@@ -7,12 +7,10 @@
 type InnerProductLayerState <: LayerState
   layer :: InnerProductLayer
   blobs :: Vector{Blob}
+  blobs_diff :: Vector{Blob}
 
   W :: Blob
   b :: Blob
-
-  ∇W :: Blob
-  ∇b :: Blob
 
   InnerProductLayerState(layer::InnerProductLayer, inputs::Vector{Blob}) = begin
     @assert length(inputs) == 1
@@ -21,11 +19,11 @@ type InnerProductLayerState <: LayerState
     out_dim = (in_dim[1], layer.output_dim)
 
     data_type = eltype(input.data)
-    state = new(layer, Blob[Blob(layer.tops[1], Array(data_type, out_dim))])
+    blobs = Blob[Blob(layer.tops[1], Array(data_type, out_dim))]
+    blobs_diff = Blob[Blob(layer.tops[1], Array(data_type, out_dim))]
+    state = new(layer, blobs, blobs_diff)
     state.W  = Blob("W", Array(data_type, tuple(in_dim[2:end]..., layer.output_dim)))
-    state.∇W = Blob("∇W", Array(data_type, size(state.W.data)))
     state.b  = Blob("b", Array(data_type, layer.output_dim))
-    state.∇b = Blob("∇b", Array(data_type, layer.output_dim))
 
     return state
   end
@@ -50,4 +48,10 @@ function forward(state::InnerProductLayerState, inputs::Vector{Blob})
     C_blob.data[i, :] = state.b.data
   end
   BLAS.gemm!('N', 'N', one, A, B, one, C_blob.data)
+end
+
+function backward(state::InnerProductLayerState, inputs::Vector{Blobs}, diffs::Vector{Blob})
+  # Update parameters
+
+  # Back propagate
 end

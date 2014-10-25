@@ -14,9 +14,9 @@ type SquareLossLayerState <: LayerState
 end
 
 function setup(layer::SquareLossLayer, inputs::Vector{Blob})
-  batch_size = size(inputs[1].data, 1)
   data_type = eltype(inputs[1].data)
-  blobs = Blob[Blob(layer.tops[1], Array(eltype, batch_size))]
+  blobs = Blob[Blob(layer.tops[1], Array(eltype, 1))]
+
   state = SquareLossLayerState(layer, blobs)
   return state
 end
@@ -32,5 +32,14 @@ function forward(state::SquareLossLayerState, inputs::Vector{Blob})
   pred  = reshape(pred, (batch_size, rest_dim))
   label = reshape(label, (batch_size, rest_dim))
 
-  state.blobs[1].data[:] = mean((pred - label).^2, 2)
+  state.blobs[1].data[:] = mean(sum((pred - label).^2, 2))
 end
+
+function backward(state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+  if length(diffs) == 1
+    pred  = inputs[1].data
+    label = inputs[2].data
+    diffs[1].data[:] = 2*(pred - label)
+  end
+end
+
