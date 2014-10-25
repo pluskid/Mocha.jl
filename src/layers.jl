@@ -17,16 +17,10 @@ abstract CompLayer <: Layer # Layer that do computation
 #############################################################
 # Data Layers
 #############################################################
-@defstruct HDF5DataLayer DataLayer (
-  (source :: String = "", source != ""),
-  (batch_size :: Int = 0, batch_size > 0), 
-  tops :: Vector{String} = String["data","label"]
-)
+include("layers/hdf5-data.jl")
+
 
 #############################################################
 # General Computation Layers
 #############################################################
-@defstruct InnerProductLayer CompLayer (
-  (output_dim :: Int = 0, output_dim > 0),
-  (tops :: Vector{String} = String[], length(tops) == 1)
-)
+include("layers/inner-product.jl")

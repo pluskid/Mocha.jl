@@ -1,5 +1,11 @@
 using HDF5
 
+@defstruct HDF5DataLayer DataLayer (
+  (source :: String = "", source != ""),
+  (batch_size :: Int = 0, batch_size > 0), 
+  tops :: Vector{String} = String["data","label"]
+)
+
 type HDF5DataLayerState <: LayerState
   layer :: HDF5DataLayer
   blobs :: Vector{Blob}
