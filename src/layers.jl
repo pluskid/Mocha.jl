@@ -1,3 +1,11 @@
+export Layer, LayerState
+export DataLayer, CostLayer, StatLayer, CompLayer
+
+export HDF5DataLayer
+export InnerProductLayer
+
+export setup, forward
+
 abstract Layer      # define layer type, parameters
 abstract LayerState # hold layer state, filters
 
@@ -11,7 +19,7 @@ abstract CompLayer <: Layer # Layer that do computation
 #############################################################
 @defstruct HDF5DataLayer DataLayer (
   (source :: String = "", source != ""),
-  batch_size :: Unsigned = 0, # 0 means varied batch_size, all samples from a file
+  (batch_size :: Int = 0, batch_size > 0), 
   tops :: Vector{String} = String["data","label"]
 )
 
@@ -19,6 +27,6 @@ abstract CompLayer <: Layer # Layer that do computation
 # General Computation Layers
 #############################################################
 @defstruct InnerProductLayer CompLayer (
-  (output_dim :: Unsigned = 0, output_dim > 0),
+  (output_dim :: Int = 0, output_dim > 0),
   (tops :: Vector{String} = String[], length(tops) == 1)
 )

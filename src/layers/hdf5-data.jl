@@ -13,7 +13,7 @@ type HDF5DataLayerState <: LayerState
     state = new(layer)
 
     sources = open(layer.source, "r") do s
-      filter(l -> !isspace(l), readlines(s))
+      map(strip, filter(l -> !isspace(l), readlines(s)))
     end
     @assert(length(sources) > 0)
     state.sources = sources
@@ -29,7 +29,7 @@ type HDF5DataLayerState <: LayerState
       end
 
       idx = [1:x for x in dims]
-      dset = state.current_hdf5_file[layer.tops[i]]
+      dset = state.curr_hdf5_file[layer.tops[i]]
       state.blobs[i] = Blob(layer.tops[i], dset[idx...])
     end
     state.curr_index = 1
@@ -44,18 +44,28 @@ function setup(layer::HDF5DataLayer)
 end
 
 function forward(state::HDF5DataLayerState)
-  if (state.layer.batch_size == 0)
-    if (state.curr_index != 1) # file already consumed, open next file
+  idx = map(x -> 1:x, size(state.blobs[1].data)[2:end])
+  n_done = 0
+  while n_done < state.layer.batch_size
+    n_remain = size(state.curr_hdf5_file[state.layer.tops[1]])[1] - state.curr_index + 1
+    if n_remain == 0
       close(state.curr_hdf5_file)
       state.curr_source = state.curr_source % length(state.sources) + 1
       state.curr_hdf5_file = h5open(state.sources[state.curr_source], "r")
+      state.curr_index = 1
+      n_remain = size(state.curr_hdf5_file[state.layer.tops[1]])[1]
     end
-    for i = 1:length(state.blobs)
-      idx = map(dim -> 1:dim, size(state.blobs[i].data))
-      state.blobs[i].data = state.curr_hdf5_file[state.layer.tops[i]][idx...]
+
+    n1 = min(state.layer.batch_size-n_done, n_remain)
+
+    if n1 > 0
+      for i = 1:length(state.blobs)
+        dset = state.curr_hdf5_file[state.layer.tops[i]]
+        state.blobs[i].data[n_done+1:n_done+n1, idx...] = dset[state.curr_index:state.curr_index+n1-1, idx...]
+      end
     end
-  else
-    throw(MethodError("Not implemented yet"))
+    state.curr_index += n1
+    n_done += n1
   end
 end
 
