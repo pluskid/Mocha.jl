@@ -21,43 +21,53 @@
 # is available.
 #############################################################
 macro defstruct(name, super_name, fields)
+  if fields.head == :tuple
     fields = fields.args
-    field_defs     = Array(Expr, length(fields))           # :(field2 :: Int)
-    field_names    = Array(Symbol, length(fields))         # :field2
-    field_defaults = Array(Expr, length(fields))           # :(field2 :: Int = 0)
-    field_asserts  = Array(Nullable{Expr}, length(fields)) # :(field2 >= 0)
+  else
+    fields = [fields]
+  end
 
-    for i = 1:length(fields)
-        field = fields[i]
-        if field.head == :tuple
-            field_asserts[i] = Nullable{Expr}(field.args[2])
-            field = field.args[1]
-        else
-            field_asserts[i] = Nullable{Expr}()
-        end
-        field_defs[i] = field.args[1]
-        field_names[i] = field.args[1].args[1]
-        field_defaults[i] = Expr(:kw, field.args...)
+  field_defs     = Array(Expr, length(fields))           # :(field2 :: Int)
+  field_names    = Array(Symbol, length(fields))         # :field2
+  field_defaults = Array(Expr, length(fields))           # :(field2 :: Int = 0)
+  field_asserts  = Array(Nullable{Expr}, length(fields)) # :(field2 >= 0)
+
+  for i = 1:length(fields)
+    field = fields[i]
+    if field.head == :tuple
+      field_asserts[i] = Nullable{Expr}(field.args[2])
+      field = field.args[1]
+    else
+      field_asserts[i] = Nullable{Expr}()
     end
+    field_defs[i] = field.args[1]
+    field_names[i] = field.args[1].args[1]
+    field_defaults[i] = Expr(:kw, field.args...)
+  end
 
+  if length(fields) == 0
+    # no need to define constructor, empty block
+    ctor = Expr(:block)
+  else
     # body of layer type, defining fields
     type_body = Expr(:block, field_defs...)
 
     # constructor
     asserts = map(filter(x -> !isnull(x), field_asserts)) do f_assert
-        :(@assert($(get(f_assert))))
+      :(@assert($(get(f_assert))))
     end
-    construct = Expr(:call, esc(symbol(name)), field_names...)
+    construct = Expr(:call, esc(name), field_names...)
     ctor_body = Expr(:block, asserts..., construct)
-    ctor_def = Expr(:call, esc(symbol(name)), Expr(:parameters, field_defaults...))
+    ctor_def = Expr(:call, esc(name), Expr(:parameters, field_defaults...))
     ctor = Expr(:(=), ctor_def, ctor_body)
+  end
 
-    quote
-        type $(esc(name)) <: $super_name
-            $type_body
-        end
-
-        $ctor
+  quote
+    type $(esc(name)) <: $super_name
+      $type_body
     end
+
+    $ctor
+  end
 end
 
