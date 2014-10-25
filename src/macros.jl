@@ -1,0 +1,63 @@
+#############################################################
+# A convenient macro to define a Composite Type, with 
+# default values for fields and a constructor that accept
+# keyword parameters to initialize the fields. For example
+#
+# @defstruct MyStruct Any (
+#   field1 :: Int = 0,
+#   (field2 :: String = "", !isempty(field2))
+# )
+#
+# where each field could be either
+#
+#   field_name :: field_type = default_value
+#
+# or put within a tuple, with the second element
+# specifying a validation check on the field value.
+# In the example above, the default value for
+# field2 does not satisfy the assertion, this
+# could be used to force user to provide a 
+# valid value when no meaningful default value
+# is available.
+#############################################################
+macro defstruct(name, super_name, fields)
+    fields = fields.args
+    field_defs     = Array(Expr, length(fields))           # :(field2 :: Int)
+    field_names    = Array(Symbol, length(fields))         # :field2
+    field_defaults = Array(Expr, length(fields))           # :(field2 :: Int = 0)
+    field_asserts  = Array(Nullable{Expr}, length(fields)) # :(field2 >= 0)
+
+    for i = 1:length(fields)
+        field = fields[i]
+        if field.head == :tuple
+            field_asserts[i] = Nullable{Expr}(field.args[2])
+            field = field.args[1]
+        else
+            field_asserts[i] = Nullable{Expr}()
+        end
+        field_defs[i] = field.args[1]
+        field_names[i] = field.args[1].args[1]
+        field_defaults[i] = Expr(:kw, field.args...)
+    end
+
+    # body of layer type, defining fields
+    type_body = Expr(:block, field_defs...)
+
+    # constructor
+    asserts = map(filter(x -> !isnull(x), field_asserts)) do f_assert
+        :(@assert($(get(f_assert))))
+    end
+    construct = Expr(:call, esc(symbol(name)), field_names...)
+    ctor_body = Expr(:block, asserts..., construct)
+    ctor_def = Expr(:call, esc(symbol(name)), Expr(:parameters, field_defaults...))
+    ctor = Expr(:(=), ctor_def, ctor_body)
+
+    quote
+        type $(esc(name)) <: $super_name
+            $type_body
+        end
+
+        $ctor
+    end
+end
+

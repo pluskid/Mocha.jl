@@ -1,5 +1,7 @@
 module Mocha
 
-# package code goes here
+include("macros.jl")
+
+include("layers.jl")
 
 end # module
