@@ -17,10 +17,10 @@ layer  = InnerProductLayer(; output_dim=right_dim, tops = String["result"], bott
 inputs = Blob[Blob("input", X)]
 state  = setup(layer, inputs)
 
-@test size(state.W.data) == size(W)
-@test size(state.b.data) == size(b)
-state.W.data[:] = W
-state.b.data[:] = b
+@test length(state.W.data) == length(W)
+@test length(state.b.data) == length(b)
+state.W.data[:] = W[:]
+state.b.data[:] = b[:]
 
 forward(state, inputs)
 
