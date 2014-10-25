@@ -40,5 +40,22 @@ end
 
 function setup(layer::HDF5DataLayer)
   state = HDF5DataLayerState(layer)
+  return state
+end
+
+function forward(state::HDF5DataLayerState)
+  if (state.layer.batch_size == 0)
+    if (state.curr_index != 1) # file already consumed, open next file
+      close(state.curr_hdf5_file)
+      state.curr_source = state.curr_source % length(state.sources) + 1
+      state.curr_hdf5_file = h5open(state.sources[state.curr_source], "r")
+    end
+    for i = 1:length(state.blobs)
+      idx = map(dim -> 1:dim, size(state.blobs[i].data))
+      state.blobs[i].data = state.curr_hdf5_file[state.layer.tops[i]][idx...]
+    end
+  else
+    throw(MethodError("Not implemented yet"))
+  end
 end
 
