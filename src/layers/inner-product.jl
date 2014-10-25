@@ -1,6 +1,7 @@
 @defstruct InnerProductLayer CompLayer (
   (output_dim :: Int = 0, output_dim > 0),
-  (tops :: Vector{String} = String[], length(tops) == 1)
+  (tops :: Vector{String} = String[], length(tops) == 1),
+  (bottoms :: Vector{String} = String[], length(bottoms) == 1)
 )
 
 type InnerProductLayerState <: LayerState

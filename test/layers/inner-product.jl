@@ -13,7 +13,7 @@ b = rand(right_dim)
 ############################################################
 # Setup
 ############################################################
-layer  = InnerProductLayer(; output_dim=right_dim, tops = String["result"])
+layer  = InnerProductLayer(; output_dim=right_dim, tops = String["result"], bottoms=String["input"])
 inputs = Blob[Blob("input", X)]
 state  = setup(layer, inputs)
 

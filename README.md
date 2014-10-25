@@ -6,3 +6,4 @@
 
 - [ ] Avoid creating new `Array` on each HDF5 read.
 - [ ] Provide access to number of epochs in data layer.
+- [ ] Add nonlinearity and regularizer to layers
