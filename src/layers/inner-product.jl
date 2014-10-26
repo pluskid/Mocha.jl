@@ -9,8 +9,10 @@ type InnerProductLayerState <: LayerState
   blobs :: Vector{Blob}
   blobs_diff :: Vector{Blob}
 
-  W :: Blob
-  b :: Blob
+  W  :: Blob
+  ∇W :: Blob
+  b  :: Blob
+  ∇b :: Blob
 
   InnerProductLayerState(layer::InnerProductLayer, inputs::Vector{Blob}) = begin
     @assert length(inputs) == 1
@@ -27,7 +29,9 @@ type InnerProductLayerState <: LayerState
     blobs_diff = Blob[Blob(layer.tops[1], Array(data_type, out_dim))]
     state = new(layer, blobs, blobs_diff)
     state.W  = Blob("W", Array(data_type, (prod(mid_dim), right_dim)))
+    state.∇W = Blob("∇W", Array(data_type, (prod(mid_dim), right_dim)))
     state.b  = Blob("b", Array(data_type, (right_dim)))
+    state.∇b = Blob("∇b", Array(data_type, (right_dim)))
 
     return state
   end
@@ -54,7 +58,23 @@ function forward(state::InnerProductLayerState, inputs::Vector{Blob})
 end
 
 function backward(state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  # Update parameters
+  input = inputs[1]
+  inner_dim = prod(size(input.data)[2:end])
 
-  # Back propagate
+  # Gradient w.r.t. parameters
+  X = reshape(input.data, size(input.data,1), inner_dim)
+  D = diffs[1].data
+
+  # ∇W = X' * D / N
+  one = convert(eltype(X),1)
+  zero = convert(eltype(X),0)
+  BLAS.gemm!('T', 'N', one, X, D, zero, state.∇W.data)
+
+  state.∇b.data[:] = sum(D,1)
+
+  # Back propagate gradient w.r.t. input
+  if length(diffs) == 1
+    # similar to ∇W
+    BLAS.gemm!('N', 'T', one, D, state.W.data, zero, diffs[1].data)
+  end
 end
