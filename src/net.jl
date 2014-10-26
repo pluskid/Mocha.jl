@@ -22,20 +22,28 @@ type Net
       layer = layers[i]
       if in(:bottoms, layer)
         blob_fwd = Blob[output_blobs[x] for x in layer.bottoms]
-        blob_bwd = Blob[diff_blobs[x] for x in layer.bottoms]
+        blob_bwd = Blob[haskey(diff_blobs,x) ? diff_blobs[x] : NullBlob() for x in layer.bottoms]
       else
         blob_fwd = Blob[]
         blob_bwd = Blob[]
       end
 
       states[i] = setup(layers[i], blob_fwd)
-      for i = 1:length(layer.tops)
-        output_blobs[layer.tops[i]] = states[i].blobs[i]
+      for j = 1:length(layer.tops)
+        output_blobs[layer.tops[j]] = states[i].blobs[j]
         if in(:blobs_diff, states[i])
-          diff_blobs[layer.tops[i]] = states[i].blobs_diff[i]
+          diff_blobs[layer.tops[j]] = states[i].blobs_diff[j]
         end
       end
+      blobs_forward[i] = blob_fwd
+      blobs_backward[i] = blob_bwd
     end
+
+    net.states = states
+    net.blobs_forward = blobs_forward
+    net.blobs_backward = blobs_backward
+
+    return net
   end
 end
 

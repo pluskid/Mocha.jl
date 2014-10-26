@@ -36,7 +36,7 @@ type HDF5DataLayerState <: LayerState
 
       idx = [1:x for x in dims]
       dset = state.curr_hdf5_file[layer.tops[i]]
-      state.blobs[i] = Blob(layer.tops[i], dset[idx...])
+      state.blobs[i] = CPUBlob(layer.tops[i], dset[idx...])
     end
     state.curr_index = 1
 

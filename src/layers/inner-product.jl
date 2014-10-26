@@ -28,13 +28,13 @@ type InnerProductLayerState <: LayerState
     out_dim = (left_dim, right_dim)
     data_type = eltype(input.data)
 
-    blobs = Blob[Blob(layer.tops[1], Array(data_type, out_dim))]
-    blobs_diff = Blob[Blob(layer.tops[1], Array(data_type, out_dim))]
+    blobs = Blob[CPUBlob(layer.tops[1], Array(data_type, out_dim))]
+    blobs_diff = Blob[CPUBlob(layer.tops[1], Array(data_type, out_dim))]
     state = new(layer, blobs, blobs_diff)
-    state.W  = Blob("W", Array(data_type, (prod(mid_dim), right_dim)))
-    state.∇W = Blob("∇W", Array(data_type, (prod(mid_dim), right_dim)))
-    state.b  = Blob("b", Array(data_type, (right_dim)))
-    state.∇b = Blob("∇b", Array(data_type, (right_dim)))
+    state.W  = CPUBlob("W", Array(data_type, (prod(mid_dim), right_dim)))
+    state.∇W = CPUBlob("∇W", Array(data_type, (prod(mid_dim), right_dim)))
+    state.b  = CPUBlob("b", Array(data_type, (right_dim)))
+    state.∇b = CPUBlob("∇b", Array(data_type, (right_dim)))
 
     state.parameters = Blob[state.W, state.b]
     state.gradients  = Blob[state.∇W, state.∇b]
@@ -79,7 +79,7 @@ function backward(state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Ve
   state.∇b.data[:] = sum(D,1)
 
   # Back propagate gradient w.r.t. input
-  if isdefined(diffs, 1)
+  if isa(diffs[1], CPUBlob)
     # similar to ∇W
     BLAS.gemm!('N', 'T', one, D, state.W.data, zero, diffs[1].data)
   end
