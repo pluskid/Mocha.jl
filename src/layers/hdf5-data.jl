@@ -3,7 +3,7 @@ using HDF5
 @defstruct HDF5DataLayer DataLayer (
   (source :: String = "", source != ""),
   (batch_size :: Int = 0, batch_size > 0), 
-  tops :: Vector{String} = String["data","label"]
+  (tops :: Vector{String} = String["data","label"], length(tops) > 0)
 )
 
 type HDF5DataLayerState <: LayerState
@@ -51,7 +51,6 @@ function setup(layer::HDF5DataLayer, inputs::Vector{Blob})
 end
 
 function forward(state::HDF5DataLayerState)
-  idx = map(x -> 1:x, size(state.blobs[1].data)[2:end])
   n_done = 0
   while n_done < state.layer.batch_size
     n_remain = size(state.curr_hdf5_file[state.layer.tops[1]])[1] - state.curr_index + 1
@@ -67,6 +66,7 @@ function forward(state::HDF5DataLayerState)
 
     if n1 > 0
       for i = 1:length(state.blobs)
+        idx = map(x -> 1:x, size(state.blobs[i].data)[2:end])
         dset = state.curr_hdf5_file[state.layer.tops[i]]
         state.blobs[i].data[n_done+1:n_done+n1, idx...] = dset[state.curr_index:state.curr_index+n1-1, idx...]
       end
