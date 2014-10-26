@@ -44,7 +44,8 @@ type HDF5DataLayerState <: LayerState
   end
 end
 
-function setup(layer::HDF5DataLayer)
+function setup(layer::HDF5DataLayer, inputs::Vector{Blob})
+  @assert length(inputs) == 0
   state = HDF5DataLayerState(layer)
   return state
 end

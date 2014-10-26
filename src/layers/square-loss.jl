@@ -4,6 +4,7 @@
 # L(\hat{y},y) = 1/N \sum_{i=1}^N (\hat{y}_i - y_i)^2
 ############################################################
 @defstruct SquareLossLayer LossLayer (
+  name :: String = "square loss",
   (tops :: Vector{String} = String[], length(tops) == 1),
   (bottoms :: Vector{String} = String[], length(bottoms) == 2)
 )

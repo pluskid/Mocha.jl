@@ -20,7 +20,7 @@ type Net
 
     for i = 1:n
       layer = layers[i]
-      if in(:bottoms, layer)
+      if :bottoms ∈ layer
         blob_fwd = Blob[output_blobs[x] for x in layer.bottoms]
         blob_bwd = Blob[haskey(diff_blobs,x) ? diff_blobs[x] : NullBlob() for x in layer.bottoms]
       else
@@ -31,7 +31,7 @@ type Net
       states[i] = setup(layers[i], blob_fwd)
       for j = 1:length(layer.tops)
         output_blobs[layer.tops[j]] = states[i].blobs[j]
-        if in(:blobs_diff, states[i])
+        if :blobs_diff ∈ states[i]
           diff_blobs[layer.tops[j]] = states[i].blobs_diff[j]
         end
       end
@@ -64,7 +64,7 @@ function topological_sort(layers :: Vector{Layer})
   end
 
   for i = 1:n
-    if in(:bottoms, names(layers[i]))
+    if :bottoms ∈ names(layers[i])
       for key in layers[i].bottoms
         if !haskey(outputs, key)
           error("Required input blob missing: $(key)")
