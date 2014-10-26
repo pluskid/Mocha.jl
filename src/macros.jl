@@ -27,18 +27,16 @@ macro defstruct(name, super_name, fields)
     fields = [fields]
   end
 
-  field_defs     = Array(Expr, length(fields))           # :(field2 :: Int)
-  field_names    = Array(Symbol, length(fields))         # :field2
-  field_defaults = Array(Expr, length(fields))           # :(field2 :: Int = 0)
-  field_asserts  = Array(Nullable{Expr}, length(fields)) # :(field2 >= 0)
+  field_defs     = Array(Expr, length(fields))     # :(field2 :: Int)
+  field_names    = Array(Symbol, length(fields))   # :field2
+  field_defaults = Array(Expr, length(fields))     # :(field2 :: Int = 0)
+  field_asserts  = Array(Expr, length(fields))     # :(field2 >= 0)
 
   for i = 1:length(fields)
     field = fields[i]
     if field.head == :tuple
-      field_asserts[i] = Nullable{Expr}(field.args[2])
+      field_asserts[i] = field.args[2]
       field = field.args[1]
-    else
-      field_asserts[i] = Nullable{Expr}()
     end
     field_defs[i] = field.args[1]
     field_names[i] = field.args[1].args[1]
@@ -53,8 +51,8 @@ macro defstruct(name, super_name, fields)
     type_body = Expr(:block, field_defs...)
 
     # constructor
-    asserts = map(filter(x -> !isnull(x), field_asserts)) do f_assert
-      :(@assert($(get(f_assert))))
+    asserts = map(filter(i -> isdefined(field_asserts,i), 1:length(fields))) do i
+      :(@assert($(field_asserts[i])))
     end
     construct = Expr(:call, esc(name), field_names...)
     ctor_body = Expr(:block, asserts..., construct)
