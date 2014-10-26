@@ -1,3 +1,5 @@
+export Net
+
 type Net
   # all layers, sorted in topological order
   layers :: Vector{Layer}
@@ -20,7 +22,7 @@ type Net
 
     for i = 1:n
       layer = layers[i]
-      if :bottoms ∈ layer
+      if :bottoms ∈ names(layer)
         blob_fwd = Blob[output_blobs[x] for x in layer.bottoms]
         blob_bwd = Blob[haskey(diff_blobs,x) ? diff_blobs[x] : NullBlob() for x in layer.bottoms]
       else
@@ -31,7 +33,7 @@ type Net
       states[i] = setup(layers[i], blob_fwd)
       for j = 1:length(layer.tops)
         output_blobs[layer.tops[j]] = states[i].blobs[j]
-        if :blobs_diff ∈ states[i]
+        if :blobs_diff ∈ names(states[i])
           diff_blobs[layer.tops[j]] = states[i].blobs_diff[j]
         end
       end

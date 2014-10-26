@@ -29,7 +29,7 @@ function setup(layer::MemoryDataLayer, inputs::Vector{Blob})
   return state
 end
 
-function forward(state::HDF5DataLayerState)
+function forward(state::MemoryDataLayerState, inputs::Vector{Blob})
   n_done = 0
   while n_done < state.layer.batch_size
     n_remain = size(state.layer.data[1], 1) - state.curr_idx + 1

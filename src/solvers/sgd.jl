@@ -17,7 +17,7 @@ function solve(sgd::SGD, net::Net)
     end
 
     for i = length(net.layers):-1:1
-      backward(net.states[i], net.blobs_backward[i])
+      backward(net.states[i], net.blobs_forward[i], net.blobs_backward[i])
     end
 
     for i = 1:length(net.layers)
@@ -29,7 +29,7 @@ function solve(sgd::SGD, net::Net)
       end
     end
 
-    if iter % 100 == 0
+    if iter % 1 == 0
       for i = 1:length(net.layers)
         if isa(net.layers[i], LossLayer)
           @printf("%06d %s = %f\n", iter, net.layers[i].name, net.states[i].blobs[1].data[1])

@@ -5,7 +5,7 @@
 ############################################################
 @defstruct SquareLossLayer LossLayer (
   name :: String = "square loss",
-  (tops :: Vector{String} = String[], length(tops) == 1),
+  (tops :: Vector{String} = String["square-loss"], length(tops) == 1),
   (bottoms :: Vector{String} = String[], length(bottoms) == 2)
 )
 
@@ -16,7 +16,7 @@ end
 
 function setup(layer::SquareLossLayer, inputs::Vector{Blob})
   data_type = eltype(inputs[1].data)
-  blobs = Blob[Blob(layer.tops[1], Array(eltype, 1))]
+  blobs = Blob[CPUBlob(layer.tops[1], Array(data_type, 1))]
 
   state = SquareLossLayerState(layer, blobs)
   return state
@@ -40,7 +40,7 @@ function backward(state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vect
   if isa(diffs[1], CPUBlob)
     pred  = inputs[1].data
     label = inputs[2].data
-    diffs[1].data[:] = 2*(pred - label) / size(pred.data,1)
+    diffs[1].data[:] = 2*(pred - label) / size(pred,1)
   end
 end
 

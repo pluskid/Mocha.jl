@@ -50,7 +50,7 @@ function setup(layer::HDF5DataLayer, inputs::Vector{Blob})
   return state
 end
 
-function forward(state::HDF5DataLayerState)
+function forward(state::HDF5DataLayerState, inputs::Vector{Blob})
   n_done = 0
   while n_done < state.layer.batch_size
     n_remain = size(state.curr_hdf5_file[state.layer.tops[1]])[1] - state.curr_index + 1

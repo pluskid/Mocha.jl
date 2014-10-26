@@ -1,11 +1,11 @@
 export Layer, LayerState
 export DataLayer, LossLayer, StatLayer, CompLayer
 
-export HDF5DataLayer
+export HDF5DataLayer, MemoryDataLayer
 export InnerProductLayer
 export SquareLossLayer
 
-export setup, forward
+export setup, forward, backward
 
 ############################################################
 # Implementing a Layer
@@ -78,6 +78,7 @@ abstract CompLayer <: Layer # Layer that do computation
 # Data Layers
 #############################################################
 include("layers/hdf5-data.jl")
+include("layers/memory-data.jl")
 
 #############################################################
 # Loss Layers
@@ -89,3 +90,9 @@ include("layers/square-loss.jl")
 #############################################################
 include("layers/inner-product.jl")
 
+
+#############################################################
+# Default procedures for layers that do not them
+#############################################################
+function backward(state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+end

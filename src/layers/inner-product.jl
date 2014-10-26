@@ -69,7 +69,7 @@ function backward(state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Ve
 
   # Gradient w.r.t. parameters
   X = reshape(input.data, size(input.data,1), inner_dim)
-  D = diffs[1].data
+  D = state.blobs_diff[1].data
 
   # ∇W = X' * D / N
   one = convert(eltype(X),1)
