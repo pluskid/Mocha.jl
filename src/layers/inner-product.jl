@@ -5,9 +5,12 @@
 )
 
 type InnerProductLayerState <: LayerState
-  layer :: InnerProductLayer
-  blobs :: Vector{Blob}
+  layer      :: InnerProductLayer
+  blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}
+
+  parameters :: Vector{Blob}
+  gradients  :: Vector{Blob}
 
   W  :: Blob
   ∇W :: Blob
@@ -32,6 +35,9 @@ type InnerProductLayerState <: LayerState
     state.∇W = Blob("∇W", Array(data_type, (prod(mid_dim), right_dim)))
     state.b  = Blob("b", Array(data_type, (right_dim)))
     state.∇b = Blob("∇b", Array(data_type, (right_dim)))
+
+    state.parameters = Blob[state.W, state.b]
+    state.gradients  = Blob[state.∇W, state.∇b]
 
     return state
   end
@@ -73,7 +79,7 @@ function backward(state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Ve
   state.∇b.data[:] = sum(D,1)
 
   # Back propagate gradient w.r.t. input
-  if length(diffs) == 1
+  if isdefined(diffs, 1)
     # similar to ∇W
     BLAS.gemm!('N', 'T', one, D, state.W.data, zero, diffs[1].data)
   end

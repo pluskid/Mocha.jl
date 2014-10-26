@@ -36,7 +36,7 @@ function forward(state::SquareLossLayerState, inputs::Vector{Blob})
 end
 
 function backward(state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  if length(diffs) == 1
+  if isdefined(diffs, 1)
     pred  = inputs[1].data
     label = inputs[2].data
     diffs[1].data[:] = 2*(pred - label) / size(pred.data,1)

@@ -1,8 +1,9 @@
 export Layer, LayerState
-export DataLayer, CostLayer, StatLayer, CompLayer
+export DataLayer, LossLayer, StatLayer, CompLayer
 
 export HDF5DataLayer
 export InnerProductLayer
+export SquareLossLayer
 
 export setup, forward
 
@@ -25,12 +26,21 @@ export setup, forward
 #
 # - blobs: An array of blobs. Corresponding to the output
 #       of this layer in the forward pass.
+#
+# If the layer needs back propagated gradient from upper
+# layer, then the following fields are required:
+#
 # - blobs_diff: An array of blobs. Corresponding to the
 #       gradient of the objective function with respect
 #       to the output of this layer in the backward pass.
 #       Note this value is computed by the upper layer.
-#       If the layer does not need back propagation, then
-#       this field could be omitted.
+#
+# If the layer has its own parameters that need to be updated
+# during optimization, the following fields should be defined
+# 
+# - parameters: vector of Blob.
+# - gradients: vector of Blob, gradients of parameters, 
+#       should be computed in the backward pass.
 #
 # Then the following functions need to be defined
 #
@@ -40,15 +50,27 @@ export setup, forward
 #   with proper shape, but not necessarily with valid data
 #   values. The constructed layer state should be returned.
 #
-# - forward(state :: MayLayerState, inputs :: Vector{Blob})
-#   This function do the forward computation 
+# - forward(state :: MyLayerState, inputs :: Vector{Blob})
+#   This function do the forward computation: inputs are
+#   forward computed output from bottom layers.
+#
+# - backward(state::MyLayerState,inputs::Vector{Blob},diffs::Vector{Blob})
+#   This function do the backward computation: inputs are
+#   the same as in forward, diffs contains blobs to hold
+#   gradient with respect to the bottom layer input. Some
+#   blob in this vector might be "undefined", meaning that
+#   blob do not want to get back propagated gradient. This
+#   procedure also compute gradient with respect to layer
+#   parameters if any.
+#
+# - update(state :: MyLayerState)
 ############################################################
 
 abstract Layer      # define layer type, parameters
 abstract LayerState # hold layer state, filters
 
 abstract DataLayer <: Layer # Layer that provide data
-abstract CostLayer <: Layer # Layer that defines cost function for learning
+abstract LossLayer <: Layer # Layer that defines loss function for learning
 abstract StatLayer <: Layer # Layer that provide statistics (e.g. Accuracy)
 abstract CompLayer <: Layer # Layer that do computation
 
@@ -57,8 +79,13 @@ abstract CompLayer <: Layer # Layer that do computation
 #############################################################
 include("layers/hdf5-data.jl")
 
+#############################################################
+# Loss Layers
+#############################################################
+include("layers/square-loss.jl")
 
 #############################################################
 # General Computation Layers
 #############################################################
 include("layers/inner-product.jl")
+
