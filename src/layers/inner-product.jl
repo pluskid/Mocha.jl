@@ -1,7 +1,9 @@
 @defstruct InnerProductLayer CompLayer (
   (output_dim :: Int = 0, output_dim > 0),
   (tops :: Vector{String} = String[], length(tops) == 1),
-  (bottoms :: Vector{String} = String[], length(bottoms) == 1)
+  (bottoms :: Vector{String} = String[], length(bottoms) == 1),
+  weight_filler :: Filler = ConstantFiller(0),
+  bias_filler :: Filler = ConstantFiller(0)
 )
 
 type InnerProductLayerState <: LayerState
@@ -35,6 +37,9 @@ type InnerProductLayerState <: LayerState
     state.∇W = CPUBlob("∇W", Array(data_type, (prod(mid_dim), right_dim)))
     state.b  = CPUBlob("b", Array(data_type, (right_dim)))
     state.∇b = CPUBlob("∇b", Array(data_type, (right_dim)))
+
+    fill(layer.weight_filler, state.W)
+    fill(layer.bias_filler, state.b)
 
     state.parameters = Blob[state.W, state.b]
     state.gradients  = Blob[state.∇W, state.∇b]
