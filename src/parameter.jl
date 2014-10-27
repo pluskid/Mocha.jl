@@ -4,7 +4,6 @@ type Parameter
   blob        :: Blob
   gradient    :: Blob
   initializer :: Initializer
-  #regularizer
-  #weight_decay
+  regularizer :: Regularizer
   #learning_rate
 end

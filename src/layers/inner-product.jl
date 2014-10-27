@@ -3,7 +3,9 @@
   (tops :: Vector{String} = String[], length(tops) == 1),
   (bottoms :: Vector{String} = String[], length(bottoms) == 1),
   weight_init :: Initializer = ConstantInitializer(0),
-  bias_init :: Initializer = ConstantInitializer(0)
+  bias_init :: Initializer = ConstantInitializer(0),
+  weight_regu :: Regularizer = Regularizer(Regularization.L2, 1),
+  bias_regu :: Regularizer = Regularizer(Regularization.Nothing)
 )
 
 type InnerProductLayerState <: LayerState
