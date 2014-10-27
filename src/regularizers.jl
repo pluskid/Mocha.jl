@@ -5,8 +5,8 @@ module Regularization
 
 abstract T
 
-abstract Nothing <: T # No regularization
-abstract L2 <: T      # L2 norm regularization
+type Nothing <: T; end # No regularization
+type L2 <: T; end      # L2 norm regularization
 
 end # module Regularization
 
@@ -14,7 +14,7 @@ type Regularizer{T1 <: Regularization.T}
   regularization :: T1
   coefficient    :: NumericRoot
 end
-Regularizer(regu :: Regularization.T, coef :: Number) = Regularizer(regu, convert(NumericRoot, coef))
+Regularizer{T<:Regularization.T}(regu :: T, coef :: Number) = Regularizer(regu, convert(NumericRoot, coef))
 Regularizer(regu :: Regularization.Nothing) = Regularizer(regu, 0)
 
 ############################################################
@@ -42,3 +42,4 @@ end
 function backward(sys::System{CPU}, regu :: Regularizer{Regularization.L2}, param:: Blob, gradient :: Blob)
   gradient.data += regu.coefficient * param.data
 end
+
