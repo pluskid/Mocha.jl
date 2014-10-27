@@ -2,8 +2,8 @@
   (output_dim :: Int = 0, output_dim > 0),
   (tops :: Vector{String} = String[], length(tops) == 1),
   (bottoms :: Vector{String} = String[], length(bottoms) == 1),
-  weight_filler :: Filler = ConstantFiller(0),
-  bias_filler :: Filler = ConstantFiller(0)
+  weight_init :: Initializer = ConstantInitializer(0),
+  bias_init :: Initializer = ConstantInitializer(0)
 )
 
 type InnerProductLayerState <: LayerState
@@ -11,8 +11,7 @@ type InnerProductLayerState <: LayerState
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}
 
-  parameters :: Vector{Blob}
-  gradients  :: Vector{Blob}
+  parameters :: Vector{Parameter}
 
   W  :: Blob
   ∇W :: Blob
@@ -42,11 +41,7 @@ type InnerProductLayerState <: LayerState
       error("Backend $(sys.backend) not supported")
     end
 
-    fill(layer.weight_filler, state.W)
-    fill(layer.bias_filler, state.b)
-
-    state.parameters = Blob[state.W, state.b]
-    state.gradients  = Blob[state.∇W, state.∇b]
+    state.parameters = [Parameter(state.W, state.∇W, layer.weight_init),Parameter(state.b, state.∇b, layer.bias_init)]
 
     return state
   end

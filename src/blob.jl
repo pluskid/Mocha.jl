@@ -1,8 +1,8 @@
 export Blob
 export CPUBlob, NullBlob
 
-import Base:    eltype, size, getindex, setindex!
-export backend, eltype, size, getindex, setindex!
+import Base:    eltype, size, getindex, setindex!, endof
+export backend, eltype, size, getindex, setindex!, endof
 
 ############################################################
 # A blob is an abstract concept that is suppose
@@ -30,6 +30,9 @@ end
 function size(blob :: Blob)
   error("Not implemented (should return the size of data)")
 end
+function endof(blob :: Blob)
+  prod(size(blob))
+end
 
 function getindex(blob :: Blob, idx...)
   error("Not implemented (should return data at given idx)")
@@ -49,7 +52,7 @@ end
 ############################################################
 # A Blob for CPU Computation
 ############################################################
-type CPUBlob{T <: FloatingPoint} <: Blob
+type CPUBlob{T <: NumericRoot} <: Blob
   data :: Array{T}
 end
 

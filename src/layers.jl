@@ -36,11 +36,18 @@ export setup, forward, backward
 #       Note this value is computed by the upper layer.
 #
 # If the layer has its own parameters that need to be updated
-# during optimization, the following fields should be defined
+# during optimization, the following field should be defined
 # 
-# - parameters: vector of Blob.
-# - gradients: vector of Blob, gradients of parameters, 
-#       should be computed in the backward pass.
+# - parameters: vector of Parameters
+#
+# Note the layer needs to compute the gradient of the parameter
+# during the backward pass, but everything else will be taken
+# care of automatically by the engine, including the followings:
+# 
+# - initialize the parameters before optimization starts
+# - compute the regularization and its gradient during forward
+#   and backward pass, respectively
+# - update the parameter after one forward-backward pass
 #
 # Then the following functions need to be defined
 #

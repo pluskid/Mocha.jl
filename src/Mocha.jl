@@ -4,7 +4,8 @@ include("macros.jl")
 
 include("base.jl")
 include("blob.jl")
-include("fillers.jl")
+include("initializers.jl")
+include("parameter.jl")
 include("layers.jl")
 include("net.jl")
 
