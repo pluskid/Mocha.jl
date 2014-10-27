@@ -4,8 +4,8 @@
   (bottoms :: Vector{String} = String[], length(bottoms) == 1),
   weight_init :: Initializer = ConstantInitializer(0),
   bias_init :: Initializer = ConstantInitializer(0),
-  weight_regu :: Regularizer = Regularizer(Regularization.L2(), 1),
-  bias_regu :: Regularizer = Regularizer(Regularization.Nothing())
+  weight_regu :: Regularizer = L2Regu(1),
+  bias_regu :: Regularizer = NoRegu()
 )
 
 type InnerProductLayerState <: LayerState
@@ -43,7 +43,8 @@ type InnerProductLayerState <: LayerState
       error("Backend $(sys.backend) not supported")
     end
 
-    state.parameters = [Parameter(state.W, state.∇W, layer.weight_init),Parameter(state.b, state.∇b, layer.bias_init)]
+    state.parameters = [Parameter(state.W, state.∇W, layer.weight_init, layer.weight_regu),
+                        Parameter(state.b, state.∇b, layer.bias_init, layer.bias_regu)]
 
     return state
   end
