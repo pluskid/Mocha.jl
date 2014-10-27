@@ -15,7 +15,7 @@ type HDF5DataLayerState <: LayerState
   curr_hdf5_file :: HDF5File
   curr_index     :: Int
 
-  HDF5DataLayerState(layer) = begin
+  HDF5DataLayerState(sys::System, layer) = begin
     state = new(layer)
 
     sources = open(layer.source, "r") do s
@@ -36,7 +36,11 @@ type HDF5DataLayerState <: LayerState
 
       idx = [1:x for x in dims]
       dset = state.curr_hdf5_file[layer.tops[i]]
-      state.blobs[i] = CPUBlob(layer.tops[i], dset[idx...])
+      if isa(sys.backend, CPU)
+        state.blobs[i] = CPUBlob(dset[idx...])
+      else
+        error("Backend $(sys.backend) not supported")
+      end
     end
     state.curr_index = 1
 
@@ -44,13 +48,13 @@ type HDF5DataLayerState <: LayerState
   end
 end
 
-function setup(layer::HDF5DataLayer, inputs::Vector{Blob})
+function setup(sys::System, layer::HDF5DataLayer, inputs::Vector{Blob})
   @assert length(inputs) == 0
-  state = HDF5DataLayerState(layer)
+  state = HDF5DataLayerState(sys, layer)
   return state
 end
 
-function forward(state::HDF5DataLayerState, inputs::Vector{Blob})
+function forward(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob})
   n_done = 0
   while n_done < state.layer.batch_size
     n_remain = size(state.curr_hdf5_file[state.layer.tops[1]])[1] - state.curr_index + 1
@@ -68,7 +72,7 @@ function forward(state::HDF5DataLayerState, inputs::Vector{Blob})
       for i = 1:length(state.blobs)
         idx = map(x -> 1:x, size(state.blobs[i].data)[2:end])
         dset = state.curr_hdf5_file[state.layer.tops[i]]
-        state.blobs[i].data[n_done+1:n_done+n1, idx...] = dset[state.curr_index:state.curr_index+n1-1, idx...]
+        state.blobs[i][n_done+1:n_done+n1, idx...] = dset[state.curr_index:state.curr_index+n1-1, idx...]
       end
     end
     state.curr_index += n1

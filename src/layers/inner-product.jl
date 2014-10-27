@@ -19,7 +19,7 @@ type InnerProductLayerState <: LayerState
   b  :: Blob
   ∇b :: Blob
 
-  InnerProductLayerState(layer::InnerProductLayer, inputs::Vector{Blob}) = begin
+  InnerProductLayerState(sys::System, layer::InnerProductLayer, inputs::Vector{Blob}) = begin
     @assert length(inputs) == 1
     input = inputs[1]
     dims = size(input.data)
@@ -30,13 +30,17 @@ type InnerProductLayerState <: LayerState
     out_dim = (left_dim, right_dim)
     data_type = eltype(input.data)
 
-    blobs = Blob[CPUBlob(layer.tops[1], Array(data_type, out_dim))]
-    blobs_diff = Blob[CPUBlob(layer.tops[1], Array(data_type, out_dim))]
-    state = new(layer, blobs, blobs_diff)
-    state.W  = CPUBlob("W", Array(data_type, (prod(mid_dim), right_dim)))
-    state.∇W = CPUBlob("∇W", Array(data_type, (prod(mid_dim), right_dim)))
-    state.b  = CPUBlob("b", Array(data_type, (right_dim)))
-    state.∇b = CPUBlob("∇b", Array(data_type, (right_dim)))
+    if isa(sys.backend, CPU)
+      blobs = Blob[CPUBlob(Array(data_type, out_dim))]
+      blobs_diff = Blob[CPUBlob(Array(data_type, out_dim))]
+      state = new(layer, blobs, blobs_diff)
+      state.W  = CPUBlob(Array(data_type, (prod(mid_dim), right_dim)))
+      state.∇W = CPUBlob(Array(data_type, (prod(mid_dim), right_dim)))
+      state.b  = CPUBlob(Array(data_type, (right_dim)))
+      state.∇b = CPUBlob(Array(data_type, (right_dim)))
+    else
+      error("Backend $(sys.backend) not supported")
+    end
 
     fill(layer.weight_filler, state.W)
     fill(layer.bias_filler, state.b)
@@ -48,12 +52,12 @@ type InnerProductLayerState <: LayerState
   end
 end
 
-function setup(layer::InnerProductLayer, inputs::Vector{Blob})
-  state = InnerProductLayerState(layer, inputs)
+function setup(sys::System, layer::InnerProductLayer, inputs::Vector{Blob})
+  state = InnerProductLayerState(sys, layer, inputs)
   return state
 end
 
-function forward(state::InnerProductLayerState, inputs::Vector{Blob})
+function forward(sys::System{CPU}, state::InnerProductLayerState, inputs::Vector{Blob})
   input = inputs[1]
   inner_dim = prod(size(input.data)[2:end])
 
@@ -68,7 +72,7 @@ function forward(state::InnerProductLayerState, inputs::Vector{Blob})
   BLAS.gemm!('N', 'N', one, X, state.W.data, one, C_blob.data)
 end
 
-function backward(state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(sys::System{CPU}, state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   input = inputs[1]
   inner_dim = prod(size(input.data)[2:end])
 

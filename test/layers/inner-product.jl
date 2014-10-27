@@ -15,16 +15,17 @@ b = rand(right_dim)
 ############################################################
 # Setup
 ############################################################
+system = System(CPU())
 layer  = InnerProductLayer(; output_dim=right_dim, tops = String["result"], bottoms=String["input"])
-inputs = Blob[CPUBlob("input", X)]
-state  = setup(layer, inputs)
+inputs = Blob[CPUBlob(X)]
+state  = setup(system, layer, inputs)
 
 @test length(state.W.data) == length(W)
 @test length(state.b.data) == length(b)
 state.W.data[:] = W[:]
 state.b.data[:] = b[:]
 
-forward(state, inputs)
+forward(system, state, inputs)
 
 X2 = reshape(X, left_dim, prod(inner_dims))
 W2 = reshape(W, prod(inner_dims), right_dim)

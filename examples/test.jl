@@ -16,11 +16,13 @@ Y = X*W .+ B + 0.01*randn(N, P)
 ############################################################
 # Define network
 ############################################################
+sys = System(CPU())
+
 data_layer = MemoryDataLayer(; batch_size=100, data=Array[X,Y])
 weight_layer = InnerProductLayer(; output_dim=P, tops=String["pred"], bottoms=String["data"])
 loss_layer = SquareLossLayer(; bottoms=String["pred", "label"])
 
-net = Net([loss_layer, weight_layer, data_layer])
+net = Net(sys, [loss_layer, weight_layer, data_layer])
 
 ############################################################
 # Solve

@@ -14,15 +14,19 @@ type SquareLossLayerState <: LayerState
   blobs :: Vector{Blob}
 end
 
-function setup(layer::SquareLossLayer, inputs::Vector{Blob})
+function setup(sys::System, layer::SquareLossLayer, inputs::Vector{Blob})
   data_type = eltype(inputs[1].data)
-  blobs = Blob[CPUBlob(layer.tops[1], Array(data_type, 1))]
+  if isa(sys.backend, CPU)
+    blobs = Blob[CPUBlob(Array(data_type, 1))]
+  else
+    error("Backend $(sys.backend) not supported")
+  end
 
   state = SquareLossLayerState(layer, blobs)
   return state
 end
 
-function forward(state::SquareLossLayerState, inputs::Vector{Blob})
+function forward(sys::System{CPU}, state::SquareLossLayerState, inputs::Vector{Blob})
   pred  = inputs[1].data
   label = inputs[2].data
 
@@ -36,7 +40,7 @@ function forward(state::SquareLossLayerState, inputs::Vector{Blob})
   state.blobs[1].data[:] = mean(sum((pred - label).^2, 2))
 end
 
-function backward(state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(sys::System{CPU}, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   if isa(diffs[1], CPUBlob)
     pred  = inputs[1].data
     label = inputs[2].data

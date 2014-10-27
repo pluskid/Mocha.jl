@@ -44,17 +44,17 @@ export setup, forward, backward
 #
 # Then the following functions need to be defined
 #
-# - setup(layer :: MyLayer, inputs :: Vector{Blob})
+# - setup(sys::System,layer::MyLayer,inputs::Vector{Blob})
 #   This function construct the layer state object and do
 #   necessary initialization. The inputs are initialized
 #   with proper shape, but not necessarily with valid data
 #   values. The constructed layer state should be returned.
 #
-# - forward(state :: MyLayerState, inputs :: Vector{Blob})
+# - forward(sys::System,state::MyLayerState,inputs::Vector{Blob})
 #   This function do the forward computation: inputs are
 #   forward computed output from bottom layers.
 #
-# - backward(state::MyLayerState,inputs::Vector{Blob},diffs::Vector{Blob})
+# - backward(sys::System,state::MyLayerState,inputs::Vector{Blob},diffs::Vector{Blob})
 #   This function do the backward computation: inputs are
 #   the same as in forward, diffs contains blobs to hold
 #   gradient with respect to the bottom layer input. Some
@@ -62,8 +62,6 @@ export setup, forward, backward
 #   blob do not want to get back propagated gradient. This
 #   procedure also compute gradient with respect to layer
 #   parameters if any.
-#
-# - update(state :: MyLayerState)
 ############################################################
 
 abstract Layer      # define layer type, parameters
@@ -92,7 +90,7 @@ include("layers/inner-product.jl")
 
 
 #############################################################
-# Default procedures for layers that do not them
+# Default procedures for layers that do not need them
 #############################################################
-function backward(state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(sys::System, state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end

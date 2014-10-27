@@ -10,26 +10,30 @@ type MemoryDataLayerState <: LayerState
 
   curr_idx :: Int
 
-  MemoryDataLayerState(layer::MemoryDataLayer) = begin
+  MemoryDataLayerState(sys::System, layer::MemoryDataLayer) = begin
     blobs = Array(CPUBlob, length(layer.tops))
     for i = 1:length(blobs)
       dims = tuple(layer.batch_size, size(layer.data[i])[2:end]...)
       idxs = map(x -> 1:x, dims)
 
-      blobs[i] = CPUBlob(layer.tops[i], layer.data[i][idxs...])
+      if isa(sys.backend, CPU)
+        blobs[i] = CPUBlob(layer.data[i][idxs...])
+      else
+        error("Backend $(sys.backend) not supported")
+      end
     end
 
     new(layer, blobs, 1)
   end
 end
 
-function setup(layer::MemoryDataLayer, inputs::Vector{Blob})
+function setup(sys::System, layer::MemoryDataLayer, inputs::Vector{Blob})
   @assert length(inputs) == 0
-  state = MemoryDataLayerState(layer)
+  state = MemoryDataLayerState(sys, layer)
   return state
 end
 
-function forward(state::MemoryDataLayerState, inputs::Vector{Blob})
+function forward(sys::System{CPU}, state::MemoryDataLayerState, inputs::Vector{Blob})
   n_done = 0
   while n_done < state.layer.batch_size
     n_remain = size(state.layer.data[1], 1) - state.curr_idx + 1

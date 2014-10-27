@@ -4,10 +4,7 @@ type SGD <: Solver
   momentum
 end
 
-function solve(sgd::SGD, net::Net)
-  # initialize
-  # TODO: properly initialize network parameters
-
+function solve(sgd::SGD, net::Net{CPU})
   param_history = Array(Vector{Array}, length(net.layers))
   for i = 1:length(net.states)
     state = net.states[i]
@@ -18,11 +15,11 @@ function solve(sgd::SGD, net::Net)
 
   for iter = 1:sgd.maxiter
     for i = 1:length(net.layers)
-      forward(net.states[i], net.blobs_forward[i])
+      forward(net.sys, net.states[i], net.blobs_forward[i])
     end
 
     for i = length(net.layers):-1:1
-      backward(net.states[i], net.blobs_forward[i], net.blobs_backward[i])
+      backward(net.sys, net.states[i], net.blobs_forward[i], net.blobs_backward[i])
     end
 
     for i = 1:length(net.layers)
