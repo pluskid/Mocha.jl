@@ -16,7 +16,7 @@ Y = X*W .+ B + 0.01*randn(N, P)
 ############################################################
 # Define network
 ############################################################
-sys = System(CPU(), 0.01, 0.9, 5000)
+sys = System(CPU(), 0.0005, 0.01, 0.9, 5000)
 
 data_layer = MemoryDataLayer(; batch_size=100, data=Array[X,Y])
 weight_layer = InnerProductLayer(; output_dim=P, tops=String["pred"], bottoms=String["data"])

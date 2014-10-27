@@ -13,8 +13,11 @@ function init(net::Net)
   for i = 1:length(net.layers)
     state = net.states[i]
     if :parameters ∈ names(state)
-      for j = 1:length(state.parameters)
-        init(state.parameters[j].initializer, state.parameters[j].blob)
+      for param in state.parameters
+        init(param.initializer, param.blob)
+
+        # scale per-layer regularization coefficient globally
+        param.regularizer.coefficient *= net.sys.regularization_coef
       end
     end
   end

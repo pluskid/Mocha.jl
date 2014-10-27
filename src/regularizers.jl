@@ -4,7 +4,9 @@ export NoRegu, L2Regu
 abstract Regularizer
 
 type NoRegu <: Regularizer
+  coefficient :: NumericRoot # not used, just for consistent API
 end
+NoRegu() = NoRegu(0.0)
 
 type L2Regu <: Regularizer
   coefficient :: NumericRoot

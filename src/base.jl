@@ -16,6 +16,7 @@ type CUDNN <: Backend; end
 type System{T <: Backend}
   backend :: T
 
+  regularization_coef :: NumericRoot
   learning_rate :: NumericRoot
   momentum :: NumericRoot
   max_iter :: Int
