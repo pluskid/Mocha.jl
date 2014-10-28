@@ -1,7 +1,7 @@
 ############################################################
 # Square Loss
 #
-# L(\hat{y},y) = 1/N \sum_{i=1}^N (\hat{y}_i - y_i)^2
+# L(\hat{y},y) = 1/2N \sum_{i=1}^N (\hat{y}_i - y_i)^2
 ############################################################
 @defstruct SquareLossLayer LossLayer (
   (tops :: Vector{String} = String["square-loss"], length(tops) == 1),
@@ -36,14 +36,14 @@ function forward(sys::System{CPU}, state::SquareLossLayerState, inputs::Vector{B
   pred  = reshape(pred, (batch_size, rest_dim))
   label = reshape(label, (batch_size, rest_dim))
 
-  state.blobs[1].data[:] = mean(sum((pred - label).^2, 2))
+  state.blobs[1].data[:] = 0.5*mean(sum((pred - label).^2, 2))
 end
 
 function backward(sys::System{CPU}, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   if isa(diffs[1], CPUBlob)
     pred  = inputs[1].data
     label = inputs[2].data
-    diffs[1].data[:] = 2*(pred - label) / size(pred,1)
+    diffs[1].data[:] = (pred - label) / size(pred,1)
   end
 end
 

@@ -2,7 +2,7 @@ using HDF5
 
 @defstruct HDF5DataLayer DataLayer (
   (source :: String = "", source != ""),
-  (batch_size :: Int = 0, batch_size > 0), 
+  (batch_size :: Int = 0, batch_size > 0),
   (tops :: Vector{String} = String["data","label"], length(tops) > 0)
 )
 
@@ -30,9 +30,7 @@ type HDF5DataLayerState <: LayerState
     state.blobs = Array(Blob, length(layer.tops))
     for i = 1:length(state.blobs)
       dims = size(state.curr_hdf5_file[layer.tops[i]])
-      if layer.batch_size > 0
-        dims = tuple(layer.batch_size, dims[2:end]...)
-      end
+      dims = tuple(layer.batch_size, dims[2:end]...)
 
       idx = [1:x for x in dims]
       dset = state.curr_hdf5_file[layer.tops[i]]
