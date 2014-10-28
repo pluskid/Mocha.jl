@@ -28,6 +28,11 @@ function forward(net::Net)
 
   for i = 1:length(net.layers)
     forward(net.sys, net.states[i], net.blobs_forward[i])
+    if :neuron ∈ names(net.layers[i]) && !isa(net.layers[i].neuron, Neurons.Identity)
+      for blob in net.states[i].blobs
+        forward(net.sys, net.layers[i].neuron, blob)
+      end
+    end
 
     if isa(net.layers[i], LossLayer)
       obj_val += net.states[i].blobs[1].data[1]
@@ -46,6 +51,12 @@ end
 
 function backward(net::Net)
   for i = length(net.layers):-1:1
+    if :neuron ∈ names(net.layers[i]) && !isa(net.layers[i].neuron, Neurons.Identity)
+      state = net.states[i]
+      for j = 1:length(state.blobs)
+        backward(net.sys, net.layers[i].neuron, state.blobs[j], state.blobs_diff[j])
+      end
+    end
     backward(net.sys, net.states[i], net.blobs_forward[i], net.blobs_backward[i])
 
     # handle regularization

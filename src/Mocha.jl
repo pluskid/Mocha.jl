@@ -6,6 +6,7 @@ include("base.jl")
 include("blob.jl")
 include("initializers.jl")
 include("regularizers.jl")
+include("neurons.jl")
 
 include("parameter.jl")
 include("layers.jl")

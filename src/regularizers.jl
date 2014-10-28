@@ -1,5 +1,6 @@
 export Regularizer
 export NoRegu, L2Regu
+export forward, backward
 
 abstract Regularizer
 

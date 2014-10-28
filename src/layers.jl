@@ -3,7 +3,7 @@ export DataLayer, LossLayer, StatLayer, CompLayer
 
 export HDF5DataLayer, MemoryDataLayer
 export InnerProductLayer
-export SquareLossLayer
+export SquareLossLayer, SoftmaxLossLayer
 
 export setup, forward, backward
 
@@ -34,6 +34,11 @@ export setup, forward, backward
 #       gradient of the objective function with respect
 #       to the output of this layer in the backward pass.
 #       Note this value is computed by the upper layer.
+#
+# Optional each layer can have an activation function
+# by defining a field called neuron. The activation
+# function computation (both forward and backward)
+# are handled automatically by the engine.
 #
 # If the layer has its own parameters that need to be updated
 # during optimization, the following field should be defined
@@ -89,6 +94,7 @@ include("layers/memory-data.jl")
 # Loss Layers
 #############################################################
 include("layers/square-loss.jl")
+include("layers/softmax-loss.jl")
 
 #############################################################
 # General Computation Layers

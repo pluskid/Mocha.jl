@@ -5,7 +5,8 @@
   weight_init :: Initializer = ConstantInitializer(0),
   bias_init :: Initializer = ConstantInitializer(0),
   weight_regu :: Regularizer = L2Regu(1),
-  bias_regu :: Regularizer = NoRegu()
+  bias_regu :: Regularizer = NoRegu(),
+  neuron :: ActivationFunction = Neurons.Identity()
 )
 
 type InnerProductLayerState <: LayerState
