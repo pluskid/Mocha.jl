@@ -107,7 +107,7 @@ function backward(sys::System{CPU}, pool::Pooling.Max, state::PoolingLayerState,
     output = state.blobs_diff[i].data
     mask = pool.masks[i]
 
-    for n = 1:size(input,1)
+    for n = 1:size(output,1)
       for c = 1:channels
         for ph = 1:pooled_height
           for pw = 1:pooled_width

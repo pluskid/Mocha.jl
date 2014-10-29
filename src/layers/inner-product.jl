@@ -74,9 +74,10 @@ end
 function backward(sys::System{CPU}, state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   input = inputs[1]
   inner_dim = prod(size(input.data)[2:end])
+  num = size(input.data,1)
 
   # Gradient w.r.t. parameters
-  X = reshape(input.data, size(input.data,1), inner_dim)
+  X = reshape(input.data, num, inner_dim)
   D = state.blobs_diff[1].data
 
   # ∇W = X' * D / N
@@ -89,6 +90,6 @@ function backward(sys::System{CPU}, state::InnerProductLayerState, inputs::Vecto
   # Back propagate gradient w.r.t. input
   if isa(diffs[1], CPUBlob)
     # similar to ∇W
-    BLAS.gemm!('N', 'T', one, D, state.W.data, zero, diffs[1].data)
+    BLAS.gemm!('N', 'T', one, D, state.W.data, zero, reshape(diffs[1].data,num,inner_dim))
   end
 end

@@ -122,7 +122,7 @@ function backward(sys::System{CPU}, state::ConvolutionLayerState, inputs::Vector
   o_g = int(state.layer.n_filter / n_group)
   k_g = int(channel / n_group)
 
-  fill!(∇filter.data, 0)
+  fill!(state.∇filter.data, 0)
 
   for i = 1:length(inputs)
     input = inputs[i].data
