@@ -31,8 +31,8 @@ type ConvolutionLayerState <: LayerState
     @assert layer.n_filter % layer.n_group == 0
 
     height, width = size(inputs[1])[3:4]
-    height_out = (height + 2*layer.pad[1]-layer.kernel[1]) / layer.stride[1] + 1
-    width_out  = (width  + 2*layer.pad[2]-layer.kernel[2]) / layer.stride[2] + 1
+    height_out = int((height + 2*layer.pad[1]-layer.kernel[1]) / layer.stride[1]) + 1
+    width_out  = int((width  + 2*layer.pad[2]-layer.kernel[2]) / layer.stride[2]) + 1
     is_1x1 = all(layer.kernel .== 1) && all(layer.pad .== 0) && all(layer.stride .== 1)
 
     dtype = eltype(input[1])
@@ -45,7 +45,7 @@ type ConvolutionLayerState <: LayerState
         blobs_diff[i] = CPUBlob(similar(blobs[i].data))
       end
 
-      filter = CPUBlob(Array(dtype, layer.n_filter, channels/layer.n_group, layer.kernel...))
+      filter = CPUBlob(Array(dtype, layer.n_filter, int(channels/layer.n_group), layer.kernel...))
       ∇filter = CPUBlob(similar(filter.data))
       bias = CPUBlob(Array(dtype, layer.n_filter))
       ∇bias = CPUBlob(similar(bias.data))
@@ -82,8 +82,8 @@ end
 function forward(sys::System{CPU}, state::ConvolutionLayerState, inputs::Vector{Blob})
   channel, height, width = size(inputs[1])[2:end]
   n_group = state.layer.n_group
-  o_g = state.layer.n_filter / n_group
-  k_g = channel / n_group
+  o_g = int(state.layer.n_filter / n_group)
+  k_g = int(channel / n_group)
 
   for i = 1:length(inputs)
     input = inputs[i].data
@@ -119,8 +119,8 @@ end
 function backward(sys::System{CPU}, state::ConvolutionLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   channel, height, width = size(inputs[1])[2:end]
   n_group = state.layer.n_group
-  o_g = state.layer.n_filter / n_group
-  k_g = channel / n_group
+  o_g = int(state.layer.n_filter / n_group)
+  k_g = int(channel / n_group)
 
   fill!(∇filter.data, 0)
 
