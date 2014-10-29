@@ -8,13 +8,13 @@
 )
 
 type PoolingLayerState <: LayerState
-  layer      :: ConvolutionLayer
+  layer      :: PoolingLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}
 end
 
 function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob})
-  channel, height, width = size(inputs[1])[2:end]
+  channels, height, width = size(inputs[1])[2:end]
   pooled_height = int(ceil(float(height+2*layer.pad[1]-layer.kernel[1]) / layer.stride[1]))+1
   pooled_width  = int(ceil(float(width +2*layer.pad[2]-layer.kernel[2]) / layer.stride[2]))+1
 
@@ -37,7 +37,7 @@ function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob})
     end
 
     for i = 1:length(inputs)
-      blobs[i] = CPUBlob(Array(dtype, size(inputs[i],1), channel, pooled_height, pooled_width))
+      blobs[i] = CPUBlob(Array(dtype, size(inputs[i],1), channels, pooled_height, pooled_width))
       blobs_diff[i] = CPUBlob(similar(blobs[i].data))
       if isa(layer.pooling, Pooling.Max)
         layer.pooling.masks[i] = similar(blobs[i].data, Int)
@@ -54,7 +54,7 @@ function forward(sys::System{CPU}, state::PoolingLayerState, inputs::Vector{Blob
   forward(sys, state.layer.pooling, state, inputs)
 end
 function forward(sys::System{CPU}, pool::Pooling.Max, state::PoolingLayerState, inputs::Vector{Blob})
-  channel, height, width = size(inputs[1])[2:end]
+  channels, height, width = size(inputs[1])[2:end]
   pooled_height, pooled_width = size(state.blobs[1])[3:end]
 
   for i = 1:length(inputs)
@@ -93,7 +93,7 @@ end
 function backward(sys::System{CPU}, pool::Pooling.Max, state::PoolingLayerState,
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
-  channel, height, width = size(inputs[1])[2:end]
+  channels, height, width = size(inputs[1])[2:end]
   pooled_height, pooled_width = size(state.blobs[1])[3:end]
 
   for i = 1:length(inputs)

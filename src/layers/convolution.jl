@@ -26,7 +26,7 @@ type ConvolutionLayerState <: LayerState
   ∇bias   :: Blob
 
   ConvolutionLayerState(sys::System, layer::ConvolutionLayer, inputs::Vector{Blob}) = begin
-    channels = size(input[1],2)
+    channels = size(inputs[1],2)
     @assert channels % layer.n_group == 0
     @assert layer.n_filter % layer.n_group == 0
 
@@ -35,7 +35,7 @@ type ConvolutionLayerState <: LayerState
     width_out  = int((width  + 2*layer.pad[2]-layer.kernel[2]) / layer.stride[2]) + 1
     is_1x1 = all(layer.kernel .== 1) && all(layer.pad .== 0) && all(layer.stride .== 1)
 
-    dtype = eltype(input[1])
+    dtype = eltype(inputs[1])
 
     if isa(sys.backend, CPU)
       blobs = Array(Blob, length(inputs))
@@ -55,8 +55,8 @@ type ConvolutionLayerState <: LayerState
       error("Backend $(sys.backend) not supported")
     end
 
-    parameters = [Parameter(filter, ∇filter, filter_init, filter_regu),
-                  Parameter(bias, ∇bias, bias_init, bias_regu)]
+    parameters = [Parameter(filter, ∇filter, layer.filter_init, layer.filter_regu),
+                  Parameter(bias, ∇bias, layer.bias_init, layer.bias_regu)]
 
     state = new(layer, blobs, blobs_diff, parameters)
     state.filter = filter
