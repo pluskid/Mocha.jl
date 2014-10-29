@@ -2,8 +2,9 @@ export Layer, LayerState
 export DataLayer, LossLayer, StatLayer, CompLayer
 
 export HDF5DataLayer, MemoryDataLayer
-export InnerProductLayer, ConvolutionLayer, PoolingLayer
+export InnerProductLayer, ConvolutionLayer, PoolingLayer, SoftmaxLayer
 export SquareLossLayer, SoftmaxLossLayer
+export AccuracyLayer
 
 export setup, forward, backward
 
@@ -97,11 +98,17 @@ include("layers/square-loss.jl")
 include("layers/softmax-loss.jl")
 
 #############################################################
+# Statistics Layers
+#############################################################
+include("layers/accuracy.jl")
+
+#############################################################
 # General Computation Layers
 #############################################################
 include("layers/inner-product.jl")
 include("layers/convolution.jl")
 include("layers/pooling.jl")
+include("layers/softmax.jl")
 
 
 #############################################################
