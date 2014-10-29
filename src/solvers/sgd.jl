@@ -2,8 +2,6 @@ type SGD <: Solver
 end
 
 function solve(sgd::SGD, net::Net{CPU})
-  loop = solver_task(net)
-
   param_history = Array(Vector{Array}, length(net.layers))
   for i = 1:length(net.states)
     state = net.states[i]
@@ -12,7 +10,10 @@ function solve(sgd::SGD, net::Net{CPU})
     end
   end
 
-  while consume(loop) > 0
+  iter = 1
+  init(net)
+  while true
+    prepare_iteration(iter, net)
     for i = 1:length(net.layers)
       state = net.states[i]
       if :parameters ∈ names(state)
@@ -23,5 +24,10 @@ function solve(sgd::SGD, net::Net{CPU})
         end
       end
     end
+
+    if !finalize_iteration(iter, net)
+      break
+    end
+    iter += 1
   end
 end

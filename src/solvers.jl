@@ -22,6 +22,21 @@ function init(net::Net)
     end
   end
 end
+function prepare_iteration(iter::Int, net::Net)
+  obj_val = forward(net)
+  backward(net)
+
+  if iter % 1 == 0
+    @printf("%06d objective function = %f\n", iter, obj_val)
+  end
+end
+function finalize_iteration(iter::Int, net::Net)
+  if iter > net.sys.max_iter
+    return false
+  end
+  return true
+end
+
 
 function forward(net::Net)
   obj_val = 0.0
@@ -66,29 +81,6 @@ function backward(net::Net)
       end
     end
   end
-end
-
-function solver_task(net::Net{CPU})
-  function solver_loop()
-    init(net)
-
-    for iter = 1:net.sys.max_iter
-      obj_val = forward(net)
-      backward(net)
-
-      # switch to the actual solver co-routine
-      produce(iter)
-
-      if iter % 100 == 0
-        @printf("%06d objective function = %f\n", iter, obj_val)
-      end
-    end
-
-    # loop ended
-    produce(0)
-  end
-
-  return Task(solver_loop)
 end
 
 include("solvers/sgd.jl")
