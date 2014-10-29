@@ -7,7 +7,7 @@ export backend, eltype, size, getindex, setindex!, endof
 ############################################################
 # A blob is an abstract concept that is suppose
 # to hold a 4-D tensor of data. The data could
-# either live in CPU memory or GPU memory or 
+# either live in CPU memory or GPU memory or
 # whatever the backend is used to store the data.
 ############################################################
 abstract Blob
@@ -32,6 +32,9 @@ function size(blob :: Blob)
 end
 function endof(blob :: Blob)
   prod(size(blob))
+end
+function size(blob :: Blob, dim :: Int)
+  size(blob)[dim]
 end
 
 function getindex(blob :: Blob, idx...)

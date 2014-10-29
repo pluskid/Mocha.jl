@@ -15,7 +15,7 @@ type HDF5DataLayerState <: LayerState
   curr_hdf5_file :: HDF5File
   curr_index     :: Int
 
-  HDF5DataLayerState(sys::System, layer) = begin
+  HDF5DataLayerState(sys::System, layer::HDF5DataLayer) = begin
     state = new(layer)
 
     sources = open(layer.source, "r") do s
