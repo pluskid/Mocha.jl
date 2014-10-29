@@ -2,7 +2,7 @@ export Layer, LayerState
 export DataLayer, LossLayer, StatLayer, CompLayer
 
 export HDF5DataLayer, MemoryDataLayer
-export InnerProductLayer, ConvolutionLayer
+export InnerProductLayer, ConvolutionLayer, PoolingLayer
 export SquareLossLayer, SoftmaxLossLayer
 
 export setup, forward, backward
@@ -101,6 +101,7 @@ include("layers/softmax-loss.jl")
 #############################################################
 include("layers/inner-product.jl")
 include("layers/convolution.jl")
+include("layers/pooling.jl")
 
 
 #############################################################
