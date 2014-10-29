@@ -10,8 +10,7 @@
   filter_init :: Initializer = ConstantInitializer(0),
   bias_init :: Initializer = ConstantInitializer(0),
   filter_regu :: Regularizer = NoRegu(),
-  bias_regu :: Regularizer = NoRegu(),
-  neuron :: ActivationFunction = Neurons.Identity()
+  bias_regu :: Regularizer = NoRegu()
 )
 
 type ConvolutionLayerState <: LayerState
@@ -28,8 +27,8 @@ type ConvolutionLayerState <: LayerState
 
   ConvolutionLayerState(sys::System, layer::ConvolutionLayer, inputs::Vector{Blob}) = begin
     channels = size(input[1],2)
-    @assert channels % layer.group == 0
-    @assert layer.n_filter % layer.group == 0
+    @assert channels % layer.n_group == 0
+    @assert layer.n_filter % layer.n_group == 0
 
     height, width = size(inputs[1])[3:4]
     height_out = (height + 2*layer.pad[1]-layer.kernel[1]) / layer.stride[1] + 1
@@ -46,9 +45,9 @@ type ConvolutionLayerState <: LayerState
         blobs_diff[i] = CPUBlob(similar(blobs[i].data))
       end
 
-      filter = CPUBlob(Array(dtype, layer.n_filter, channels/layer.group, layer.kernel...))
+      filter = CPUBlob(Array(dtype, layer.n_filter, channels/layer.n_group, layer.kernel...))
       ∇filter = CPUBlob(similar(filter.data))
-      bias = CPUBlob(Array(dtype, layer.n_filter, 1))
+      bias = CPUBlob(Array(dtype, layer.n_filter))
       ∇bias = CPUBlob(similar(bias.data))
 
       col_buffer = CPUBlob(Array(dtype, 1, channels*prod(layer.kernel), height_out, width_out))
@@ -64,20 +63,16 @@ type ConvolutionLayerState <: LayerState
     state.∇filter = ∇filter
     state.bias = bias
     state.∇bias = ∇bias
-    state.col_buffer = col_buffer
 
     state.height_out = height_out
     state.width_out = width_out
-    state.is_1x1 = is_1x1
 
     return state
   end
 
   # Auxiliary variables
-  col_buffer :: Blob
   height_out :: Int
   width_out  :: Int
-  is_1x1     :: Bool
 end
 
 function setup(sys::System{CPU}, layer::ConvolutionLayer, inputs::Vector{Blob})
@@ -86,34 +81,86 @@ end
 
 function forward(sys::System{CPU}, state::ConvolutionLayerState, inputs::Vector{Blob})
   channel, height, width = size(inputs[1])[2:end]
-
-  M = state.layer.n_filter / state.layer.group
-  K = channel * prod(state.layer.kernel) / group
-  N = state.height_out * state.width_out
+  n_group = state.layer.n_group
+  o_g = state.layer.n_filter / n_group
+  k_g = channel / n_group
 
   for i = 1:length(inputs)
-    input = inputs[i]
-    output = state.blobs[i]
+    input = inputs[i].data
+    output = state.blobs[i].data
 
-    for n = 1:size(input, 1)
-      # caffe-style convolution by im2col
-      if (state.is_1x1)
-        state.col_buffer.data[:] = input.data[n,:,:,:]
-      else
-        im2col(sub(input.data, n, 1:channel, 1:height, 1:width), state.col_buffer.data,
-               state.layer.kernel, state.layer.pad, state.layer.stride)
-      end
+    for n = 1:size(input,1)
+      for g = 1:n_group
+        for o = 1:o_g
+          for k = 1:k_g
+            for y = 1:state.height_out
+              for x = 1:state.width_out
+                output[n, (g-1)*o_g+o, y, x] = state.bias.data[(g-1)*o_g+o]
 
-      for g = 1:state.layer.group
-        idx_g = (g-1)*M+1:g*M
-        output.data[n, idx_g, :, :] = reshape(state.filter.data[idx_g,:,:,:], M, K) *
-                                      reshape(state.col_buffer[1,idx_g,:,:], K, N) .+
-                                      state.bias[idx_g,1]
+                for p = 1:state.layer.kernel[1]
+                  for q = 1:state.layer.kernel[2]
+                    in_y = (y-1) * state.layer.stride[1] - state.layer.pad[1] + p
+                    in_x = (x-1) * state.layer.stride[2] - state.layer.pad[2] + q
+                    if (in_y >= 1 && in_y <= height && in_x >= 1 && in_y <= width)
+                      output[n, (g-1)*o_g+o, y, x] += input[n, (g-1)*k_g+k, in_y, in_x] *
+                                                      state.filter.data[(g-1)*o_g+o, k, p, q]
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
       end
     end
   end
 end
 
 function backward(sys::System{CPU}, state::ConvolutionLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+  channel, height, width = size(inputs[1])[2:end]
+  n_group = state.layer.n_group
+  o_g = state.layer.n_filter / n_group
+  k_g = channel / n_group
 
+  fill!(∇filter.data, 0)
+
+  for i = 1:length(inputs)
+    input = inputs[i].data
+    output = state.blobs_diff[i].data
+
+    diff = diffs[i]
+    if !isa(diff, NullBlob)
+      fill!(diff.data, 0)
+    end
+
+    for n = 1:size(input,1)
+      for g = 1:n_group
+        for o = 1:o_g
+          for k = 1:k_g
+            for y = 1:state.height_out
+              for x = 1:state.width_out
+                state.∇bias.data[(g-1)*o_g+o] = output[n, (g-1)*o_g+o, y, x]
+
+                for p = 1:state.layer.kernel[1]
+                  for q = 1:state.layer.kernel[2]
+                    in_y = (y-1) * state.layer.stride[1] - state.layer.pad[1] + p
+                    in_x = (x-1) * state.layer.stride[2] - state.layer.pad[2] + q
+                    if (in_y >= 1 && in_y <= height && in_x >= 1 && in_y <= width)
+                      state.∇filter.data[(g-1)*o_g+o,k,p,q] += output[n,(g-1)*o_g+o,y,x] *
+                                                               input[n,(g-1)*k_g+k,in_y,in_x]
+                      if !isa(diff, NullBlob)
+                        diff.data[n,(g-1)*k_g+k,in_y,in_x] += output[n,(g-1)*o_g+o,y,x] *
+                                                              state.filter.data[(g-1)*o_g+o,k,p,q]
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
 end
+

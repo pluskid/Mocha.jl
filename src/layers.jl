@@ -2,7 +2,7 @@ export Layer, LayerState
 export DataLayer, LossLayer, StatLayer, CompLayer
 
 export HDF5DataLayer, MemoryDataLayer
-export InnerProductLayer
+export InnerProductLayer, ConvolutionLayer
 export SquareLossLayer, SoftmaxLossLayer
 
 export setup, forward, backward
@@ -13,7 +13,7 @@ export setup, forward, backward
 # A Layer object is a configuration of how a layer is going
 # to behave. The following fields are needed by the neural
 # network engine:
-# 
+#
 # - tops: An array of strings, as the name of output blobs
 # - bottoms: An array of strings for the name of input blobs.
 #       Data Layers can omit this field.
@@ -42,13 +42,13 @@ export setup, forward, backward
 #
 # If the layer has its own parameters that need to be updated
 # during optimization, the following field should be defined
-# 
+#
 # - parameters: vector of Parameters
 #
 # Note the layer needs to compute the gradient of the parameter
 # during the backward pass, but everything else will be taken
 # care of automatically by the engine, including the followings:
-# 
+#
 # - initialize the parameters before optimization starts
 # - compute the regularization and its gradient during forward
 #   and backward pass, respectively
@@ -100,6 +100,7 @@ include("layers/softmax-loss.jl")
 # General Computation Layers
 #############################################################
 include("layers/inner-product.jl")
+include("layers/convolution.jl")
 
 
 #############################################################
