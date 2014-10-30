@@ -1,3 +1,6 @@
+export CuBlobDescriptor, CuPODBlobDescriptor, CuTensorBlobDescriptor, CuFilterBlobDescriptor
+export CuTensorBlob
+
 abstract CuBlobDescriptor
 type CuPODBlobDescriptor <: CuBlobDescriptor end
 type CuTensorBlobDescriptor <: CuBlobDescriptor
@@ -16,7 +19,7 @@ type CuTensorBlob{T<:FloatingPoint} <: Blob
 end
 function CuTensorBlob{T<:FloatingPoint}(dtype::Type{T}, desc::CuBlobDescriptor, n::Int, c::Int, h::Int, w::Int)
   len = n*c*h*w
-  ptr = cualloc(dtype, len)
+  ptr = CUDA.cualloc(dtype, len)
   return CuTensorBlob{T}(ptr, (w,h,c,n), len, desc)
 end
 CuTensorBlob(dtype::Type; desc::CuBlobDescriptor=CuPODBlobDescriptor(), n::Int=1, c::Int=1, h::Int=1, w::Int=1) =
