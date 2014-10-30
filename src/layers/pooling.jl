@@ -29,7 +29,7 @@ function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob})
   end
 
   dtype = eltype(inputs[1])
-  if isa(sys.backend, CPU)
+  if isa(sys.backend, CPUBackend)
     blobs = Array(CPUBlob, length(inputs))
     blobs_diff = Array(CPUBlob, length(inputs))
     if isa(layer.pooling, Pooling.Max)
@@ -50,10 +50,10 @@ function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob})
   state = PoolingLayerState(layer, blobs, blobs_diff)
 end
 
-function forward(sys::System{CPU}, state::PoolingLayerState, inputs::Vector{Blob})
+function forward(sys::System{CPUBackend}, state::PoolingLayerState, inputs::Vector{Blob})
   forward(sys, state.layer.pooling, state, inputs)
 end
-function forward(sys::System{CPU}, pool::Pooling.Max, state::PoolingLayerState, inputs::Vector{Blob})
+function forward(sys::System{CPUBackend}, pool::Pooling.Max, state::PoolingLayerState, inputs::Vector{Blob})
   channels, height, width = size(inputs[1])[2:end]
   pooled_height, pooled_width = size(state.blobs[1])[3:end]
 
@@ -87,10 +87,10 @@ function forward(sys::System{CPU}, pool::Pooling.Max, state::PoolingLayerState, 
   end
 end
 
-function backward(sys::System{CPU}, state::PoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(sys::System{CPUBackend}, state::PoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   backward(sys, state.layer.pooling, state, inputs, diffs)
 end
-function backward(sys::System{CPU}, pool::Pooling.Max, state::PoolingLayerState,
+function backward(sys::System{CPUBackend}, pool::Pooling.Max, state::PoolingLayerState,
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   channels, height, width = size(inputs[1])[2:end]

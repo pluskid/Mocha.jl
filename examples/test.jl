@@ -19,7 +19,7 @@ Y[Y .<= m] = 1
 ############################################################
 # Define network
 ############################################################
-sys = System(CPU(), 0.0005, 0.01, 0.9, 5000)
+sys = System(CPUBackend(), 0.0005, 0.01, 0.9, 5000)
 
 data_layer = MemoryDataLayer(; batch_size=100, data=Array[X,Y])
 weight_layer = InnerProductLayer(; output_dim=M, tops=String["pred"], bottoms=String["data"], neuron = Neurons.Sigmoid())

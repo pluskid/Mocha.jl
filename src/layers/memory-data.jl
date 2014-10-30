@@ -1,5 +1,5 @@
 @defstruct MemoryDataLayer DataLayer (
-  (batch_size :: Int = 0, batch_size > 0), 
+  (batch_size :: Int = 0, batch_size > 0),
   (tops :: Vector{String} = String["data","label"], length(tops) > 0),
   (data :: Vector{Array} = Array[], length(data) == length(tops))
 )
@@ -16,7 +16,7 @@ type MemoryDataLayerState <: LayerState
       dims = tuple(layer.batch_size, size(layer.data[i])[2:end]...)
       idxs = map(x -> 1:x, dims)
 
-      if isa(sys.backend, CPU)
+      if isa(sys.backend, CPUBackend)
         blobs[i] = CPUBlob(layer.data[i][idxs...])
       else
         error("Backend $(sys.backend) not supported")
@@ -33,7 +33,7 @@ function setup(sys::System, layer::MemoryDataLayer, inputs::Vector{Blob})
   return state
 end
 
-function forward(sys::System{CPU}, state::MemoryDataLayerState, inputs::Vector{Blob})
+function forward(sys::System{CPUBackend}, state::MemoryDataLayerState, inputs::Vector{Blob})
   n_done = 0
   while n_done < state.layer.batch_size
     n_remain = size(state.layer.data[1], 1) - state.curr_idx + 1

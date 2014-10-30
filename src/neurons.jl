@@ -43,29 +43,29 @@ end # module Neurons
 ############################################################
 # Identity
 ############################################################
-function forward(sys :: System{CPU}, neuron :: Neurons.Identity, output :: Blob)
+function forward(sys :: System{CPUBackend}, neuron :: Neurons.Identity, output :: Blob)
   # do nothing
 end
-function backward(sys :: System{CPU}, neuron :: Neurons.Identity, output :: Blob, gradient :: Blob)
+function backward(sys :: System{CPUBackend}, neuron :: Neurons.Identity, output :: Blob, gradient :: Blob)
   # do nothing
 end
 
 ############################################################
 # Rectified-Linear
 ############################################################
-function forward(sys :: System{CPU}, neuron :: Neurons.ReLU, output :: Blob)
+function forward(sys :: System{CPUBackend}, neuron :: Neurons.ReLU, output :: Blob)
   output.data[:] = max(output.data[:], 0)
 end
-function backward(sys :: System{CPU}, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
+function backward(sys :: System{CPUBackend}, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
   gradient.data[:] .*= (output.data[:] .>= 0)
 end
 
 ############################################################
 # Sigmoid
 ############################################################
-function forward(sys :: System{CPU}, neuron :: Neurons.Sigmoid, output :: Blob)
+function forward(sys :: System{CPUBackend}, neuron :: Neurons.Sigmoid, output :: Blob)
   output.data[:] = 1 ./ (1 + exp(-output.data[:]))
 end
-function backward(sys :: System{CPU}, neuron :: Neurons.Sigmoid, output :: Blob, gradient :: Blob)
+function backward(sys :: System{CPUBackend}, neuron :: Neurons.Sigmoid, output :: Blob, gradient :: Blob)
   gradient.data[:] .*= (output.data[:] .* (1-output.data[:]))
 end

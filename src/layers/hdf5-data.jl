@@ -34,7 +34,7 @@ type HDF5DataLayerState <: LayerState
 
       idx = [1:x for x in dims]
       dset = state.curr_hdf5_file[layer.tops[i]]
-      if isa(sys.backend, CPU)
+      if isa(sys.backend, CPUBackend)
         state.blobs[i] = CPUBlob(dset[idx...])
       else
         error("Backend $(sys.backend) not supported")

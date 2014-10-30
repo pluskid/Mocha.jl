@@ -52,7 +52,7 @@ end
 ############################################################
 # A Blob for CPU Computation
 ############################################################
-type CPUBlob{T <: NumericRoot} <: Blob
+type CPUBlob{T <: FloatingPoint} <: Blob
   data :: Array{T}
 end
 

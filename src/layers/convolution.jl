@@ -37,7 +37,7 @@ type ConvolutionLayerState <: LayerState
 
     dtype = eltype(inputs[1])
 
-    if isa(sys.backend, CPU)
+    if isa(sys.backend, CPUBackend)
       blobs = Array(Blob, length(inputs))
       blobs_diff = Array(Blob, length(inputs))
       for i = 1:length(inputs)
@@ -75,11 +75,11 @@ type ConvolutionLayerState <: LayerState
   width_out  :: Int
 end
 
-function setup(sys::System{CPU}, layer::ConvolutionLayer, inputs::Vector{Blob})
+function setup(sys::System{CPUBackend}, layer::ConvolutionLayer, inputs::Vector{Blob})
   return ConvolutionLayerState(sys, layer, inputs)
 end
 
-function forward(sys::System{CPU}, state::ConvolutionLayerState, inputs::Vector{Blob})
+function forward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs::Vector{Blob})
   channel, height, width = size(inputs[1])[2:end]
   n_group = state.layer.n_group
   o_g = int(state.layer.n_filter / n_group)
@@ -116,7 +116,7 @@ function forward(sys::System{CPU}, state::ConvolutionLayerState, inputs::Vector{
   end
 end
 
-function backward(sys::System{CPU}, state::ConvolutionLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   channel, height, width = size(inputs[1])[2:end]
   n_group = state.layer.n_group
   o_g = int(state.layer.n_filter / n_group)

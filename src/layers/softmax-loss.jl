@@ -13,7 +13,7 @@ end
 
 function setup(sys::System, layer::SoftmaxLossLayer, inputs::Vector{Blob})
   data_type = eltype(inputs[1])
-  if isa(sys.backend, CPU)
+  if isa(sys.backend, CPUBackend)
     blobs = Blob[CPUBlob(Array(data_type, 1))]
   else
     error("Backend $(sys.backend) not supported")
@@ -23,7 +23,7 @@ function setup(sys::System, layer::SoftmaxLossLayer, inputs::Vector{Blob})
   return state
 end
 
-function forward(sys::System{CPU}, state::SoftmaxLossLayerState, inputs::Vector{Blob})
+function forward(sys::System{CPUBackend}, state::SoftmaxLossLayerState, inputs::Vector{Blob})
   pred = inputs[1]
   label = inputs[2]
 
@@ -39,7 +39,7 @@ function forward(sys::System{CPU}, state::SoftmaxLossLayerState, inputs::Vector{
   state.blobs[1].data[:] = loss
 end
 
-function backward(sys::System{CPU}, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(sys::System{CPUBackend}, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   prob  = inputs[1].data
   label = int(inputs[2].data)
 

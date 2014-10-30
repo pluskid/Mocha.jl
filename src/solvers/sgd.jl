@@ -1,7 +1,7 @@
 type SGD <: Solver
 end
 
-function solve(sgd::SGD, net::Net{CPU})
+function solve(sgd::SGD, net::Net{CPUBackend})
   param_history = Array(Vector{Array}, length(net.layers))
   for i = 1:length(net.states)
     state = net.states[i]

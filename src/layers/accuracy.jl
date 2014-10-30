@@ -12,7 +12,7 @@ function setup(sys::System, layer::AccuracyLayer, inputs::Vector{Blob})
   return AccuracyLayerState(layer, Blob[])
 end
 
-function forward(sys::System{CPU}, layer::AccuracyLayer, inputs::Vector{Blob})
+function forward(sys::System{CPUBackend}, layer::AccuracyLayer, inputs::Vector{Blob})
   pred = inputs[1].data
   label = inputs[2].data
 

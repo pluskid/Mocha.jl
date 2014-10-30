@@ -32,7 +32,7 @@ type InnerProductLayerState <: LayerState
     out_dim = (left_dim, right_dim)
     data_type = eltype(input.data)
 
-    if isa(sys.backend, CPU)
+    if isa(sys.backend, CPUBackend)
       blobs = Blob[CPUBlob(Array(data_type, out_dim))]
       blobs_diff = Blob[CPUBlob(Array(data_type, out_dim))]
       state = new(layer, blobs, blobs_diff)
@@ -56,7 +56,7 @@ function setup(sys::System, layer::InnerProductLayer, inputs::Vector{Blob})
   return state
 end
 
-function forward(sys::System{CPU}, state::InnerProductLayerState, inputs::Vector{Blob})
+function forward(sys::System{CPUBackend}, state::InnerProductLayerState, inputs::Vector{Blob})
   input = inputs[1]
   inner_dim = prod(size(input.data)[2:end])
 
@@ -71,7 +71,7 @@ function forward(sys::System{CPU}, state::InnerProductLayerState, inputs::Vector
   BLAS.gemm!('N', 'N', one, X, state.W.data, one, C_blob.data)
 end
 
-function backward(sys::System{CPU}, state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(sys::System{CPUBackend}, state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   input = inputs[1]
   inner_dim = prod(size(input.data)[2:end])
   num = size(input.data,1)

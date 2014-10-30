@@ -14,7 +14,7 @@ end
 function setup(sys::System, layer::SoftmaxLayer, inputs::Vector{Blob})
   data_type = eltype(inputs[1])
   blobs = Array(Blob, length(layer.tops))
-  if isa(sys.backend, CPU)
+  if isa(sys.backend, CPUBackend)
     for i = 1:length(blobs)
       blobs[i] = CPUBlob(Array(data_type, size(inputs[i],1), 1))
     end
@@ -26,7 +26,7 @@ function setup(sys::System, layer::SoftmaxLayer, inputs::Vector{Blob})
   return state
 end
 
-function forward(sys::System{CPU}, state::SoftmaxLayerState, inputs::Vector{Blob})
+function forward(sys::System{CPUBackend}, state::SoftmaxLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input  = inputs[i]
     output = copy(state.blobs[i].data)
