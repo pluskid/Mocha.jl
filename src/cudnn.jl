@@ -101,11 +101,11 @@ end
 
 function set_tensor4d_descriptor{T<:FloatingPoint}(desc::Tensor4dDescriptor, dtype::Type{T}, dims :: Vector{Int})
   n,c,h,w = dims
-  @cudnncall(:cudnnSetTensor4dDescriptor, (Tensor4dDescriptor, Cint, Cint, Cint, Cint, Cint, Cint), 
+  @cudnncall(:cudnnSetTensor4dDescriptor, (Tensor4dDescriptor, Cint, Cint, Cint, Cint, Cint, Cint),
              desc, CUDNN_TENSOR_NCHW, cudnn_data_type(dtype), n, c, h, w)
 end
 
-function set_tensor4d_descriptor{T<:FloatingPoint}(desc::Tensor4dDescriptor, dtype::Type{T}, 
+function set_tensor4d_descriptor{T<:FloatingPoint}(desc::Tensor4dDescriptor, dtype::Type{T},
                                                    dims :: Vector{Int}, stride :: Vector{Int})
   n, c, h, w = dims
   nStride, cStride, hStride, wStride = stride
@@ -128,6 +128,243 @@ function destroy_tensor4d_descriptor(desc :: Tensor4dDescriptor)
 end
 
 function transform_tensor4d(handle::Handle, src_desc::Tensor4dDescriptor, src::CuPtr, dest_desc::Tensor4dDescriptor, dest::CuPtr)
-  @cudnncall(:cudnnTransformTensor4d, (Handle, Tensor4dDescriptor, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}), 
+  @cudnncall(:cudnnTransformTensor4d, (Handle, Tensor4dDescriptor, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}),
              handle, src_desc, src.p, dest_desc, dest.p)
 end
+
+
+# Tensor bias addition mode
+const CUDNN_ADD_IMAGE   = 0     # add one image to every feature maps of each input
+const CUDNN_ADD_SAME_HW = 0
+const CUDNN_ADD_FEATURE_MAP = 1 # add a set of feature maps to a batch of inputs : tensorBias has n=1 , same nb feature than Src/dest
+const CUDNN_ADD_SAME_CHW    = 1
+const CUDNN_ADD_SAME_C      = 2 # add a tensor of size 1,c,1,1 to every corresponding point of n,c,h,w input
+const CUDNN_ADD_FULL_TENSOR = 3 # add 2 tensors with same n,c,h,w
+
+function add_tensor4d{T<:FloatingPoint}(handle::Handle, mode::Int, alpha::T,
+                                        bias_desc::Tensor4dDescriptor, bias::CuPtr,
+                                        srcdst_desc::Tensor4dDescriptor, srcdst::CuPtr)
+  @assert CUDNN_ADD_IMAGE <= mode <= CUDNN_ADD_FULL_TENSOR
+  @assert typeof(alpha) == get_tensor4d_descriptor(bias_desc)[0]
+  alpha_ptr = T[alpha]
+
+  @cudnncall(:cudnnAddTensor4d, (Handle, Cint, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}),
+            handle, mode, alpha_ptr, bias_desc, bias.p, srcdst_desc, srcdst.p)
+end
+
+function set_tensor4d{T<:FloatingPoint}(handle::Handle, desc::Tensor4dDescriptor, data::CuPtr, val::T)
+  @assert typeof(val) == get_tensor4d_descriptor(desc)[0]
+  val_ptr = T[val]
+
+  @cudnncall(:cudnnSetTensor4d, (Handle, Tensor4dDescriptor, Ptr{Void}, Ptr{Void}),
+             handle, desc, data.p, val_ptr)
+end
+
+
+# Convolution Mode
+const CUDNN_CONVOLUTION       = 0
+const CUDNN_CROSS_CORRELATION = 1
+
+# Convolution Path
+const CUDNN_CONVOLUTION_FWD         = 0 # Tensor Convolution function
+const CUDNN_CONVOLUTION_WEIGHT_GRAD = 1 # Weight Gradient update function
+const CUDNN_CONVOLUTION_DATA_GRAD   = 2 # Data Gradient update function
+
+function create_filter_descriptor()
+  desc = FilterDescriptor[0]
+  @cudnncall(:cudnnCreateFilterDescriptor, (Ptr{FilterDescriptor},), desc)
+  return desc[1]
+end
+function set_filter_descriptor{T<:FloatingPoint}(desc::FilterDescriptor, dtype::Type{T}, dims :: Vector{Int})
+  k,c,h,w = dims
+  @cudnncall(:cudnnSetFilterDescriptor, (FilterDescriptor, Cint, Cint, Cint, Cint, Cint),
+             desc, cudnn_data_type(dtype), k, c, h, w)
+end
+function get_filter_descriptor(desc::FilterDescriptor)
+  k = Cint[0]; c = Cint[0]; h = Cint[0]; w = Cint[0]
+  dtype = Cint[0]
+  @cudnncall(:cudnnGetFilterDescriptor, (FilterDescriptor,Ptr{Cint},Ptr{Cint},Ptr{Cint},Ptr{Cint},Ptr{Cint}),
+             desc, dtype, k, c, h, w)
+  return (cudnn_data_type(dtype[1]), k[1], c[1], h[1], w[1])
+end
+function destroy_filter_descriptor(desc::FilterDescriptor)
+  @cudnncall(:cudnnDestroyFilterDescriptor, (FilterDescriptor,), desc)
+end
+
+function create_convolution_descriptor()
+  desc = ConvolutionDescriptor[0]
+  @cudnncall(:cudnnCreateConvolutionDescriptor, (Ptr{ConvolutionDescriptor},), desc)
+  return desc[1]
+end
+function set_convolution_descriptor(desc::ConvolutionDescriptor, input_desc::Tensor4dDescriptor,
+    filter_desc::FilterDescriptor, pad::Vector{Int}, stride::Vector{Int}, upscale::Vector{Int},
+    conv_mode :: Int)
+
+  @assert CUDNN_CONVOLUTION <= conv_mode CUDNN_CROSS_CORRELATION
+  pad_h, pad_w = pad
+  u, v = stride
+  upscalex, upscaley = upscale
+
+  @cudnncall(:cudnnSetConvolutionDescriptor, (ConvolutionDescriptor, Tensor4dDescriptor,
+                                              FilterDescriptor, Cint, Cint, Cint, Cint,
+                                              Cint, Cint, Cint),
+             desc, input_desc, filter_desc, pad_h, pad_w, u, v, upscalex, upscaley, conv_mode)
+end
+function set_convolution_descriptor_ex(desc::ConvolutionDescriptor, dims::Vector{Int},
+    n_filter::Int, kernel_hw::Vector{Int}, pad::Vector{Int}, stride::Vector{Int},
+    upscale::Vector{Int}, conv_mode::Int)
+
+  @assert CUDNN_CONVOLUTION <= conv_mode CUDNN_CROSS_CORRELATION
+  n,c,h,w = dims
+  r,s = kernel_hw
+  pad_h, pad_w = pad
+  u,v = stride
+  upscalex, upscaley = upscale
+
+  @cudnncall(:cudnnSetConvolutionDescriptorEx, (ConvolutionDescriptor, Cint,Cint,Cint,Cint,
+                                                Cint,Cint,Cint, Cint,Cint, Cint,Cint, Cint,Cint, Cint),
+             desc, n,c,h,w, n_filter, r,s, pad_h,pad_w, u,v, upscalex,upscaley, conv_mode)
+end
+function destroy_convolution_descriptor(desc::ConvolutionDescriptor)
+  @cudnncall(:cudnnDestroyConvolutionDescriptor, (ConvolutionDescriptor,), desc)
+end
+
+# accumulate the result of the operation into output buffer (or overwrite) ?
+const CUDNN_RESULT_ACCUMULATE      = 0 # Evaluate O += I * F
+const CUDNN_RESULT_NO_ACCUMULATE   = 1 # Evaluate O = I * F
+
+function convolution_forward(handle::Handle, src_desc::Tensor4dDescriptor, src::CuPtr,
+    filter_desc::FilterDescriptor, filter::CuPtr, conv::ConvolutionDescriptor,
+    dest_desc::Tensor4dDescriptor, dest::CuPtr, mode::Int)
+
+  @assert CUDNN_RESULT_ACCUMULATE <= mode <= CUDNN_RESULT_NO_ACCUMULATE
+  @cudnncall(:cudnnConvolutionForward, (Handle, Tensor4dDescriptor, Ptr{Void},
+                                        FilterDescriptor, Ptr{Void}, ConvolutionDescriptor,
+                                        Tensor4dDescriptor, Ptr{Void}, Cint),
+             handle, src_desc, src.p, filter_desc, filter.p, conv, dest_desc, dest.p, mode)
+end
+
+function colvolution_backward_bias(handle::Handle, src_desc::Tensor4dDescriptor, src::CuPtr,
+    dest_desc::Tensor4dDescriptor, dest::CuPtr, mode::Int)
+  @assert CUDNN_RESULT_ACCUMULATE <= mode <= CUDNN_RESULT_NO_ACCUMULATE
+  @cudnncall(:cudnnConvolutionBackwardBias, (Handle, Tensor4dDescriptor, Ptr{Void},
+                                             Tensor4dDescriptor, Ptr{Void}, Cint),
+             handle, src_desc, src.p, dest_desc, dest.p, mode)
+end
+
+function convolution_backward_filter(handle::Handle, src_desc::Tensor4dDescriptor, src::CuPtr,
+    diff_desc::Tensor4dDescriptor, diff::CuPtr, conv::ConvolutionDescriptor,
+    grad_desc::FilterDescriptor, grad::CuPtr, mode::Int)
+  @assert CUDNN_RESULT_ACCUMULATE <= mode <= CUDNN_RESULT_NO_ACCUMULATE
+  @cudnncall(:cudnnConvolutionBackwardFilter, (Handle, Tensor4dDescriptor, Ptr{Void},
+                                               Tensor4dDescriptor, Ptr{Void},
+                                               ConvolutionDescriptor,
+                                               FilterDescriptor, Ptr{Void}, Cint),
+             handle, src_desc, src.p, diff_desc, diff.p, conv, grad_desc, grad.p, mode)
+end
+
+function convolution_backward_data(handle::Handle, filter_desc::FilterDescriptor, filter::CuPtr,
+    diff_desc::Tensor4dDescriptor, diff::CuPtr, conv::ConvolutionDescriptor,
+    grad_desc::Tensor4dDescriptor, grad::CuPtr, mode::Int)
+  @assert CUDNN_RESULT_ACCUMULATE <= mode <= CUDNN_RESULT_NO_ACCUMULATE
+  @cudnncall(:cudnnConvolutionForwardData, (Handle, FilterDescriptor, Ptr{Void},
+                                            Tensor4dDescriptor, Ptr{Void},
+                                            ConvolutionDescriptor, Tensor4dDescriptor,
+                                            Ptr{Void}, Cint),
+             handle, filter_desc, filter.p, diff_desc, diff.p, conv, grad_desc, grad.p, mode)
+end
+
+
+const CUDNN_SOFTMAX_FAST     = 0  # straightforward implementation
+const CUDNN_SOFTMAX_ACCURATE = 1  # subtract max from every point to avoid overflow
+
+const CUDNN_SOFTMAX_MODE_INSTANCE = 0 # compute the softmax over all C, H, W for each N
+const CUDNN_SOFTMAX_MODE_CHANNEL = 1  # compute the softmax over all C for each H, W, N
+
+function softmax_forward(handle::Handle, algorithm::Int, mode::Int,
+    src_desc::Tensor4dDescriptor, src::CuPtr, dest_desc::Tensor4dDescriptor, dest::CuPtr)
+  @assert CUDNN_SOFT_MAX_FAST <= algorithm <= CUDNN_SOFTMAX_ACCURATE
+  @assert CUDNN_SOFTMAX_MODE_INSTANCE <= mode <= CUDNN_SOFTMAX_MODE_CHANNEL
+  @cudnncall(:cudnnSoftmaxForward, (Handle, Cint, Cint, Tensor4dDescriptor, Ptr{Void},
+                                    Tensor4dDescriptor, Ptr{Void}),
+             handle, algorithm, mode, src_desc, src.p, dest_desc, dest.p)
+end
+
+function softmax_backward(handle::Handle, algorithm::Int, mode::Int,
+    src_desc::Tensor4dDescriptor, src::CuPtr, srcdiff_desc::Tensor4dDescriptor, srcdiff::CuPtr,
+    destdiff_desc::Tensor4dDescriptor, descdiff::CuPtr)
+  @assert CUDNN_SOFT_MAX_FAST <= algorithm <= CUDNN_SOFTMAX_ACCURATE
+  @assert CUDNN_SOFTMAX_MODE_INSTANCE <= mode <= CUDNN_SOFTMAX_MODE_CHANNEL
+  @cudnncall(:cudnnSoftmaxBackward, (Handle, Cint, Cint, Tensor4dDescriptor, Ptr{Void},
+                                     Tensor4dDescriptor, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}),
+             handle, algorithm, mode, src_desc, src.p, srcdiff_desc, srcdiff.p,
+             destdiff_desc, destdiff.p)
+end
+
+const CUDNN_POOLING_MAX     = 0
+const CUDNN_POOLING_AVERAGE = 1
+
+function create_pooling_descriptor()
+  desc = PoolingDescriptor[0]
+  @cudnncall(:cudnnCreatePoolingDescriptor, (Ptr{PoolingDescriptor},), desc)
+  return desc[1]
+end
+function set_pooling_descriptor(desc::PoolingDescriptor, mode::Int, dims::Vector{Int}, stride::Vector{Int})
+  @assert CUDNN_POOLING_MAX <= mode <= CUDNN_POOLING_AVERAGE
+  h,w = dims
+  stride_h, stride_w = stride
+  @cudnncall(:cudnnSetPoolingDescriptor, (PoolingDescriptor, Cint, Cint,Cint,Cint,Cint),
+             desc, mode, h,w, stride_h, stride_w)
+end
+function get_pooling_descriptor(desc::PoolingDescriptor)
+  mode = Cint[0]
+  h = Cint[0]; w = Cint[0]; stride_h = Cint[0]; stride_w = Cint[0]
+  @cudnncall(:cudnGetPoolingDescriptor, (PoolingDescriptor, Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
+                                         Ptr{Cint}, Ptr{Cint}),
+             desc, mode, h, w, stride_h, stride_w)
+  return (mode[1], (h,w), (stride_h, stride_w))
+end
+function destroy_pooling_descriotpr(desc::PoolingDescriptor)
+  @cudnncall(:cudnnDestroyPoolingDescroptor, (PoolingDescriptor,), desc)
+end
+
+function pooling_forward(handle::Handle, pooling::PoolingDescriptor,
+    src_desc::Tensor4dDescriptor, src::CuPtr, dest_desc::Tensor4dDescriptor, dest::CuPtr)
+  @cudnncall(:cudnnPoolingForward, (Handle, PoolingDescriptor, Tensor4dDescriptor, Ptr{Void},
+                                    Tensor4dDescriptor, Ptr{Void}),
+             handle, pooling, src_desc, src.p, dest_desc, dest.p)
+end
+function pooling_backward(handle::Handle, pooling::PoolingDescriptor,
+    src_desc::Tensor4dDescriptor, src::CuPtr, srcdiff_desc::Tensor4dDescriptor, srcdiff::CuPtr,
+    dest_desc::Tensor4dDescriptor, dest::CuPtr, destdiff_desc::Tensor4dDescriptor, destdiff::CuPtr)
+  @cudnncall(:cudnnPoolingBackward, (Handle, PoolingDescriptor, Tensor4dDescriptor, Ptr{Void},
+                                     Tensor4dDescriptor, Ptr{Void},Tensor4dDescriptor, Ptr{Void},
+                                     Tensor4dDescriptor, Ptr{Void}),
+             handle, pooling, src_desc, src.p, srcdiff_desc, srcdiff.p,
+             dest_desc, dest.p, destdiff_desc, destdiff.p)
+end
+
+
+const CUDNN_ACTIVATION_SIGMOID = 0
+const CUDNN_ACTIVATION_RELU    = 1
+const CUDNN_ACTIVATION_TANH    = 2
+
+function activation_forward(handle::Handle, mode::Int, src_desc::Tensor4dDescriptor, src::CuPtr,
+    dest_desc::Tensor4dDescriptor, dest::CuPtr)
+  @assert CUDNN_ACTIVATION_SIGMOID <= mode <+ CUDNN_ACTIVATION_TANH
+  @cudnncall(:cudnnActivationForward, (Handle, Cint, Tensor4dDescriptor, Ptr{Void},
+                                       Tensor4dDescriptor, Ptr{Void}),
+             handle, mode, src_desc, src.p, dest_desc, dest.p)
+end
+function activation_backward(handle::Handle, mode::Int,
+    src_desc::Tensor4dDescriptor, src::CuPtr, srcdiff_desc::Tensor4dDescriptor, srcdiff::CuPtr,
+    dest_desc::Tensor4dDescriptor, dest::CuPtr, destdiff_desc::Tensor4dDescriptor, destdiff::CuPtr)
+  @assert CUDNN_ACTIVATION_SIGMOID <= mode <+ CUDNN_ACTIVATION_TANH
+  @cudnncall(:cudnnActivationBackward, (Handle, Cint, Tensor4dDescriptor, Ptr{Void},
+                                     Tensor4dDescriptor, Ptr{Void},Tensor4dDescriptor, Ptr{Void},
+                                     Tensor4dDescriptor, Ptr{Void}),
+             handle, mode, src_desc, src.p, srcdiff_desc, srcdiff.p,
+             dest_desc, dest.p, destdiff_desc, destdiff.p)
+end
+
+end # module
