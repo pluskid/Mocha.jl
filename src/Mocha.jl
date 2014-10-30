@@ -3,8 +3,8 @@ module Mocha
 include("macros.jl")
 
 include("base.jl")
-include("cuda/cuda.jl")
 include("blob.jl")
+include("cuda/cuda.jl")
 include("initializers.jl")
 include("regularizers.jl")
 include("neurons.jl")

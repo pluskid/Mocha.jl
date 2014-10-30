@@ -9,6 +9,6 @@ type ConstantInitializer <: Initializer
 end
 
 function init(initializer::ConstantInitializer, blob::Blob)
-  blob[:] = initializer.value
+  fill!(blob, initializer.value)
 end
 

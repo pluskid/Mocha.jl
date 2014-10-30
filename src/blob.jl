@@ -1,8 +1,8 @@
 export Blob
 export CPUBlob, NullBlob
 
-import Base: eltype, size, getindex, setindex!, endof
-export       eltype, size, getindex, setindex!, endof
+import Base: eltype, size, length
+export       eltype, size, length, copy!
 
 ############################################################
 # A blob is an abstract concept that is suppose
@@ -19,10 +19,6 @@ abstract Blob
 # and mainly for components that do not need
 # to know the underlying backend (e.g. Filler).
 ############################################################
-function backend(blob :: Blob)
-  error("Not implemented (should return the backend)")
-end
-
 function eltype(blob :: Blob)
   error("Not implemented (should return the element type)")
 end
@@ -30,21 +26,22 @@ end
 function size(blob :: Blob)
   error("Not implemented (should return the size of data)")
 end
-function endof(blob :: Blob)
-  prod(size(blob))
-end
 function size(blob :: Blob, dim :: Int)
   size(blob)[dim]
 end
-
-function getindex(blob :: Blob, idx...)
-  error("Not implemented (should return data at given idx)")
+function length(blob :: Blob)
+  return prod(size(blob))
 end
 
-function setindex!(blob :: Blob, value, idx...)
-  error("Not implemented (should set value at given idx)")
+function copy!(dst :: Array, src :: Blob)
+  error("Not implemented (should copy content of src to dst)")
 end
-
+function copy!(dst :: Blob, src :: Array)
+  error("Not implemented (should copy content of src to dst)")
+end
+function fill!(dst :: Blob, val)
+  error("Not implemented (should fill dst with val)")
+end
 
 ############################################################
 # A Dummy Blob type holding nothing
@@ -60,7 +57,17 @@ type CPUBlob{T <: NumericRoot} <: Blob
 end
 
 eltype{T}(::CPUBlob{T}) = T
-
 size(blob::CPUBlob) = size(blob.data)
-getindex(blob::CPUBlob,idx...) = getindex(blob.data,idx...)
-setindex!(blob::CPUBlob,idx...) = setindex!(blob.data,idx...)
+
+function copy!{T}(dst :: Array{T}, src :: CPUBlob{T})
+  @assert length(dst) == length(src)
+  dst[:] = src.data[:]
+end
+function copy!{T}(dst :: CPUBlob{T}, src :: Array{T})
+  @assert length(dst) == length(src)
+  dst.data[:] = src[:]
+end
+
+function fill!{T}(dst :: CPUBlob{T}, src)
+  dst.data[:] = convert(eltype(dst.data), src)
+end
