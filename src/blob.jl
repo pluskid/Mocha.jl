@@ -2,7 +2,7 @@ export Blob
 export CPUBlob, NullBlob
 
 import Base: eltype, size, length
-export       eltype, size, length, copy!
+export       eltype, size, length, copy!, fill!
 
 ############################################################
 # A blob is an abstract concept that is suppose

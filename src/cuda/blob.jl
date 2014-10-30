@@ -40,5 +40,5 @@ end
 function fill!{T}(dst :: CuTensorBlob{T}, val)
   val = convert(T, val)
   val = convert(Ptr{Void}, T[val])
-  CuBLAS.set_vector(length(dst), sizeof(T), val, 0, dst, 1)
+  CuBLAS.set_vector(length(dst), sizeof(T), val, 0, dst.ptr, 1)
 end
