@@ -1,3 +1,5 @@
+export CuDNN
+
 module CuDNN
 using CUDA
 

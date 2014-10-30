@@ -1,17 +1,11 @@
 export NumericRoot
 
-export Backend, CPU, GPU
 export System
 
 # Numerical computations are only supported
 # for number types that are subtype of this
 # NumericRoot in Mocha
-typealias NumericRoot FloatingPoint 
-
-abstract Backend
-
-type CPU <: Backend; end
-type CUDNN <: Backend; end
+typealias NumericRoot FloatingPoint
 
 type System{T <: Backend}
   backend :: T
@@ -20,4 +14,11 @@ type System{T <: Backend}
   learning_rate :: NumericRoot
   momentum :: NumericRoot
   max_iter :: Int
+end
+
+function init(sys::System)
+  init(sys.backend)
+end
+function shutdown(sys::System)
+  shutdown(sys.backend)
 end
