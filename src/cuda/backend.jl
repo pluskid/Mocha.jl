@@ -1,16 +1,3 @@
-export Backend, CPU, CuDNN
-
-using CUDA
-
-abstract Backend
-
-function init(backend::Backend)
-end
-function shutdown(backend::Backend)
-end
-
-type CPU <: Backend; end
-
 type CuDNNBackend <: Backend
   initialized:: Bool
   cu_ctx     :: CuContext
@@ -37,4 +24,5 @@ function shutdown(backend::CuDNNBackend)
   CuDNN.destroy(backend.cudnn_ctx)
   abckend.initialized = false
 end
+
 

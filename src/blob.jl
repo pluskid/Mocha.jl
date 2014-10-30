@@ -1,8 +1,8 @@
 export Blob
 export CPUBlob, NullBlob
 
-import Base:    eltype, size, getindex, setindex!, endof
-export backend, eltype, size, getindex, setindex!, endof
+import Base: eltype, size, getindex, setindex!, endof
+export       eltype, size, getindex, setindex!, endof
 
 ############################################################
 # A blob is an abstract concept that is suppose
@@ -59,7 +59,6 @@ type CPUBlob{T <: NumericRoot} <: Blob
   data :: Array{T}
 end
 
-backend(::CPUBlob) = CPU()
 eltype{T}(::CPUBlob{T}) = T
 
 size(blob::CPUBlob) = size(blob.data)

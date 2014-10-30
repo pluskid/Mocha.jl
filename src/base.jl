@@ -1,6 +1,15 @@
 export NumericRoot
 
 export System
+export Backend, CPU
+
+abstract Backend
+function init(backend::Backend)
+end
+function shutdown(backend::Backend)
+end
+
+type CPU <: Backend; end
 
 # Numerical computations are only supported
 # for number types that are subtype of this
