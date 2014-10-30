@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 
+mkdir -p data
 cd data
 
 for dset in train-images-idx3-ubyte.gz train-labels-idx1-ubyte.gz \
