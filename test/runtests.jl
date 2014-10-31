@@ -10,4 +10,6 @@ include("layers/memory-data.jl")
 
 include("layers/inner-product.jl")
 
+include("layers/square-loss.jl")
+
 shutdown(sys_cudnn)
