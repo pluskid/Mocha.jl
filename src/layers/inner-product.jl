@@ -126,7 +126,7 @@ function forward(sys::System{CuDNNBackend}, state::InnerProductLayerState, input
                 state.W.ptr, K, input.ptr, K, convert(dtype, 0), output.ptr, M)
     # output += bias
     CuBLAS.gemm(sys.backend.cublas_ctx, CuBLAS.CUBLAS_OP_N, CuBLAS.CUBLAS_OP_N, M, N, 1, convert(dtype, 1),
-                state.b.ptr, 1, state.bias_multiplier.ptr, N, convert(dtype, 1), output.ptr, M)
+                state.b.ptr, N, state.bias_multiplier.ptr, 1, convert(dtype, 1), output.ptr, M)
   end
 end
 
