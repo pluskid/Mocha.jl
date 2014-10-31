@@ -1,3 +1,5 @@
+export CuDNNBackend
+
 type CuDNNBackend <: Backend
   initialized:: Bool
   cu_ctx     :: CuContext

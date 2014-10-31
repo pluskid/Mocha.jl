@@ -1,4 +1,5 @@
 export Backend, CPUBackend
+export init, shutdown
 
 abstract Backend
 function init(backend::Backend)

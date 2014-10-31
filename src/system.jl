@@ -1,4 +1,5 @@
 export System
+export init, shutdown
 
 type System{T <: Backend}
   backend :: T

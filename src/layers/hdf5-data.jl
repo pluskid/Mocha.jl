@@ -30,12 +30,13 @@ type HDF5DataLayerState <: LayerState
     state.blobs = Array(Blob, length(layer.tops))
     for i = 1:length(state.blobs)
       dims = size(state.curr_hdf5_file[layer.tops[i]])
-      dims = tuple(layer.batch_size, dims[2:end]...)
+      dims = tuple(dims[1:3]..., layer.batch_size)
 
-      idx = [1:x for x in dims]
       dset = state.curr_hdf5_file[layer.tops[i]]
       if isa(sys.backend, CPUBackend)
-        state.blobs[i] = CPUBlob(dset[idx...])
+        state.blobs[i] = CPUBlob(Array(eltype(dset), dims))
+      elseif isa(sys.backend, CuDNNBackend)
+        blobs[i] = cudnn_make_tensor_blob(eltype(dset), dims...)
       else
         error("Backend $(sys.backend) not supported")
       end
@@ -55,22 +56,24 @@ end
 function forward(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob})
   n_done = 0
   while n_done < state.layer.batch_size
-    n_remain = size(state.curr_hdf5_file[state.layer.tops[1]])[1] - state.curr_index + 1
+    n_remain = size(state.curr_hdf5_file[state.layer.tops[1]])[4] - state.curr_index + 1
     if n_remain == 0
       close(state.curr_hdf5_file)
       state.curr_source = state.curr_source % length(state.sources) + 1
       state.curr_hdf5_file = h5open(state.sources[state.curr_source], "r")
       state.curr_index = 1
-      n_remain = size(state.curr_hdf5_file[state.layer.tops[1]])[1]
+      n_remain = size(state.curr_hdf5_file[state.layer.tops[1]])[4]
     end
 
     n1 = min(state.layer.batch_size-n_done, n_remain)
 
     if n1 > 0
       for i = 1:length(state.blobs)
-        idx = map(x -> 1:x, size(state.blobs[i].data)[2:end])
+        idx = map(x -> 1:x, size(state.blobs[i].data)[1:3])
         dset = state.curr_hdf5_file[state.layer.tops[i]]
-        state.blobs[i][n_done+1:n_done+n1, idx...] = dset[state.curr_index:state.curr_index+n1-1, idx...]
+        the_data = dset[idx..., state.curr_index:state.curr_index+n1-1]
+        set_blob_data(the_data, state.blobs[i], n_done+1)
+        #state.blobs[i][n_done+1:n_done+n1, idx...] = dset[state.curr_index:state.curr_index+n1-1, idx...]
       end
     end
     state.curr_index += n1
@@ -78,3 +81,11 @@ function forward(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob})
   end
 end
 
+function set_blob_data(data::Array, blob::CPUBlob, blob_idx::Int)
+  n_fea = prod(size(blob)[1:3])
+  blob.data[(blob_idx-1)*n_fea+1:blob_idx*n_fea] = data
+end
+function set_blob_data{T}(data::Array{T}, blob::CuTensorBlob{T}, blob_idx::Int)
+  ptr = blob.ptr + sizeof(T) * (blob_idx-1) # note 0-based indexing in CUDA Vector
+  CuBLAS.set_vector(data, 1, ptr, 1)
+end

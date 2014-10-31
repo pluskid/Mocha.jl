@@ -1,13 +1,15 @@
+println("-- Testing HDF5DataLayer...")
+
 using HDF5
 
 ############################################################
 # Prepare Data for Testing
 ############################################################
 batch_size = 3
-data_dim = (2,3,4)
+data_dim = (2,)#(2,3,4)
 eps = 1e-15
 
-data_all = [rand(data_dim..., x) for x in [5 1 2]]
+data_all = [rand(x, data_dim...) for x in [5 1 2]]
 h5fn_all = [string(tempname(), ".hdf5") for x in 1:length(data_all)]
 
 for i = 1:length(data_all)
@@ -26,18 +28,17 @@ end
 ############################################################
 # Setup
 ############################################################
+sys = System(CPU())
 
-# batch size is determined by
+# batch size is determined by 
 layer = HDF5DataLayer(; source = source_fn, tops = String["data"], batch_size=batch_size)
-state = setup(sys_cudnn, layer, Blob[])
+state = setup(sys, layer, Blob[])
 
-data = cat(4, data_all...)
-data = cat(4, data, data)
+data = cat(1, data_all...)
+data = cat(1, data, data)
 
-data_idx = map(data_dim, x->1:x)
-layer_data = Array(eltype(data), tuple(data_dim..., batch_size))
+data_idx = map(x->1:x, data_dim)
 for i = 1:batch_size:size(data,1)-batch_size
   forward(sys, state, Blob[])
-  copy!(layer_data, state.blobs[1])
-  @test all(-eps .< layer_data - data[i:i+batch_size-1, data_idx...] .< eps)
+  @test all(-eps .< state.blobs[1].data - data[i:i+batch_size-1, data_idx...] .< eps)
 end
