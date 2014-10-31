@@ -16,15 +16,17 @@ function init(backend::CuDNNBackend)
   backend.cu_ctx = create_context(dev)
   backend.cublas_ctx = CuBLAS.create()
   backend.cudnn_ctx = CuDNN.create()
+  backend.initialized = true
 end
 
 function shutdown(backend::CuDNNBackend)
   @assert backend.initialized == true
 
-  destroy(backend.cu_ctx)
-  CuBLAS.destroy(backend.cublas_ctx)
+  # NOTE: destroy should be in reverse order of init
   CuDNN.destroy(backend.cudnn_ctx)
-  abckend.initialized = false
+  CuBLAS.destroy(backend.cublas_ctx)
+  destroy(backend.cu_ctx)
+  backend.initialized = false
 end
 
 

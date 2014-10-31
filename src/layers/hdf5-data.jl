@@ -36,7 +36,7 @@ type HDF5DataLayerState <: LayerState
       if isa(sys.backend, CPUBackend)
         state.blobs[i] = CPUBlob(Array(eltype(dset), dims))
       elseif isa(sys.backend, CuDNNBackend)
-        blobs[i] = cudnn_make_tensor_blob(eltype(dset), dims...)
+        state.blobs[i] = cudnn_make_tensor_blob(eltype(dset), dims...)
       else
         error("Backend $(sys.backend) not supported")
       end

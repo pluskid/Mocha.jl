@@ -1,5 +1,5 @@
 using Mocha
-using FactCheck
+using Base.Test
 
 backend_cudnn = CuDNNBackend()
 sys_cudnn = System(backend_cudnn, 0.0005, 0.01, 0.9, 5000)

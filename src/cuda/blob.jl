@@ -46,21 +46,21 @@ end
 # Get canonical 4D tensor dims
 # Note we store data in column-major order, thus
 # the data shape is width, height, channel, num
-function get_nchw_dim(dims...)
-  dims = convert(Vector{Int}, dims)
+function get_nchw_dims(dims...)
+  dims = convert(NTuple{4, Int}, dims)
   if length(dims) > 4
     error("Tensor dimension ($(length(dims))) twoo high, only 4D tensor supported")
   end
   if length(dims) < 4
     # add singleton dimensions
-    dims = tuple(ones(Int, 4-length(dims)), dims...)
+    dims = tuple(ones(Int, 4-length(dims))..., dims...)
   end
   return dims
 end
 
 function cudnn_make_tensor_blob(dtype::Type, dims...)
   desc = CuDNN.create_tensor4d_descriptor()
-  dims = get_nchw_dims(dims)
+  dims = get_nchw_dims(dims...)
   CuDNN.set_tensor4d_descriptor(desc, dtype, dims)
   return CuTensorBlob(dtype, CuTensorBlobDescriptor(desc), dims...)
 end
