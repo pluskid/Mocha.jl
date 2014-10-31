@@ -33,7 +33,8 @@ const cublas_error_description = [
 import Base.show
 show(io::IO, error::CuBLASError) = print(io, cublas_error_description[error.code])
 
-macro cublascall(f, argtypes, args...)
+macro cublascall(fv, argtypes, args...)
+  f = eval(fv)
   quote
     _curet = ccall( ($(Meta.quot(f)), "libcublas"), Cint, $argtypes, $(args...)  )
     if int(_curet) != CUBLAS_STATUS_SUCCESS
@@ -92,24 +93,26 @@ const CUBLAS_OP_T=1
 const CUBLAS_OP_C=2
 
 # C = α A * B + β C
-for dtype in (Float32, Float64)
-  if dtype == Float32
-    cublas_gemm_func = :cublasSgemm_v2
-  elseif dtype == Float64
-    cublas_gemm_func = :cublasDgemm_v2
-  end
-  @eval begin
-    function gemm(handle::Handle, trans_a::Int, trans_b::Int, m::Int, n::Int, k::Int,
-        alpha::$dtype, A::CuPtr, lda::Int, B::CuPtr, ldb::Int, beta::$dtype, C::CuPtr, ldc::Int)
-      @assert CUBLAS_OP_N <= trans_a <= CUBLAS_OP_C
-      @assert CUBLAS_OP_N <= trans_b <+ CUBLAS_OP_C
-      alpha_box = $dtype[alpha]
-      beta_box = $dtype[beta]
-      @cublascall($cublas_gemm_func, (Handle, Cint,Cint, Cint,Cint,Cint, Ptr{Void},
-          Ptr{Void},Cint, Ptr{Void},Cint, Ptr{Void}, Ptr{Void},Cint),
-          handle, trans_a, trans_b, m, n, k, alpha_box, A, lda, B, ldb, beta_box, C, ldc)
-    end
-  end
+function gemm{T}(handle::Handle, trans_a::Int, trans_b::Int, m::Int, n::Int, k::Int,
+    alpha::T, A::CuPtr, lda::Int, B::CuPtr, ldb::Int, beta::T, C::CuPtr, ldc::Int)
+  @assert CUBLAS_OP_N <= trans_a <= CUBLAS_OP_C
+  @assert CUBLAS_OP_N <= trans_b <+ CUBLAS_OP_C
+  alpha_box = T[alpha]
+  beta_box = T[beta]
+  gemm_impl(handle, trans_a, trans_b, m, n, k, alpha_box, A, lda, B, ldb, beta_box, C, ldc)
+end
+
+function gemm_impl(handle::Handle, trans_a::Int, trans_b::Int, m::Int, n::Int, k::Int,
+    alpha_box::Array{Float32}, A::CuPtr, lda::Int, B::CuPtr, ldb::Int, beta_box::Array{Float32}, C::CuPtr, ldc::Int)
+  @cublascall(:cublasSgemm_v2, (Handle, Cint,Cint, Cint,Cint,Cint, Ptr{Void},
+      Ptr{Void},Cint, Ptr{Void},Cint, Ptr{Void}, Ptr{Void},Cint),
+      handle, trans_a, trans_b, m, n, k, alpha_box, A.p, lda, B.p, ldb, beta_box, C.p, ldc)
+end
+function gemm_impl(handle::Handle, trans_a::Int, trans_b::Int, m::Int, n::Int, k::Int,
+    alpha_box::Array{Float64}, A::CuPtr, lda::Int, B::CuPtr, ldb::Int, beta_box::Array{Float64}, C::CuPtr, ldc::Int)
+  @cublascall(:cublasDgemm_v2, (Handle, Cint,Cint, Cint,Cint,Cint, Ptr{Void},
+      Ptr{Void},Cint, Ptr{Void},Cint, Ptr{Void}, Ptr{Void},Cint),
+      handle, trans_a, trans_b, m, n, k, alpha_box, A.p, lda, B.p, ldb, beta_box, C.p, ldc)
 end
 
 end # module

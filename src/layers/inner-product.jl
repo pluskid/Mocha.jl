@@ -46,8 +46,8 @@ type InnerProductLayerState <: LayerState
       #state.∇b = CPUBlob(Array(data_type, (right_dim)))
     elseif isa(sys.backend, CuDNNBackend)
       for i = 1:length(inputs)
-        blobs[i] = cudnn_make_tensor_blob(data_type, fea_size, nums)
-        blobs_diff[i] = cudnn_make_tensor_blob(data_type, fea_size, nums)
+        blobs[i] = cudnn_make_tensor_blob(data_type, out_dim, nums)
+        blobs_diff[i] = cudnn_make_tensor_blob(data_type, out_dim, nums)
       end
 
       state = new(layer, blobs, blobs_diff)
@@ -57,6 +57,7 @@ type InnerProductLayerState <: LayerState
       state.∇b = cudnn_make_pod_blob(data_type, out_dim)
 
       state.bias_multiplier = cudnn_make_pod_blob(data_type, nums)
+      fill!(state.bias_multiplier, 1)
     else
       error("Backend $(sys.backend) not supported")
     end
@@ -112,7 +113,7 @@ function backward(sys::System{CPUBackend}, state::InnerProductLayerState, inputs
 end
 
 
-function forward(sys::System{CuDNNBackend}, state::InnerProductLayerState, inputs::Vector{blob})
+function forward(sys::System{CuDNNBackend}, state::InnerProductLayerState, inputs::Vector{Blob})
   M = size(state.W, 4)   # target dim
   N = size(inputs[1], 4) # batch size
   K = size(state.W, 3)   # source dim
@@ -121,10 +122,10 @@ function forward(sys::System{CuDNNBackend}, state::InnerProductLayerState, input
     input = inputs[i]
     output = state.blobs[i]
     # output = W^T * X
-    CuBLAS.gemm(sys.backend.cublas_ctx, CUBLAS_OP_T, CUBLAS_OP_N, M, N, K, convert(dtype, 1),
+    CuBLAS.gemm(sys.backend.cublas_ctx, CuBLAS.CUBLAS_OP_T, CuBLAS.CUBLAS_OP_N, M, N, K, convert(dtype, 1),
                 state.W.ptr, K, input.ptr, K, convert(dtype, 0), output.ptr, M)
     # output += bias
-    CuBLAS.gemm(sys.backend.cublas_ctx, CUBLAS_OP_T, CUBLAS_OP_N, M, N, 1, convert(dtype, 1),
+    CuBLAS.gemm(sys.backend.cublas_ctx, CuBLAS.CUBLAS_OP_T, CuBLAS.CUBLAS_OP_N, M, N, 1, convert(dtype, 1),
                 state.b.ptr, 1, state.bias_multiplier.ptr, 1, convert(dtype, 1), output.ptr, M)
   end
 end

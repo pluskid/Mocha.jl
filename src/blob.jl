@@ -1,7 +1,7 @@
 export Blob
 export CPUBlob, NullBlob
 
-import Base: eltype, size, length
+import Base: eltype, size, length, copy!, fill!
 export       eltype, size, length, copy!, fill!
 
 ############################################################

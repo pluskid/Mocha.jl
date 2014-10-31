@@ -17,13 +17,13 @@ type CuTensorBlob{T<:FloatingPoint} <: Blob
 
   desc  :: CuBlobDescriptor
 end
-function CuTensorBlob{T<:FloatingPoint}(dtype::Type{T}, desc::CuBlobDescriptor, n::Int, c::Int, h::Int, w::Int)
+function CuTensorBlob{T<:FloatingPoint}(dtype::Type{T}, desc::CuBlobDescriptor, w::Int, h::Int, c::Int, n::Int)
   len = n*c*h*w
   ptr = CUDA.cualloc(dtype, len)
   return CuTensorBlob{T}(ptr, (w,h,c,n), len, desc)
 end
-CuTensorBlob(dtype::Type; desc::CuBlobDescriptor=CuPODBlobDescriptor(), n::Int=1, c::Int=1, h::Int=1, w::Int=1) =
-    CuTensorBlob(dtype, desc, n, c, h, w)
+CuTensorBlob(dtype::Type; desc::CuBlobDescriptor=CuPODBlobDescriptor(), w::Int=1, h::Int=1, c::Int=1, n::Int=1) =
+    CuTensorBlob(dtype, desc, w, h, c, n)
 
 length(b::CuTensorBlob) = b.len
 size(b::CuTensorBlob) = b.shape
@@ -38,16 +38,15 @@ function copy!{T}(dst :: Array{T}, src :: CuTensorBlob{T})
   CuBLAS.get_vector(src.ptr, dst)
 end
 function fill!{T}(dst :: CuTensorBlob{T}, val)
-  val = convert(T, val)
-  val = convert(Ptr{Void}, T[val])
-  CuBLAS.set_vector(length(dst), sizeof(T), val, 0, dst.ptr, 1)
+  val_vec = Array(T, length(dst))
+  fill!(val_vec, val)
+  copy!(dst, val_vec)
 end
 
 # Get canonical 4D tensor dims
 # Note we store data in column-major order, thus
 # the data shape is width, height, channel, num
 function get_nchw_dims(dims...)
-  dims = convert(NTuple{4, Int}, dims)
   if length(dims) > 4
     error("Tensor dimension ($(length(dims))) twoo high, only 4D tensor supported")
   end

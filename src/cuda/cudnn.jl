@@ -35,7 +35,8 @@ const cudnn_error_description = [
 import Base.show
 show(io::IO, error::CuDNNError) = print(io, cudnn_error_description[error.code])
 
-macro cudnncall(f, argtypes, args...)
+macro cudnncall(fv, argtypes, args...)
+  f = eval(fv)
   quote
     _curet = ccall( ($(Meta.quot(f)), "libcudnn"), Cint, $argtypes, $(args...)  )
     if int(_curet) != CUDNN_STATUS_SUCCESS
@@ -101,14 +102,14 @@ function create_tensor4d_descriptor()
 end
 
 function set_tensor4d_descriptor{T<:FloatingPoint}(desc::Tensor4dDescriptor, dtype::Type{T}, dims :: NTuple{4, Int})
-  n,c,h,w = dims
+  w,h,c,n = dims
   @cudnncall(:cudnnSetTensor4dDescriptor, (Tensor4dDescriptor, Cint, Cint, Cint, Cint, Cint, Cint),
              desc, CUDNN_TENSOR_NCHW, cudnn_data_type(dtype), n, c, h, w)
 end
 
 function set_tensor4d_descriptor{T<:FloatingPoint}(desc::Tensor4dDescriptor, dtype::Type{T},
                                                    dims :: NTuple{4, Int}, stride :: NTuple{4, Int})
-  n, c, h, w = dims
+  w, h, c, n = dims
   nStride, cStride, hStride, wStride = stride
   @cudnncall(:cudnnSetTensor4dDescriptorEx, (Tensor4dDescriptor, Cint, Cint, Cint, Cint, Cint, Cint, Cint, Cint, Cint, Cint),
              desc, CUDNN_TENSOR_NCHW, cudnn_data_type(dtype), n,c,h,w,nStride,cStride,hStride,wStride)
@@ -121,7 +122,7 @@ function get_tensor4d_descriptor(desc::Tensor4dDescriptor)
   @cudnncall(:cudnnGetTensor4dDescriptor, (Tensor4dDescriptor, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
                                            Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}), desc, dtype, n,c,h,w,
                                            nStride, cStride, hStride, wStride)
-  return (cudnn_data_type(dtype[1]), (n[1],c[1],h[1],w[1]), (nStride[1],cStride[1],hStride[1],wStride[1]))
+  return (cudnn_data_type(dtype[1]), (w[1],h[1],c[1],n[1]), (nStride[1],cStride[1],hStride[1],wStride[1]))
 end
 
 function destroy_tensor4d_descriptor(desc :: Tensor4dDescriptor)
@@ -177,7 +178,7 @@ function create_filter_descriptor()
   return desc[1]
 end
 function set_filter_descriptor{T<:FloatingPoint}(desc::FilterDescriptor, dtype::Type{T}, dims :: NTuple{4, Int})
-  k,c,h,w = dims
+  w,h,c,k = dims
   @cudnncall(:cudnnSetFilterDescriptor, (FilterDescriptor, Cint, Cint, Cint, Cint, Cint),
              desc, cudnn_data_type(dtype), k, c, h, w)
 end
@@ -186,7 +187,7 @@ function get_filter_descriptor(desc::FilterDescriptor)
   dtype = Cint[0]
   @cudnncall(:cudnnGetFilterDescriptor, (FilterDescriptor,Ptr{Cint},Ptr{Cint},Ptr{Cint},Ptr{Cint},Ptr{Cint}),
              desc, dtype, k, c, h, w)
-  return (cudnn_data_type(dtype[1]), k[1], c[1], h[1], w[1])
+  return (cudnn_data_type(dtype[1]), w[1], h[1], c[1], k[1])
 end
 function destroy_filter_descriptor(desc::FilterDescriptor)
   @cudnncall(:cudnnDestroyFilterDescriptor, (FilterDescriptor,), desc)
@@ -216,7 +217,7 @@ function set_convolution_descriptor_ex(desc::ConvolutionDescriptor, dims::NTuple
     upscale::NTuple{2, Int}, conv_mode::Int)
 
   @assert CUDNN_CONVOLUTION <= conv_mode CUDNN_CROSS_CORRELATION
-  n,c,h,w = dims
+  w,h,c,n = dims
   r,s = kernel_hw
   pad_h, pad_w = pad
   u,v = stride

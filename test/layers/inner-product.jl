@@ -6,7 +6,7 @@ function test_hdf5_data_layer(sys::System)
   ############################################################
   batch_size   = 50
   orig_dim_all = (10, 20, 3)
-  orig_dim     = prod(orig_dim)
+  orig_dim     = prod(orig_dim_all)
   target_dim   = 30
   eps          = 1e-10
 
@@ -17,11 +17,13 @@ function test_hdf5_data_layer(sys::System)
   ############################################################
   # Setup
   ############################################################
-  layer  = InnerProductLayer(; output_dim=right_dim, tops = String["result"], bottoms=String["input"])
+  layer  = InnerProductLayer(; output_dim=target_dim, tops = String["result"], bottoms=String["input"])
   if isa(sys.backend, CPUBackend)
     error("TODO")
   elseif isa(sys.backend, CuDNNBackend)
-    inputs = Blob[Mocha.cudnn_make_pod_blob(Float64, orig_dim_all..., batch_size)]
+    input = Mocha.cudnn_make_pod_blob(Float64, orig_dim_all..., batch_size)
+    copy!(input, X)
+    inputs = Blob[input]
   end
   state  = setup(sys, layer, inputs)
 
@@ -30,10 +32,10 @@ function test_hdf5_data_layer(sys::System)
   copy!(state.W, W)
   copy!(state.b, b)
 
-  forward(system, state, inputs)
+  forward(sys, state, inputs)
 
   X2 = reshape(X, orig_dim, batch_size)
-  res = W' * X .+ b
+  res = W' * X2 .+ b
 
   res_layer = similar(res)
   copy!(res_layer, state.blobs[1])
