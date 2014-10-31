@@ -11,7 +11,7 @@ type MemoryDataLayerState <: LayerState
   curr_idx :: Int
 
   MemoryDataLayerState(sys::System, layer::MemoryDataLayer) = begin
-    blobs = Array(CPUBlob, length(layer.tops))
+    blobs = Array(Blob, length(layer.tops))
     for i = 1:length(blobs)
       dims = tuple(size(layer.data[i])[1:3]..., layer.batch_size)
       idxs = map(x -> 1:x, dims)

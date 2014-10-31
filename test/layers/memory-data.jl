@@ -1,5 +1,5 @@
 function test_memory_data_layer()
-  println("-- Testing HDF5 Data Layer...")
+  println("-- Testing Memory Data Layer...")
 
   ############################################################
   # Prepare Data for Testing
@@ -15,7 +15,7 @@ function test_memory_data_layer()
   ############################################################
 
   # batch size is determined by
-  layer = MemoryDataLayer(; data = data, tops = String["data"], batch_size=batch_size)
+  layer = MemoryDataLayer(; data = Array[data], tops = String["data"], batch_size=batch_size)
   state = setup(sys_cudnn, layer, Blob[])
 
   data_idx = map(x->1:x, data_dim)
