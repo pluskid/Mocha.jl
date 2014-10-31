@@ -125,7 +125,30 @@ function forward(sys::System{CuDNNBackend}, state::InnerProductLayerState, input
     CuBLAS.gemm(sys.backend.cublas_ctx, CuBLAS.CUBLAS_OP_T, CuBLAS.CUBLAS_OP_N, M, N, K, convert(dtype, 1),
                 state.W.ptr, K, input.ptr, K, convert(dtype, 0), output.ptr, M)
     # output += bias
-    CuBLAS.gemm(sys.backend.cublas_ctx, CuBLAS.CUBLAS_OP_T, CuBLAS.CUBLAS_OP_N, M, N, 1, convert(dtype, 1),
-                state.b.ptr, 1, state.bias_multiplier.ptr, 1, convert(dtype, 1), output.ptr, M)
+    CuBLAS.gemm(sys.backend.cublas_ctx, CuBLAS.CUBLAS_OP_N, CuBLAS.CUBLAS_OP_N, M, N, 1, convert(dtype, 1),
+                state.b.ptr, 1, state.bias_multiplier.ptr, N, convert(dtype, 1), output.ptr, M)
+  end
+end
+
+function backward(sys::System{CuDNNBackend}, state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+  target_dim = size(state.W, 4)
+  source_dim = size(state.W, 3)
+  batch_size = size(inputs[1], 4)
+  data_type  = eltype(state.W)
+
+  # used in BLAS, at first it is zero, indicating overwriting the data
+  # then it becomes one, indicating adding to the data
+  zero_and_then_one = convert(data_type, 0)
+
+  for i = 1:length(inputs)
+    # ∂f/∂W = input * [∂f/∂o]^T
+    input = inputs[i]
+    ∂f_∂o = state.blobs_diff[i]
+    CuBLAS.gemm(sys.backend.cublas_ctx, CuBLAS.CUBLAS_OP_N, CuBLAS.CUBLAS_OP_T, source_dim, target_dim, batch_size,
+        convert(data_type, 1), input.ptr, source_dim, ∂f_∂o.ptr, target_dim, zero_and_then_one, state.∇W.ptr, source_dim)
+
+    # ∂f/∂b =
+
+    zero_and_then_one = convert(data_type, 1)
   end
 end
