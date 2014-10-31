@@ -35,8 +35,7 @@ const cudnn_error_description = [
 import Base.show
 show(io::IO, error::CuDNNError) = print(io, cudnn_error_description[error.code])
 
-macro cudnncall(fv, argtypes, args...)
-  f = eval(fv)
+macro cudnncall(f, argtypes, args...)
   quote
     _curet = ccall( ($(Meta.quot(f)), "libcudnn"), Cint, $argtypes, $(args...)  )
     if int(_curet) != CUDNN_STATUS_SUCCESS

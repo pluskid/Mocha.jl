@@ -33,8 +33,7 @@ const cublas_error_description = [
 import Base.show
 show(io::IO, error::CuBLASError) = print(io, cublas_error_description[error.code])
 
-macro cublascall(fv, argtypes, args...)
-  f = eval(fv)
+macro cublascall(f, argtypes, args...)
   quote
     _curet = ccall( ($(Meta.quot(f)), "libcublas"), Cint, $argtypes, $(args...)  )
     if int(_curet) != CUBLAS_STATUS_SUCCESS
@@ -86,5 +85,31 @@ function get_vector{T}(src::CuPtr, incx::Int, dest::Array{T}, incy::Int)
   get_vector(n, elem_size, src, incx, dest_buf, incy)
 end
 get_vector{T}(src::CuPtr, dest::Array{T}) = get_vector(src, 1, dest, 1)
+
+# cublasOperation_t
+const CUBLAS_OP_N=0
+const CUBLAS_OP_T=1
+const CUBLAS_OP_C=2
+
+# C = α A * B + β C
+for dtype in (Float32, Float64)
+  if dtype == Float32
+    cublas_gemm_func = :cublasSgemm_v2
+  elseif dtype == Float64
+    cublas_gemm_func = :cublasDgemm_v2
+  end
+  @eval begin
+    function gemm(handle::Handle, trans_a::Int, trans_b::Int, m::Int, n::Int, k::Int,
+        alpha::$dtype, A::CuPtr, lda::Int, B::CuPtr, ldb::Int, beta::$dtype, C::CuPtr, ldc::Int)
+      @assert CUBLAS_OP_N <= trans_a <= CUBLAS_OP_C
+      @assert CUBLAS_OP_N <= trans_b <+ CUBLAS_OP_C
+      alpha_box = $dtype[alpha]
+      beta_box = $dtype[beta]
+      @cublascall($cublas_gemm_func, (Handle, Cint,Cint, Cint,Cint,Cint, Ptr{Void},
+          Ptr{Void},Cint, Ptr{Void},Cint, Ptr{Void}, Ptr{Void},Cint),
+          handle, trans_a, trans_b, m, n, k, alpha_box, A, lda, B, ldb, beta_box, C, ldc)
+    end
+  end
+end
 
 end # module

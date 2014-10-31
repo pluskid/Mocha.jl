@@ -1,7 +1,7 @@
 @defstruct InnerProductLayer CompLayer (
   (output_dim :: Int = 0, output_dim > 0),
-  (tops :: Vector{String} = String[], length(tops) == 1),
-  (bottoms :: Vector{String} = String[], length(bottoms) == 1),
+  (tops :: Vector{String} = String[], length(tops) >= 1),
+  (bottoms :: Vector{String} = String[], length(bottoms) == length(tops)),
   weight_init :: Initializer = ConstantInitializer(0),
   bias_init :: Initializer = ConstantInitializer(0),
   weight_regu :: Regularizer = L2Regu(1),
@@ -21,25 +21,42 @@ type InnerProductLayerState <: LayerState
   b  :: Blob
   ∇b :: Blob
 
-  InnerProductLayerState(sys::System, layer::InnerProductLayer, inputs::Vector{Blob}) = begin
-    @assert length(inputs) == 1
-    input = inputs[1]
-    dims = size(input.data)
-    left_dim = dims[1]
-    mid_dim = dims[2:end]
-    right_dim = layer.output_dim
+  # a all-1 vector used in gemm to help bias calculation
+  bias_multiplier :: Blob
 
-    out_dim = (left_dim, right_dim)
-    data_type = eltype(input.data)
+  InnerProductLayerState(sys::System, layer::InnerProductLayer, inputs::Vector{Blob}) = begin
+    dims = size(inputs[1])
+    nums = dims[4]
+    fea_dim = dims[1:3]
+    fea_size = prod(fea_dim)
+    out_dim = layer.output_dim
+
+    data_type = eltype(inputs[1])
+    blobs = Array(Blob, length(inputs))
+    blobs_diff = Array(Blob, length(inputs))
 
     if isa(sys.backend, CPUBackend)
-      blobs = Blob[CPUBlob(Array(data_type, out_dim))]
-      blobs_diff = Blob[CPUBlob(Array(data_type, out_dim))]
+      # TODO: correct this
+      #blobs = Blob[CPUBlob(Array(data_type, out_dim))]
+      #blobs_diff = Blob[CPUBlob(Array(data_type, out_dim))]
+      #state = new(layer, blobs, blobs_diff)
+      #state.W  = CPUBlob(Array(data_type, (prod(mid_dim), right_dim)))
+      #state.∇W = CPUBlob(Array(data_type, (prod(mid_dim), right_dim)))
+      #state.b  = CPUBlob(Array(data_type, (right_dim)))
+      #state.∇b = CPUBlob(Array(data_type, (right_dim)))
+    elseif isa(sys.backend, CuDNNBackend)
+      for i = 1:length(inputs)
+        blobs[i] = cudnn_make_tensor_blob(data_type, fea_size, nums)
+        blobs_diff[i] = cudnn_make_tensor_blob(data_type, fea_size, nums)
+      end
+
       state = new(layer, blobs, blobs_diff)
-      state.W  = CPUBlob(Array(data_type, (prod(mid_dim), right_dim)))
-      state.∇W = CPUBlob(Array(data_type, (prod(mid_dim), right_dim)))
-      state.b  = CPUBlob(Array(data_type, (right_dim)))
-      state.∇b = CPUBlob(Array(data_type, (right_dim)))
+      state.W  = cudnn_make_pod_blob(data_type, fea_size, out_dim)
+      state.∇W = cudnn_make_pod_blob(data_type, fea_size, out_dim)
+      state.b  = cudnn_make_pod_blob(data_type, out_dim)
+      state.∇b = cudnn_make_pod_blob(data_type, out_dim)
+
+      state.bias_multiplier = cudnn_make_pod_blob(data_type, nums)
     else
       error("Backend $(sys.backend) not supported")
     end
@@ -91,5 +108,23 @@ function backward(sys::System{CPUBackend}, state::InnerProductLayerState, inputs
   if isa(diffs[1], CPUBlob)
     # similar to ∇W
     BLAS.gemm!('N', 'T', one, D, state.W.data, zero, reshape(diffs[1].data,num,inner_dim))
+  end
+end
+
+
+function forward(sys::System{CuDNNBackend}, state::InnerProductLayerState, inputs::Vector{blob})
+  M = size(state.W, 4)   # target dim
+  N = size(inputs[1], 4) # batch size
+  K = size(state.W, 3)   # source dim
+  dtype = eltype(state.W)
+  for i = 1:length(inputs)
+    input = inputs[i]
+    output = state.blobs[i]
+    # output = W^T * X
+    CuBLAS.gemm(sys.backend.cublas_ctx, CUBLAS_OP_T, CUBLAS_OP_N, M, N, K, convert(dtype, 1),
+                state.W.ptr, K, input.ptr, K, convert(dtype, 0), output.ptr, M)
+    # output += bias
+    CuBLAS.gemm(sys.backend.cublas_ctx, CUBLAS_OP_T, CUBLAS_OP_N, M, N, 1, convert(dtype, 1),
+                state.b.ptr, 1, state.bias_multiplier.ptr, 1, convert(dtype, 1), output.ptr, M)
   end
 end

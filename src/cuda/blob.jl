@@ -64,3 +64,7 @@ function cudnn_make_tensor_blob(dtype::Type, dims...)
   CuDNN.set_tensor4d_descriptor(desc, dtype, dims)
   return CuTensorBlob(dtype, CuTensorBlobDescriptor(desc), dims...)
 end
+function cudnn_make_pod_blob(dtype::Type, dims...)
+  dims = get_nchw_dims(dims...)
+  return CuTensorBlob(dtype, CuPODBlobDescriptor(), dims...)
+end

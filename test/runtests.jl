@@ -8,4 +8,6 @@ init(sys_cudnn)
 include("layers/hdf5-data.jl")
 include("layers/memory-data.jl")
 
+include("layers/inner-product.jl")
+
 shutdown(sys_cudnn)
