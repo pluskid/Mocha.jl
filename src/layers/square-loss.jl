@@ -4,24 +4,29 @@
 # L(\hat{y},y) = 1/2N \sum_{i=1}^N (\hat{y}_i - y_i)^2
 ############################################################
 @defstruct SquareLossLayer LossLayer (
-  (tops :: Vector{String} = String["square-loss"], length(tops) == 1),
   (bottoms :: Vector{String} = String[], length(bottoms) == 2)
 )
 
-type SquareLossLayerState <: LayerState
+type SquareLossLayerState{T} <: LayerState
   layer :: SquareLossLayer
-  blobs :: Vector{Blob}
+  loss  :: T
+
+  # a helper blob used to compute the loss without destroying
+  # the pred results passed up
+  pred_copy :: Blob
 end
 
 function setup(sys::System, layer::SquareLossLayer, inputs::Vector{Blob})
   data_type = eltype(inputs[1])
   if isa(sys.backend, CPUBackend)
-    blobs = Blob[CPUBlob(Array(data_type, 1))]
+    # TODO
+  elseif isa(sys.backend, CuDNNBackend)
+    pred_copy = cudnn_make_pod_blob(data_type, size(inputs[1])...)
   else
     error("Backend $(sys.backend) not supported")
   end
 
-  state = SquareLossLayerState(layer, blobs)
+  state = SquareLossLayerState{data_type}(layer, convert(data_type, 0), pred_copy)
   return state
 end
 
@@ -44,6 +49,33 @@ function backward(sys::System{CPUBackend}, state::SquareLossLayerState, inputs::
     pred  = inputs[1].data
     label = inputs[2].data
     diffs[1].data[:] = (pred - label) / size(pred,1)
+  end
+end
+
+
+function forward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs::Vector{Blob})
+  pred = inputs[1]
+  label = inputs[2]
+
+  data_type = eltype(pred)
+  n = length(pred)
+
+  copy!(state.pred_copy, pred, sys.backend.cublas_ctx)
+  CuBLAS.axpy(sys.backend.cublas_ctx, n, convert(data_type, -1), label.ptr, 1, pred_copy.ptr, 1)
+  state.loss = 0.5*CuBLAS.dot(sys.backend.cublas_ctx, n, pred_copy.ptr, 1, pred_copy.ptr, 1)
+end
+
+function backward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+  diff = diffs[1]
+  if isa(diff, CuTensorBlob)
+    pred = inputs[1]
+    label = inputs[2]
+
+    data_type = eltype(pred)
+    n = length(pred)
+
+    copy!(diff, pred, sys.backend.cublas_ctx)
+    CuBLAS.axpy(sys.backend.cublas_ctx, n, convert(data_type, -1), label.ptr, 1, diff.ptr, 1)
   end
 end
 

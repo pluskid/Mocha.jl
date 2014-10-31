@@ -50,7 +50,7 @@ function forward(net::Net)
     end
 
     if isa(net.layers[i], LossLayer)
-      obj_val += net.states[i].blobs[1].data[1]
+      obj_val += net.states[i].loss
     end
 
     # handle regularization

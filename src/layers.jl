@@ -15,7 +15,8 @@ export setup, forward, backward
 # to behave. The following fields are needed by the neural
 # network engine:
 #
-# - tops: An array of strings, as the name of output blobs
+# - tops: An array of strings, as the name of output blobs.
+#       Note tops is optional for LossLayer and StatLayer.
 # - bottoms: An array of strings for the name of input blobs.
 #       Data Layers can omit this field.
 #

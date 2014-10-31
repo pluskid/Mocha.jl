@@ -63,6 +63,9 @@ function get_stream(handle::Handle)
   return s_handle[1]
 end
 
+############################################################
+# Copy a vector from host to device
+############################################################
 function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::CuPtr, incy::Int)
   @cublascall(:cublasSetVector, (Cint, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
       n, elem_size, src, incx, dest.p, incy)
@@ -75,6 +78,9 @@ function set_vector{T}(src::Array{T}, incx::Int, dest::CuPtr, incy::Int)
 end
 set_vector{T}(src::Array{T}, dest::CuPtr) = set_vector(src, 1, dest, 1)
 
+############################################################
+# Copy a vector from device to host
+############################################################
 function get_vector(n::Int, elem_size::Int, src::CuPtr, incx::Int, dest::Ptr{Void}, incy::Int)
   @cublascall(:cublasGetVector, (Cint, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
       n, elem_size, src.p, incx, dest, incy)
@@ -87,16 +93,63 @@ function get_vector{T}(src::CuPtr, incx::Int, dest::Array{T}, incy::Int)
 end
 get_vector{T}(src::CuPtr, dest::Array{T}) = get_vector(src, 1, dest, 1)
 
-# cublasOperation_t
-const CUBLAS_OP_N=0
-const CUBLAS_OP_T=1
-const CUBLAS_OP_C=2
+############################################################
+# Copy a vector from device to device (from x to y)
+############################################################
+function copy(handle::Handle, ::Type{Float32}, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+  @cublascall(:cublasScopy, (Handle, Cint, Void{Ptr}, Cint, Void{Ptr}, Cint),
+      handle, n, x.p, incx, y.p, incy)
+end
+function copy(handle::Handle, ::Type{Float64}, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+  @cublascall(:cublasDcopy, (Handle, Cint, Void{Ptr}, Cint, Void{Ptr}, Cint),
+      handle, n, x.p, incx, y.p, incy)
+end
 
+
+############################################################
+# y = α x + y
+############################################################
+function axpy{Float32}(handle::Handle, n::Int, alpha::Float32, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+  alpha_box = Float32[alpha]
+  @cublascall(:cublasSaxpy, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint, Ptr{Void}, Cint),
+      handle, n, alpha_box, x.p, incx, y.p, incy)
+end
+function axpy{Float64}(handle::Handle, n::Int, alpha::Float64, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+  alpha_box = Float64[alpha]
+  @cublascall(:cublasSaxpy, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint, Ptr{Void}, Cint),
+      handle, n, alpha_box, x.p, incx, y.p, incy)
+end
+
+############################################################
+# vector dot product
+############################################################
+function dot{Float32}(handle::Handle, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+  result = Float32[0]
+  @cublascall(:cublasSdot, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
+      handle, n, x.ptr, incx, y.ptr, incy, result)
+  return result[1]
+end
+function dot{Float64}(handle::Handle, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+  result = Float64[0]
+  @cublascall(:cublasSdot, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
+      handle, n, x.ptr, incx, y.ptr, incy, result)
+  return result[1]
+end
+
+############################################################
+# cublasOperation_t
+############################################################
+const OP_N=0
+const OP_T=1
+const OP_C=2
+
+############################################################
 # C = α A * B + β C
+############################################################
 function gemm{T}(handle::Handle, trans_a::Int, trans_b::Int, m::Int, n::Int, k::Int,
     alpha::T, A::CuPtr, lda::Int, B::CuPtr, ldb::Int, beta::T, C::CuPtr, ldc::Int)
-  @assert CUBLAS_OP_N <= trans_a <= CUBLAS_OP_C
-  @assert CUBLAS_OP_N <= trans_b <+ CUBLAS_OP_C
+  @assert OP_N <= trans_a <= OP_C
+  @assert OP_N <= trans_b <+ OP_C
   alpha_box = T[alpha]
   beta_box = T[beta]
   gemm_impl(handle, trans_a, trans_b, m, n, k, alpha_box, A, lda, B, ldb, beta_box, C, ldc)
