@@ -33,7 +33,7 @@ Net(sys::System, layers :: Vector{Layer}) = begin
     end
 
     states[i] = setup(sys, layers[i], blob_fwd)
-    if :tops ∈ layer
+    if :tops ∈ names(layer)
       for j = 1:length(layer.tops)
         output_blobs[layer.tops[j]] = states[i].blobs[j]
         if :blobs_diff ∈ names(states[i])

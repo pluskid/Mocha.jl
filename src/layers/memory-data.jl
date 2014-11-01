@@ -31,6 +31,15 @@ end
 
 function setup(sys::System, layer::MemoryDataLayer, inputs::Vector{Blob})
   @assert length(inputs) == 0
+  for i = 1:length(layer.data)
+    dims = size(layer.data[i])
+    if length(dims) > 4
+      error("Tensor dimension in data $(layer.tops[i]): $(length(dims)) > 4")
+    elseif length(dims) < 4
+      dims = tuple(ones(Int, 4-length(dims))..., dims...)
+      layer.data[i] = reshape(layer.data[i], dims)
+    end
+  end
   state = MemoryDataLayerState(sys, layer)
   return state
 end
