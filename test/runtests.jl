@@ -5,6 +5,9 @@ backend_cudnn = CuDNNBackend()
 sys_cudnn = System(backend_cudnn, 0.0005, 0.01, 0.9, 5000)
 init(sys_cudnn)
 
+include("cuda/cublas.jl")
+
+
 include("layers/hdf5-data.jl")
 include("layers/memory-data.jl")
 

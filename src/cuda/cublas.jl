@@ -94,45 +94,32 @@ end
 get_vector{T}(src::CuPtr, dest::Array{T}) = get_vector(src, 1, dest, 1)
 
 ############################################################
-# Copy a vector from device to device (from x to y)
-############################################################
-function copy(handle::Handle, ::Type{Float32}, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
-  @cublascall(:cublasScopy, (Handle, Cint, Void{Ptr}, Cint, Void{Ptr}, Cint),
-      handle, n, x.p, incx, y.p, incy)
-end
-function copy(handle::Handle, ::Type{Float64}, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
-  @cublascall(:cublasDcopy, (Handle, Cint, Void{Ptr}, Cint, Void{Ptr}, Cint),
-      handle, n, x.p, incx, y.p, incy)
-end
-
-
-############################################################
 # y = α x + y
 ############################################################
-function axpy{Float32}(handle::Handle, n::Int, alpha::Float32, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+function axpy(handle::Handle, n::Int, alpha::Float32, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
   alpha_box = Float32[alpha]
-  @cublascall(:cublasSaxpy, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint, Ptr{Void}, Cint),
+  @cublascall(:cublasSaxpy_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint, Ptr{Void}, Cint),
       handle, n, alpha_box, x.p, incx, y.p, incy)
 end
-function axpy{Float64}(handle::Handle, n::Int, alpha::Float64, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+function axpy(handle::Handle, n::Int, alpha::Float64, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
   alpha_box = Float64[alpha]
-  @cublascall(:cublasSaxpy, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint, Ptr{Void}, Cint),
+  @cublascall(:cublasDaxpy_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint, Ptr{Void}, Cint),
       handle, n, alpha_box, x.p, incx, y.p, incy)
 end
 
 ############################################################
 # vector dot product
 ############################################################
-function dot{Float32}(handle::Handle, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+function dot(handle::Handle, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
   result = Float32[0]
-  @cublascall(:cublasSdot, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
-      handle, n, x.ptr, incx, y.ptr, incy, result)
+  @cublascall(:cublasSdot_v2, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
+      handle, n, x.p, incx, y.p, incy, result)
   return result[1]
 end
-function dot{Float64}(handle::Handle, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+function dot(handle::Handle, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
   result = Float64[0]
-  @cublascall(:cublasSdot, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
-      handle, n, x.ptr, incx, y.ptr, incy, result)
+  @cublascall(:cublasDdot_v2, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
+      handle, n, x.p, incx, y.p, incy, result)
   return result[1]
 end
 

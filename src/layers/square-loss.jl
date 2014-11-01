@@ -4,7 +4,7 @@
 # L(\hat{y},y) = 1/2N \sum_{i=1}^N (\hat{y}_i - y_i)^2
 ############################################################
 @defstruct SquareLossLayer LossLayer (
-  (bottoms :: Vector{String} = String[], length(bottoms) == 2)
+  (bottoms :: Vector{String} = String[], length(bottoms) == 2),
 )
 
 type SquareLossLayerState{T} <: LayerState
@@ -26,7 +26,7 @@ function setup(sys::System, layer::SquareLossLayer, inputs::Vector{Blob})
     error("Backend $(sys.backend) not supported")
   end
 
-  state = SquareLossLayerState{data_type}(layer, convert(data_type, 0), pred_copy)
+  state = SquareLossLayerState(layer, convert(data_type, 0), pred_copy)
   return state
 end
 
@@ -60,9 +60,9 @@ function forward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs:
   data_type = eltype(pred)
   n = length(pred)
 
-  copy!(state.pred_copy, pred, sys.backend.cublas_ctx)
-  CuBLAS.axpy(sys.backend.cublas_ctx, n, convert(data_type, -1), label.ptr, 1, pred_copy.ptr, 1)
-  state.loss = 0.5*CuBLAS.dot(sys.backend.cublas_ctx, n, pred_copy.ptr, 1, pred_copy.ptr, 1)
+  copy!(state.pred_copy, pred)
+  CuBLAS.axpy(sys.backend.cublas_ctx, n, convert(data_type, -1), label.ptr, 1, state.pred_copy.ptr, 1)
+  state.loss = 0.5*CuBLAS.dot(sys.backend.cublas_ctx, n, state.pred_copy.ptr, 1, state.pred_copy.ptr, 1)
 end
 
 function backward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
@@ -74,7 +74,7 @@ function backward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs
     data_type = eltype(pred)
     n = length(pred)
 
-    copy!(diff, pred, sys.backend.cublas_ctx)
+    copy!(diff, pred)
     CuBLAS.axpy(sys.backend.cublas_ctx, n, convert(data_type, -1), label.ptr, 1, diff.ptr, 1)
   end
 end

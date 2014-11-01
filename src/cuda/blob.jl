@@ -37,9 +37,9 @@ function copy!{T}(dst :: Array{T}, src :: CuTensorBlob{T})
   @assert length(dst) == length(src)
   CuBLAS.get_vector(src.ptr, dst)
 end
-function copy!{T}(dst :: CuTensorBlob{T}, src :: CuTensorBlob{T}, handle::CuBLAS.Handle)
+function copy!{T}(dst :: CuTensorBlob{T}, src :: CuTensorBlob{T})
   @assert length(dst) == length(src)
-  CuBLAS.copy(handle, T, length(src), src.ptr, 1, dst.ptr, 1)
+  @CUDA.cucall(:cuMemcpy, (Ptr{Void}, Ptr{Void}, Cint), dst.ptr.p, src.ptr.p, length(dst)*sizeof(T))
 end
 function fill!{T}(dst :: CuTensorBlob{T}, val)
   val_vec = Array(T, length(dst))
