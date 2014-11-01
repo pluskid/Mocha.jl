@@ -5,6 +5,10 @@ export solve
 
 abstract Solver
 
+type SolverState
+  iter :: Int
+end
+
 ############################################################
 # General utilities that could be used by all solvers
 ############################################################
@@ -21,20 +25,23 @@ function init(net::Net)
       end
     end
   end
+
+  return SolverState(0)
 end
-function prepare_iteration(iter::Int, net::Net)
+function forward_backward(state::SolverState, net::Net)
   obj_val = forward(net)
   backward(net)
 
-  if iter % 1 == 0
-    @printf("%06d objective function = %f\n", iter, obj_val)
+  state.iter += 1
+  if state.iter % 1 == 0
+    @printf("%06d objective function = %f\n", state.iter, obj_val)
   end
 end
-function finalize_iteration(iter::Int, net::Net)
-  if iter > net.sys.max_iter
-    return false
+function stop_condition_satisfied(state::SolverState, net::Net)
+  if state.iter > net.sys.max_iter
+    return true
   end
-  return true
+  return false
 end
 
 
