@@ -34,7 +34,8 @@ solve(solver, net)
 
 learned_b = similar(B)
 copy!(learned_b, net.states[2].b)
-println("$(learned_b)")
-println("$(B)")
+
+#println("$(learned_b)")
+#println("$(B)")
 
 shutdown(sys)
