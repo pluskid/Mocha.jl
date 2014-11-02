@@ -2,7 +2,7 @@ export Blob
 export CPUBlob, NullBlob
 
 import Base: eltype, size, length, copy!, fill!
-export       eltype, size, length, copy!, fill!
+export       eltype, size, length, copy!, fill!, erase!
 
 ############################################################
 # A blob is an abstract concept that is suppose
@@ -41,6 +41,9 @@ function copy!(dst :: Blob, src :: Array)
 end
 function fill!(dst :: Blob, val)
   error("Not implemented (should fill dst with val)")
+end
+function erase!(dst :: Blob)
+  fill!(dst, 0)
 end
 
 ############################################################

@@ -46,6 +46,9 @@ function fill!{T}(dst :: CuTensorBlob{T}, val)
   fill!(val_vec, val)
   copy!(dst, val_vec)
 end
+#function erase!{T}(dst :: CuTensorBlob{T})
+#  @CUDA.cucall(:cuMemsetD8, (Ptr{Void}, Cuchar, Csize_t), dst.ptr.p, 0, length(dst)*sizeof(T))
+#end
 
 # Get canonical 4D tensor dims
 # Note we store data in column-major order, thus

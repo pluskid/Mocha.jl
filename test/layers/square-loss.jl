@@ -28,11 +28,11 @@ function test_square_loss_layer(sys::System)
 
   forward(sys, state, inputs)
 
-  loss = 0.5*vecnorm(preds-labels)^2
+  loss = 0.5*vecnorm(preds-labels)^2 / dims[4]
   @test -eps < loss-state.loss < eps
 
   backward(sys, state, inputs, diffs)
-  grad = preds - labels
+  grad = (preds - labels) / dims[4]
   diff = similar(grad)
   copy!(diff, diffs[1])
 

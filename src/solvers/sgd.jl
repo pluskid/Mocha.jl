@@ -33,10 +33,10 @@ function solve(sgd::SGD, net::Net{CPUBackend})
 end
 
 function solve(sgd::SGD, net::Net{CuDNNBackend})
-  param_states = filter(x -> :params ∈ names(x) for x in net.states)
+  param_states = filter(x -> :params ∈ names(x), net.states)
 
   param_history = Array(Vector{Blob}, length(param_states))
-  for i = 1:length(net.states)
+  for i = 1:length(param_states)
     state = param_states[i]
     param_history[i] = [cudnn_make_pod_blob(eltype(x.blob),size(x.blob)) for x in state.parameters]
   end
@@ -47,7 +47,7 @@ function solve(sgd::SGD, net::Net{CuDNNBackend})
 
     # update parameters
     for i = 1:length(param_states)
-      state = net.states[i]
+      state = param_states[i]
       history = param_history[i]
       for j = 1:length(state.parameters)
         blob = history[j]

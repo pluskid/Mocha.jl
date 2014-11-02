@@ -33,7 +33,7 @@ function forward_backward(state::SolverState, net::Net)
   backward(net)
 
   state.iter += 1
-  if state.iter % 1 == 0
+  if state.iter % 100 == 0
     @printf("%06d objective function = %f\n", state.iter, obj_val)
   end
 end

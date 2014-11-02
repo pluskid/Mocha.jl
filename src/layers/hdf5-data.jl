@@ -73,7 +73,6 @@ function forward(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob})
         dset = state.curr_hdf5_file[state.layer.tops[i]]
         the_data = dset[idx..., state.curr_index:state.curr_index+n1-1]
         set_blob_data(the_data, state.blobs[i], n_done+1)
-        #state.blobs[i][n_done+1:n_done+n1, idx...] = dset[state.curr_index:state.curr_index+n1-1, idx...]
       end
     end
     state.curr_index += n1
@@ -86,6 +85,6 @@ function set_blob_data(data::Array, blob::CPUBlob, blob_idx::Int)
   blob.data[(blob_idx-1)*n_fea+1:blob_idx*n_fea] = data
 end
 function set_blob_data{T}(data::Array{T}, blob::CuTensorBlob{T}, blob_idx::Int)
-  ptr = blob.ptr + sizeof(T) * (blob_idx-1) # note 0-based indexing in CUDA Vector
-  CuBLAS.set_vector(data, 1, ptr, 1)
+  ptr = convert(Ptr{Void}, blob.ptr.p) + sizeof(T) * (blob_idx-1) # note 0-based indexing in CUDA Vector
+  CuBLAS.set_vector(length(data), sizeof(T), convert(Ptr{Void},data), 1, ptr, 1)
 end

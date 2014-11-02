@@ -44,5 +44,5 @@ function forward(sys::System{CuDNNBackend}, regu :: L2Regu, param :: Blob)
 end
 function backward(sys::System{CuDNNBackend}, regu :: L2Regu, param :: Blob, gradient :: Blob)
     CuBLAS.axpy(sys.backend.cublas_ctx, length(param),
-        convert(data_type, regu.coefficient), param.ptr, 1, gradient.ptr, 1)
+        convert(eltype(param), regu.coefficient), param.ptr, 1, gradient.ptr, 1)
 end

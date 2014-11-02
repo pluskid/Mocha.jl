@@ -56,7 +56,7 @@ function forward(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob})
     n1 = min(state.layer.batch_size - n_done, n_remain)
     for i = 1:length(state.blobs)
       dset = state.layer.data[i]
-      idx = map(x -> 1:x, size(state.blobs[i].data)[1:3])
+      idx = map(x -> 1:x, size(state.blobs[i])[1:3])
       the_data = dset[idx..., state.curr_idx:state.curr_idx+n1-1]
       set_blob_data(the_data, state.blobs[i], n_done+1)
     end
@@ -64,4 +64,3 @@ function forward(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob})
     n_done += n1
   end
 end
-

@@ -63,12 +63,16 @@ function get_stream(handle::Handle)
   return s_handle[1]
 end
 
+
 ############################################################
 # Copy a vector from host to device
 ############################################################
-function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::CuPtr, incy::Int)
+function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::Ptr{Void}, incy::Int)
   @cublascall(:cublasSetVector, (Cint, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
-      n, elem_size, src, incx, dest.p, incy)
+      n, elem_size, src, incx, dest, incy)
+end
+function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::CuPtr, incy::Int)
+  set_vector(n, elem_size, src, incx, convert(Ptr{Void}, dest.p), incy)
 end
 function set_vector{T}(src::Array{T}, incx::Int, dest::CuPtr, incy::Int)
   elem_size = sizeof(T)
