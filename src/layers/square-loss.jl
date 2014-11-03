@@ -21,7 +21,7 @@ function setup(sys::System, layer::SquareLossLayer, inputs::Vector{Blob})
   if isa(sys.backend, CPUBackend)
     # TODO
   elseif isa(sys.backend, CuDNNBackend)
-    pred_copy = cudnn_make_pod_blob(data_type, size(inputs[1])...)
+    pred_copy = cudnn_make_tensor_blob(data_type, size(inputs[1])...)
   else
     error("Backend $(sys.backend) not supported")
   end
