@@ -1,6 +1,5 @@
-using CUDA
-
 # a simplified CUDA module, adapted from github.com/JuliaGPU/CUDA.jl
+export CUDA
 module CUDA
 export CuPtr
 
@@ -83,9 +82,51 @@ macro cucall(fv, argtypes, args...)
 end
 
 function init()
-  @cucall(cuInit, (Cint,), 0)
+  @cucall(:cuInit, (Cint,), 0)
 end
 
+############################################################
+# Device and Context
+############################################################
+immutable CuDevice
+  ordinal::Cint
+  handle::Cint
+
+  function CuDevice(i::Int)
+    ordinal = convert(Cint, i)
+    a = Cint[0]
+    @cucall(:cuDeviceGet, (Ptr{Cint}, Cint), a, ordinal)
+    handle = a[1]
+    new(ordinal, handle)
+  end
+end
+
+immutable CuContext
+    handle::Ptr{Void}
+end
+
+const CTX_SCHED_AUTO  = 0x00
+const CTX_SCHED_SPIN  = 0x01
+const CTX_SCHED_YIELD = 0x02
+const CTX_SCHED_BLOCKING_SYNC = 0x04
+const CTX_MAP_HOST = 0x08
+const CTX_LMEM_RESIZE_TO_MAX = 0x10
+
+function create_context(dev::CuDevice, flags::Integer)
+  a = Array(Ptr{Void}, 1)
+  @cucall(:cuCtxCreate_v2, (Ptr{Ptr{Void}}, Cuint, Cint), a, flags, dev.handle)
+  return CuContext(a[1])
+end
+
+create_context(dev::CuDevice) = create_context(dev, 0)
+
+function destroy(ctx::CuContext)
+  @cucall(:cuCtxDestroy_v2, (Ptr{Void},), ctx.handle)
+end
+
+############################################################
+# Memory allocation
+############################################################
 typealias CUdeviceptr Uint64
 
 immutable CuPtr
@@ -98,12 +139,12 @@ end
 function cualloc(T::Type, len::Integer)
   a = CUdeviceptr[0]
   nbytes = int(len) * sizeof(T)
-  @cucall(cuMemAlloc, (Ptr{CUdeviceptr}, Csize_t), a, nbytes)
+  @cucall(:cuMemAlloc_v2, (Ptr{CUdeviceptr}, Csize_t), a, nbytes)
   return CuPtr(a[1])
 end
 
 function free(p::CuPtr)
-  @cucall(cuMemFree, (CUdeviceptr,), p.p)
+  @cucall(:cuMemFree_v2, (CUdeviceptr,), p.p)
 end
 
 end

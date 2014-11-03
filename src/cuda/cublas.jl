@@ -1,7 +1,7 @@
 export CuBLAS
 
 module CuBLAS
-using CUDA
+using ..CUDA
 
 # cublasStatus_t
 const CUBLAS_STATUS_SUCCESS         = 0

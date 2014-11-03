@@ -1,7 +1,7 @@
 export CuDNN
 
 module CuDNN
-using CUDA
+using ..CUDA
 
 # cudnnStatus_t
 const  CUDNN_STATUS_SUCCESS          = 0
