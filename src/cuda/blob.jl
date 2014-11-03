@@ -1,33 +1,24 @@
 export CuBlobDescriptor, CuPODBlobDescriptor, CuTensorBlobDescriptor, CuFilterBlobDescriptor
 export CuTensorBlob
 
-abstract CuBlobDescriptor
-type CuPODBlobDescriptor <: CuBlobDescriptor end
-type CuTensorBlobDescriptor <: CuBlobDescriptor
-  desc :: CuDNN.Tensor4dDescriptor
-end
-type CuFilterBlobDescriptor <: CuBlobDescriptor
-  desc :: CuDNN.FilterDescriptor
-end
-
 type CuTensorBlob{T<:FloatingPoint} <: Blob
   ptr   :: CuPtr
   shape :: NTuple{4, Int}
   len   :: Int
-
-  desc  :: CuBlobDescriptor
 end
-function CuTensorBlob{T<:FloatingPoint}(dtype::Type{T}, desc::CuBlobDescriptor, w::Int, h::Int, c::Int, n::Int)
+function CuTensorBlob{T<:FloatingPoint}(dtype::Type{T}, w::Int, h::Int, c::Int, n::Int)
   len = n*c*h*w
   ptr = CUDA.cualloc(dtype, len)
-  return CuTensorBlob{T}(ptr, (w,h,c,n), len, desc)
+  return CuTensorBlob{T}(ptr, (w,h,c,n), len)
 end
-CuTensorBlob(dtype::Type; desc::CuBlobDescriptor=CuPODBlobDescriptor(), w::Int=1, h::Int=1, c::Int=1, n::Int=1) =
-    CuTensorBlob(dtype, desc, w, h, c, n)
+CuTensorBlob(dtype::Type; w::Int=1, h::Int=1, c::Int=1, n::Int=1) =
+    CuTensorBlob(dtype, w, h, c, n)
+CuTensorBlob(dtype::Type, dims::NTuple{4, Int}) =
+    CuTensorBlob(dtype, dims...)
 
 length(b::CuTensorBlob) = b.len
 size(b::CuTensorBlob) = b.shape
-eltype{T1}(b::CuTensorBlob{T1}) = T1
+eltype{T}(b::CuTensorBlob{T}) = T
 
 function copy!{T}(dst :: CuTensorBlob{T}, src :: Array{T})
   @assert length(dst) == length(src)
@@ -65,12 +56,6 @@ function get_nchw_dims(dims...)
 end
 
 function cudnn_make_tensor_blob(dtype::Type, dims...)
-  desc = CuDNN.create_tensor4d_descriptor()
   dims = get_nchw_dims(dims...)
-  CuDNN.set_tensor4d_descriptor(desc, dtype, dims)
-  return CuTensorBlob(dtype, CuTensorBlobDescriptor(desc), dims...)
-end
-function cudnn_make_pod_blob(dtype::Type, dims...)
-  dims = get_nchw_dims(dims...)
-  return CuTensorBlob(dtype, CuPODBlobDescriptor(), dims...)
+  return CuTensorBlob(dtype, dims...)
 end

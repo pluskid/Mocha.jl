@@ -16,13 +16,13 @@ function test_square_loss_layer(sys::System)
   if isa(sys.backend, CPUBackend)
     error("TODO")
   elseif isa(sys.backend, CuDNNBackend)
-    pred_blob = Mocha.cudnn_make_pod_blob(Float64, dims...)
+    pred_blob = Mocha.cudnn_make_tensor_blob(Float64, dims...)
     copy!(pred_blob, preds)
-    label_blob = Mocha.cudnn_make_pod_blob(Float64, dims...)
+    label_blob = Mocha.cudnn_make_tensor_blob(Float64, dims...)
     copy!(label_blob, labels)
     inputs = Blob[pred_blob, label_blob]
 
-    diffs = Blob[Mocha.cudnn_make_pod_blob(Float64, dims...)]
+    diffs = Blob[Mocha.cudnn_make_tensor_blob(Float64, dims...)]
   end
   state  = setup(sys, layer, inputs)
 

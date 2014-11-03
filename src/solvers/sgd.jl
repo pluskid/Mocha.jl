@@ -38,7 +38,7 @@ function solve(sgd::SGD, net::Net{CuDNNBackend})
   param_history = Array(Vector{Blob}, length(param_states))
   for i = 1:length(param_states)
     state = param_states[i]
-    param_history[i] = [cudnn_make_pod_blob(eltype(x.blob),size(x.blob)...) for x in state.parameters]
+    param_history[i] = [cudnn_make_tensor_blob(eltype(x.blob),size(x.blob)...) for x in state.parameters]
   end
 
   solver_state = init(net)

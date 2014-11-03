@@ -21,10 +21,10 @@ function test_hdf5_data_layer(sys::System)
   if isa(sys.backend, CPUBackend)
     error("TODO")
   elseif isa(sys.backend, CuDNNBackend)
-    input = Mocha.cudnn_make_pod_blob(Float64, orig_dim_all..., batch_size)
+    input = Mocha.cudnn_make_tensor_blob(Float64, orig_dim_all..., batch_size)
     copy!(input, X)
     inputs = Blob[input]
-    diffs = Blob[Mocha.cudnn_make_pod_blob(Float64, size(input)...)]
+    diffs = Blob[Mocha.cudnn_make_tensor_blob(Float64, size(input)...)]
   end
 
   println("    > Setup")

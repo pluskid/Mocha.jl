@@ -51,12 +51,12 @@ type InnerProductLayerState <: LayerState
       end
 
       state = new(layer, blobs, blobs_diff)
-      state.W  = cudnn_make_pod_blob(data_type, fea_size, out_dim)
-      state.∇W = cudnn_make_pod_blob(data_type, fea_size, out_dim)
-      state.b  = cudnn_make_pod_blob(data_type, out_dim)
-      state.∇b = cudnn_make_pod_blob(data_type, out_dim)
+      state.W  = cudnn_make_tensor_blob(data_type, fea_size, out_dim)
+      state.∇W = cudnn_make_tensor_blob(data_type, fea_size, out_dim)
+      state.b  = cudnn_make_tensor_blob(data_type, out_dim)
+      state.∇b = cudnn_make_tensor_blob(data_type, out_dim)
 
-      state.bias_multiplier = cudnn_make_pod_blob(data_type, nums)
+      state.bias_multiplier = cudnn_make_tensor_blob(data_type, nums)
       fill!(state.bias_multiplier, 1)
     else
       error("Backend $(sys.backend) not supported")
