@@ -19,7 +19,7 @@ end
 function setup(sys::System, layer::SquareLossLayer, inputs::Vector{Blob})
   data_type = eltype(inputs[1])
   if isa(sys.backend, CPUBackend)
-    # TODO
+    pred_copy = CPUBlob(data_type, size(inputs[1])...)
   elseif isa(sys.backend, CuDNNBackend)
     pred_copy = cudnn_make_tensor_blob(data_type, size(inputs[1])...)
   else
@@ -31,24 +31,30 @@ function setup(sys::System, layer::SquareLossLayer, inputs::Vector{Blob})
 end
 
 function forward(sys::System{CPUBackend}, state::SquareLossLayerState, inputs::Vector{Blob})
-  pred  = inputs[1].data
-  label = inputs[2].data
+  pred  = inputs[1]
+  label = inputs[2]
 
-  dims = size(pred)
-  batch_size = dims[1]
-  rest_dim = prod(dims[2:end])
+  data_type = eltype(pred)
+  n = length(pred)
 
-  pred  = reshape(pred, (batch_size, rest_dim))
-  label = reshape(label, (batch_size, rest_dim))
-
-  state.blobs[1].data[:] = 0.5*mean(sum((pred - label).^2, 2))
+  copy!(state.pred_copy, pred)
+  BLAS.axpy!(n, convert(data_type, -1), label.data, 1, state.pred_copy.data, 1)
+  state.loss = 0.5/get_num(pred)*BLAS.dot(state.pred_copy.data, state.pred_copy.data)
 end
 
 function backward(sys::System{CPUBackend}, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  if isa(diffs[1], CPUBlob)
-    pred  = inputs[1].data
-    label = inputs[2].data
-    diffs[1].data[:] = (pred - label) / size(pred,1)
+  diff = diffs[1]
+  if isa(diff, CPUBlob)
+    pred  = inputs[1]
+    label = inputs[2]
+
+    data_type = eltype(pred)
+    n = length(pred)
+    num = get_num(pred)
+
+    erase!(diff)
+    BLAS.axpy!(n, convert(data_type, 1.0/num), pred.data, 1, diff.data, 1)
+    BLAS.axpy!(n, convert(data_type, -1.0/num), label.data, 1, diff.data, 1)
   end
 end
 
@@ -62,7 +68,7 @@ function forward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs:
 
   copy!(state.pred_copy, pred)
   CuBLAS.axpy(sys.backend.cublas_ctx, n, convert(data_type, -1), label.ptr, 1, state.pred_copy.ptr, 1)
-  state.loss = 0.5/size(pred,4)*CuBLAS.dot(sys.backend.cublas_ctx, n, state.pred_copy.ptr, 1, state.pred_copy.ptr, 1)
+  state.loss = 0.5/get_num(pred)*CuBLAS.dot(sys.backend.cublas_ctx, n, state.pred_copy.ptr, 1, state.pred_copy.ptr, 1)
 end
 
 function backward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
@@ -73,7 +79,7 @@ function backward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs
 
     data_type = eltype(pred)
     n = length(pred)
-    num = size(pred, 4)
+    num = get_num(pred)
 
     erase!(diff)
     CuBLAS.axpy(sys.backend.cublas_ctx, n, convert(data_type, 1.0/num), pred.ptr, 1, diff.ptr, 1)

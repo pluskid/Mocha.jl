@@ -14,16 +14,19 @@ function test_square_loss_layer(sys::System)
   ############################################################
   layer  = SquareLossLayer(; bottoms=String["predictions", "labels"])
   if isa(sys.backend, CPUBackend)
-    error("TODO")
+    pred_blob  = CPUBlob(Float64, dims...)
+    label_blob = CPUBlob(Float64, dims...)
+    diff_blob  = CPUBlob(Float64, dims...)
   elseif isa(sys.backend, CuDNNBackend)
-    pred_blob = Mocha.cudnn_make_tensor_blob(Float64, dims...)
-    copy!(pred_blob, preds)
+    pred_blob  = Mocha.cudnn_make_tensor_blob(Float64, dims...)
     label_blob = Mocha.cudnn_make_tensor_blob(Float64, dims...)
-    copy!(label_blob, labels)
-    inputs = Blob[pred_blob, label_blob]
-
-    diffs = Blob[Mocha.cudnn_make_tensor_blob(Float64, dims...)]
+    diff_blob  = Mocha.cudnn_make_tensor_blob(Float64, dims...)
   end
+  copy!(pred_blob, preds)
+  copy!(label_blob, labels)
+  inputs = Blob[pred_blob, label_blob]
+  diffs = Blob[diff_blob]
+
   state  = setup(sys, layer, inputs)
 
   forward(sys, state, inputs)

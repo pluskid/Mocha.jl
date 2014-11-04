@@ -30,9 +30,9 @@ include("layers/memory-data.jl")
 #-- Computation Layers
 #include("layers/inner-product.jl")
 #include("layers/convolution.jl")
-#
-##-- Loss Layers
-#include("layers/square-loss.jl")
+
+#-- Loss Layers
+include("layers/square-loss.jl")
 
 if test_cudnn
   shutdown(sys_cudnn)

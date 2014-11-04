@@ -105,7 +105,9 @@ function copy!{T}(dst :: CPUBlob{T}, src :: Array{T})
   @assert length(dst) == length(src)
   dst.data[:] = src[:]
 end
-
+function copy!{T}(dst :: CPUBlob{T}, src :: CPUBlob{T})
+  dst.data[:] = src.data[:]
+end
 function fill!{T}(dst :: CPUBlob{T}, src)
   dst.data[:] = convert(T, src)
 end
