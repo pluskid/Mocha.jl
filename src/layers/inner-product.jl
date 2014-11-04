@@ -36,14 +36,19 @@ type InnerProductLayerState <: LayerState
     blobs_diff = Array(Blob, length(inputs))
 
     if isa(sys.backend, CPUBackend)
-      # TODO: correct this
-      #blobs = Blob[CPUBlob(Array(data_type, out_dim))]
-      #blobs_diff = Blob[CPUBlob(Array(data_type, out_dim))]
-      #state = new(layer, blobs, blobs_diff)
-      #state.W  = CPUBlob(Array(data_type, (prod(mid_dim), right_dim)))
-      #state.∇W = CPUBlob(Array(data_type, (prod(mid_dim), right_dim)))
-      #state.b  = CPUBlob(Array(data_type, (right_dim)))
-      #state.∇b = CPUBlob(Array(data_type, (right_dim)))
+      for i = 1:length(inputs)
+        blobs[i] = CPUBlob(data_type, out_dim, nums)
+        blobs_diff[i] = CPUBlob(data_type, out_dim, nums)
+      end
+
+      state = new(layer, blobs, blobs_diff)
+      state.W  = CPUBlob(data_type, fea_size, out_dim)
+      state.∇W = CPUBlob(data_type, fea_size, out_dim)
+      state.b  = CPUBlob(data_type, out_dim)
+      state.∇b = CPUBlob(data_type, out_dim)
+
+      state.bias_multiplier = CPUBlob(data_type, nums)
+      fill!(state.bias_multiplier, 1)
     elseif isa(sys.backend, CuDNNBackend)
       for i = 1:length(inputs)
         blobs[i] = cudnn_make_tensor_blob(data_type, out_dim, nums)
@@ -75,40 +80,54 @@ function setup(sys::System, layer::InnerProductLayer, inputs::Vector{Blob})
 end
 
 function forward(sys::System{CPUBackend}, state::InnerProductLayerState, inputs::Vector{Blob})
-  input = inputs[1]
-  inner_dim = prod(size(input.data)[2:end])
-
-  one = convert(eltype(input.data), 1)
-  X = reshape(input.data, size(input.data,1), inner_dim)
-  C_blob = state.blobs[1]
-
-  # C = X*W + C
-  for i = 1:size(input.data,1)
-    C_blob.data[i, :] = state.b.data
+  M = size(state.W, 4)   # target dim
+  N = size(inputs[1], 4) # batch size
+  K = size(state.W, 3)   # source dim
+  dtype = eltype(state.W)
+  for i = 1:length(inputs)
+    input = inputs[i]
+    output = state.blobs[i]
+    # output = W^T * X
+    BLAS.gemm!('T', 'N', convert(dtype, 1), reshape(state.W.data, (K,M)),
+                reshape(input.data, (K,N)), convert(dtype, 0), reshape(output.data, (M,N)))
+    # output += bias
+    BLAS.gemm!('N', 'N', convert(dtype, 1), reshape(state.b.data, (M,1)),
+                reshape(state.bias_multiplier.data, (1,N)), convert(dtype, 1), reshape(output.data, (M,N)))
   end
-  BLAS.gemm!('N', 'N', one, X, state.W.data, one, C_blob.data)
 end
 
 function backward(sys::System{CPUBackend}, state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  input = inputs[1]
-  inner_dim = prod(size(input.data)[2:end])
-  num = size(input.data,1)
+  target_dim = size(state.W, 4)
+  source_dim = size(state.W, 3)
+  batch_size = size(inputs[1], 4)
+  data_type  = eltype(state.W)
 
-  # Gradient w.r.t. parameters
-  X = reshape(input.data, num, inner_dim)
-  D = state.blobs_diff[1].data
+  # used in BLAS, at first it is zero, indicating overwriting the data
+  # then it becomes one, indicating adding to the data
+  zero_and_then_one = convert(data_type, 0)
 
-  # ∇W = X' * D / N
-  one = convert(eltype(X),1)
-  zero = convert(eltype(X),0)
-  BLAS.gemm!('T', 'N', one, X, D, zero, state.∇W.data)
+  for i = 1:length(inputs)
+    # ∂f/∂W = input * [∂f/∂o]^T
+    input = inputs[i]
+    ∂f_∂o = state.blobs_diff[i]
+    BLAS.gemm!('N', 'T', convert(data_type, 1), reshape(input.data, (source_dim, batch_size)),
+               reshape(∂f_∂o.data, (target_dim, batch_size)), zero_and_then_one,
+               reshape(state.∇W.data, (source_dim, target_dim)))
 
-  state.∇b.data[:] = sum(D,1)
+    # ∂f/∂b = sum(∂f/∂o, 2)
+    BLAS.gemm!('N', 'N', convert(data_type, 1), reshape(∂f_∂o.data, (target_dim, batch_size)),
+               reshape(state.bias_multiplier.data, (batch_size, 1)), zero_and_then_one,
+               reshape(state.∇b.data, (target_dim, 1)))
 
-  # Back propagate gradient w.r.t. input
-  if isa(diffs[1], CPUBlob)
-    # similar to ∇W
-    BLAS.gemm!('N', 'T', one, D, state.W.data, zero, reshape(diffs[1].data,num,inner_dim))
+    zero_and_then_one = convert(data_type, 1)
+
+    # if back propagate down
+    if isa(diffs[i], CPUBlob)
+      # ∂f/∂x = W * [∂f/∂o]
+      BLAS.gemm!('N', 'N', convert(data_type, 1), reshape(state.W.data, (source_dim, target_dim)),
+                 reshape(∂f_∂o.data, (target_dim, batch_size)), convert(data_type, 0),
+                 reshape(diffs[i].data, (source_dim, batch_size)))
+    end
   end
 end
 
@@ -126,7 +145,7 @@ function forward(sys::System{CuDNNBackend}, state::InnerProductLayerState, input
                 state.W.ptr, K, input.ptr, K, convert(dtype, 0), output.ptr, M)
     # output += bias
     CuBLAS.gemm(sys.backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_N, M, N, 1, convert(dtype, 1),
-                state.b.ptr, N, state.bias_multiplier.ptr, 1, convert(dtype, 1), output.ptr, M)
+                state.b.ptr, M, state.bias_multiplier.ptr, 1, convert(dtype, 1), output.ptr, M)
   end
 end
 

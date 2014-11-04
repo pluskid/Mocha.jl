@@ -19,13 +19,15 @@ function test_inner_product_layer(sys::System)
   ############################################################
   layer  = InnerProductLayer(; output_dim=target_dim, tops = String["result"], bottoms=String["input"])
   if isa(sys.backend, CPUBackend)
-    error("TODO")
+    input_blob = CPUBlob(Float64, orig_dim_all..., batch_size)
+    diff_blob = CPUBlob(Float64, size(input_blob)...)
   elseif isa(sys.backend, CuDNNBackend)
-    input = Mocha.cudnn_make_tensor_blob(Float64, orig_dim_all..., batch_size)
-    copy!(input, X)
-    inputs = Blob[input]
-    diffs = Blob[Mocha.cudnn_make_tensor_blob(Float64, size(input)...)]
+    input_blob = Mocha.cudnn_make_tensor_blob(Float64, orig_dim_all..., batch_size)
+    diff_blob = Mocha.cudnn_make_tensor_blob(Float64, size(input_blob)...)
   end
+  copy!(input_blob, X)
+  inputs = Blob[input_blob]
+  diffs = Blob[diff_blob]
 
   println("    > Setup")
   state  = setup(sys, layer, inputs)
