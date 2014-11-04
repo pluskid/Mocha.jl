@@ -1,5 +1,5 @@
 function test_convolution_layer(sys::System)
-  println("-- Testing InnerProductLayer...")
+  println("-- Testing InnerProductLayer on $(typeof(sys.backend))...")
   println("    > Setup")
   input_w = 16
   input_h = 10
@@ -13,7 +13,7 @@ function test_convolution_layer(sys::System)
   filter_dims = (filter_w, filter_h, input_chann, 1)
   bias_dims = (1, 1, input_chann, 1)
 
-  layer = ConvolutionLayer(; kernel=(filter_w, filter_h), stride=(1,2), pad=(2,2), n_filter=12, n_group=n_group, 
+  layer = ConvolutionLayer(; kernel=(filter_w, filter_h), stride=(1,2), pad=(2,2), n_filter=12, n_group=n_group,
       tops=String["conv"], bottoms=String["data"])
 
   input = rand(input_dims)

@@ -17,7 +17,7 @@ type MemoryDataLayerState <: LayerState
       idxs = map(x -> 1:x, dims)
 
       if isa(sys.backend, CPUBackend)
-        blobs[i] = CPUBlob(Array(eltype(layer.data[i]), dims))
+        blobs[i] = CPUBlob(eltype(layer.data[i]), dims)
       elseif isa(sys.backend, CuDNNBackend)
         blobs[i] = cudnn_make_tensor_blob(eltype(layer.data[i]), dims...)
       else

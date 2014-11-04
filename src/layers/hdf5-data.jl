@@ -34,7 +34,7 @@ type HDF5DataLayerState <: LayerState
 
       dset = state.curr_hdf5_file[layer.tops[i]]
       if isa(sys.backend, CPUBackend)
-        state.blobs[i] = CPUBlob(Array(eltype(dset), dims))
+        state.blobs[i] = CPUBlob(eltype(dset), dims)
       elseif isa(sys.backend, CuDNNBackend)
         state.blobs[i] = cudnn_make_tensor_blob(eltype(dset), dims...)
       else

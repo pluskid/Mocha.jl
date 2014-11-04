@@ -61,6 +61,24 @@ function erase!(dst :: Blob)
   fill!(dst, 0)
 end
 
+# Get canonical 4D tensor dims
+# Note we store data in column-major order, thus
+# the data shape is width, height, channel, num
+function blob_canonical_dims(dims...)
+  if length(dims) == 1 && isa(dims[1], NTuple)
+    dims = dims[1]
+  end
+
+  if length(dims) > 4
+    error("Tensor dimension ($(length(dims))) twoo high, only 4D tensor supported")
+  end
+  if length(dims) < 4
+    # add singleton dimensions
+    dims = tuple(ones(Int, 4-length(dims))..., dims...)
+  end
+  return dims
+end
+
 ############################################################
 # A Dummy Blob type holding nothing
 ############################################################
@@ -71,8 +89,10 @@ end
 # A Blob for CPU Computation
 ############################################################
 type CPUBlob{T <: FloatingPoint} <: Blob
-  data :: Array{T}
+  data :: Array{T, 4}
 end
+CPUBlob(t :: Type, dims :: NTuple{Int}) = CPUBlob(Array(t, blob_canonical_dims(dims...)))
+CPUBlob(t :: Type, dims...) = CPUBlob(t, dims)
 
 eltype{T}(::CPUBlob{T}) = T
 size(blob::CPUBlob) = size(blob.data)
@@ -87,5 +107,5 @@ function copy!{T}(dst :: CPUBlob{T}, src :: Array{T})
 end
 
 function fill!{T}(dst :: CPUBlob{T}, src)
-  dst.data[:] = convert(eltype(dst.data), src)
+  dst.data[:] = convert(T, src)
 end

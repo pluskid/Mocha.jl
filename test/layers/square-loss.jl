@@ -1,5 +1,5 @@
 function test_square_loss_layer(sys::System)
-  println("-- Testing SquareLossLayer...")
+  println("-- Testing SquareLossLayer on $(typeof(sys.backend))...")
 
   ############################################################
   # Prepare Data for Testing
@@ -39,5 +39,9 @@ function test_square_loss_layer(sys::System)
   @test all(-eps .< grad - diff .< eps)
 end
 
-test_square_loss_layer(sys_cudnn)
-
+if test_cpu
+  test_square_loss_layer(sys_cpu)
+end
+if test_cudnn
+  test_square_loss_layer(sys_cudnn)
+end

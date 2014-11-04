@@ -1,7 +1,7 @@
 using HDF5
 
-function test_hdf5_data_layer()
-  println("-- Testing HDF5 Data Layer...")
+function test_hdf5_data_layer(sys::System)
+  println("-- Testing HDF5 Data Layer on $(typeof(sys.backend))...")
 
   ############################################################
   # Prepare Data for Testing
@@ -32,7 +32,7 @@ function test_hdf5_data_layer()
 
   # batch size is determined by
   layer = HDF5DataLayer(; source = source_fn, tops = String["data"], batch_size=batch_size)
-  state = setup(sys_cudnn, layer, Blob[])
+  state = setup(sys, layer, Blob[])
 
   data = cat(4, data_all...)
   data = cat(4, data, data)
@@ -46,4 +46,9 @@ function test_hdf5_data_layer()
   end
 end
 
-test_hdf5_data_layer()
+if test_cudnn
+  test_hdf5_data_layer(sys_cudnn)
+end
+if test_cpu
+  test_hdf5_data_layer(sys_cpu)
+end

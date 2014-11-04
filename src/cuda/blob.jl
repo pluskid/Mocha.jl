@@ -43,21 +43,7 @@ end
 #  @CUDA.cucall(:cuMemsetD8, (Ptr{Void}, Cuchar, Csize_t), dst.ptr.p, 0, length(dst)*sizeof(T))
 #end
 
-# Get canonical 4D tensor dims
-# Note we store data in column-major order, thus
-# the data shape is width, height, channel, num
-function get_nchw_dims(dims...)
-  if length(dims) > 4
-    error("Tensor dimension ($(length(dims))) twoo high, only 4D tensor supported")
-  end
-  if length(dims) < 4
-    # add singleton dimensions
-    dims = tuple(ones(Int, 4-length(dims))..., dims...)
-  end
-  return dims
-end
-
 function cudnn_make_tensor_blob(dtype::Type, dims...)
-  dims = get_nchw_dims(dims...)
+  dims = blob_canonical_dims(dims...)
   return CuTensorBlob(dtype, dims...)
 end

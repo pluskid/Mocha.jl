@@ -1,5 +1,5 @@
-function test_hdf5_data_layer(sys::System)
-  println("-- Testing InnerProductLayer...")
+function test_inner_product_layer(sys::System)
+  println("-- Testing InnerProductLayer on $(typeof(sys.backend))...")
 
   ############################################################
   # Prepare Data for Testing
@@ -66,4 +66,9 @@ function test_hdf5_data_layer(sys::System)
   @test all(-eps .< vec(back_grad) - vec(W * top_diff) .< eps)
 end
 
-test_hdf5_data_layer(sys_cudnn)
+if test_cpu
+  test_inner_product_layer(sys_cpu)
+end
+if test_cudnn
+  test_inner_product_layer(sys_cudnn)
+end
