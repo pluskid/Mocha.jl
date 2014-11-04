@@ -4,6 +4,7 @@ export CPUBlob, NullBlob
 import Base: eltype, size, length, copy!, fill!
 export       eltype, size, length, copy!, fill!, erase!
 export get_num, get_chann, get_height, get_width
+export make_blob
 
 ############################################################
 # A blob is an abstract concept that is suppose
@@ -85,6 +86,18 @@ end
 type NullBlob <: Blob
 end
 
+function make_blob()
+  return NullBlob()
+end
+function make_blob(backend::Backend, data_type::Type, dims...)
+  error("Not implemented (should return a blob for corresponding backend)")
+end
+function make_zero_blob(backend::Backend, data_type::Type, dims...)
+  blob = make_blob(backend, data_type, dims...)
+  erase!(blob)
+  return blob
+end
+
 ############################################################
 # A Blob for CPU Computation
 ############################################################
@@ -93,6 +106,10 @@ type CPUBlob{T <: FloatingPoint} <: Blob
 end
 CPUBlob(t :: Type, dims :: NTuple{Int}) = CPUBlob(Array(t, blob_canonical_dims(dims...)))
 CPUBlob(t :: Type, dims...) = CPUBlob(t, dims)
+
+function make_blob(backend::CPUBackend, data_type::Type, dims...)
+  return CPUBlob(data_type, dims...)
+end
 
 eltype{T}(::CPUBlob{T}) = T
 size(blob::CPUBlob) = size(blob.data)

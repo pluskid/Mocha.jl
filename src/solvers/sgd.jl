@@ -1,44 +1,13 @@
 type SGD <: Solver
 end
 
-function solve(sgd::SGD, net::Net{CPUBackend})
-  param_history = Array(Vector{Array}, length(net.layers))
-  for i = 1:length(net.states)
-    state = net.states[i]
-    if :parameters ∈ names(state)
-      param_history[i] = [zeros(eltype(x.blob.data),size(x.blob.data)) for x in state.parameters]
-    end
-  end
-
-  iter = 1
-  init(net)
-  while true
-    prepare_iteration(iter, net)
-    for i = 1:length(net.layers)
-      state = net.states[i]
-      if :parameters ∈ names(state)
-        for j = 1:length(state.parameters)
-          param_history[i][j] *= net.sys.momentum
-          param_history[i][j] -= net.sys.learning_rate * state.parameters[j].gradient.data
-          state.parameters[j].blob.data += param_history[i][j]
-        end
-      end
-    end
-
-    if !finalize_iteration(iter, net)
-      break
-    end
-    iter += 1
-  end
-end
-
-function solve(sgd::SGD, net::Net{CuDNNBackend})
+function solve(sgd::SGD, net::Net)
   param_states = filter(x -> :parameters ∈ names(x), net.states)
 
   param_history = Array(Vector{Blob}, length(param_states))
   for i = 1:length(param_states)
     state = param_states[i]
-    param_history[i] = [cudnn_make_tensor_blob(eltype(x.blob),size(x.blob)...) for x in state.parameters]
+    param_history[i] = [make_zero_blob(net.sys.backend, eltype(x.blob),size(x.blob)...) for x in state.parameters]
   end
 
   solver_state = init(net)
@@ -54,17 +23,7 @@ function solve(sgd::SGD, net::Net{CuDNNBackend})
         gradient = state.parameters[j].gradient
         data_type = eltype(blob)
 
-        # blob = net.sys.moment * blob
-        CuBLAS.axpy(net.sys.backend.cublas_ctx, length(blob), convert(data_type, net.sys.momentum-1),
-            blob.ptr, 1, blob.ptr, 1)
-        # blob = - net.sys.learning_rate * gradient + blob
-        CuBLAS.axpy(net.sys.backend.cublas_ctx, length(blob), convert(data_type, -net.sys.learning_rate),
-            gradient.ptr, 1, blob.ptr, 1)
-
-        # update parameter
-        # state.parameters[j] += blob
-        CuBLAS.axpy(net.sys.backend.cublas_ctx, length(blob), convert(data_type, 1),
-            blob.ptr, 1, state.parameters[j].blob.ptr, 1)
+        update_parameters(net, state, state.parameters[j].blob, blob, gradient, data_type)
       end
     end
 
@@ -72,4 +31,28 @@ function solve(sgd::SGD, net::Net{CuDNNBackend})
       break
     end
   end
+end
+
+function update_parameters(net::Net{CPUBackend}, state, param_blob, blob, gradient, data_type)
+  # blob = net.sys.momentum * blob
+  BLAS.scal!(length(blob), convert(data_type, net.sys.momentum), blob.data, 1)
+  # blob = - net.sys.learning_rate * gradient + blob
+  BLAS.axpy!(length(blob), convert(data_type, -net.sys.learning_rate), gradient.data, 1, blob.data, 1)
+
+  # update parameter
+  # param_blob += blob
+  BLAS.axpy!(length(blob), convert(data_type, 1), blob.data, 1, param_blob.data, 1)
+end
+function update_parameters(net::Net{CuDNNBackend}, state, blob, gradient, data_type)
+  # blob = net.sys.momentum * blob
+  CuBLAS.scal(net.sys.backend.cublas_ctx, length(blob), convert(data_type, net.sys.momentum),
+      blob.ptr, 1)
+  # blob = - net.sys.learning_rate * gradient + blob
+  CuBLAS.axpy(net.sys.backend.cublas_ctx, length(blob), convert(data_type, -net.sys.learning_rate),
+      gradient.ptr, 1, blob.ptr, 1)
+
+  # update parameter
+  # param_blob += blob
+  CuBLAS.axpy(net.sys.backend.cublas_ctx, length(blob), convert(data_type, 1),
+      blob.ptr, 1, param_blob.ptr, 1)
 end

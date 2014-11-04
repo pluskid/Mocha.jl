@@ -82,7 +82,8 @@ end
 
 function set_blob_data(data::Array, blob::CPUBlob, blob_idx::Int)
   n_fea = prod(size(blob)[1:3])
-  blob.data[(blob_idx-1)*n_fea+1:blob_idx*n_fea] = data
+  idx_start = (blob_idx-1)*n_fea
+  blob.data[idx_start+1:idx_start+length(data)] = data
 end
 function set_blob_data{T}(data::Array{T}, blob::CuTensorBlob{T}, blob_idx::Int)
   ptr = convert(Ptr{Void}, blob.ptr.p) + sizeof(T) * (blob_idx-1) # note 0-based indexing in CUDA Vector

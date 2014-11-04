@@ -47,3 +47,7 @@ function cudnn_make_tensor_blob(dtype::Type, dims...)
   dims = blob_canonical_dims(dims...)
   return CuTensorBlob(dtype, dims...)
 end
+
+function make_blob(backend::CuDNNBackend, data_type::Type, dims...)
+  return cudnn_make_tensor_blob(data_type, dims...)
+end

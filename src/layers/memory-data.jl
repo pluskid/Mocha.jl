@@ -16,13 +16,7 @@ type MemoryDataLayerState <: LayerState
       dims = tuple(size(layer.data[i])[1:3]..., layer.batch_size)
       idxs = map(x -> 1:x, dims)
 
-      if isa(sys.backend, CPUBackend)
-        blobs[i] = CPUBlob(eltype(layer.data[i]), dims)
-      elseif isa(sys.backend, CuDNNBackend)
-        blobs[i] = cudnn_make_tensor_blob(eltype(layer.data[i]), dims...)
-      else
-        error("Backend $(sys.backend) not supported")
-      end
+      blobs[i] = make_blob(sys.backend, eltype(layer.data[i]), dims...)
     end
 
     new(layer, blobs, 1)

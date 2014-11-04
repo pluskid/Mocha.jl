@@ -97,6 +97,21 @@ function get_vector{T}(src::CuPtr, incx::Int, dest::Array{T}, incy::Int)
 end
 get_vector{T}(src::CuPtr, dest::Array{T}) = get_vector(src, 1, dest, 1)
 
+
+############################################################
+# y = α y
+############################################################
+function scal(handle::Handle, n::Int, alpha::Float32, x::CuPtr, incx::Int)
+  alpha_box = Float32[alpha]
+  @cublascall(:cublasSscal_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint),
+              handle, n, alpha_box, x.p, incx)
+end
+function scal(handle::Handle, n::Int, alpha::Float64, x::CuPtr, incx::Int)
+  alpha_box = Float64[alpha]
+  @cublascall(:cublasSscal_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint),
+              handle, n, alpha_box, x.p, incx)
+end
+
 ############################################################
 # y = α x + y
 ############################################################

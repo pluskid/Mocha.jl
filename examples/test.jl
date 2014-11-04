@@ -1,5 +1,6 @@
 using Mocha
 
+use_cudnn = false
 ############################################################
 # Prepare Random Data
 ############################################################
@@ -17,7 +18,11 @@ Y = Y + 0.01*randn(size(Y))
 ############################################################
 # Define network
 ############################################################
-sys = System(CuDNNBackend(), 0.0005, 0.01, 0.9, 5000)
+if use_cudnn
+  sys = System(CuDNNBackend(), 0.0005, 0.01, 0.9, 5000)
+else
+  sys = System(CPUBackend(), 0.0005, 0.01, 0.9, 5000)
+end
 init(sys)
 
 data_layer = MemoryDataLayer(; batch_size=500, data=Array[X,Y])

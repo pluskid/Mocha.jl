@@ -35,7 +35,7 @@ function forward(sys::System{CPUBackend}, regu :: L2Regu, param :: Blob)
   return regu.coefficient * vecnorm(param.data)
 end
 function backward(sys::System{CPUBackend}, regu :: L2Regu, param :: Blob, gradient :: Blob)
-  gradient.data += regu.coefficient * param.data
+  BLAS.axpy!(length(param), convert(eltype(param), regu.coefficient), param.data, 1, gradient.data, 1)
 end
 
 function forward(sys::System{CuDNNBackend}, regu :: L2Regu, param :: Blob)
