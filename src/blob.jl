@@ -3,6 +3,7 @@ export CPUBlob, NullBlob
 
 import Base: eltype, size, length, copy!, fill!
 export       eltype, size, length, copy!, fill!, erase!
+export get_num, get_chann, get_height, get_width
 
 ############################################################
 # A blob is an abstract concept that is suppose
@@ -32,6 +33,20 @@ end
 function length(blob :: Blob)
   return prod(size(blob))
 end
+
+function get_num(blob :: Blob)
+  size(blob, 4)
+end
+function get_chann(blob :: Blob)
+  size(blob, 3)
+end
+function get_height(blob :: Blob)
+  size(blob, 2)
+end
+function get_width(blob :: Blob)
+  size(blob, 1)
+end
+
 
 function copy!(dst :: Array, src :: Blob)
   error("Not implemented (should copy content of src to dst)")

@@ -110,9 +110,15 @@ end
 function set_tensor4d_descriptor{T<:FloatingPoint}(desc::Tensor4dDescriptor, dtype::Type{T},
                                                    dims :: NTuple{4, Int}, stride :: NTuple{4, Int})
   w, h, c, n = dims
-  nStride, cStride, hStride, wStride = stride
+  wStride, hStride, cStride, nStride = stride
   @cudnncall(:cudnnSetTensor4dDescriptorEx, (Tensor4dDescriptor, Cint, Cint, Cint, Cint, Cint, Cint, Cint, Cint, Cint, Cint),
              desc, CUDNN_TENSOR_NCHW, cudnn_data_type(dtype), n,c,h,w,nStride,cStride,hStride,wStride)
+end
+
+function create_tensor4d_descriptor(dtype::Type, dims :: NTuple{4, Int})
+  desc = create_tensor4d_descriptor()
+  set_tensor4d_descriptor(desc, dtype, dims)
+  return desc
 end
 
 function get_tensor4d_descriptor(desc::Tensor4dDescriptor)
@@ -181,6 +187,11 @@ function set_filter_descriptor{T<:FloatingPoint}(desc::FilterDescriptor, dtype::
   w,h,c,k = dims
   @cudnncall(:cudnnSetFilterDescriptor, (FilterDescriptor, Cint, Cint, Cint, Cint, Cint),
              desc, cudnn_data_type(dtype), k, c, h, w)
+           end
+function create_filter_descriptor(dtype::Type, dims :: NTuple{4, Int})
+  desc = create_filter_descriptor()
+  set_filter_descriptor(desc, dtype, dims)
+  return desc
 end
 function get_filter_descriptor(desc::FilterDescriptor)
   k = Cint[0]; c = Cint[0]; h = Cint[0]; w = Cint[0]
@@ -203,8 +214,8 @@ function set_convolution_descriptor(desc::ConvolutionDescriptor, input_desc::Ten
     conv_mode :: Int)
 
   @assert CUDNN_CONVOLUTION <= conv_mode CUDNN_CROSS_CORRELATION
-  pad_h, pad_w = pad
-  u, v = stride
+  pad_w, pad_h = pad
+  v, u = stride
   upscalex, upscaley = upscale
 
   @cudnncall(:cudnnSetConvolutionDescriptor, (ConvolutionDescriptor, Tensor4dDescriptor,
@@ -212,15 +223,24 @@ function set_convolution_descriptor(desc::ConvolutionDescriptor, input_desc::Ten
                                               Cint, Cint, Cint),
              desc, input_desc, filter_desc, pad_h, pad_w, u, v, upscalex, upscaley, conv_mode)
 end
+
+function create_convolution_descriptor(input_desc::Tensor4dDescriptor,
+    filter_desc::FilterDescriptor, pad::NTuple{2, Int}, stride::NTuple{2, Int}, upscale::NTuple{2, Int},
+    conv_mode :: Int)
+  desc = create_convolution_descriptor()
+  set_convolution_descriptor(desc, input_desc, filter_desc, pad, stride, upscale, conv_mode)
+  return desc
+end
+
 function set_convolution_descriptor_ex(desc::ConvolutionDescriptor, dims::NTuple{4, Int},
-    n_filter::Int, kernel_hw::NTuple{2, Int}, pad::NTuple{2, Int}, stride::NTuple{2, Int},
+    n_filter::Int, kernel_wh::NTuple{2, Int}, pad::NTuple{2, Int}, stride::NTuple{2, Int},
     upscale::NTuple{2, Int}, conv_mode::Int)
 
   @assert CUDNN_CONVOLUTION <= conv_mode CUDNN_CROSS_CORRELATION
   w,h,c,n = dims
-  r,s = kernel_hw
-  pad_h, pad_w = pad
-  u,v = stride
+  s,r = kernel_hw
+  pad_w, pad_h = pad
+  v,u = stride
   upscalex, upscaley = upscale
 
   @cudnncall(:cudnnSetConvolutionDescriptorEx, (ConvolutionDescriptor, Cint,Cint,Cint,Cint,
@@ -313,8 +333,8 @@ function create_pooling_descriptor()
 end
 function set_pooling_descriptor(desc::PoolingDescriptor, mode::Int, dims::NTuple{2, Int}, stride::NTuple{2, Int})
   @assert CUDNN_POOLING_MAX <= mode <= CUDNN_POOLING_AVERAGE
-  h,w = dims
-  stride_h, stride_w = stride
+  w,h = dims
+  stride_w, stride_h = stride
   @cudnncall(:cudnnSetPoolingDescriptor, (PoolingDescriptor, Cint, Cint,Cint,Cint,Cint),
              desc, mode, h,w, stride_h, stride_w)
 end
@@ -324,7 +344,7 @@ function get_pooling_descriptor(desc::PoolingDescriptor)
   @cudnncall(:cudnGetPoolingDescriptor, (PoolingDescriptor, Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
                                          Ptr{Cint}, Ptr{Cint}),
              desc, mode, h, w, stride_h, stride_w)
-  return (mode[1], (h,w), (stride_h, stride_w))
+  return (mode[1], (w,h), (stride_w, stride_h))
 end
 function destroy_pooling_descriotpr(desc::PoolingDescriptor)
   @cudnncall(:cudnnDestroyPoolingDescroptor, (PoolingDescriptor,), desc)

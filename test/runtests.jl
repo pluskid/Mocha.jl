@@ -7,12 +7,18 @@ init(sys_cudnn)
 
 include("cuda/cublas.jl")
 
-
+############################################################
+# Layers
+############################################################
+#-- Data layers
 include("layers/hdf5-data.jl")
 include("layers/memory-data.jl")
 
+#-- Computation Layers
 include("layers/inner-product.jl")
+include("layers/convolution.jl")
 
+#-- Loss Layers
 include("layers/square-loss.jl")
 
 shutdown(sys_cudnn)
