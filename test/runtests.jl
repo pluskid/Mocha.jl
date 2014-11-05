@@ -1,8 +1,8 @@
 using Mocha
 using Base.Test
 
-global test_cpu   = true
-global test_cudnn = false
+global test_cpu   = false
+global test_cudnn = true
 
 if test_cpu
   backend_cpu = CPUBackend()
@@ -16,6 +16,7 @@ if test_cudnn
   init(sys_cudnn)
 end
 
+include("layers/convolution.jl")
 if test_cudnn
   include("cuda/cublas.jl")
 end
@@ -29,7 +30,6 @@ include("layers/memory-data.jl")
 
 #-- Computation Layers
 include("layers/inner-product.jl")
-#include("layers/convolution.jl")
 
 #-- Loss Layers
 include("layers/square-loss.jl")
