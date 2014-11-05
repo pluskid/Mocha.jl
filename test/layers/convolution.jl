@@ -19,7 +19,6 @@ function test_convolution_layer(sys::System)
       tops=String["conv"], bottoms=String["data"])
 
   input = rand(input_dims)
-  inputs = Array(Blob, 1)
   inputs = Blob[make_blob(sys.backend, Float64, input_dims)]
   copy!(inputs[1], input)
 

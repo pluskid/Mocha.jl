@@ -30,6 +30,7 @@ include("layers/memory-data.jl")
 #-- Computation Layers
 include("layers/inner-product.jl")
 include("layers/convolution.jl")
+include("layers/pooling.jl")
 
 #-- Loss Layers
 include("layers/square-loss.jl")

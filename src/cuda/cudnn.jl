@@ -358,6 +358,13 @@ function set_pooling_descriptor(desc::PoolingDescriptor, mode::Int, dims::NTuple
   @cudnncall(:cudnnSetPoolingDescriptor, (PoolingDescriptor, Cint, Cint,Cint,Cint,Cint),
              desc, mode, h,w, stride_h, stride_w)
 end
+
+function create_pooling_descriptor(mode::Int, dims::NTuple{2,Int}, stride::NTuple{2,Int})
+  desc = create_pooling_descriptor()
+  set_pooling_descriptor(desc, mode, dims, stride)
+  return desc
+end
+
 function get_pooling_descriptor(desc::PoolingDescriptor)
   mode = Cint[0]
   h = Cint[0]; w = Cint[0]; stride_h = Cint[0]; stride_w = Cint[0]
