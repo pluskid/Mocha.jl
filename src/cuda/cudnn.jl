@@ -288,6 +288,12 @@ function colvolution_backward_bias(handle::Handle, src_desc::Tensor4dDescriptor,
              handle, src_desc, src.p, dest_desc, dest.p, mode)
 end
 
+function convolution_backward_bias(handle::Handle, src_desc::Tensor4dDescriptor, src::CuPtr,
+    dest_desc::Tensor4dDescriptor, dest::CuPtr, mode::Int)
+  @assert CUDNN_RESULT_ACCUMULATE <= mode <= CUDNN_RESULT_NO_ACCUMULATE
+  @cudnncall(:cudnnConvolutionBackwardBias, (Handle, Tensor4dDescriptor, Ptr{Void}, 
+      Tensor4dDescriptor, Ptr{Void}, Cint), handle, src_desc, src.p, dest_desc, dest.p, mode)
+end
 function convolution_backward_filter(handle::Handle, src_desc::Tensor4dDescriptor, src::CuPtr,
     diff_desc::Tensor4dDescriptor, diff::CuPtr, conv::ConvolutionDescriptor,
     grad_desc::FilterDescriptor, grad::CuPtr, mode::Int)
@@ -303,7 +309,7 @@ function convolution_backward_data(handle::Handle, filter_desc::FilterDescriptor
     diff_desc::Tensor4dDescriptor, diff::CuPtr, conv::ConvolutionDescriptor,
     grad_desc::Tensor4dDescriptor, grad::CuPtr, mode::Int)
   @assert CUDNN_RESULT_ACCUMULATE <= mode <= CUDNN_RESULT_NO_ACCUMULATE
-  @cudnncall(:cudnnConvolutionForwardData, (Handle, FilterDescriptor, Ptr{Void},
+  @cudnncall(:cudnnConvolutionBackwardData, (Handle, FilterDescriptor, Ptr{Void},
                                             Tensor4dDescriptor, Ptr{Void},
                                             ConvolutionDescriptor, Tensor4dDescriptor,
                                             Ptr{Void}, Cint),

@@ -238,3 +238,39 @@ function forward(sys::System{CuDNNBackend}, state::ConvolutionLayerState, inputs
     end
   end
 end
+
+function backward(sys::System{CuDNNBackend}, state::ConvolutionLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+  erase!(state.∇filter)
+  erase!(state.∇bias)
+
+  for i = 1:length(inputs)
+    bottom = inputs[i]
+    top_diff = state.blobs_diff[i]
+
+    for g = 1:state.layer.n_group
+      # gradient w.r.t. bias
+      CuDNN.convolution_backward_bias(sys.backend.cudnn_ctx, 
+          state.etc.outputs_desc[i], CuPtr(top_diff.ptr.p + state.etc.top_offset * (g-1)), 
+          state.etc.bias_desc, CuPtr(state.∇bias.ptr.p + state.etc.bias_offset * (g-1)),
+          CuDNN.CUDNN_RESULT_ACCUMULATE)
+
+      # gradient w.r.t. weights
+      CuDNN.convolution_backward_filter(sys.backend.cudnn_ctx,
+          state.etc.inputs_desc[i], CuPtr(bottom.ptr.p + state.etc.bottom_offset * (g-1)),
+          state.etc.outputs_desc[i], CuPtr(top_diff.ptr.p + state.etc.top_offset * (g-1)),
+          state.etc.conv_desc[i],
+          state.etc.filter_desc, CuPtr(state.∇filter.ptr.p + state.etc.weight_offset * (g-1)),
+          CuDNN.CUDNN_RESULT_ACCUMULATE)
+
+      # gradient w.r.t. bottom data
+      if isa(diffs[i], CuTensorBlob)
+        CuDNN.convolution_backward_data(sys.backend.cudnn_ctx,
+            state.etc.filter_desc, CuPtr(state.filter.ptr.p + state.etc.weight_offset * (g-1)),
+            state.etc.outputs_desc[i], CuPtr(top_diff.ptr.p + state.etc.top_offset * (g-1)),
+            state.etc.conv_desc[i],
+            state.etc.inputs_desc[i], CuPtr(diffs[i].ptr.p + state.etc.bottom_offset * (g-1)),
+            CuDNN.CUDNN_RESULT_NO_ACCUMULATE)
+      end
+    end
+  end
+end

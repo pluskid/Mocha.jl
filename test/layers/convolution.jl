@@ -20,12 +20,8 @@ function test_convolution_layer(sys::System)
 
   input = rand(input_dims)
   inputs = Array(Blob, 1)
-  if isa(sys.backend, CPUBackend)
-    error("TODO")
-  elseif isa(sys.backend, CuDNNBackend)
-    inputs = Blob[Mocha.cudnn_make_tensor_blob(Float64, input_dims)]
-    copy!(inputs[1], input)
-  end
+  inputs = Blob[make_blob(sys.backend, Float64, input_dims)]
+  copy!(inputs[1], input)
 
   state = setup(sys, layer, inputs)
 
@@ -45,6 +41,23 @@ function test_convolution_layer(sys::System)
   got_output = similar(expected_output)
   copy!(got_output, state.blobs[1])
   @test all(-eps .< expected_output - got_output .< eps)
+
+  println("    > Backward")
+  top_diff = rand(size(expected_output))
+  copy!(state.blobs_diff[1], top_diff)
+  data_diffs = Blob[make_blob(sys.backend, Float64, size(input))]
+
+  backward(sys, state, inputs, data_diffs)
+
+  gradients_expected = convolution_backward(state, filter, bias, input, top_diff)
+  gradients_got = Array[similar(x) for x in gradients_expected]
+  copy!(gradients_got[1], state.∇filter)
+  copy!(gradients_got[2], state.∇bias)
+  copy!(gradients_got[3], data_diffs[1])
+
+  for i = 1:length(gradients_expected)
+    @test all(-eps .< gradients_got[i] - gradients_expected[i] .< eps)
+  end
 end
 
 # naive implementation of convolution forward, used to check the correctness
@@ -80,6 +93,7 @@ function convolution_forward(state, filter::Array, bias::Array, input::Array)
     end
   end
 
+  # add bias
   for n = 1:num
     for o = 1:state.layer.n_filter
       for y = 1:state.height_out
@@ -91,6 +105,55 @@ function convolution_forward(state, filter::Array, bias::Array, input::Array)
   end
 
   return output
+end
+
+# naive implementation of convolution backward, used to check correctness
+function convolution_backward(state, filter::Array, bias::Array, input::Array, top_diff::Array)
+  ∇filter = zeros(size(filter))
+  ∇bias   = zeros(size(bias))
+  ∇input  = zeros(size(input))
+
+  width, height, channels, num = size(input)
+  n_group = state.layer.n_group
+  o_g = int(state.layer.n_filter / n_group)
+  k_g = int(channels / n_group)
+
+  # ∇bias
+  for n = 1:num
+    for o = 1:state.layer.n_filter
+      for y = 1:state.height_out
+        for x = 1:state.width_out
+          ∇bias[o] += top_diff[x, y, o, n]
+        end
+      end
+    end
+  end
+
+  # ∇filter and ∇input
+  for n = 1:num
+    for g = 1:n_group
+      for o = 1:o_g
+        for k = 1:k_g
+          for y = 1:state.height_out
+            for x = 1:state.width_out
+              for p = 1:state.layer.kernel[2]
+                for q = 1:state.layer.kernel[1]
+                  in_y = (y-1) * state.layer.stride[2] - state.layer.pad[2] + p
+                  in_x = (x-1) * state.layer.stride[1] - state.layer.pad[1] + q
+                  if (in_y >= 1 && in_y <= height && in_x >= 1 && in_x <= width)
+                    ∇filter[q,p,k,(g-1)*o_g+o] += top_diff[x,y,(g-1)*o_g+o,n] * input[in_x,in_y,(g-1)*k_g+k,n]
+                    ∇input[in_x,in_y,(g-1)*k_g+k,n] += top_diff[x,y,(g-1)*o_g+o,n] * filter[q,p,k,(g-1)*o_g+o]
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  return (∇filter, ∇bias, ∇input)
 end
 
 if test_cpu
