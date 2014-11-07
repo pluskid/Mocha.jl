@@ -1,1 +1,5 @@
 examples/mnist/data
+
+src/cuda/kernels/*
+!src/cuda/kernels/*.cu
+!src/cuda/kernels/*.impl
