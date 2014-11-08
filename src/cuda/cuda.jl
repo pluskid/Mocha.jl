@@ -86,6 +86,11 @@ function init()
 end
 
 ############################################################
+# Box a julia variable as a pointer
+############################################################
+cubox{T}(x::T) = T[x]
+
+############################################################
 # Device and Context
 ############################################################
 immutable CuDevice
@@ -136,6 +141,8 @@ immutable CuPtr
   CuPtr(p::CUdeviceptr) = new(p)
 end
 
+cubox(p::CuPtr) = cubox(p.p)
+
 function cualloc(T::Type, len::Integer)
   a = CUdeviceptr[0]
   nbytes = int(len) * sizeof(T)
@@ -147,8 +154,110 @@ function free(p::CuPtr)
   @cucall(:cuMemFree_v2, (CUdeviceptr,), p.p)
 end
 
+############################################################
+# CUDA streams
+############################################################
+immutable CuStream
+  handle::Ptr{Void}
+  blocking::Bool
+  priority::Int
 end
 
+function null_stream()
+  CuStream(convert(Ptr{Void}, 0), true, 0)
+end
+
+function destroy(s::CuStream)
+  @cucall(:cuStreamDestroy_v2, (Ptr{Void},), s.handle)
+end
+
+function synchronize(s::CuStream)
+  @cucall(:cuStreamSynchronize, (Ptr{Void},), s.handle)
+end
+
+
+############################################################
+# PTX Module and Function
+############################################################
+immutable CuModule
+  handle::Ptr{Void}
+
+  function CuModule(filename::ASCIIString)
+    a = Array(Ptr{Void}, 1)
+    @cucall(:cuModuleLoad, (Ptr{Ptr{Void}}, Ptr{Cchar}), a, filename)
+    new(a[1])
+  end
+end
+
+function unload(md::CuModule)
+  @cucall(:cuModuleUnload, (Ptr{Void},), md.handle)
+end
+
+
+immutable CuFunction
+  handle::Ptr{Void}
+
+  function CuFunction(md::CuModule, name::ASCIIString)
+    a = Array(Ptr{Void}, 1)
+    @cucall(:cuModuleGetFunction, (Ptr{Ptr{Void}}, Ptr{Void}, Ptr{Cchar}),
+    a, md.handle, name)
+    new(a[1])
+  end
+end
+
+############################################################
+# Launching kernels
+############################################################
+# This value should be manually synced with the one in kernels/kernels.cu
+const THREADS_PER_BLOCK = 1024 
+
+get_dim_x(g::Int) = g
+get_dim_x(g::(Int, Int)) = g[1]
+get_dim_x(g::(Int, Int, Int)) = g[1]
+
+get_dim_y(g::Int) = 1
+get_dim_y(g::(Int, Int)) = g[2]
+get_dim_y(g::(Int, Int, Int)) = g[2]
+
+get_dim_z(g::Int) = 1
+get_dim_z(g::(Int, Int)) = 1
+get_dim_z(g::(Int, Int, Int)) = g[3]
+
+typealias CuDim Union(Int, (Int, Int), (Int, Int, Int))
+
+# Stream management
+
+function launch(f::CuFunction, grid::CuDim, block::CuDim, args::Tuple; shmem_bytes::Int=4, stream::CuStream=null_stream())
+  gx = get_dim_x(grid)
+  gy = get_dim_y(grid)
+  gz = get_dim_z(grid)
+
+  tx = get_dim_x(block)
+  ty = get_dim_y(block)
+  tz = get_dim_z(block)
+
+  kernel_args = [cubox(arg) for arg in args]
+
+  @cucall(:cuLaunchKernel, (
+      Ptr{Void},       # function
+      Cuint,           # grid dim x
+      Cuint,           # grid dim y
+      Cuint,           # grid dim z
+      Cuint,           # block dim x
+      Cuint,           # block dim y
+      Cuint,           # block dim z
+      Cuint,           # shared memory bytes,
+      Ptr{Void},       # stream
+      Ptr{Ptr{Void}},  # kernel parameters,
+      Ptr{Ptr{Void}}), # extra parameters
+      f.handle, gx, gy, gz, tx, ty, tz, shmem_bytes, stream.handle, kernel_args, 0)
+end
+
+end # module CUDA
+
+############################################################
+# Rest of the story
+############################################################
 include("cublas.jl")
 include("cudnn.jl")
 include("backend.jl")

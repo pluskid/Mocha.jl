@@ -6,8 +6,7 @@
 //
 // NOTE: the loss is a float pointer regardless of whether the input
 // is double or float. This is because currently CUDA atomicAdd only
-// support up to float. Practically this will not be a serious issue
-// as a float is typically enough to hold any reasonable loss.
+// support up to float. 
 template <typename T>
 __device__ void logistic_loss_forward(T *prob, T *label, int num, int spatial_dim, int prob_dim, float *loss) {
   __shared__ T local_loss[THREADS_PER_BLOCK];
@@ -17,11 +16,10 @@ __device__ void logistic_loss_forward(T *prob, T *label, int num, int spatial_di
   if (idx >= num || idx_sp >= spatial_dim) {
     // out of bounds, set local loss to zero so that we can safely accumulate late
     local_loss[threadIdx.x] = 0;
-    return;
+  } else {
+    int y = static_cast<int>(label[idx * spatial_dim + idx_sp]);
+    local_loss[threadIdx.x] = -log(prob[idx * (spatial_dim*prob_dim) + y*spatial_dim + idx_sp]);
   }
-
-  int y = static_cast<int>(label[idx * spatial_dim + idx_sp]);
-  local_loss[threadIdx.x] = prob[idx * (spatial_dim*prob_dim) + y*spatial_dim + idx_sp];
 
   __syncthreads();
   if (0 == threadIdx.x) {
@@ -37,7 +35,7 @@ extern "C" {
   __global__ void logistic_loss_forward_float(float *prob, float *label, int num, int spatial_dim, int prob_dim, float *loss) {
     logistic_loss_forward(prob, label, num, spatial_dim, prob_dim, loss);
   }
-  __global__ void logsitic_loss_forward_double(double *prob, double *label, int num, int spatial_dim, int prob_dim, float *loss) {
+  __global__ void logistic_loss_forward_double(double *prob, double *label, int num, int spatial_dim, int prob_dim, float *loss) {
     logistic_loss_forward(prob, label, num, spatial_dim, prob_dim, loss);
   }
 }

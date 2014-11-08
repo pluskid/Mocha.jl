@@ -17,6 +17,7 @@ if test_cudnn
 end
 
 if test_cudnn
+  include("cuda/mocha.jl")
   include("cuda/cublas.jl")
 end
 
