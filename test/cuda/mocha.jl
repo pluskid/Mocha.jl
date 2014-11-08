@@ -1,35 +1,11 @@
 function test_mocha_kernels(sys::System)
   println("-- Testing Mocha CUDA kernels")
 
-  input_blob = make_blob(sys.backend, Float32, 1)
-  copy!(input_blob, Float32[0.1])
-  n = 3840
-  output_blob = make_blob(sys.backend, Float32, 1)
-  copy!(output_blob, Float32[0])
-  x_block = int(ceil(float64(n)/CUDA.THREADS_PER_BLOCK))
-  CUDA.launch(sys.backend.mocha.test, x_block, CUDA.THREADS_PER_BLOCK,
-      (n, input_blob.ptr.p, output_blob.ptr.p))
-  output = Float32[0]
-  copy!(output, output_blob)
-  output = output[1]
-  
-  real_output = 0f0
-  for i = 1:n
-    real_output += -log(0.1f0)
-  end
-  println("output = $output")
-  println("real_output = $real_output")
-
-
   println("    > logistic loss forward")
   for data_type in [Float32, Float64]
-    if data_type == Float32
-      eps = 1e-7
-    else
-      eps = 1e-2
-    end
+    eps = 1e-5
 
-    h, w, c, n = (1, 1, 1, 3840)
+    h, w, c, n = (5, 6, 7, 128)
     prob = abs(rand(data_type, (h,w,c,n))) + 0.1
     label = abs(rand(Int, (h, w, 1, n))) % c
     label = convert(Array{data_type}, label)
@@ -59,16 +35,22 @@ function test_mocha_kernels(sys::System)
 
     loss = Float32[0]
     copy!(loss, loss_blob)
-    loss = loss[1]
+    loss = loss[1] / (n*h*w)
 
+    # simulate CUDA blocking, because float is very inaccurate
+    # adding 512 float32 of -log(0.1) will produce noticeable different
+    # results (1e-2) from adding 256 of them and then add the two sums
     expected_loss = 0f0
-    for i = 1:n
-      for j = 1:w
-        for k = 1:h
-          expected_loss += -log(prob[k, j, int(label[k,j,1,i])+1, i])
+    for j = 1:w
+      for k = 1:h
+        local_loss = 0f0
+        for i = 1:n
+          local_loss += -log(prob[k, j, int(label[k,j,1,i])+1, i])
         end
+        expected_loss += local_loss
       end
     end
+    expected_loss /= (n*h*w)
 
     println("loss = $loss")
     println("expected_loss = $expected_loss")

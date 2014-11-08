@@ -6,7 +6,6 @@ type MochaKernels
   # implemented kernels
   logistic_loss_forward_float  :: CUDA.CuFunction
   logistic_loss_forward_double :: CUDA.CuFunction
-  test :: CUDA.CuFunction
 
   MochaKernels() = begin
     mod_path = joinpath(dirname(@__FILE__), "kernels", "kernels.ptx")
@@ -15,7 +14,6 @@ type MochaKernels
   
     kernels.logistic_loss_forward_float = CUDA.CuFunction(mod, "logistic_loss_forward_float")
     kernels.logistic_loss_forward_double = CUDA.CuFunction(mod, "logistic_loss_forward_double")
-    kernels.test = CUDA.CuFunction(mod, "test")
 
     return kernels
   end
