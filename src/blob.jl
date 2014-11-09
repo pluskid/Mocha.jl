@@ -92,6 +92,11 @@ end
 function make_blob(backend::Backend, data_type::Type, dims...)
   error("Not implemented (should return a blob for corresponding backend)")
 end
+function make_blob(backend::Backend, data::Array)
+  blob = make_blob(backend, eltype(data), size(data))
+  copy!(blob, data)
+  return blob
+end
 function make_zero_blob(backend::Backend, data_type::Type, dims...)
   blob = make_blob(backend, data_type, dims...)
   erase!(blob)

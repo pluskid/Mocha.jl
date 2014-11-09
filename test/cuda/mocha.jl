@@ -52,8 +52,8 @@ function test_mocha_kernels(sys::System)
     end
     expected_loss /= (n*h*w)
 
-    println("loss = $loss")
-    println("expected_loss = $expected_loss")
+    #println("loss = $loss")
+    #println("expected_loss = $expected_loss")
     @test (-eps < expected_loss - loss < eps)
   end
 end

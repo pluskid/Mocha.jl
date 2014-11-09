@@ -325,7 +325,7 @@ const CUDNN_SOFTMAX_MODE_CHANNEL = 1  # compute the softmax over all C for each 
 
 function softmax_forward(handle::Handle, algorithm::Int, mode::Int,
     src_desc::Tensor4dDescriptor, src::CuPtr, dest_desc::Tensor4dDescriptor, dest::CuPtr)
-  @assert CUDNN_SOFT_MAX_FAST <= algorithm <= CUDNN_SOFTMAX_ACCURATE
+  @assert CUDNN_SOFTMAX_FAST <= algorithm <= CUDNN_SOFTMAX_ACCURATE
   @assert CUDNN_SOFTMAX_MODE_INSTANCE <= mode <= CUDNN_SOFTMAX_MODE_CHANNEL
   @cudnncall(:cudnnSoftmaxForward, (Handle, Cint, Cint, Tensor4dDescriptor, Ptr{Void},
                                     Tensor4dDescriptor, Ptr{Void}),
@@ -335,7 +335,7 @@ end
 function softmax_backward(handle::Handle, algorithm::Int, mode::Int,
     src_desc::Tensor4dDescriptor, src::CuPtr, srcdiff_desc::Tensor4dDescriptor, srcdiff::CuPtr,
     destdiff_desc::Tensor4dDescriptor, descdiff::CuPtr)
-  @assert CUDNN_SOFT_MAX_FAST <= algorithm <= CUDNN_SOFTMAX_ACCURATE
+  @assert CUDNN_SOFTMAX_FAST <= algorithm <= CUDNN_SOFTMAX_ACCURATE
   @assert CUDNN_SOFTMAX_MODE_INSTANCE <= mode <= CUDNN_SOFTMAX_MODE_CHANNEL
   @cudnncall(:cudnnSoftmaxBackward, (Handle, Cint, Cint, Tensor4dDescriptor, Ptr{Void},
                                      Tensor4dDescriptor, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}),

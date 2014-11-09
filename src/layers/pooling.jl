@@ -56,6 +56,7 @@ function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob})
         layer.pooling.masks[i] = Array(Int, size(blobs[i]))
       end
     end
+    etc = nothing
   elseif isa(sys.backend, CuDNNBackend)
     if layer.pad[1] == 0 && layer.pad[2] == 0
       if isa(layer.pooling, Pooling.Max)
