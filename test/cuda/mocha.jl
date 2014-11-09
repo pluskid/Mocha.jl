@@ -6,8 +6,8 @@ function test_mocha_kernels(sys::System)
     eps = 1e-5
 
     h, w, c, n = (5, 6, 7, 128)
-    prob = abs(rand(data_type, (h,w,c,n))) + 0.1
-    label = abs(rand(Int, (h, w, 1, n))) % c
+    prob = abs(rand(data_type, (w,h,c,n))) + 0.1
+    label = abs(rand(Int, (w, h, 1, n))) % c
     label = convert(Array{data_type}, label)
 
     prob_blob = make_blob(sys.backend, data_type, size(prob))
@@ -45,7 +45,7 @@ function test_mocha_kernels(sys::System)
       for k = 1:h
         local_loss = 0f0
         for i = 1:n
-          local_loss += -log(prob[k, j, int(label[k,j,1,i])+1, i])
+          local_loss += -log(prob[j, k, int(label[j,k,1,i])+1, i])
         end
         expected_loss += local_loss
       end

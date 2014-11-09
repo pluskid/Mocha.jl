@@ -7,19 +7,23 @@
 )
 
 type SoftmaxLossLayerState <: LayerState
-  layer :: SoftmaxLossLayer
-  blobs :: Vector{Blob}
+  layer   :: SoftmaxLossLayer
+  blobs   :: Vector{Blob}
+
+  softmax :: SoftmaxLayerState
+
+  etc     :: Any
 end
 
 function setup(sys::System, layer::SoftmaxLossLayer, inputs::Vector{Blob})
   data_type = eltype(inputs[1])
-  if isa(sys.backend, CPUBackend)
-    blobs = Blob[CPUBlob(Array(data_type, 1))]
-  else
-    error("Backend $(sys.backend) not supported")
-  end
+  blobs = Blob[make_blob(sys.backend, data_type, size(input)) for input in inputs]
+  etc = nothing
 
-  state = SoftmaxLossLayerState(layer, blobs)
+  softmax_layer = SoftmaxLayer(tops=Array(String, length(inputs)), bottoms=Array(String, length(inputs)))
+  softmax = setup(sys, softmax_layer, inputs)
+
+  state = SoftmaxLossLayerState(layer, blobs, softmax, etc)
   return state
 end
 
@@ -49,3 +53,6 @@ function backward(sys::System{CPUBackend}, state::SoftmaxLossLayerState, inputs:
   diffs[1].data[:] = prob[:]
 end
 
+function forward(sys::System{CuDNNBackend}, state::SoftmaxLossLayerState, inputs::Vector{Blob})
+
+end

@@ -36,6 +36,7 @@ include("layers/softmax.jl")
 
 #-- Loss Layers
 include("layers/square-loss.jl")
+include("layers/multinomial-logistic-loss.jl")
 
 if test_cudnn
   shutdown(sys_cudnn)

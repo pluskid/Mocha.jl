@@ -18,7 +18,8 @@ __device__ void logistic_loss_forward(T *prob, T *label, int num, int spatial_di
     local_loss[threadIdx.x] = 0;
   } else {
     int y = static_cast<int>(label[idx * spatial_dim + idx_sp]);
-    local_loss[threadIdx.x] = -log(prob[idx * (spatial_dim*prob_dim) + y*spatial_dim + idx_sp]);
+    T the_prob = prob[idx * (spatial_dim*prob_dim) + y*spatial_dim + idx_sp];
+    local_loss[threadIdx.x] = -log(max(the_prob, static_cast<T>(LOG_THRESHOLD)));
   }
 
   __syncthreads();
