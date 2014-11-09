@@ -6,24 +6,27 @@
   (bottoms :: Vector{String} = String[], length(bottoms) == 2)
 )
 
-type SoftmaxLossLayerState <: LayerState
-  layer   :: SoftmaxLossLayer
-  blobs   :: Vector{Blob}
+type SoftmaxLossLayerState{T} <: LayerState
+  layer    :: SoftmaxLossLayer
+  loss     :: T
 
-  softmax :: SoftmaxLayerState
+  softmax  :: SoftmaxLayerState
+  logistic :: MultinomialLogisticLossLayerState
 
-  etc     :: Any
+  etc      :: Any
 end
 
 function setup(sys::System, layer::SoftmaxLossLayer, inputs::Vector{Blob})
   data_type = eltype(inputs[1])
-  blobs = Blob[make_blob(sys.backend, data_type, size(input)) for input in inputs]
   etc = nothing
 
   softmax_layer = SoftmaxLayer(tops=Array(String, length(inputs)), bottoms=Array(String, length(inputs)))
-  softmax = setup(sys, softmax_layer, inputs)
+  softmax = setup(sys, softmax_layer, Blob[inputs[1]])
 
-  state = SoftmaxLossLayerState(layer, blobs, softmax, etc)
+  logistic_layer = MultinomialLogisticLossLayer(bottoms=Array(String, 2))
+  logistic = setup(sys, logistic_layer, inputs)
+
+  state = SoftmaxLossLayerState(layer, convert(data_type, 0), softmax, logistic, etc)
   return state
 end
 
@@ -54,5 +57,7 @@ function backward(sys::System{CPUBackend}, state::SoftmaxLossLayerState, inputs:
 end
 
 function forward(sys::System{CuDNNBackend}, state::SoftmaxLossLayerState, inputs::Vector{Blob})
-
+  forward(sys, state.softmax, Blob[inputs[1]])
+  forward(sys, state.logistic, Blob[state.softmax.blobs[1], inputs[2]])
+  state.loss = state.logistic.loss
 end
