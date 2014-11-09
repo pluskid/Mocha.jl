@@ -1,0 +1,38 @@
+#define RELU_BOUNDS_AND_INDEX \
+  int n = threadIdx.x + blockIdx.x * blockDim.x; \
+  int k = threadIdx.y + blockIdx.y * blockDim.y; \
+  int s = threadIdx.z + blockIdx.z * blockDim.z; \
+  if (n >= num || k >= channels || s >= spatial_dim) \
+    return; \
+  int idx = s + channels * (k + spatial_dim * n)
+
+template <typename T>
+__device__ void relu_forward(T *data, int num, int channels, int spatial_dim) {
+  RELU_BOUNDS_AND_INDEX;
+  data[idx] = max(data[idx], static_cast<T>(0));
+}
+
+template <typename T>
+__device__ void relu_backward(T *data, T *gradient, int num, int channels, int spatial_dim) {
+  RELU_BOUNDS_AND_INDEX;
+  if (data[idx] < 0)
+    gradient[idx] = 0;
+}
+
+extern "C" {
+  __global__ void relu_forward_float(float *data, int num, int channels, int spatial_dim) {
+    relu_forward(data, num, channels, spatial_dim);
+  }
+  __global__ void relu_forward_double(double *data, int num, int channels, int spatial_dim) {
+    relu_forward(data, num, channels, spatial_dim);
+  }
+
+  __global__ void relu_backward_float(float *data, float *gradient, int num, int channels, int spatial_dim) {
+    relu_backward(data, gradient, num, channels, spatial_dim);
+  }
+  __global__ void relu_backward_double(double *data, double *gradient, int num, int channels, int spatial_dim) {
+    relu_backward(data, gradient, num, channels, spatial_dim);
+  }
+}
+
+// vim: ft=cuda

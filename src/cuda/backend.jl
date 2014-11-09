@@ -8,6 +8,10 @@ type MochaKernels
   logistic_loss_forward_double :: CUDA.CuFunction
   softmax_loss_backward_float  :: CUDA.CuFunction
   softmax_loss_backward_double :: CUDA.CuFunction
+  relu_forward_float           :: CUDA.CuFunction
+  relu_forward_double          :: CUDA.CuFunction
+  relu_backward_float          :: CUDA.CuFunction
+  relu_backward_double         :: CUDA.CuFunction
 
   MochaKernels() = begin
     mod_path = joinpath(dirname(@__FILE__), "kernels", "kernels.ptx")
@@ -18,6 +22,10 @@ type MochaKernels
     kernels.logistic_loss_forward_double = CUDA.CuFunction(mod, "logistic_loss_forward_double")
     kernels.softmax_loss_backward_float = CUDA.CuFunction(mod, "softmax_loss_backward_float")
     kernels.softmax_loss_backward_double = CUDA.CuFunction(mod, "softmax_loss_backward_double")
+    kernels.relu_forward_float = CUDA.CuFunction(mod, "relu_forward_float")
+    kernels.relu_forward_double = CUDA.CuFunction(mod, "relu_forward_double")
+    kernels.relu_backward_float = CUDA.CuFunction(mod, "relu_backward_float")
+    kernels.relu_backward_double = CUDA.CuFunction(mod, "relu_backward_double")
 
     return kernels
   end
