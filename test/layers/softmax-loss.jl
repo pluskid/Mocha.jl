@@ -19,11 +19,14 @@ function test_softmax_loss_layer(sys::System)
   forward(sys, state, inputs)
 
   expected_loss = 0
+  expected_grad = zeros(size(input))
   for w = 1:width
     for h = 1:height
       for n = 1:num
         pred = exp(input[w, h, :, n])
         pred /= sum(pred)
+        expected_grad[w, h, :, n] = pred
+        expected_grad[w, h, int(label[w,h,1,n])+1, n] -= 1
         expected_loss += -log(pred[int(label[w,h,1,n])+1])
       end
     end
@@ -33,6 +36,14 @@ function test_softmax_loss_layer(sys::System)
   #println("loss = $(state.loss)")
   #println("expected_loss = $expected_loss")
   @test -eps < state.loss - expected_loss < eps
+
+  println("    > Backward")
+  diff_blob = make_blob(sys.backend, Float64, size(input))
+  backward(sys, state, inputs, Blob[diff_blob])
+  grad = zeros(size(input))
+  copy!(grad, diff_blob)
+
+  @test all(-eps .< grad - expected_grad .< eps)
 end
 
 if test_cpu
