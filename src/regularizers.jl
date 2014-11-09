@@ -32,7 +32,7 @@ end
 # L2 regularization
 ############################################################
 function forward(sys::System{CPUBackend}, regu :: L2Regu, param :: Blob)
-  return regu.coefficient * vecnorm(param.data)
+  return regu.coefficient * vecnorm(param.data)^2
 end
 function backward(sys::System{CPUBackend}, regu :: L2Regu, param :: Blob, gradient :: Blob)
   BLAS.axpy!(length(param), convert(eltype(param), regu.coefficient), param.data, 1, gradient.data, 1)

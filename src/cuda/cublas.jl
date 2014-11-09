@@ -108,7 +108,7 @@ function scal(handle::Handle, n::Int, alpha::Float32, x::CuPtr, incx::Int)
 end
 function scal(handle::Handle, n::Int, alpha::Float64, x::CuPtr, incx::Int)
   alpha_box = Float64[alpha]
-  @cublascall(:cublasSscal_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint),
+  @cublascall(:cublasDscal_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint),
               handle, n, alpha_box, x.p, incx)
 end
 

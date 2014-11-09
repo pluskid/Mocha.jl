@@ -24,6 +24,7 @@ Net(sys::System, layers :: Vector{Layer}) = begin
 
   for i = 1:n
     layer = layers[i]
+    # record if layers has any dependency
     if :bottoms ∈ names(layer)
       blob_fwd = Blob[output_blobs[x] for x in layer.bottoms]
       blob_bwd = Blob[haskey(diff_blobs,x) ? diff_blobs[x] : NullBlob() for x in layer.bottoms]

@@ -1,6 +1,6 @@
 using Mocha
 
-use_cudnn = false
+use_cudnn = true
 ############################################################
 # Prepare Random Data
 ############################################################
@@ -19,15 +19,15 @@ Y = Y + 0.01*randn(size(Y))
 # Define network
 ############################################################
 if use_cudnn
-  sys = System(CuDNNBackend(), 0.0005, 0.01, 0.9, 5000)
+  sys = System(CuDNNBackend(), 0.0005, 0.01, 0.9, 1000)
 else
-  sys = System(CPUBackend(), 0.0005, 0.01, 0.9, 5000)
+  sys = System(CPUBackend(), 0.0005, 0.01, 0.9, 1000)
 end
 init(sys)
 
-data_layer = MemoryDataLayer(; batch_size=500, data=Array[X,Y])
-weight_layer = InnerProductLayer(; output_dim=P, tops=String["pred"], bottoms=String["data"])
-loss_layer = SquareLossLayer(; bottoms=String["pred", "label"])
+data_layer = MemoryDataLayer(batch_size=500, data=Array[X,Y])
+weight_layer = InnerProductLayer(output_dim=P, tops=String["pred"], bottoms=String["data"])
+loss_layer = SquareLossLayer(bottoms=String["pred", "label"])
 
 net = Net(sys, [loss_layer, weight_layer, data_layer])
 

@@ -2,8 +2,7 @@
 # Softmax Loss
 ############################################################
 @defstruct SoftmaxLossLayer LossLayer (
-  (tops :: Vector{String} = String["softmax-loss"], length(tops) == 1),
-  (bottoms :: Vector{String} = String[], length(bottoms) == 2)
+  (bottoms :: Vector{String} = String[], length(bottoms) == 2),
 )
 
 type SoftmaxLossLayerState{T} <: LayerState
@@ -63,7 +62,6 @@ function forward(sys::System{CuDNNBackend}, state::SoftmaxLossLayerState, inputs
 end
 
 function backward(sys::System{CuDNNBackend}, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  @assert length(diffs) == 1
   diff = diffs[1]
   if isa(diff, CuTensorBlob)
     copy!(diff, state.softmax.blobs[1])
@@ -74,7 +72,7 @@ function backward(sys::System{CuDNNBackend}, state::SoftmaxLossLayerState, input
     spatial_dim = height*width
     prob_dim = channels
 
-    x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK))
+    x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X))
     y_block = spatial_dim
 
     if data_type == Float32
@@ -84,7 +82,7 @@ function backward(sys::System{CuDNNBackend}, state::SoftmaxLossLayerState, input
     else
       error("Unsupported data type $data_type")
     end
-    CUDA.launch(kernel, (x_block, y_block), (CUDA.THREADS_PER_BLOCK, 1),
+    CUDA.launch(kernel, (x_block, y_block), (CUDA.THREADS_PER_BLOCK_X, 1),
         (diff.ptr.p, inputs[2].ptr.p, num, spatial_dim, prob_dim))
   end
 end

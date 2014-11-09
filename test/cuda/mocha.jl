@@ -22,7 +22,7 @@ function test_mocha_kernels(sys::System)
     spatial_dim = h*w
     prob_dim = c
 
-    x_block = int(ceil(float64(n)/CUDA.THREADS_PER_BLOCK))
+    x_block = int(ceil(float64(n)/CUDA.THREADS_PER_BLOCK_X))
     y_block = spatial_dim
 
     if data_type == Float32
@@ -30,7 +30,7 @@ function test_mocha_kernels(sys::System)
     else
       kernel = sys.backend.mocha.logistic_loss_forward_double
     end
-    CUDA.launch(kernel, (x_block, y_block), (CUDA.THREADS_PER_BLOCK, 1),
+    CUDA.launch(kernel, (x_block, y_block), (CUDA.THREADS_PER_BLOCK_X, 1),
         (prob_blob.ptr.p, label_blob.ptr.p, n, spatial_dim, prob_dim, loss_blob.ptr.p))
 
     loss = Float32[0]

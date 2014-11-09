@@ -209,7 +209,9 @@ end
 # Launching kernels
 ############################################################
 # This value should be manually synced with the one in kernels/kernels.cu
-const THREADS_PER_BLOCK = 256
+const THREADS_PER_BLOCK_X = 128
+const THREADS_PER_BLOCK_Y = 1
+const THREADS_PER_BLOCK_Z = 8
 
 get_dim_x(g::Int) = g
 get_dim_x(g::(Int, Int)) = g[1]

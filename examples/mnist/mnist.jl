@@ -11,15 +11,19 @@ end
 
 using Mocha
 
-data_layer = HDF5DataLayer(; source=train_source_fn, batch_size=64)
-conv_layer = ConvolutionLayer(; n_filter=20, kernel=[5,5], bottoms=String["data"], tops=String["conv"])
-pool_layer = PoolingLayer(; kernel=[2,2], stride=[2,2], bottoms=String["conv"], tops=String["pool"])
-fc1_layer  = InnerProductLayer(; output_dim=500, neuron=Neurons.ReLU(), bottoms=String["pool"], tops=String["ip1"])
-fc2_layer  = InnerProductLayer(; output_dim=10, bottoms=String["ip1"], tops=String["ip2"])
-loss_layer = SoftmaxLossLayer(; bottoms=String["ip2","label"])
+data_layer = HDF5DataLayer(source=train_source_fn, batch_size=64)
+conv_layer = ConvolutionLayer(n_filter=20, kernel=(5,5), bottoms=String["data"], tops=String["conv"])
+pool_layer = PoolingLayer(kernel=(2,2), stride=(2,2), bottoms=String["conv"], tops=String["pool"])
+fc1_layer  = InnerProductLayer(output_dim=500, neuron=Neurons.ReLU(), bottoms=String["pool"], tops=String["ip1"])
+fc2_layer  = InnerProductLayer(output_dim=10, bottoms=String["ip1"], tops=String["ip2"])
+loss_layer = SoftmaxLossLayer(bottoms=String["ip2","label"])
 
-sys = System(CPU(), 0.0005, 0.01, 0.9, 10000)
+sys = System(CuDNNBackend(), 0.0005, 0.01, 0.9, 10000)
+init(sys)
+
 net = Net(sys, [data_layer, conv_layer, pool_layer, fc1_layer, fc2_layer, loss_layer])
 
 solver = SGD()
 solve(solver, net)
+
+shutdown(sys)

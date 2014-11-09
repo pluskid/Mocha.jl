@@ -23,7 +23,14 @@ function solve(sgd::SGD, net::Net)
         gradient = state.parameters[j].gradient
         data_type = eltype(blob)
 
+        #tmp = zeros(size(state.parameters[j].blob))
+        #copy!(tmp, gradient)
+        #println("  gradient: $(tmp[1:10])")
+        #copy!(tmp, state.parameters[j].blob)
+        #println("  before update: $(tmp[1:10])")
         update_parameters(net, state, state.parameters[j].blob, blob, gradient, data_type)
+        #copy!(tmp, state.parameters[j].blob)
+        #println("  after update: $(tmp[1:10])")
       end
     end
 
@@ -43,7 +50,7 @@ function update_parameters(net::Net{CPUBackend}, state, param_blob, blob, gradie
   # param_blob += blob
   BLAS.axpy!(length(blob), convert(data_type, 1), blob.data, 1, param_blob.data, 1)
 end
-function update_parameters(net::Net{CuDNNBackend}, state, blob, gradient, data_type)
+function update_parameters(net::Net{CuDNNBackend}, state, param_blob, blob, gradient, data_type)
   # blob = net.sys.momentum * blob
   CuBLAS.scal(net.sys.backend.cublas_ctx, length(blob), convert(data_type, net.sys.momentum),
       blob.ptr, 1)

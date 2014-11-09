@@ -69,7 +69,7 @@ function forward(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob})
 
     if n1 > 0
       for i = 1:length(state.blobs)
-        idx = map(x -> 1:x, size(state.blobs[i].data)[1:3])
+        idx = map(x -> 1:x, size(state.blobs[i])[1:3])
         dset = state.curr_hdf5_file[state.layer.tops[i]]
         the_data = dset[idx..., state.curr_index:state.curr_index+n1-1]
         set_blob_data(the_data, state.blobs[i], n_done+1)

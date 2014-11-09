@@ -54,10 +54,10 @@ function cuda_geometry(:: ActivationFunction, output :: Blob)
   width, height, channels, num = size(output)
   spatial_dim = width*height
 
-  x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK));
-  y_block = int(ceil(float64(channels)/CUDA.THREADS_PER_BLOCK));
-  z_block = int(ceil(float64(spatial_dim)/CUDA.THREADS_PER_BLOCK));
-  return (((x_block,y_block,z_block),(CUDA.THREADS_PER_BLOCK, CUDA.THREADS_PER_BLOCK, CUDA.THREADS_PER_BLOCK)),
+  x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X));
+  y_block = int(ceil(float64(channels)/CUDA.THREADS_PER_BLOCK_Y));
+  z_block = int(ceil(float64(spatial_dim)/CUDA.THREADS_PER_BLOCK_Z));
+  return (((x_block,y_block,z_block),(CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z)),
           (num, channels, spatial_dim))
 end
 ############################################################
@@ -67,7 +67,7 @@ function forward(sys :: System{CPUBackend}, neuron :: Neurons.ReLU, output :: Bl
   output.data[:] = max(output.data[:], 0)
 end
 function backward(sys :: System{CPUBackend}, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
-  gradient.data[:] .*= (output.data[:] .>= 0)
+  gradient.data[:] .*= (output.data[:] .> 0)
 end
 
 function forward(sys :: System{CuDNNBackend}, neuron :: Neurons.ReLU, output :: Blob)

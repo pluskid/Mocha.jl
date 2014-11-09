@@ -2,8 +2,7 @@
 # Multinomial Logistic Loss
 ############################################################
 @defstruct MultinomialLogisticLossLayer LossLayer (
-  (tops :: Vector{String} = String["multinomial-logistic-loss"], length(tops) == 1),
-  (bottoms :: Vector{String} = String[], length(bottoms) == 2)
+  (bottoms :: Vector{String} = String[], length(bottoms) == 2),
 )
 
 type MultinomialLogisticLossLayerState{T} <: LayerState
@@ -27,7 +26,7 @@ function forward(sys::System{CuDNNBackend}, state::MultinomialLogisticLossLayerS
   spatial_dim = height*width
   prob_dim = channels
 
-  x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK))
+  x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X))
   y_block = spatial_dim
 
   loss_blob = make_zero_blob(sys.backend, Float32, 1)
@@ -39,7 +38,7 @@ function forward(sys::System{CuDNNBackend}, state::MultinomialLogisticLossLayerS
   else
     error("Unsupported data type $data_type")
   end
-  CUDA.launch(kernel, (x_block, y_block), (CUDA.THREADS_PER_BLOCK, 1),
+  CUDA.launch(kernel, (x_block, y_block), (CUDA.THREADS_PER_BLOCK_X, 1),
       (pred.ptr.p, label.ptr.p, num, spatial_dim, prob_dim, loss_blob.ptr.p))
 
   loss = Float32[0]
