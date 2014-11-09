@@ -32,10 +32,10 @@ function forward_backward(state::SolverState, net::Net)
   obj_val = forward(net)
   backward(net)
 
-  state.iter += 1
   if state.iter % 100 == 0
     @printf("%06d objective function = %f\n", state.iter, obj_val)
   end
+  state.iter += 1
 end
 function stop_condition_satisfied(state::SolverState, net::Net)
   if state.iter > net.sys.max_iter
@@ -58,12 +58,15 @@ function forward(net::Net)
 
     if isa(net.layers[i], LossLayer)
       obj_val += net.states[i].loss
+      #println("~~ obj_val = $obj_val")
     end
 
     # handle regularization
     if :parameters ∈ names(net.states[i])
       for param in net.states[i].parameters
+        #println("== obj_val = $obj_val")
         obj_val += forward(net.sys, param.regularizer, param.blob)
+        #println("!! obj_val = $obj_val")
       end
     end
   end

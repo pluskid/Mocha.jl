@@ -23,14 +23,14 @@ function solve(sgd::SGD, net::Net)
         gradient = state.parameters[j].gradient
         data_type = eltype(blob)
 
-        #tmp = zeros(size(state.parameters[j].blob))
+        #tmp = zeros(eltype(gradient), size(state.parameters[j].blob))
         #copy!(tmp, gradient)
-        #println("  gradient: $(tmp[1:10])")
+        #println("--gradient: $(maximum(abs(tmp)))")
         #copy!(tmp, state.parameters[j].blob)
-        #println("  before update: $(tmp[1:10])")
+        #println("--before update: $(maximum(abs(tmp)))")
         update_parameters(net, state, state.parameters[j].blob, blob, gradient, data_type)
         #copy!(tmp, state.parameters[j].blob)
-        #println("  after update: $(tmp[1:10])")
+        #println("--after update: $(maximum(abs(tmp)))")
       end
     end
 

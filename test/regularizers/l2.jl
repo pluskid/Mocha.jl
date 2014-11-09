@@ -2,7 +2,7 @@ function test_l2_regularizer(sys::System)
   println("-- Testing L2 regularizer on $(typeof(sys.backend))...")
 
   eps = 1e-10
-  param = rand(2,3,4,5)
+  param = rand(2,3,4,5) - 0.5
   param_blob = make_blob(sys.backend, param)
   regu = L2Regu(1)
 

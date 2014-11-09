@@ -7,9 +7,9 @@
   neuron :: ActivationFunction = Neurons.Identity(),
   (bottoms :: Vector{String} = String[], length(bottoms) > 0),
   (tops :: Vector{String} = String[], length(tops) == length(bottoms)),
-  filter_init :: Initializer = ConstantInitializer(0),
+  filter_init :: Initializer = XavierInitializer(),
   bias_init :: Initializer = ConstantInitializer(0),
-  filter_regu :: Regularizer = NoRegu(),
+  filter_regu :: Regularizer = L2Regu(1),
   bias_regu :: Regularizer = NoRegu()
 )
 

@@ -129,13 +129,13 @@ end
 ############################################################
 # vector dot product
 ############################################################
-function dot(handle::Handle, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+function dot(handle::Handle, ::Type{Float32}, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
   result = Float32[0]
   @cublascall(:cublasSdot_v2, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
       handle, n, x.p, incx, y.p, incy, result)
   return result[1]
 end
-function dot(handle::Handle, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+function dot(handle::Handle, ::Type{Float64}, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
   result = Float64[0]
   @cublascall(:cublasDdot_v2, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
       handle, n, x.p, incx, y.p, incy, result)

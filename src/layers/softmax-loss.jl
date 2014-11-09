@@ -84,5 +84,7 @@ function backward(sys::System{CuDNNBackend}, state::SoftmaxLossLayerState, input
     end
     CUDA.launch(kernel, (x_block, y_block), (CUDA.THREADS_PER_BLOCK_X, 1),
         (diff.ptr.p, inputs[2].ptr.p, num, spatial_dim, prob_dim))
+    CuBLAS.scal(sys.backend.cublas_ctx, length(diff), convert(data_type, 1.0/(spatial_dim*num)),
+        diff.ptr, 1)
   end
 end

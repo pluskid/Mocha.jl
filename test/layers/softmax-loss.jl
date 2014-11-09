@@ -32,6 +32,7 @@ function test_softmax_loss_layer(sys::System)
     end
   end
   expected_loss /= (width*height*num)
+  expected_grad /= (width*height*num)
         
   #println("loss = $(state.loss)")
   #println("expected_loss = $expected_loss")

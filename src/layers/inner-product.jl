@@ -2,7 +2,7 @@
   (output_dim :: Int = 0, output_dim > 0),
   (tops :: Vector{String} = String[], length(tops) >= 1),
   (bottoms :: Vector{String} = String[], length(bottoms) == length(tops)),
-  weight_init :: Initializer = ConstantInitializer(0),
+  weight_init :: Initializer = XavierInitializer(),
   bias_init :: Initializer = ConstantInitializer(0),
   weight_regu :: Regularizer = L2Regu(1),
   bias_regu :: Regularizer = NoRegu(),

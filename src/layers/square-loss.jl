@@ -68,7 +68,7 @@ function forward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs:
 
   copy!(state.pred_copy, pred)
   CuBLAS.axpy(sys.backend.cublas_ctx, n, convert(data_type, -1), label.ptr, 1, state.pred_copy.ptr, 1)
-  state.loss = 0.5/get_num(pred)*CuBLAS.dot(sys.backend.cublas_ctx, n, state.pred_copy.ptr, 1, state.pred_copy.ptr, 1)
+  state.loss = 0.5/get_num(pred)*CuBLAS.dot(sys.backend.cublas_ctx, data_type, n, state.pred_copy.ptr, 1, state.pred_copy.ptr, 1)
 end
 
 function backward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
