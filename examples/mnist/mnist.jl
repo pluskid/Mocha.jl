@@ -20,7 +20,7 @@ fc2_layer  = InnerProductLayer(output_dim=10, bottoms=String["ip1"], tops=String
 loss_layer = SoftmaxLossLayer(bottoms=String["ip2","label"])
 
 #sys = System(CuDNNBackend(), 0.0005, 0.01, 0.9, 10000)
-sys = System(CuDNNBackend(), 0.0005, 0.01, 0.9, 1000)
+sys = System(CuDNNBackend(), 0.0005, 0.01, 0.9, 10000)
 init(sys)
 
 net = Net(sys, [data_layer, conv_layer, pool_layer, fc1_layer, fc2_layer, loss_layer])

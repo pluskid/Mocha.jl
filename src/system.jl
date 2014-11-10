@@ -3,11 +3,6 @@ export init, shutdown
 
 type System{T <: Backend}
   backend :: T
-
-  regularization_coef :: FloatingPoint
-  learning_rate :: FloatingPoint
-  momentum :: FloatingPoint
-  max_iter :: Int
 end
 
 function init(sys::System)

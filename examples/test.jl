@@ -19,9 +19,9 @@ Y = Y + 0.01*randn(size(Y))
 # Define network
 ############################################################
 if use_cudnn
-  sys = System(CuDNNBackend(), 0.0005, 0.01, 0.9, 1000)
+  sys = System(CuDNNBackend())
 else
-  sys = System(CPUBackend(), 0.0005, 0.01, 0.9, 1000)
+  sys = System(CPUBackend())
 end
 init(sys)
 
@@ -34,7 +34,8 @@ net = Net(sys, [loss_layer, weight_layer, data_layer])
 ############################################################
 # Solve
 ############################################################
-solver = SGD()
+params = SolverParameters(regu_coef=0.0005, base_lr=0.01, momentum=0.9, max_iter=1000)
+solver = SGD(params)
 solve(solver, net)
 
 learned_b = similar(B)

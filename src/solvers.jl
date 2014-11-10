@@ -1,5 +1,7 @@
-export Solver
+export SolverParameters, Solver, SolverState
 export SGD
+
+export LearningRatePolicy, LRPolicy, get_learning_rate
 
 export solve
 
@@ -9,11 +11,52 @@ type SolverState
   iter :: Int
 end
 
+
+############################################################
+# Learning rate policy
+############################################################
+abstract LearningRatePolicy
+module LRPolicy
+using ..Mocha.LearningRatePolicy
+type Fixed <: LearningRatePolicy end
+
+# base_lr * gamma ^ (floor(iter / stepsize))
+type Step <: LearningRatePolicy
+  gamma :: FloatingPoint
+  stepsize :: Int
+end
+
+# base_lr * gamma ^ iter
+type Exp <: LearningRatePolicy 
+  gamma :: FloatingPoint
+end
+type Inv <: LearningRatePolicy 
+  gamma :: FloatingPoint
+  power :: FloatingPoint
+end
+end # module LRPolicy
+get_learning_rate(policy::LRPolicy.Fixed, base_lr, state::SolverState) = base_lr
+get_learning_rate(policy::LRPolicy.Step, base_lr, state::SolverState) = 
+    base_lr * policy.gamma ^ (floor(state.iter / policy.stepsize))
+get_learning_rate(policy::LRPolicy.Exp, base_lr, state::SolverState) =
+    base_lr * policy.gamma ^ state.iter
+get_learning_rate(policy::LRPolicy.Inv, base_lr, state::SolverState) =
+    base_lr * (1 + policy.gamma * state.iter) ^ (-state.power)
+
+
+@defstruct SolverParameters Any (
+  (base_lr :: FloatingPoint = 0.01, base_lr > 0),
+  lr_policy :: LearningRatePolicy = LRPolicy.Fixed(),
+  (momentum :: FloatingPoint = 0.9, 0 <= momentum < 1),
+  (max_iter :: Int = 0, max_iter > 0),
+  (regu_coef :: FloatingPoint = 0.0005, regu_coef >= 0),
+)
+
 ############################################################
 # General utilities that could be used by all solvers
 ############################################################
 # Initialize network parameters according to defined initializers
-function init(net::Net)
+function init(solver::Solver, net::Net)
   for i = 1:length(net.layers)
     state = net.states[i]
     if :parameters ∈ names(state)
@@ -21,7 +64,7 @@ function init(net::Net)
         init(param.initializer, param.blob)
 
         # scale per-layer regularization coefficient globally
-        param.regularizer.coefficient *= net.sys.regularization_coef
+        param.regularizer.coefficient *= solver.params.regu_coef
       end
     end
   end
@@ -37,8 +80,8 @@ function forward_backward(state::SolverState, net::Net)
   end
   state.iter += 1
 end
-function stop_condition_satisfied(state::SolverState, net::Net)
-  if state.iter > net.sys.max_iter
+function stop_condition_satisfied(solver::Solver, state::SolverState, net::Net)
+  if state.iter > solver.params.max_iter
     return true
   end
   return false

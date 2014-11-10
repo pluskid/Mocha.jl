@@ -1,4 +1,5 @@
 type SGD <: Solver
+  params :: SolverParameters
 end
 
 function solve(sgd::SGD, net::Net)
@@ -10,9 +11,10 @@ function solve(sgd::SGD, net::Net)
     param_history[i] = [make_zero_blob(net.sys.backend, eltype(x.blob),size(x.blob)...) for x in state.parameters]
   end
 
-  solver_state = init(net)
+  solver_state = init(sgd, net)
   while true
     forward_backward(solver_state, net)
+    learning_rate = get_learning_rate(sgd.params.lr_policy, sgd.params.base_lr, solver_state)
 
     # update parameters
     for i = 1:length(param_states)
@@ -28,34 +30,35 @@ function solve(sgd::SGD, net::Net)
         #println("--gradient: $(maximum(abs(tmp)))")
         #copy!(tmp, state.parameters[j].blob)
         #println("--before update: $(maximum(abs(tmp)))")
-        update_parameters(net, state, state.parameters[j].blob, blob, gradient, data_type)
+        update_parameters(net, sgd, learning_rate, state, state.parameters[j].blob, 
+            blob, gradient, data_type)
         #copy!(tmp, state.parameters[j].blob)
         #println("--after update: $(maximum(abs(tmp)))")
       end
     end
 
-    if stop_condition_satisfied(solver_state, net)
+    if stop_condition_satisfied(sgd, solver_state, net)
       break
     end
   end
 end
 
-function update_parameters(net::Net{CPUBackend}, state, param_blob, blob, gradient, data_type)
-  # blob = net.sys.momentum * blob
-  BLAS.scal!(length(blob), convert(data_type, net.sys.momentum), blob.data, 1)
-  # blob = - net.sys.learning_rate * gradient + blob
-  BLAS.axpy!(length(blob), convert(data_type, -net.sys.learning_rate), gradient.data, 1, blob.data, 1)
+function update_parameters(net::Net{CPUBackend}, solver, learning_rate, state, param_blob, blob, gradient, data_type)
+  # blob = momentum * blob
+  BLAS.scal!(length(blob), convert(data_type, solver.params.momentum), blob.data, 1)
+  # blob = - learning_rate * gradient + blob
+  BLAS.axpy!(length(blob), convert(data_type, -learning_rate), gradient.data, 1, blob.data, 1)
 
   # update parameter
   # param_blob += blob
   BLAS.axpy!(length(blob), convert(data_type, 1), blob.data, 1, param_blob.data, 1)
 end
-function update_parameters(net::Net{CuDNNBackend}, state, param_blob, blob, gradient, data_type)
+function update_parameters(net::Net{CuDNNBackend}, solver, learning_rate, state, param_blob, blob, gradient, data_type)
   # blob = net.sys.momentum * blob
-  CuBLAS.scal(net.sys.backend.cublas_ctx, length(blob), convert(data_type, net.sys.momentum),
+  CuBLAS.scal(net.sys.backend.cublas_ctx, length(blob), convert(data_type, solver.params.momentum),
       blob.ptr, 1)
   # blob = - net.sys.learning_rate * gradient + blob
-  CuBLAS.axpy(net.sys.backend.cublas_ctx, length(blob), convert(data_type, -net.sys.learning_rate),
+  CuBLAS.axpy(net.sys.backend.cublas_ctx, length(blob), convert(data_type, -learning_rate),
       gradient.ptr, 1, blob.ptr, 1)
 
   # update parameter
