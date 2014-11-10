@@ -56,21 +56,24 @@ get_learning_rate(policy::LRPolicy.Inv, base_lr, state::SolverState) =
 # General utilities that could be used by all solvers
 ############################################################
 # Initialize network parameters according to defined initializers
-function init(net::Net)
+function init(net::Net, regu_coef :: FloatingPoint = 0.0)
   for i = 1:length(net.layers)
     state = net.states[i]
     if :parameters ∈ names(state)
       for param in state.parameters
         init(param.initializer, param.blob)
+
+        # scale per-layer regularization coefficient globally
+        param.regularizer.coefficient *= regu_coef
       end
     end
   end
 
   return SolverState(0)
 end
-function forward_backward(state::SolverState, net::Net, regu_coef :: FloatingPoint = 0.0)
-  obj_val = forward(net, regu_coef)
-  backward(net, regu_coef)
+function forward_backward(state::SolverState, net::Net)
+  obj_val = forward(net)
+  backward(net)
 
   if state.iter % 100 == 0
     @printf("%06d objective function = %f\n", state.iter, obj_val)
@@ -85,7 +88,7 @@ function stop_condition_satisfied(solver::Solver, state::SolverState, net::Net)
 end
 
 
-function forward(net::Net, regu_coef :: FloatingPoint = 0.0)
+function forward(net::Net)
   obj_val = 0.0
 
   for i = 1:length(net.layers)
@@ -101,9 +104,9 @@ function forward(net::Net, regu_coef :: FloatingPoint = 0.0)
     end
 
     # handle regularization
-    if regu_coef > 0 && :parameters ∈ names(net.states[i])
+    if :parameters ∈ names(net.states[i])
       for param in net.states[i].parameters
-        obj_val += forward(net.sys, param.regularizer, regu_coef, param.blob)
+        obj_val += forward(net.sys, param.regularizer, param.blob)
       end
     end
   end
@@ -111,7 +114,7 @@ function forward(net::Net, regu_coef :: FloatingPoint = 0.0)
   return obj_val
 end
 
-function backward(net::Net, regu_coef :: FloatingPoint = 0.0)
+function backward(net::Net)
   for i = length(net.layers):-1:1
     if :neuron ∈ names(net.layers[i]) && !isa(net.layers[i].neuron, Neurons.Identity)
       state = net.states[i]
@@ -124,7 +127,7 @@ function backward(net::Net, regu_coef :: FloatingPoint = 0.0)
     # handle regularization
     if :parameters ∈ names(net.states[i])
       for param in net.states[i].parameters
-        backward(net.sys, param.regularizer, regu_coef, param.blob, param.gradient)
+        backward(net.sys, param.regularizer, param.blob, param.gradient)
       end
     end
   end
