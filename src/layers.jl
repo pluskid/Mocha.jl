@@ -1,4 +1,3 @@
-export Layer, LayerState
 export DataLayer, LossLayer, StatLayer, CompLayer
 
 export HDF5DataLayer, MemoryDataLayer
@@ -77,9 +76,6 @@ export setup, forward, backward
 #   procedure also compute gradient with respect to layer
 #   parameters if any.
 ############################################################
-
-abstract Layer      # define layer type, parameters
-abstract LayerState # hold layer state, filters
 
 abstract DataLayer <: Layer # Layer that provide data
 abstract LossLayer <: Layer # Layer that defines loss function for learning

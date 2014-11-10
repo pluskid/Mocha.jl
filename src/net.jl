@@ -33,7 +33,13 @@ Net(sys::System, layers :: Vector{Layer}) = begin
       blob_bwd = Blob[]
     end
 
-    states[i] = setup(sys, layers[i], blob_fwd)
+    if haskey(sys.layer_registry, layers[i])
+      @debug("Sharing parameter with existing layer $(layers[i])")
+      states[i] = sys.layer_registry[layers[i]]
+    else
+      states[i] = setup(sys, layers[i], blob_fwd)
+      sys.layer_registry[layers[i]] = states[i]
+    end
     if :tops ∈ names(layer)
       for j = 1:length(layer.tops)
         output_blobs[layer.tops[j]] = states[i].blobs[j]

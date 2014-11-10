@@ -9,6 +9,7 @@ using HDF5
 type HDF5DataLayerState <: LayerState
   layer :: HDF5DataLayer
   blobs :: Vector{Blob}
+  epoch :: Int
 
   sources        :: Vector{String}
   dsets          :: Vector{String}
@@ -26,12 +27,15 @@ type HDF5DataLayerState <: LayerState
     state.sources = sources
     state.dsets = [string(x) for x in layer.tops]
 
+    state.epoch = 0
     state.curr_source = 1
     state.curr_hdf5_file = h5open(sources[1], "r")
 
     state.blobs = Array(Blob, length(layer.tops))
     for i = 1:length(state.blobs)
       dims = size(state.curr_hdf5_file[state.dsets[i]])
+      @assert(length(dims)==4, "HDF5 dataset $(state.dsets[i]) is not 4D tensor")
+
       dims = tuple(dims[1:3]..., layer.batch_size)
 
       dset = state.curr_hdf5_file[state.dsets[i]]
@@ -68,7 +72,6 @@ function forward(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob})
     end
 
     n1 = min(state.layer.batch_size-n_done, n_remain)
-
     if n1 > 0
       for i = 1:length(state.blobs)
         idx = map(x -> 1:x, size(state.blobs[i])[1:3])
@@ -79,6 +82,12 @@ function forward(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob})
     end
     state.curr_index += n1
     n_done += n1
+
+    # update epoch
+    if state.curr_index > size(state.curr_hdf5_file[state.dsets[1]])[4] &&
+        state.curr_source == length(state.sources)
+      state.epoch += 1
+    end
   end
 end
 
@@ -88,6 +97,7 @@ function set_blob_data(data::Array, blob::CPUBlob, blob_idx::Int)
   blob.data[idx_start+1:idx_start+length(data)] = data
 end
 function set_blob_data{T}(data::Array{T}, blob::CuTensorBlob{T}, blob_idx::Int)
-  ptr = convert(Ptr{Void}, blob.ptr.p) + sizeof(T) * (blob_idx-1) # note 0-based indexing in CUDA Vector
+  n_fea = prod(size(data)[1:3])
+  ptr = convert(Ptr{Void}, blob.ptr.p) + sizeof(T) * n_fea * (blob_idx-1) # note 0-based indexing in CUDA Vector
   CuBLAS.set_vector(length(data), sizeof(T), convert(Ptr{Void},data), 1, ptr, 1)
 end
