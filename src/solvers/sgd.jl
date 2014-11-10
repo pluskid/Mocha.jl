@@ -11,7 +11,7 @@ function solve(sgd::SGD, net::Net)
     param_history[i] = [make_zero_blob(net.sys.backend, eltype(x.blob),size(x.blob)...) for x in state.parameters]
   end
 
-  solver_state = init(sgd, net)
+  solver_state = init(net)
   while true
     forward_backward(solver_state, net)
     learning_rate = get_learning_rate(sgd.params.lr_policy, sgd.params.base_lr, solver_state)
