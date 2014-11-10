@@ -1,17 +1,19 @@
-train_fn = "data/train.hdf5"
-train_source_fn = "data/train.txt"
-if !isfile(train_fn)
-  println("Data not found, use get-mnist.sh to generate HDF5 data")
-  exit(1)
-else
-  open(train_source_fn, "w") do s
-    println(s, train_fn)
+hdf5_fns = ["data/train.hdf5", "data/test.hdf5"]
+source_fns = ["data/train.txt", "data/test.txt"]
+for i = 1:length(hdf5_fns)
+  if !isfile(hdf5_fns[i])
+    println("Data not found, use get-mnist.sh to generate HDF5 data")
+    exit(1)
+  else
+    open(source_fns[i], "w") do s
+      println(s, hdf5_fns[i])
+    end
   end
 end
 
 using Mocha
 
-data_layer = HDF5DataLayer(source=train_source_fn, batch_size=64)
+data_layer = HDF5DataLayer(source=source_fns[1], batch_size=64)
 conv_layer = ConvolutionLayer(n_filter=20, kernel=(5,5), bottoms=[:data], tops=[:conv])
 pool_layer = PoolingLayer(kernel=(2,2), stride=(2,2), bottoms=[:conv], tops=[:pool])
 conv2_layer = ConvolutionLayer(n_filter=50, kernel=(5,5), bottoms=[:pool], tops=[:conv2])
@@ -23,12 +25,19 @@ loss_layer = SoftmaxLossLayer(bottoms=[:ip2,:label])
 sys = System(CuDNNBackend())
 init(sys)
 
-net = Net(sys, [data_layer, conv_layer, pool_layer, conv2_layer, pool2_layer, fc1_layer, fc2_layer, loss_layer])
-#net = Net(sys, [data_layer, fc2_layer, loss_layer])
+common_layers = [conv_layer, pool_layer, conv2_layer, pool2_layer, fc1_layer, fc2_layer]
+net = Net(sys, [data_layer, common_layers..., loss_layer])
 
 params = SolverParameters(max_iter=10000, regu_coef=0.0005, base_lr=0.01, momentum=0.9,
     lr_policy=LRPolicy.Inv(0.0001, 0.75))
 solver = SGD(params)
+add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
+
+data_layer_test = HDF5DataLayer(source=source_fns[2], batch_size=100)
+acc_layer = AccuracyLayer(bottoms=[:ip2, :label])
+test_net = Net(sys, [data_layer_test, common_layers..., acc_layer])
+add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
+
 solve(solver, net)
 
 shutdown(sys)

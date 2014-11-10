@@ -25,3 +25,4 @@ function check_coffee_break(cb::CoffeeBreak, state::SolverState, net::Net)
 end
 
 include("coffee/training-summary.jl")
+include("coffee/validation-performance.jl")

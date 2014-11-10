@@ -17,7 +17,7 @@ function get_epoch(net::Net)
   if length(net.data_layers) == 0
     error("No data layer in the net, cannot get epoch")
   end
-  return net.states[layer.data_layers[1]].epoch
+  return net.states[net.data_layers[1]].epoch
 end
 
 function init(net::Net, regu_coef :: FloatingPoint = 0.0)
@@ -35,6 +35,19 @@ function init(net::Net, regu_coef :: FloatingPoint = 0.0)
 end
 function destroy(net::Net)
   # TODO
+end
+
+function show_statistics(net::Net; title="Network Statistics")
+  @info("")
+  @info("## $title")
+  @info("---------------------------------------------------------")
+  for i = 1:length(net.layers)
+    if isa(net.layers[i], StatLayer)
+      summarize(net.states[i])
+    end
+  end
+  @info("---------------------------------------------------------")
+  @info("")
 end
 
 function forward_backward(net::Net)
