@@ -6,7 +6,7 @@ function test_softmax_layer(sys::System)
   input = rand(width, height, channels, num)
   input_blob = make_blob(sys.backend, input)
 
-  layer = SoftmaxLayer(tops = String["prob"], bottoms = String["response"])
+  layer = SoftmaxLayer(tops = [:prob], bottoms = [:response])
   state = setup(sys, layer, Blob[input_blob])
 
   forward(sys, state, Blob[input_blob])

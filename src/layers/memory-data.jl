@@ -1,6 +1,6 @@
 @defstruct MemoryDataLayer DataLayer (
+  (tops :: Vector{Symbol} = Symbol[:data,:label], length(tops) > 0),
   (batch_size :: Int = 0, batch_size > 0),
-  (tops :: Vector{String} = String["data","label"], length(tops) > 0),
   (data :: Vector{Array} = Array[], length(data) == length(tops))
 )
 

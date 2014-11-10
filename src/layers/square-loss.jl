@@ -4,7 +4,7 @@
 # L(\hat{y},y) = 1/2N \sum_{i=1}^N (\hat{y}_i - y_i)^2
 ############################################################
 @defstruct SquareLossLayer LossLayer (
-  (bottoms :: Vector{String} = String[], length(bottoms) == 2),
+  (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 
 type SquareLossLayerState{T} <: LayerState

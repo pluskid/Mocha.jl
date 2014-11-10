@@ -12,7 +12,7 @@ function test_softmax_loss_layer(sys::System)
 
   inputs = Blob[input_blob, label_blob]
 
-  layer = SoftmaxLossLayer(bottoms=String["pred", "labels"])
+  layer = SoftmaxLossLayer(bottoms=[:pred, :labels])
   state = setup(sys, layer, inputs)
 
   println("    > Forward")

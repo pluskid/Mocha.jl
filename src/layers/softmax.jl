@@ -2,8 +2,8 @@
 # Softmax Layer
 ############################################################
 @defstruct SoftmaxLayer CompLayer (
-  tops :: Vector{String} = String[],
-  (bottoms :: Vector{String} = String[], length(bottoms) == length(tops))
+  tops :: Vector{Symbol} = Symbol[],
+  (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(tops))
 )
 
 type SoftmaxLayerState <: LayerState

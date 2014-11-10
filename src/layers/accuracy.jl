@@ -1,6 +1,6 @@
 @defstruct AccuracyLayer StatLayer (
-  (tops :: Vector{String} = String[], length(tops) == 0),
-  (bottoms :: Vector{String} = String[], length(bottoms) == 2)
+  (tops :: Vector{Symbol} = Symbol[], length(tops) == 0),
+  (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2)
 )
 
 type AccuracyLayerState <: LayerState

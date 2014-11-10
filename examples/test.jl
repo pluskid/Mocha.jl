@@ -26,8 +26,8 @@ end
 init(sys)
 
 data_layer = MemoryDataLayer(batch_size=500, data=Array[X,Y])
-weight_layer = InnerProductLayer(output_dim=P, tops=String["pred"], bottoms=String["data"])
-loss_layer = SquareLossLayer(bottoms=String["pred", "label"])
+weight_layer = InnerProductLayer(output_dim=P, tops=[:pred], bottoms=[:data])
+loss_layer = SquareLossLayer(bottoms=[:pred, :label])
 
 net = Net(sys, [loss_layer, weight_layer, data_layer])
 

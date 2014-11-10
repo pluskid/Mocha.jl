@@ -16,7 +16,7 @@ function test_convolution_layer(sys::System)
   bias_dims = (1, 1, n_filter, 1)
 
   layer = ConvolutionLayer(; kernel=(filter_w, filter_h), stride=(1,2), pad=(2,2), n_filter=n_filter, n_group=n_group,
-      tops=String["conv"], bottoms=String["data"])
+      tops=[:conv], bottoms=[:data])
 
   input = rand(input_dims)
   inputs = Blob[make_blob(sys.backend, Float64, input_dims)]

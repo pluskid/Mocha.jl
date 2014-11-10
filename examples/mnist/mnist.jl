@@ -12,13 +12,13 @@ end
 using Mocha
 
 data_layer = HDF5DataLayer(source=train_source_fn, batch_size=64)
-conv_layer = ConvolutionLayer(n_filter=20, kernel=(5,5), bottoms=String["data"], tops=String["conv"])
-pool_layer = PoolingLayer(kernel=(2,2), stride=(2,2), bottoms=String["conv"], tops=String["pool"])
-conv2_layer = ConvolutionLayer(n_filter=50, kernel=(5,5), bottoms=String["pool"], tops=String["conv2"])
-pool2_layer = PoolingLayer(kernel=(2,2), stride=(2,2), bottoms=String["conv2"], tops=String["pool2"])
-fc1_layer  = InnerProductLayer(output_dim=500, neuron=Neurons.ReLU(), bottoms=String["pool2"], tops=String["ip1"])
-fc2_layer  = InnerProductLayer(output_dim=10, bottoms=String["ip1"], tops=String["ip2"])
-loss_layer = SoftmaxLossLayer(bottoms=String["ip2","label"])
+conv_layer = ConvolutionLayer(n_filter=20, kernel=(5,5), bottoms=[:data], tops=[:conv])
+pool_layer = PoolingLayer(kernel=(2,2), stride=(2,2), bottoms=[:conv], tops=[:pool])
+conv2_layer = ConvolutionLayer(n_filter=50, kernel=(5,5), bottoms=[:pool], tops=[:conv2])
+pool2_layer = PoolingLayer(kernel=(2,2), stride=(2,2), bottoms=[:conv2], tops=[:pool2])
+fc1_layer  = InnerProductLayer(output_dim=500, neuron=Neurons.ReLU(), bottoms=[:pool2], tops=[:ip1])
+fc2_layer  = InnerProductLayer(output_dim=10, bottoms=[:ip1], tops=[:ip2])
+loss_layer = SoftmaxLossLayer(bottoms=[:ip2,:label])
 
 sys = System(CuDNNBackend())
 init(sys)

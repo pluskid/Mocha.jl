@@ -2,7 +2,7 @@
 # Softmax Loss
 ############################################################
 @defstruct SoftmaxLossLayer LossLayer (
-  (bottoms :: Vector{String} = String[], length(bottoms) == 2),
+  (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 
 type SoftmaxLossLayerState{T} <: LayerState
@@ -19,10 +19,10 @@ function setup(sys::System, layer::SoftmaxLossLayer, inputs::Vector{Blob})
   data_type = eltype(inputs[1])
   etc = nothing
 
-  softmax_layer = SoftmaxLayer(tops=Array(String, length(inputs)), bottoms=Array(String, length(inputs)))
+  softmax_layer = SoftmaxLayer(tops=Array(Symbol, length(inputs)), bottoms=Array(Symbol, length(inputs)))
   softmax = setup(sys, softmax_layer, Blob[inputs[1]])
 
-  logistic_layer = MultinomialLogisticLossLayer(bottoms=Array(String, 2))
+  logistic_layer = MultinomialLogisticLossLayer(bottoms=Array(Symbol, 2))
   logistic = setup(sys, logistic_layer, inputs)
 
   state = SoftmaxLossLayerState(layer, convert(data_type, 0), softmax, logistic, etc)

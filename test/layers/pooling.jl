@@ -20,7 +20,7 @@ function test_pooling_layer(sys::System, pooling::PoolingFunction, has_padding::
   eps         = 1e-10
 
   layer = PoolingLayer(; kernel=(kernel_w,kernel_h), stride=(stride_w,stride_h), pad=padding,
-      tops=String["output"], bottoms=String["input"], pooling=pooling)
+      tops=[:output], bottoms=[:input], pooling=pooling)
 
   input_dims = (input_w, input_h, input_chann, input_num)
   input = rand(input_dims)

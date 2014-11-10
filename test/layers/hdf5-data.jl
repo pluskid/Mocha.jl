@@ -31,7 +31,7 @@ function test_hdf5_data_layer(sys::System)
   ############################################################
 
   # batch size is determined by
-  layer = HDF5DataLayer(; source = source_fn, tops = String["data"], batch_size=batch_size)
+  layer = HDF5DataLayer(; source = source_fn, tops = [:data], batch_size=batch_size)
   state = setup(sys, layer, Blob[])
 
   data = cat(4, data_all...)

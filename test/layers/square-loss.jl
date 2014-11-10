@@ -12,7 +12,7 @@ function test_square_loss_layer(sys::System)
   ############################################################
   # Setup
   ############################################################
-  layer  = SquareLossLayer(; bottoms=String["predictions", "labels"])
+  layer  = SquareLossLayer(; bottoms=[:predictions, :labels])
   if isa(sys.backend, CPUBackend)
     pred_blob  = CPUBlob(Float64, dims...)
     label_blob = CPUBlob(Float64, dims...)

@@ -2,7 +2,7 @@
 # Multinomial Logistic Loss
 ############################################################
 @defstruct MultinomialLogisticLossLayer LossLayer (
-  (bottoms :: Vector{String} = String[], length(bottoms) == 2),
+  (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 
 type MultinomialLogisticLossLayerState{T} <: LayerState
