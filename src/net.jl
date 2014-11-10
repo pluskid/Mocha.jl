@@ -29,8 +29,8 @@ Net(sys::System, layers :: Vector{Layer}) = begin
   blobs_forward = Array(Vector{Blob}, n)
   blobs_backward = Array(Vector{Blob}, n)
 
-  output_blobs = Dict{String,Blob}()
-  diff_blobs = Dict{String,Blob}()
+  output_blobs = Dict{Symbol,Blob}()
+  diff_blobs = Dict{Symbol,Blob}()
 
   for i = 1:n
     layer = layers[i]
@@ -72,7 +72,7 @@ function topological_sort(layers :: Vector{Layer})
 
   #---- Build dependency graph
   graph = zeros(Int, n, n)
-  outputs = Dict{String, Int}()
+  outputs = Dict{Symbol, Int}()
 
   for i = 1:n
     if :tops ∈ names(layers[i])

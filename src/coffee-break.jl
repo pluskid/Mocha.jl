@@ -2,7 +2,7 @@ export CoffeeBreak, go
 export PerformanceOnValidationSet
 
 abstract Coffee
-function enjoy(::CoffeeBreak)
+function enjoy(::System, ::Coffee)
   error("Not implemented (should enjoy coffee)")
 end
 
@@ -29,5 +29,7 @@ end
 
 type PerformanceOnValidationSet <: Coffee
   net :: Net
+end
+function enjoy(sys::System, coffee::PerformanceOnValidationSet)
 end
 

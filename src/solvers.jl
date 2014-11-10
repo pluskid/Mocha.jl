@@ -1,16 +1,9 @@
-export SolverParameters, Solver, SolverState
+export SolverParameters
 export SGD
 
 export LearningRatePolicy, LRPolicy, get_learning_rate
 
 export solve
-
-abstract Solver
-
-type SolverState
-  iter :: Int
-end
-
 
 ############################################################
 # Learning rate policy
@@ -68,8 +61,6 @@ function init(net::Net, regu_coef :: FloatingPoint = 0.0)
       end
     end
   end
-
-  return SolverState(0)
 end
 function forward_backward(state::SolverState, net::Net)
   obj_val = forward(net)

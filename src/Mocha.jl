@@ -17,6 +17,7 @@ include("parameter.jl")
 include("layers.jl")
 include("net.jl")
 
+include("coffee-break.jl")
 include("solvers.jl")
 
 end # module
