@@ -1,5 +1,5 @@
 export Net
-export init, forward, backward, forward_backward, get_epoch
+export init, destroy, forward, backward, forward_backward, get_epoch
 
 type Net{T <: Backend}
   sys :: System{T}
@@ -33,6 +33,10 @@ function init(net::Net, regu_coef :: FloatingPoint = 0.0)
     end
   end
 end
+function destroy(net::Net)
+  # TODO
+end
+
 function forward_backward(net::Net)
   obj_val = forward(net)
   backward(net)
