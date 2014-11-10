@@ -1,5 +1,8 @@
 type SGD <: Solver
-  params :: SolverParameters
+  params        :: SolverParameters
+  coffee_breaks :: Vector{CoffeeBreak}
+
+  SGD(params::SolverParameters) = new(params, CoffeeBreak[])
 end
 
 function solve(sgd::SGD, net::Net)
@@ -12,9 +15,11 @@ function solve(sgd::SGD, net::Net)
   end
 
   init(net)
-  solver_state = SolverState(0)
+  init_coffee_breaks(sgd, net)
+  solver_state = SolverState(0, 0.0)
+
   while true
-    forward_backward(solver_state, net)
+    obj_val = forward_backward(net)
     learning_rate = get_learning_rate(sgd.params.lr_policy, sgd.params.base_lr, solver_state)
 
     # update parameters
@@ -26,22 +31,20 @@ function solve(sgd::SGD, net::Net)
         gradient = state.parameters[j].gradient
         data_type = eltype(blob)
 
-        #tmp = zeros(eltype(gradient), size(state.parameters[j].blob))
-        #copy!(tmp, gradient)
-        #println("--gradient: $(maximum(abs(tmp)))")
-        #copy!(tmp, state.parameters[j].blob)
-        #println("--before update: $(maximum(abs(tmp)))")
         update_parameters(net, sgd, learning_rate, state, state.parameters[j].blob, 
             blob, gradient, data_type)
-        #copy!(tmp, state.parameters[j].blob)
-        #println("--after update: $(maximum(abs(tmp)))")
       end
     end
+
+    update_solver_state(solver_state, obj_val)
+    check_coffee_breaks(sgd, solver_state, net)
 
     if stop_condition_satisfied(sgd, solver_state, net)
       break
     end
   end
+
+  destroy_coffee_breaks(sgd, net)
 end
 
 function update_parameters(net::Net{CPUBackend}, solver, learning_rate, state, param_blob, blob, gradient, data_type)

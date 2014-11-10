@@ -8,6 +8,7 @@ export Solver, SolverState
 
 abstract Solver
 type SolverState
-  iter :: Int
+  iter    :: Int
+  obj_val :: Float64
 end
 

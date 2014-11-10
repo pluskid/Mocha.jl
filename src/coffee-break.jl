@@ -1,35 +1,27 @@
-export CoffeeBreak, go
+export CoffeeBreak, check_coffee_break
+export init, enjoy, destroy
 export PerformanceOnValidationSet
 
 abstract Coffee
-function enjoy(::System, ::Coffee)
-  error("Not implemented (should enjoy coffee)")
-end
+function init(::Coffee, ::Net) end
+function enjoy(::Coffee, ::Net, ::SolverState) end
+function destroy(::Coffee, ::Net) end
 
 type CoffeeBreak
   coffee        :: Coffee
   every_n_iter  :: Int
   every_n_epoch :: Int
-
-  CoffeeBreak(coffee::Coffee; every_n_iter=0, every_n_epoch=0) =
-      CoffeeBreak(coffee, every_n_iter, every_n_epoch)
 end
-function check_coffee_break(state::SolverState, net::Net, cb::CoffeeBreak)
+function check_coffee_break(cb::CoffeeBreak, state::SolverState, net::Net)
   if cb.every_n_iter > 0
     if state.iter % cb.every_n_iter == 0
-      enjoy(cb.coffee)
+      enjoy(cb.coffee, net, state)
     end
-  elseif cb.every_n_epoch
+  elseif cb.every_n_epoch > 0
     if get_epoch(net) % cb.every_n_epoch == 0
-      enjoy(cb.coffee)
+      enjoy(cb.coffee, net, state)
     end
   end
 end
 
-
-type PerformanceOnValidationSet <: Coffee
-  net :: Net
-end
-function enjoy(sys::System, coffee::PerformanceOnValidationSet)
-end
-
+include("coffee/training-summary.jl")
