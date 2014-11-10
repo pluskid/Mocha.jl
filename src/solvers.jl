@@ -41,7 +41,7 @@ get_learning_rate(policy::LRPolicy.Step, base_lr, state::SolverState) =
 get_learning_rate(policy::LRPolicy.Exp, base_lr, state::SolverState) =
     base_lr * policy.gamma ^ state.iter
 get_learning_rate(policy::LRPolicy.Inv, base_lr, state::SolverState) =
-    base_lr * (1 + policy.gamma * state.iter) ^ (-state.power)
+    base_lr * (1 + policy.gamma * state.iter) ^ (-policy.power)
 
 
 @defstruct SolverParameters Any (
@@ -101,15 +101,12 @@ function forward(net::Net)
 
     if isa(net.layers[i], LossLayer)
       obj_val += net.states[i].loss
-      #println("~~ obj_val = $obj_val")
     end
 
     # handle regularization
     if :parameters ∈ names(net.states[i])
       for param in net.states[i].parameters
-        #println("== obj_val = $obj_val")
         obj_val += forward(net.sys, param.regularizer, param.blob)
-        #println("!! obj_val = $obj_val")
       end
     end
   end
