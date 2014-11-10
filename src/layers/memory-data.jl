@@ -7,6 +7,7 @@
 type MemoryDataLayerState <: LayerState
   layer :: MemoryDataLayer
   blobs :: Vector{Blob}
+  epoch :: Int
 
   curr_idx :: Int
 
@@ -19,7 +20,7 @@ type MemoryDataLayerState <: LayerState
       blobs[i] = make_blob(sys.backend, eltype(layer.data[i]), dims...)
     end
 
-    new(layer, blobs, 1)
+    new(layer, blobs, 0, 1)
   end
 end
 
@@ -56,5 +57,9 @@ function forward(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob})
     end
     state.curr_idx += n1
     n_done += n1
+
+    if state.curr_idx > size(state.layer.data[1], 4)
+      state.epoch += 1
+    end
   end
 end

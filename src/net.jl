@@ -1,4 +1,5 @@
 export Net
+export get_epoch
 
 type Net{T <: Backend}
   sys :: System{T}
@@ -9,10 +10,19 @@ type Net{T <: Backend}
   states         :: Vector{LayerState}
   blobs_forward  :: Vector{Vector{Blob}}
   blobs_backward :: Vector{Vector{Blob}}
+  data_layers    :: Vector{Int}
+end
+
+function get_epoch(net::Net)
+  if length(net.data_layers) == 0
+    error("No data layer in the net, cannot get epoch")
+  end
+  return net.states[layer.data_layers[1]].epoch
 end
 
 Net(sys::System, layers :: Vector{Layer}) = begin
   layers = topological_sort(layers)
+  data_layers = find(l -> isa(l, DataLayer), layers)
 
   n = length(layers)
   states = Array(LayerState, n)
@@ -53,7 +63,7 @@ Net(sys::System, layers :: Vector{Layer}) = begin
     blobs_backward[i] = blob_bwd
   end
 
-  return Net(sys, layers, states, blobs_forward, blobs_backward)
+  return Net(sys, layers, states, blobs_forward, blobs_backward, data_layers)
 end
 
 

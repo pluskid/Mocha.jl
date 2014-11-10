@@ -5,6 +5,7 @@ __device__ void accuracy_forward(T *pred, T *labels, T *acc_buf, int num, int ch
   int s = threadIdx.y + blockIdx.y * blockDim.y;
   if (n >= num || s >= spatial_dim)
     return;
+
   int idx = s + spatial_dim * n;
   int label = static_cast<int>(labels[idx]);
   acc_buf[idx] = 1; // correct

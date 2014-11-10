@@ -10,7 +10,7 @@ function test_hdf5_data_layer(sys::System)
   data_dim = (1,1,2)
   eps = 1e-15
 
-  data_all = [zeros(data_dim..., x)+x for x in [5 1 2]]
+  data_all = [rand(data_dim..., x) for x in [5 1 2]]
   h5fn_all = [string(tempname(), ".hdf5") for x in 1:length(data_all)]
 
   for i = 1:length(data_all)
