@@ -34,6 +34,9 @@ include("regularizers/l2.jl")
 ############################################################
 # Layers
 ############################################################
+#-- Statistics Layers
+include("layers/accuracy.jl")
+
 #-- Data layers
 include("layers/hdf5-data.jl")
 include("layers/memory-data.jl")

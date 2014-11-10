@@ -12,6 +12,8 @@ type MochaKernels
   relu_forward_double          :: CUDA.CuFunction
   relu_backward_float          :: CUDA.CuFunction
   relu_backward_double         :: CUDA.CuFunction
+  accuracy_forward_float       :: CUDA.CuFunction
+  accuracy_forward_double      :: CUDA.CuFunction
 
   MochaKernels() = begin
     mod_path = joinpath(dirname(@__FILE__), "kernels", "kernels.ptx")
@@ -26,6 +28,8 @@ type MochaKernels
     kernels.relu_forward_double = CUDA.CuFunction(mod, "relu_forward_double")
     kernels.relu_backward_float = CUDA.CuFunction(mod, "relu_backward_float")
     kernels.relu_backward_double = CUDA.CuFunction(mod, "relu_backward_double")
+    kernels.accuracy_forward_float = CUDA.CuFunction(mod, "accuracy_forward_float")
+    kernels.accuracy_forward_double = CUDA.CuFunction(mod, "accuracy_forward_double")
 
     return kernels
   end

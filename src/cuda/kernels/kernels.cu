@@ -7,4 +7,7 @@
 #include "logistic_loss.impl"
 #include "softmax_loss.impl"
 
+#include "accuracy.impl"
+
 #include "relu.impl"
+

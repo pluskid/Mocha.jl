@@ -1,0 +1,28 @@
+#define ACCURACY_IDX(k) (s + spatial_dim * (k + channels * n))
+template <typename T>
+__device__ void accuracy_forward(T *pred, T *labels, T *acc_buf, int num, int channels, int spatial_dim) {
+  int n = threadIdx.x + blockIdx.x * blockDim.x;
+  int s = threadIdx.y + blockIdx.y * blockDim.y;
+  if (n >= num || s >= spatial_dim)
+    return;
+  int idx = s + spatial_dim * n;
+  int label = static_cast<int>(labels[idx]);
+  acc_buf[idx] = 1; // correct
+  T maxval = pred[ACCURACY_IDX(label)];
+  for (int i = 0; i < channels; ++i) {
+    if (pred[ACCURACY_IDX(i)] > maxval) {
+      acc_buf[idx] = 0; // incorrect
+    }
+  }
+}
+
+extern "C" {
+  __global__ void accuracy_forward_float(float *pred, float *label, float *acc_buf, int num, int channels, int spatial_dim) {
+    accuracy_forward(pred, label, acc_buf, num, channels, spatial_dim);
+  }
+  __global__ void accuracy_forward_double(double *pred, double *label, double *acc_buf, int num, int channels, int spatial_dim) {
+    accuracy_forward(pred, label, acc_buf, num, channels, spatial_dim);
+  }
+}
+
+// vim: ft=cuda

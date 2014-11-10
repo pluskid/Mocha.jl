@@ -7,6 +7,8 @@ export AccuracyLayer
 
 export setup, forward, backward
 
+export reset, summarize # for statistics layers
+
 ############################################################
 # Implementing a Layer
 #
@@ -83,6 +85,12 @@ abstract StatLayer <: Layer # Layer that provide statistics (e.g. Accuracy)
 abstract CompLayer <: Layer # Layer that do computation
 
 #############################################################
+# Default procedures for layers that do not need them
+#############################################################
+function backward(sys::System, state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+end
+
+#############################################################
 # Data Layers
 #############################################################
 include("layers/hdf5-data.jl")
@@ -108,9 +116,3 @@ include("layers/softmax-loss.jl")
 #############################################################
 include("layers/accuracy.jl")
 
-
-#############################################################
-# Default procedures for layers that do not need them
-#############################################################
-function backward(sys::System, state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-end
