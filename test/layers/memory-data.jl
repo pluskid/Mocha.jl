@@ -8,7 +8,7 @@ function test_memory_data_layer(sys::System)
   data_dim = (2,3,4)
   eps = 1e-15
 
-  data = rand(data_dim..., 10)
+  data = rand(data_dim..., 9)
 
   ############################################################
   # Setup
@@ -35,7 +35,7 @@ function test_memory_data_layer(sys::System)
   forward(sys, state, Blob[])
   copy!(layer_data, state.blobs[1])
   @test all(-eps .< layer_data - data_aug[data_idx..., 2batch_size+1:3batch_size] .< eps)
-  @test state.epoch == 1
+  @test state.epoch == 2
 end
 
 if test_cpu
