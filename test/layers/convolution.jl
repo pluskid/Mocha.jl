@@ -8,14 +8,28 @@ function test_convolution_layer(sys::System)
   n_group = 2
   filter_w = 3
   filter_h = 4
+  pad_w = 2
+  pad_h = 2
   n_filter = 12
   eps = 1e-10
+
+  #input_w = 2
+  #input_h = 2
+  #input_chann = 2
+  #input_num = 1
+  #n_group = 2
+  #filter_w = 2
+  #filter_h = 2
+  #pad_w = 0
+  #pad_h = 0
+  #n_filter = 2
+  #eps = 1e-10
 
   input_dims = (input_w, input_h, input_chann, input_num)
   filter_dims = (filter_w, filter_h, int(input_chann/n_group), n_filter)
   bias_dims = (1, 1, n_filter, 1)
 
-  layer = ConvolutionLayer(; kernel=(filter_w, filter_h), stride=(1,2), pad=(2,2), n_filter=n_filter, n_group=n_group,
+  layer = ConvolutionLayer(; kernel=(filter_w, filter_h), stride=(1,2), pad=(pad_w,pad_h), n_filter=n_filter, n_group=n_group,
       tops=[:conv], bottoms=[:data])
 
   input = rand(input_dims)
@@ -24,14 +38,16 @@ function test_convolution_layer(sys::System)
 
   state = setup(sys, layer, inputs)
 
-  # test that we are getting the correct output shape
-  out_blob_dims = CuDNN.get_output_tensor4d_dim(state.etc.conv_desc[1], CuDNN.CUDNN_CONVOLUTION_FWD)
-  @test out_blob_dims == (get_width(state.blobs[1]), get_height(state.blobs[1]), int(get_chann(state.blobs[1])/n_group), input_num)
+  if isa(sys.backend, CuDNNBackend)
+    # test that we are getting the correct output shape
+    out_blob_dims = CuDNN.get_output_tensor4d_dim(state.etc.conv_desc[1], CuDNN.CUDNN_CONVOLUTION_FWD)
+    @test out_blob_dims == (get_width(state.blobs[1]), get_height(state.blobs[1]), int(get_chann(state.blobs[1])/n_group), input_num)
+  end
 
   println("    > Forward")
   filter = rand(filter_dims)
   copy!(state.filter, filter)
-  bias = rand(bias_dims)
+  bias = zeros(bias_dims)#rand(bias_dims)
   copy!(state.bias, bias)
 
   forward(sys, state, inputs)

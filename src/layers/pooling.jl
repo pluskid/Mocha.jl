@@ -149,7 +149,7 @@ function backward(sys::System{CPUBackend}, pool::Pooling.Max, state::PoolingLaye
           for pw = 1:pooled_width
             index = mask[n,c,ph,pw]
             w = index % width
-            h = int(index / width)
+            h = floorint(index / width)
 
             diff.data[n,c,h,w] += output[n,c,ph,pw]
           end
