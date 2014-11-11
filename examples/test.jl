@@ -1,35 +1,49 @@
 using Mocha
 
+use_cudnn = true
 ############################################################
 # Prepare Random Data
 ############################################################
 N = 10000
 M = 20
-P = 1
+P = 10
 
-X = rand(N, M)
+X = rand(M, N)
 W = rand(M, P)
-B = rand(1, P)
+B = rand(P, 1)
 
-Y = ((X*W .+ B)).^2
-m = mean(Y)
-Y[Y .> m] = 2
-Y[Y .<= m] = 1
+Y = (W'*X .+ B)
+Y = Y + 0.01*randn(size(Y))
 
 ############################################################
 # Define network
 ############################################################
-sys = System(CPU(), 0.0005, 0.01, 0.9, 5000)
+if use_cudnn
+  sys = System(CuDNNBackend())
+else
+  sys = System(CPUBackend())
+end
+init(sys)
 
-data_layer = MemoryDataLayer(; batch_size=100, data=Array[X,Y])
-weight_layer = InnerProductLayer(; output_dim=M, tops=String["pred"], bottoms=String["data"], neuron = Neurons.Sigmoid())
-weight_layer2 = InnerProductLayer(; output_dim=2, tops=String["pred2"], bottoms=String["pred"], neuron = Neurons.Identity())
-loss_layer = SoftmaxLossLayer(; bottoms=String["pred2", "label"])
+data_layer = MemoryDataLayer(batch_size=500, data=Array[X,Y])
+weight_layer = InnerProductLayer(output_dim=P, tops=[:pred], bottoms=[:data])
+loss_layer = SquareLossLayer(bottoms=[:pred, :label])
 
-net = Net(sys, [loss_layer, weight_layer, weight_layer2, data_layer])
+net = Net(sys, [loss_layer, weight_layer, data_layer])
 
 ############################################################
 # Solve
 ############################################################
-solver = SGD()
+params = SolverParameters(regu_coef=0.0005, base_lr=0.01, momentum=0.9, max_iter=1000)
+solver = SGD(params)
+add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
+
 solve(solver, net)
+
+learned_b = similar(B)
+copy!(learned_b, net.states[2].b)
+
+#println("$(learned_b)")
+#println("$(B)")
+
+shutdown(sys)

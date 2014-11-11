@@ -1,23 +1,17 @@
-export NumericRoot
+export Layer, LayerState
 
-export Backend, CPU, GPU
-export System
+abstract Layer      # define layer type, parameters
+abstract LayerState # hold layer state, filters
 
-# Numerical computations are only supported
-# for number types that are subtype of this
-# NumericRoot in Mocha
-typealias NumericRoot FloatingPoint 
 
-abstract Backend
+export Solver, SolverState
 
-type CPU <: Backend; end
-type CUDNN <: Backend; end
-
-type System{T <: Backend}
-  backend :: T
-
-  regularization_coef :: NumericRoot
-  learning_rate :: NumericRoot
-  momentum :: NumericRoot
-  max_iter :: Int
+abstract Solver
+type SolverState
+  iter    :: Int
+  obj_val :: Float64
+end
+function copy_solver_state!(dst::SolverState, src::SolverState)
+  dst.iter = src.iter
+  dst.obj_val = src.obj_val
 end

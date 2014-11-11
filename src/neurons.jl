@@ -43,29 +43,65 @@ end # module Neurons
 ############################################################
 # Identity
 ############################################################
-function forward(sys :: System{CPU}, neuron :: Neurons.Identity, output :: Blob)
+function forward(sys :: System, neuron :: Neurons.Identity, output :: Blob)
   # do nothing
 end
-function backward(sys :: System{CPU}, neuron :: Neurons.Identity, output :: Blob, gradient :: Blob)
+function backward(sys :: System, neuron :: Neurons.Identity, output :: Blob, gradient :: Blob)
   # do nothing
 end
 
+function cuda_geometry(:: ActivationFunction, output :: Blob)
+  width, height, channels, num = size(output)
+  spatial_dim = width*height
+
+  x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X));
+  y_block = int(ceil(float64(channels)/CUDA.THREADS_PER_BLOCK_Y));
+  z_block = int(ceil(float64(spatial_dim)/CUDA.THREADS_PER_BLOCK_Z));
+  return (((x_block,y_block,z_block),(CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z)),
+          (num, channels, spatial_dim))
+end
 ############################################################
 # Rectified-Linear
 ############################################################
-function forward(sys :: System{CPU}, neuron :: Neurons.ReLU, output :: Blob)
+function forward(sys :: System{CPUBackend}, neuron :: Neurons.ReLU, output :: Blob)
   output.data[:] = max(output.data[:], 0)
 end
-function backward(sys :: System{CPU}, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
-  gradient.data[:] .*= (output.data[:] .>= 0)
+function backward(sys :: System{CPUBackend}, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
+  gradient.data[:] .*= (output.data[:] .> 0)
+end
+
+function forward(sys :: System{CuDNNBackend}, neuron :: Neurons.ReLU, output :: Blob)
+  cuda_dim, blob_dim = cuda_geometry(neuron, output)
+  data_type = eltype(output)
+  if data_type == Float32
+    kernel = sys.backend.mocha.relu_forward_float
+  elseif data_type == Float64
+    kernel = sys.backend.mocha.relu_forward_double
+  else
+    error("Unsupported data type $data_type")
+  end
+  CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, blob_dim...))
+end
+
+function backward(sys :: System{CuDNNBackend}, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
+  cuda_dim, blob_dim = cuda_geometry(neuron, output)
+  data_type = eltype(output)
+  if data_type == Float32
+    kernel = sys.backend.mocha.relu_backward_float
+  elseif data_type == Float64
+    kernel = sys.backend.mocha.relu_backward_double
+  else
+    error("Unsupported data type $data_type")
+  end
+  CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, gradient.ptr.p, blob_dim...))
 end
 
 ############################################################
 # Sigmoid
 ############################################################
-function forward(sys :: System{CPU}, neuron :: Neurons.Sigmoid, output :: Blob)
+function forward(sys :: System{CPUBackend}, neuron :: Neurons.Sigmoid, output :: Blob)
   output.data[:] = 1 ./ (1 + exp(-output.data[:]))
 end
-function backward(sys :: System{CPU}, neuron :: Neurons.Sigmoid, output :: Blob, gradient :: Blob)
+function backward(sys :: System{CPUBackend}, neuron :: Neurons.Sigmoid, output :: Blob, gradient :: Blob)
   gradient.data[:] .*= (output.data[:] .* (1-output.data[:]))
 end

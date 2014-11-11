@@ -1,54 +1,66 @@
 @defstruct MemoryDataLayer DataLayer (
-  (batch_size :: Int = 0, batch_size > 0), 
-  (tops :: Vector{String} = String["data","label"], length(tops) > 0),
+  name :: String = "memory-data",
+  (tops :: Vector{Symbol} = Symbol[:data,:label], length(tops) > 0),
+  (batch_size :: Int = 0, batch_size > 0),
   (data :: Vector{Array} = Array[], length(data) == length(tops))
 )
 
 type MemoryDataLayerState <: LayerState
   layer :: MemoryDataLayer
   blobs :: Vector{Blob}
+  epoch :: Int
 
   curr_idx :: Int
 
   MemoryDataLayerState(sys::System, layer::MemoryDataLayer) = begin
-    blobs = Array(CPUBlob, length(layer.tops))
+    blobs = Array(Blob, length(layer.tops))
     for i = 1:length(blobs)
-      dims = tuple(layer.batch_size, size(layer.data[i])[2:end]...)
+      dims = tuple(size(layer.data[i])[1:3]..., layer.batch_size)
       idxs = map(x -> 1:x, dims)
 
-      if isa(sys.backend, CPU)
-        blobs[i] = CPUBlob(layer.data[i][idxs...])
-      else
-        error("Backend $(sys.backend) not supported")
-      end
+      blobs[i] = make_blob(sys.backend, eltype(layer.data[i]), dims...)
     end
 
-    new(layer, blobs, 1)
+    new(layer, blobs, 0, 1)
   end
 end
 
 function setup(sys::System, layer::MemoryDataLayer, inputs::Vector{Blob})
   @assert length(inputs) == 0
+  for i = 1:length(layer.data)
+    dims = size(layer.data[i])
+    if length(dims) > 4
+      error("Tensor dimension in data $(layer.tops[i]): $(length(dims)) > 4")
+    elseif length(dims) < 4
+      dims = tuple(ones(Int, 4-length(dims))..., dims...)
+      layer.data[i] = reshape(layer.data[i], dims)
+    end
+  end
   state = MemoryDataLayerState(sys, layer)
   return state
 end
 
-function forward(sys::System{CPU}, state::MemoryDataLayerState, inputs::Vector{Blob})
+function forward(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob})
   n_done = 0
   while n_done < state.layer.batch_size
-    n_remain = size(state.layer.data[1], 1) - state.curr_idx + 1
+    n_remain = size(state.layer.data[1], 4) - state.curr_idx + 1
     if n_remain == 0
       state.curr_idx = 1
-      n_remain = size(state.layer.data[1],1)
+      n_remain = size(state.layer.data[1], 4)
     end
 
     n1 = min(state.layer.batch_size - n_done, n_remain)
     for i = 1:length(state.blobs)
-      idx = map(x -> 1:x, size(state.blobs[i].data)[2:end])
       dset = state.layer.data[i]
-      state.blobs[i].data[n_done+1:n_done+n1,idx...] = dset[state.curr_idx:state.curr_idx+n1-1,idx...]
+      idx = map(x -> 1:x, size(state.blobs[i])[1:3])
+      the_data = dset[idx..., state.curr_idx:state.curr_idx+n1-1]
+      set_blob_data(the_data, state.blobs[i], n_done+1)
     end
     state.curr_idx += n1
     n_done += n1
+
+    if state.curr_idx > size(state.layer.data[1], 4)
+      state.epoch += 1
+    end
   end
 end

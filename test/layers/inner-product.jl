@@ -1,35 +1,76 @@
-println("-- Testing InnerProductLayer...")
+function test_inner_product_layer(sys::System)
+  println("-- Testing InnerProductLayer on $(typeof(sys.backend))...")
 
-############################################################
-# Prepare Data for Testing
-############################################################
-left_dim   = 50
-inner_dims = (2,3)
-right_dim  = 100
-eps        = 1e-10
+  ############################################################
+  # Prepare Data for Testing
+  ############################################################
+  batch_size   = 50
+  orig_dim_all = (10, 20, 3)
+  orig_dim     = prod(orig_dim_all)
+  target_dim   = 30
+  eps          = 1e-10
 
-X = rand(left_dim, inner_dims...)
-W = rand(inner_dims..., right_dim)
-b = rand(right_dim)
+  X = rand(orig_dim_all..., batch_size)
+  W = rand(orig_dim, target_dim)
+  b = rand(target_dim)
 
-############################################################
-# Setup
-############################################################
-system = System(CPU())
-layer  = InnerProductLayer(; output_dim=right_dim, tops = String["result"], bottoms=String["input"])
-inputs = Blob[CPUBlob(X)]
-state  = setup(system, layer, inputs)
+  ############################################################
+  # Setup
+  ############################################################
+  layer  = InnerProductLayer(; output_dim=target_dim, tops = [:result], bottoms=[:input])
+  if isa(sys.backend, CPUBackend)
+    input_blob = CPUBlob(Float64, orig_dim_all..., batch_size)
+    diff_blob = CPUBlob(Float64, size(input_blob)...)
+  elseif isa(sys.backend, CuDNNBackend)
+    input_blob = Mocha.cudnn_make_tensor_blob(Float64, orig_dim_all..., batch_size)
+    diff_blob = Mocha.cudnn_make_tensor_blob(Float64, size(input_blob)...)
+  end
+  copy!(input_blob, X)
+  inputs = Blob[input_blob]
+  diffs = Blob[diff_blob]
 
-@test length(state.W.data) == length(W)
-@test length(state.b.data) == length(b)
-state.W.data[:] = W[:]
-state.b.data[:] = b[:]
+  println("    > Setup")
+  state  = setup(sys, layer, inputs)
 
-forward(system, state, inputs)
+  @test length(state.W) == length(W)
+  @test length(state.b) == length(b)
+  copy!(state.W, W)
+  copy!(state.b, b)
 
-X2 = reshape(X, left_dim, prod(inner_dims))
-W2 = reshape(W, prod(inner_dims), right_dim)
-b2 = reshape(b, 1, right_dim)
-res = X2*W2 .+ b2
+  println("    > Forward")
+  forward(sys, state, inputs)
 
-@test all(-eps .< state.blobs[1].data - res .< eps)
+  X2 = reshape(X, orig_dim, batch_size)
+  res = W' * X2 .+ b
+
+  res_layer = similar(res)
+  copy!(res_layer, state.blobs[1])
+
+  @test all(-eps .< res_layer - res .< eps)
+
+  println("    > Backward")
+  top_diff = rand(size(state.blobs_diff[1]))
+  copy!(state.blobs_diff[1], top_diff)
+  backward(sys, state, inputs, diffs)
+
+  top_diff = reshape(top_diff, target_dim, batch_size)
+  bias_grad = similar(b)
+  copy!(bias_grad, state.∇b)
+  @test all(-eps .< vec(bias_grad) - vec(sum(top_diff,2)) .< eps)
+
+  X_mat = reshape(X, orig_dim, batch_size)
+  weight_grad = similar(W)
+  copy!(weight_grad, state.∇W)
+  @test all(-eps .< vec(weight_grad) - vec(X_mat*top_diff') .< eps)
+
+  back_grad = similar(X_mat)
+  copy!(back_grad, diffs[1])
+  @test all(-eps .< vec(back_grad) - vec(W * top_diff) .< eps)
+end
+
+if test_cpu
+  test_inner_product_layer(sys_cpu)
+end
+if test_cudnn
+  test_inner_product_layer(sys_cudnn)
+end
