@@ -3,12 +3,9 @@ export init, shutdown
 
 type System{T <: Backend}
   backend :: T
-
-  regularization_coef :: FloatingPoint
-  learning_rate :: FloatingPoint
-  momentum :: FloatingPoint
-  max_iter :: Int
+  layer_registry :: Dict{Layer, LayerState}
 end
+System{T<:Backend}(backend :: T) = System(backend, Dict{Layer, LayerState}())
 
 function init(sys::System)
   init(sys.backend)

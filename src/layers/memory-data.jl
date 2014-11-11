@@ -1,12 +1,14 @@
 @defstruct MemoryDataLayer DataLayer (
+  name :: String = "memory-data",
+  (tops :: Vector{Symbol} = Symbol[:data,:label], length(tops) > 0),
   (batch_size :: Int = 0, batch_size > 0),
-  (tops :: Vector{String} = String["data","label"], length(tops) > 0),
   (data :: Vector{Array} = Array[], length(data) == length(tops))
 )
 
 type MemoryDataLayerState <: LayerState
   layer :: MemoryDataLayer
   blobs :: Vector{Blob}
+  epoch :: Int
 
   curr_idx :: Int
 
@@ -19,7 +21,7 @@ type MemoryDataLayerState <: LayerState
       blobs[i] = make_blob(sys.backend, eltype(layer.data[i]), dims...)
     end
 
-    new(layer, blobs, 1)
+    new(layer, blobs, 0, 1)
   end
 end
 
@@ -56,5 +58,9 @@ function forward(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob})
     end
     state.curr_idx += n1
     n_done += n1
+
+    if state.curr_idx > size(state.layer.data[1], 4)
+      state.epoch += 1
+    end
   end
 end

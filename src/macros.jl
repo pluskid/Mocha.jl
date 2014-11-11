@@ -61,7 +61,7 @@ macro defstruct(name, super_name, fields)
   end
 
   quote
-    type $(esc(name)) <: $super_name
+    immutable $(esc(name)) <: $super_name
       $type_body
     end
 

@@ -7,7 +7,7 @@ function test_hdf5_data_layer(sys::System)
   # Prepare Data for Testing
   ############################################################
   batch_size = 3
-  data_dim = (2,3,4)
+  data_dim = (1,1,2)
   eps = 1e-15
 
   data_all = [rand(data_dim..., x) for x in [5 1 2]]
@@ -31,24 +31,26 @@ function test_hdf5_data_layer(sys::System)
   ############################################################
 
   # batch size is determined by
-  layer = HDF5DataLayer(; source = source_fn, tops = String["data"], batch_size=batch_size)
+  layer = HDF5DataLayer(; source = source_fn, tops = [:data], batch_size=batch_size)
   state = setup(sys, layer, Blob[])
+  @test state.epoch == 0
 
   data = cat(4, data_all...)
-  data = cat(4, data, data)
+  data = cat(4, data, data, data)
 
   data_idx = map(x->1:x, data_dim)
   layer_data = Array(eltype(data), tuple(data_dim..., batch_size))
-  for i = 1:batch_size:size(data,1)-batch_size
+  for i = 1:batch_size:size(data,4)-batch_size+1
     forward(sys, state, Blob[])
     copy!(layer_data, state.blobs[1])
     @test all(-eps .< layer_data - data[data_idx..., i:i+batch_size-1] .< eps)
   end
+  @test state.epoch == 3
 end
 
-if test_cudnn
-  test_hdf5_data_layer(sys_cudnn)
-end
 if test_cpu
   test_hdf5_data_layer(sys_cpu)
+end
+if test_cudnn
+  test_hdf5_data_layer(sys_cudnn)
 end

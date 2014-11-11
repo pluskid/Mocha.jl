@@ -1,12 +1,13 @@
-export Layer, LayerState
 export DataLayer, LossLayer, StatLayer, CompLayer
 
 export HDF5DataLayer, MemoryDataLayer
 export InnerProductLayer, ConvolutionLayer, PoolingLayer, SoftmaxLayer
-export SquareLossLayer, SoftmaxLossLayer
+export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export AccuracyLayer
 
 export setup, forward, backward
+
+export reset_statistics, show_statistics
 
 ############################################################
 # Implementing a Layer
@@ -78,30 +79,29 @@ export setup, forward, backward
 #   parameters if any.
 ############################################################
 
-abstract Layer      # define layer type, parameters
-abstract LayerState # hold layer state, filters
-
 abstract DataLayer <: Layer # Layer that provide data
 abstract LossLayer <: Layer # Layer that defines loss function for learning
 abstract StatLayer <: Layer # Layer that provide statistics (e.g. Accuracy)
 abstract CompLayer <: Layer # Layer that do computation
 
 #############################################################
+# Overload when there is no shared_state
+#############################################################
+function setup(sys::System, layer::Layer, inputs::Vector{Blob})
+  setup(sys, layer, nothing, inputs)
+end
+
+#############################################################
+# Default procedures for layers that do not need them
+#############################################################
+function backward(sys::System, state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+end
+
+#############################################################
 # Data Layers
 #############################################################
 include("layers/hdf5-data.jl")
 include("layers/memory-data.jl")
-
-#############################################################
-# Loss Layers
-#############################################################
-include("layers/square-loss.jl")
-include("layers/softmax-loss.jl")
-
-#############################################################
-# Statistics Layers
-#############################################################
-include("layers/accuracy.jl")
 
 #############################################################
 # General Computation Layers
@@ -111,9 +111,15 @@ include("layers/convolution.jl")
 include("layers/pooling.jl")
 include("layers/softmax.jl")
 
+#############################################################
+# Loss Layers
+#############################################################
+include("layers/square-loss.jl")
+include("layers/multinomial-logistic-loss.jl")
+include("layers/softmax-loss.jl")
 
 #############################################################
-# Default procedures for layers that do not need them
+# Statistics Layers
 #############################################################
-function backward(sys::System, state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-end
+include("layers/accuracy.jl")
+

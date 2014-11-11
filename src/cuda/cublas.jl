@@ -108,7 +108,7 @@ function scal(handle::Handle, n::Int, alpha::Float32, x::CuPtr, incx::Int)
 end
 function scal(handle::Handle, n::Int, alpha::Float64, x::CuPtr, incx::Int)
   alpha_box = Float64[alpha]
-  @cublascall(:cublasSscal_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint),
+  @cublascall(:cublasDscal_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint),
               handle, n, alpha_box, x.p, incx)
 end
 
@@ -129,13 +129,13 @@ end
 ############################################################
 # vector dot product
 ############################################################
-function dot(handle::Handle, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+function dot(handle::Handle, ::Type{Float32}, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
   result = Float32[0]
   @cublascall(:cublasSdot_v2, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
       handle, n, x.p, incx, y.p, incy, result)
   return result[1]
 end
-function dot(handle::Handle, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+function dot(handle::Handle, ::Type{Float64}, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
   result = Float64[0]
   @cublascall(:cublasDdot_v2, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
       handle, n, x.p, incx, y.p, incy, result)

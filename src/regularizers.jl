@@ -32,14 +32,14 @@ end
 # L2 regularization
 ############################################################
 function forward(sys::System{CPUBackend}, regu :: L2Regu, param :: Blob)
-  return regu.coefficient * vecnorm(param.data)
+  return regu.coefficient * vecnorm(param.data)^2
 end
 function backward(sys::System{CPUBackend}, regu :: L2Regu, param :: Blob, gradient :: Blob)
   BLAS.axpy!(length(param), convert(eltype(param), regu.coefficient), param.data, 1, gradient.data, 1)
 end
 
 function forward(sys::System{CuDNNBackend}, regu :: L2Regu, param :: Blob)
-  return regu.coefficient * CuBLAS.dot(sys.backend.cublas_ctx, length(param),
+  return regu.coefficient * CuBLAS.dot(sys.backend.cublas_ctx, eltype(param), length(param),
       param.ptr, 1, param.ptr, 1)
 end
 function backward(sys::System{CuDNNBackend}, regu :: L2Regu, param :: Blob, gradient :: Blob)

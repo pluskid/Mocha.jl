@@ -111,8 +111,8 @@ function set_tensor4d_descriptor{T<:FloatingPoint}(desc::Tensor4dDescriptor, dty
                                                    dims :: NTuple{4, Int}, stride :: NTuple{4, Int})
   w, h, c, n = dims
   wStride, hStride, cStride, nStride = stride
-  @cudnncall(:cudnnSetTensor4dDescriptorEx, (Tensor4dDescriptor, Cint, Cint, Cint, Cint, Cint, Cint, Cint, Cint, Cint, Cint),
-             desc, CUDNN_TENSOR_NCHW, cudnn_data_type(dtype), n,c,h,w,nStride,cStride,hStride,wStride)
+  @cudnncall(:cudnnSetTensor4dDescriptorEx, (Tensor4dDescriptor, Cint, Cint, Cint, Cint, Cint, Cint, Cint, Cint, Cint),
+             desc, cudnn_data_type(dtype), n,c,h,w,nStride,cStride,hStride,wStride)
 end
 
 function create_tensor4d_descriptor(dtype::Type, dims :: NTuple{4, Int})
@@ -121,14 +121,20 @@ function create_tensor4d_descriptor(dtype::Type, dims :: NTuple{4, Int})
   return desc
 end
 
+function create_tensor4d_descriptor(dtype::Type, dims :: NTuple{4, Int}, stride :: NTuple{4, Int})
+  desc = create_tensor4d_descriptor()
+  set_tensor4d_descriptor(desc, dtype, dims, stride)
+  return desc
+end
+
 function get_tensor4d_descriptor(desc::Tensor4dDescriptor)
   dtype = Cint[0]
   n = Cint[0]; c = Cint[0]; h = Cint[0]; w = Cint[0]
-  nStride = Cint[0], cStride = Cint[0], hStride = Cint[0], wStride = Cint[0]
+  nStride = Cint[0]; cStride = Cint[0]; hStride = Cint[0]; wStride = Cint[0]
   @cudnncall(:cudnnGetTensor4dDescriptor, (Tensor4dDescriptor, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
                                            Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}), desc, dtype, n,c,h,w,
                                            nStride, cStride, hStride, wStride)
-  return (cudnn_data_type(dtype[1]), (w[1],h[1],c[1],n[1]), (nStride[1],cStride[1],hStride[1],wStride[1]))
+  return (cudnn_data_type(dtype[1]), (w[1],h[1],c[1],n[1]), (wStride[1],hStride[1],cStride[1],nStride[1]))
 end
 
 function destroy_tensor4d_descriptor(desc :: Tensor4dDescriptor)
@@ -153,7 +159,7 @@ function add_tensor4d{T<:FloatingPoint}(handle::Handle, mode::Int, alpha::T,
                                         bias_desc::Tensor4dDescriptor, bias::CuPtr,
                                         srcdst_desc::Tensor4dDescriptor, srcdst::CuPtr)
   @assert CUDNN_ADD_IMAGE <= mode <= CUDNN_ADD_FULL_TENSOR
-  @assert typeof(alpha) == get_tensor4d_descriptor(bias_desc)[0]
+  @assert typeof(alpha) == get_tensor4d_descriptor(bias_desc)[1]
   alpha_ptr = T[alpha]
 
   @cudnncall(:cudnnAddTensor4d, (Handle, Cint, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}),
@@ -238,7 +244,7 @@ function set_convolution_descriptor_ex(desc::ConvolutionDescriptor, dims::NTuple
 
   @assert CUDNN_CONVOLUTION <= conv_mode CUDNN_CROSS_CORRELATION
   w,h,c,n = dims
-  s,r = kernel_hw
+  s,r = kernel_wh
   pad_w, pad_h = pad
   v,u = stride
   upscalex, upscaley = upscale
@@ -249,6 +255,14 @@ function set_convolution_descriptor_ex(desc::ConvolutionDescriptor, dims::NTuple
 end
 function destroy_convolution_descriptor(desc::ConvolutionDescriptor)
   @cudnncall(:cudnnDestroyConvolutionDescriptor, (ConvolutionDescriptor,), desc)
+end
+
+function get_output_tensor4d_dim(desc::ConvolutionDescriptor, path::Int)
+  @assert CUDNN_CONVOLUTION_FWD <= path <= CUDNN_CONVOLUTION_DATA_GRAD
+  n = Cint[0]; c = Cint[0]; h = Cint[0]; w = Cint[0]
+  @cudnncall(:cudnnGetOutputTensor4dDim, (ConvolutionDescriptor, Cint, Ptr{Void}, Ptr{Void}, Ptr{Void}, Ptr{Void}),
+             desc, path, n, c, h, w)
+  return (w[1], h[1], c[1], n[1])
 end
 
 # accumulate the result of the operation into output buffer (or overwrite) ?
@@ -274,6 +288,12 @@ function colvolution_backward_bias(handle::Handle, src_desc::Tensor4dDescriptor,
              handle, src_desc, src.p, dest_desc, dest.p, mode)
 end
 
+function convolution_backward_bias(handle::Handle, src_desc::Tensor4dDescriptor, src::CuPtr,
+    dest_desc::Tensor4dDescriptor, dest::CuPtr, mode::Int)
+  @assert CUDNN_RESULT_ACCUMULATE <= mode <= CUDNN_RESULT_NO_ACCUMULATE
+  @cudnncall(:cudnnConvolutionBackwardBias, (Handle, Tensor4dDescriptor, Ptr{Void}, 
+      Tensor4dDescriptor, Ptr{Void}, Cint), handle, src_desc, src.p, dest_desc, dest.p, mode)
+end
 function convolution_backward_filter(handle::Handle, src_desc::Tensor4dDescriptor, src::CuPtr,
     diff_desc::Tensor4dDescriptor, diff::CuPtr, conv::ConvolutionDescriptor,
     grad_desc::FilterDescriptor, grad::CuPtr, mode::Int)
@@ -289,7 +309,7 @@ function convolution_backward_data(handle::Handle, filter_desc::FilterDescriptor
     diff_desc::Tensor4dDescriptor, diff::CuPtr, conv::ConvolutionDescriptor,
     grad_desc::Tensor4dDescriptor, grad::CuPtr, mode::Int)
   @assert CUDNN_RESULT_ACCUMULATE <= mode <= CUDNN_RESULT_NO_ACCUMULATE
-  @cudnncall(:cudnnConvolutionForwardData, (Handle, FilterDescriptor, Ptr{Void},
+  @cudnncall(:cudnnConvolutionBackwardData, (Handle, FilterDescriptor, Ptr{Void},
                                             Tensor4dDescriptor, Ptr{Void},
                                             ConvolutionDescriptor, Tensor4dDescriptor,
                                             Ptr{Void}, Cint),
@@ -305,7 +325,7 @@ const CUDNN_SOFTMAX_MODE_CHANNEL = 1  # compute the softmax over all C for each 
 
 function softmax_forward(handle::Handle, algorithm::Int, mode::Int,
     src_desc::Tensor4dDescriptor, src::CuPtr, dest_desc::Tensor4dDescriptor, dest::CuPtr)
-  @assert CUDNN_SOFT_MAX_FAST <= algorithm <= CUDNN_SOFTMAX_ACCURATE
+  @assert CUDNN_SOFTMAX_FAST <= algorithm <= CUDNN_SOFTMAX_ACCURATE
   @assert CUDNN_SOFTMAX_MODE_INSTANCE <= mode <= CUDNN_SOFTMAX_MODE_CHANNEL
   @cudnncall(:cudnnSoftmaxForward, (Handle, Cint, Cint, Tensor4dDescriptor, Ptr{Void},
                                     Tensor4dDescriptor, Ptr{Void}),
@@ -315,7 +335,7 @@ end
 function softmax_backward(handle::Handle, algorithm::Int, mode::Int,
     src_desc::Tensor4dDescriptor, src::CuPtr, srcdiff_desc::Tensor4dDescriptor, srcdiff::CuPtr,
     destdiff_desc::Tensor4dDescriptor, descdiff::CuPtr)
-  @assert CUDNN_SOFT_MAX_FAST <= algorithm <= CUDNN_SOFTMAX_ACCURATE
+  @assert CUDNN_SOFTMAX_FAST <= algorithm <= CUDNN_SOFTMAX_ACCURATE
   @assert CUDNN_SOFTMAX_MODE_INSTANCE <= mode <= CUDNN_SOFTMAX_MODE_CHANNEL
   @cudnncall(:cudnnSoftmaxBackward, (Handle, Cint, Cint, Tensor4dDescriptor, Ptr{Void},
                                      Tensor4dDescriptor, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}),
@@ -338,6 +358,13 @@ function set_pooling_descriptor(desc::PoolingDescriptor, mode::Int, dims::NTuple
   @cudnncall(:cudnnSetPoolingDescriptor, (PoolingDescriptor, Cint, Cint,Cint,Cint,Cint),
              desc, mode, h,w, stride_h, stride_w)
 end
+
+function create_pooling_descriptor(mode::Int, dims::NTuple{2,Int}, stride::NTuple{2,Int})
+  desc = create_pooling_descriptor()
+  set_pooling_descriptor(desc, mode, dims, stride)
+  return desc
+end
+
 function get_pooling_descriptor(desc::PoolingDescriptor)
   mode = Cint[0]
   h = Cint[0]; w = Cint[0]; stride_h = Cint[0]; stride_w = Cint[0]

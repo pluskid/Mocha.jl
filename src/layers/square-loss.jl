@@ -4,7 +4,8 @@
 # L(\hat{y},y) = 1/2N \sum_{i=1}^N (\hat{y}_i - y_i)^2
 ############################################################
 @defstruct SquareLossLayer LossLayer (
-  (bottoms :: Vector{String} = String[], length(bottoms) == 2),
+  name :: String = "square-loss",
+  (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 
 type SquareLossLayerState{T} <: LayerState
@@ -68,7 +69,7 @@ function forward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs:
 
   copy!(state.pred_copy, pred)
   CuBLAS.axpy(sys.backend.cublas_ctx, n, convert(data_type, -1), label.ptr, 1, state.pred_copy.ptr, 1)
-  state.loss = 0.5/get_num(pred)*CuBLAS.dot(sys.backend.cublas_ctx, n, state.pred_copy.ptr, 1, state.pred_copy.ptr, 1)
+  state.loss = 0.5/get_num(pred)*CuBLAS.dot(sys.backend.cublas_ctx, data_type, n, state.pred_copy.ptr, 1, state.pred_copy.ptr, 1)
 end
 
 function backward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})

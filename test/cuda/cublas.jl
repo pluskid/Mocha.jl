@@ -23,6 +23,12 @@ function test_cublas(sys::System)
   copy!(x2, x2_blob)
   @test all(-eps .< 3*x - x2 .< eps)
 
+  println("    > scal")
+  copy!(x_blob, x)
+  CuBLAS.scal(sys.backend.cublas_ctx, length(x), 0.9, x_blob.ptr, 1)
+  copy!(x2, x_blob)
+  @test all(-eps .< 0.9*x - x2 .< eps)
+
   println("    > gemm")
   A = rand(5,6)
   B = rand(6,7)

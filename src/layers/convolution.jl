@@ -1,15 +1,16 @@
 @defstruct ConvolutionLayer CompLayer (
-  (kernel :: NTuple{Int,2} = (1,1), length(kernel)==2 && all(kernel .> 0)),
-  (stride :: NTuple{Int,2} = (1,1), length(stride)==2 && all(stride .> 0)),
-  (pad :: NTuple{Int,2} = (0,0), length(pad)==2 && all(pad .>= 0)),
+  name :: String = "convolution",
+  (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) > 0),
+  (tops :: Vector{Symbol} = Symbol[], length(tops) == length(bottoms)),
+  (kernel :: NTuple{2,Int} = (1,1), length(kernel)==2 && all([kernel...] .> 0)),
+  (stride :: NTuple{2,Int} = (1,1), length(stride)==2 && all([stride...] .> 0)),
+  (pad :: NTuple{2, Int} = (0,0), length(pad)==2 && all([pad...] .>= 0)),
   (n_filter :: Int = 1, n_filter > 0),
   (n_group :: Int = 1, n_group > 0),
   neuron :: ActivationFunction = Neurons.Identity(),
-  (bottoms :: Vector{String} = String[], length(bottoms) > 0),
-  (tops :: Vector{String} = String[], length(tops) == length(bottoms)),
-  filter_init :: Initializer = ConstantInitializer(0),
+  filter_init :: Initializer = XavierInitializer(),
   bias_init :: Initializer = ConstantInitializer(0),
-  filter_regu :: Regularizer = NoRegu(),
+  filter_regu :: Regularizer = L2Regu(1),
   bias_regu :: Regularizer = NoRegu()
 )
 
@@ -22,6 +23,7 @@ type CuDNNConvState
 
   bottom_offset :: Int
   top_offset    :: Int
+  weight_offset :: Int
   bias_offset   :: Int
 end
 
@@ -37,7 +39,7 @@ type ConvolutionLayerState <: LayerState
   bias    :: Blob
   ∇bias   :: Blob
 
-  ConvolutionLayerState(sys::System, layer::ConvolutionLayer, inputs::Vector{Blob}) = begin
+  ConvolutionLayerState(sys::System, layer::ConvolutionLayer, shared_state, inputs::Vector{Blob}) = begin
     channels = get_chann(inputs[1])
     @assert channels % layer.n_group == 0
     @assert layer.n_filter % layer.n_group == 0
@@ -45,8 +47,8 @@ type ConvolutionLayerState <: LayerState
     batch_size = get_num(inputs[1])
     height = get_height(inputs[1])
     width  = get_width(inputs[1])
-    height_out = int((height + 2*layer.pad[1]-layer.kernel[1]) / layer.stride[1]) + 1
-    width_out  = int((width  + 2*layer.pad[2]-layer.kernel[2]) / layer.stride[2]) + 1
+    width_out  = int((width  + 2*layer.pad[1]-layer.kernel[1]) / layer.stride[1]) + 1
+    height_out = int((height + 2*layer.pad[2]-layer.kernel[2]) / layer.stride[2]) + 1
 
     dtype = eltype(inputs[1])
 
@@ -70,14 +72,25 @@ type ConvolutionLayerState <: LayerState
         blobs_diff[i] = cudnn_make_tensor_blob(dtype, width_out, height_out, layer.n_filter, batch_size)
       end
 
-      filter = cudnn_make_tensor_blob(dtype, layer.kernel[2], layer.kernel[1], 
-          int(channels/layer.n_group), layer.n_filter)
-      ∇filter = cudnn_make_tensor_blob(dtype, layer.kernel[2], layer.kernel[1], 
-          int(channels/layer.n_group), layer.n_filter)
-      bias = cudnn_make_tensor_blob(dtype, layer.n_filter)
-      ∇bias = cudnn_make_tensor_blob(dtype, layer.n_filter)
+      if isa(shared_state, ConvolutionLayerState)
+        @assert size(shared_state.filter) == tuple(layer.kernel...,int(channels/layer.n_group),layer.n_filter)
+        @assert eltype(shared_state.filter) == dtype
+        @debug("Sharing filters and bias with an existing ConvolutionLayer")
 
-      filter_desc = CuDNN.create_filter_descriptor(dtype, (layer.kernel[2], layer.kernel[1],
+        filter = shared_state.filter
+        ∇filter = shared_state.∇filter
+        bias = shared_state.bias
+        ∇bias = shared_state.bias
+      else
+        filter = cudnn_make_tensor_blob(dtype, layer.kernel[1], layer.kernel[2], 
+            int(channels/layer.n_group), layer.n_filter)
+        ∇filter = cudnn_make_tensor_blob(dtype, layer.kernel[1], layer.kernel[2], 
+            int(channels/layer.n_group), layer.n_filter)
+        bias = cudnn_make_tensor_blob(dtype, layer.n_filter)
+        ∇bias = cudnn_make_tensor_blob(dtype, layer.n_filter)
+      end
+
+      filter_desc = CuDNN.create_filter_descriptor(dtype, (layer.kernel[1], layer.kernel[2],
           int(channels/layer.n_group), int(layer.n_filter/layer.n_group)))
       bias_desc = CuDNN.create_tensor4d_descriptor(dtype, (1,1,int(layer.n_filter/layer.n_group),1))
 
@@ -85,18 +98,21 @@ type ConvolutionLayerState <: LayerState
       outputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
       conv_desc = Array(CuDNN.ConvolutionDescriptor, length(inputs))
       for i = 1:length(inputs)
-        inputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype, (width,height,channels,batch_size))
-        outputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype, size(blobs[i]))
-        conv_desc[i] = CuDNN.create_convolution_descriptor(inputs_desc[i], filter_desc, layer.pad, 
+        inputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype, (width,height,int(channels/layer.n_group),batch_size), 
+            (1, width, width*height, width*height*channels))
+        outputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype, (width_out, height_out, int(layer.n_filter/layer.n_group), batch_size),
+            (1, width_out, width_out*height_out, width_out*height_out*layer.n_filter))
+        conv_desc[i] = CuDNN.create_convolution_descriptor(inputs_desc[i], filter_desc, layer.pad,
             layer.stride, (1,1), CuDNN.CUDNN_CROSS_CORRELATION)
       end
 
-      bottom_offset = int(channels/layer.group) * height * width * sizeof(data_type)
-      top_offset = int(layer.n_filter/layer.group) * height_out * width_out * sizeof(data_type)
-      bias_offset = int(layer.n_filter/layer.n_group) * sizeof(data_type)
+      bottom_offset = int(channels/layer.n_group) * height * width * sizeof(dtype)
+      top_offset = int(layer.n_filter/layer.n_group) * height_out * width_out * sizeof(dtype)
+      weight_offset = int(layer.n_filter/layer.n_group) * int(channels/layer.n_group) * layer.kernel[1] * layer.kernel[2] * sizeof(dtype)
+      bias_offset = int(layer.n_filter/layer.n_group) * sizeof(dtype)
 
       etc = CuDNNConvState(inputs_desc, outputs_desc, conv_desc, filter_desc, bias_desc, 
-          bottom_offset, top_offset, bias_offset)
+          bottom_offset, top_offset, weight_offset, bias_offset)
     else
       error("Backend $(sys.backend) not supported")
     end
@@ -125,8 +141,8 @@ type ConvolutionLayerState <: LayerState
   etc        :: Any # whatever status a computation backend needs to maintain
 end
 
-function setup(sys::System{CPUBackend}, layer::ConvolutionLayer, inputs::Vector{Blob})
-  return ConvolutionLayerState(sys, layer, inputs)
+function setup(sys::System, layer::ConvolutionLayer, shared_state, inputs::Vector{Blob})
+  return ConvolutionLayerState(sys, layer, shared_state, inputs)
 end
 
 function forward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs::Vector{Blob})
@@ -218,18 +234,55 @@ function forward(sys::System{CuDNNBackend}, state::ConvolutionLayerState, inputs
   one = convert(eltype(inputs[1]), 1)
 
   for i = 1:length(inputs)
-    for g = 1:length(state.layer.n_group)
+    for g = 1:state.layer.n_group
       input_ptr = CuPtr(inputs[i].ptr.p + state.etc.bottom_offset * (g-1))
-      output_ptr = CuPtr(blobs[i].ptr.p + state.etc.top_offset * (g-1))
+      output_ptr = CuPtr(state.blobs[i].ptr.p + state.etc.top_offset * (g-1))
+      filter_ptr = CuPtr(state.filter.ptr.p + state.etc.weight_offset * (g-1))
 
       CuDNN.convolution_forward(sys.backend.cudnn_ctx, state.etc.inputs_desc[i], input_ptr,
-          state.etc.filter_desc, state.filter.ptr, state.etc.conv_desc[i], 
+          state.etc.filter_desc, filter_ptr, state.etc.conv_desc[i],
           state.etc.outputs_desc[i], output_ptr, CuDNN.CUDNN_RESULT_NO_ACCUMULATE)
 
       # bias
       CuDNN.add_tensor4d(sys.backend.cudnn_ctx, CuDNN.CUDNN_ADD_SAME_C, one,
           state.etc.bias_desc, CuPtr(state.bias.ptr.p + state.etc.bias_offset * (g-1)),
           state.etc.outputs_desc[i], output_ptr)
+    end
+  end
+end
+
+function backward(sys::System{CuDNNBackend}, state::ConvolutionLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+  erase!(state.∇filter)
+  erase!(state.∇bias)
+
+  for i = 1:length(inputs)
+    bottom = inputs[i]
+    top_diff = state.blobs_diff[i]
+
+    for g = 1:state.layer.n_group
+      # gradient w.r.t. bias
+      CuDNN.convolution_backward_bias(sys.backend.cudnn_ctx, 
+          state.etc.outputs_desc[i], CuPtr(top_diff.ptr.p + state.etc.top_offset * (g-1)), 
+          state.etc.bias_desc, CuPtr(state.∇bias.ptr.p + state.etc.bias_offset * (g-1)),
+          CuDNN.CUDNN_RESULT_ACCUMULATE)
+
+      # gradient w.r.t. weights
+      CuDNN.convolution_backward_filter(sys.backend.cudnn_ctx,
+          state.etc.inputs_desc[i], CuPtr(bottom.ptr.p + state.etc.bottom_offset * (g-1)),
+          state.etc.outputs_desc[i], CuPtr(top_diff.ptr.p + state.etc.top_offset * (g-1)),
+          state.etc.conv_desc[i],
+          state.etc.filter_desc, CuPtr(state.∇filter.ptr.p + state.etc.weight_offset * (g-1)),
+          CuDNN.CUDNN_RESULT_ACCUMULATE)
+
+      # gradient w.r.t. bottom data
+      if isa(diffs[i], CuTensorBlob)
+        CuDNN.convolution_backward_data(sys.backend.cudnn_ctx,
+            state.etc.filter_desc, CuPtr(state.filter.ptr.p + state.etc.weight_offset * (g-1)),
+            state.etc.outputs_desc[i], CuPtr(top_diff.ptr.p + state.etc.top_offset * (g-1)),
+            state.etc.conv_desc[i],
+            state.etc.inputs_desc[i], CuPtr(diffs[i].ptr.p + state.etc.bottom_offset * (g-1)),
+            CuDNN.CUDNN_RESULT_NO_ACCUMULATE)
+      end
     end
   end
 end

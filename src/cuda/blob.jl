@@ -39,9 +39,9 @@ function fill!{T}(dst :: CuTensorBlob{T}, val)
   fill!(val_vec, val)
   copy!(dst, val_vec)
 end
-#function erase!{T}(dst :: CuTensorBlob{T})
-#  @CUDA.cucall(:cuMemsetD8, (Ptr{Void}, Cuchar, Csize_t), dst.ptr.p, 0, length(dst)*sizeof(T))
-#end
+function erase!{T}(dst :: CuTensorBlob{T})
+  @CUDA.cucall(:cuMemsetD8_v2, (Ptr{Void}, Cuchar, Csize_t), dst.ptr.p, 0, length(dst)*sizeof(T))
+end
 
 function cudnn_make_tensor_blob(dtype::Type, dims...)
   dims = blob_canonical_dims(dims...)

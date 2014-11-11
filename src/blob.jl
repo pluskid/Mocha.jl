@@ -4,7 +4,7 @@ export CPUBlob, NullBlob
 import Base: eltype, size, length, copy!, fill!
 export       eltype, size, length, copy!, fill!, erase!
 export get_num, get_chann, get_height, get_width
-export make_blob
+export make_blob, make_zero_blob
 
 ############################################################
 # A blob is an abstract concept that is suppose
@@ -91,6 +91,11 @@ function make_blob()
 end
 function make_blob(backend::Backend, data_type::Type, dims...)
   error("Not implemented (should return a blob for corresponding backend)")
+end
+function make_blob(backend::Backend, data::Array)
+  blob = make_blob(backend, eltype(data), size(data))
+  copy!(blob, data)
+  return blob
 end
 function make_zero_blob(backend::Backend, data_type::Type, dims...)
   blob = make_blob(backend, data_type, dims...)

@@ -1,6 +1,6 @@
 using Mocha
 
-use_cudnn = false
+use_cudnn = true
 ############################################################
 # Prepare Random Data
 ############################################################
@@ -19,22 +19,25 @@ Y = Y + 0.01*randn(size(Y))
 # Define network
 ############################################################
 if use_cudnn
-  sys = System(CuDNNBackend(), 0.0005, 0.01, 0.9, 5000)
+  sys = System(CuDNNBackend())
 else
-  sys = System(CPUBackend(), 0.0005, 0.01, 0.9, 5000)
+  sys = System(CPUBackend())
 end
 init(sys)
 
-data_layer = MemoryDataLayer(; batch_size=500, data=Array[X,Y])
-weight_layer = InnerProductLayer(; output_dim=P, tops=String["pred"], bottoms=String["data"])
-loss_layer = SquareLossLayer(; bottoms=String["pred", "label"])
+data_layer = MemoryDataLayer(batch_size=500, data=Array[X,Y])
+weight_layer = InnerProductLayer(output_dim=P, tops=[:pred], bottoms=[:data])
+loss_layer = SquareLossLayer(bottoms=[:pred, :label])
 
 net = Net(sys, [loss_layer, weight_layer, data_layer])
 
 ############################################################
 # Solve
 ############################################################
-solver = SGD()
+params = SolverParameters(regu_coef=0.0005, base_lr=0.01, momentum=0.9, max_iter=1000)
+solver = SGD(params)
+add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
+
 solve(solver, net)
 
 learned_b = similar(B)

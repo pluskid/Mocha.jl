@@ -17,7 +17,7 @@ function test_inner_product_layer(sys::System)
   ############################################################
   # Setup
   ############################################################
-  layer  = InnerProductLayer(; output_dim=target_dim, tops = String["result"], bottoms=String["input"])
+  layer  = InnerProductLayer(; output_dim=target_dim, tops = [:result], bottoms=[:input])
   if isa(sys.backend, CPUBackend)
     input_blob = CPUBlob(Float64, orig_dim_all..., batch_size)
     diff_blob = CPUBlob(Float64, size(input_blob)...)
