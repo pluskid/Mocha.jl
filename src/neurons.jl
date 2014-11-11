@@ -64,10 +64,10 @@ end
 # Rectified-Linear
 ############################################################
 function forward(sys :: System{CPUBackend}, neuron :: Neurons.ReLU, output :: Blob)
-  output.data[:] = max(output.data[:], 0)
+  output.data = max(output.data, 0)
 end
 function backward(sys :: System{CPUBackend}, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
-  gradient.data[:] .*= (output.data[:] .> 0)
+  gradient.data .*= (output.data .> 0)
 end
 
 function forward(sys :: System{CuDNNBackend}, neuron :: Neurons.ReLU, output :: Blob)
@@ -100,8 +100,8 @@ end
 # Sigmoid
 ############################################################
 function forward(sys :: System{CPUBackend}, neuron :: Neurons.Sigmoid, output :: Blob)
-  output.data[:] = 1 ./ (1 + exp(-output.data[:]))
+  output.data = 1 ./ (1 + exp(-output.data))
 end
 function backward(sys :: System{CPUBackend}, neuron :: Neurons.Sigmoid, output :: Blob, gradient :: Blob)
-  gradient.data[:] .*= (output.data[:] .* (1-output.data[:]))
+  gradient.data .*= (output.data .* (1-output.data))
 end

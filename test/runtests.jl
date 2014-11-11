@@ -2,7 +2,7 @@ using Mocha
 using Base.Test
 
 global test_cpu   = true
-global test_cudnn = false
+global test_cudnn = true
 
 if test_cpu
   backend_cpu = CPUBackend()
