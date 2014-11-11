@@ -40,14 +40,14 @@ end
 
 function forward(sys::System{CPUBackend}, state::SoftmaxLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
-    input  = inputs[i]
-    output = copy(state.blobs[i].data)
+    input  = inputs[i].data
 
-    # substract max before exp to avoid numerical issue
-    data .-= max(output,2)
+    output = copy(input)
+    output .-= maximum(output, 3) # subtract max along channel dimension
     output = exp(output)
-    output ./= sum(output,2)
-    blobs[i].data[:] = map(j -> indmax(output[j,:]), 1:size(output,1))
+    output ./= sum(output, 3) # normalize along channel dimension
+
+    state.blobs[i].data = output
   end
 end
 

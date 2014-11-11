@@ -17,12 +17,23 @@ function setup(sys::System, layer::MultinomialLogisticLossLayer, inputs::Vector{
   return state
 end
 
+function forward(sys::System{CPUBackend}, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob})
+  pred = inputs[1].data
+  label = inputs[2].data
+  width, height, channels, num = size(pred)
+
+  loss = sum(-log(max(broadcast_getindex(pred, reshape(collect(1:width), (width, 1, 1, 1)),
+      reshape(collect(1:height), (1, height, 1, 1)),
+      int(label)+1, reshape(collect(1:num), (1, 1, 1, num))), 1e-20)))
+  state.loss = loss / (width*height*num)
+end
+
 function forward(sys::System{CuDNNBackend}, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob})
   pred      = inputs[1]
   label     = inputs[2]
   data_type = eltype(pred)
 
-  height, width, channels, num = size(pred)
+  width, height, channels, num = size(pred)
 
   spatial_dim = height*width
   prob_dim = channels

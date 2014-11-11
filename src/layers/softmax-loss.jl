@@ -30,33 +30,21 @@ function setup(sys::System, layer::SoftmaxLossLayer, inputs::Vector{Blob})
   return state
 end
 
-function forward(sys::System{CPUBackend}, state::SoftmaxLossLayerState, inputs::Vector{Blob})
-  pred = inputs[1]
-  label = inputs[2]
-
-  # substract max before exp to avoid numerical issue
-  # also do in-place computation to get the probability so that we do not need to
-  # do duplicated computation in backward pass when computing the gradient
-  pred.data .-= max(pred.data,2)
-  pred.data = exp(pred.data)
-  pred.data ./= sum(pred.data,2)
-
-  loss = sum(-log(broadcast_getindex(pred.data, vec(1:length(label.data)), vec(int(label.data)))))
-  loss /= length(label.data)
-  state.blobs[1].data[:] = loss
-end
-
 function backward(sys::System{CPUBackend}, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  prob  = inputs[1].data
-  label = int(inputs[2].data)
+  diff = diffs[1]
+  if isa(diff, CPUBlob)
+    copy!(diff, state.softmax.blobs[1])
+    width, height, channels, num = size(diff)
 
-  for i = 1:length(label)
-    prob[i,label[i]] -= 1
+    index = (reshape(collect(1:width), (width, 1, 1, 1)),
+        reshape(collect(1:height), (1, height, 1, 1)),
+        int(inputs[2].data)+1, reshape(collect(1:num), (1, 1, 1, num)))
+    broadcast_setindex!(diff.data, broadcast_getindex(diff.data, index...)-1, index...)
+    diff.data /= width*height*num
   end
-  diffs[1].data[:] = prob[:]
 end
 
-function forward(sys::System{CuDNNBackend}, state::SoftmaxLossLayerState, inputs::Vector{Blob})
+function forward(sys::System, state::SoftmaxLossLayerState, inputs::Vector{Blob})
   forward(sys, state.softmax, Blob[inputs[1]])
   forward(sys, state.logistic, Blob[state.softmax.blobs[1], inputs[2]])
   state.loss = state.logistic.loss
