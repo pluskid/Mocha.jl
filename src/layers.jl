@@ -85,6 +85,13 @@ abstract StatLayer <: Layer # Layer that provide statistics (e.g. Accuracy)
 abstract CompLayer <: Layer # Layer that do computation
 
 #############################################################
+# Overload when there is no shared_state
+#############################################################
+function setup(sys::System, layer::Layer, inputs::Vector{Blob})
+  setup(sys, layer, nothing, inputs)
+end
+
+#############################################################
 # Default procedures for layers that do not need them
 #############################################################
 function backward(sys::System, state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})

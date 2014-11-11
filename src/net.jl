@@ -49,6 +49,13 @@ function show_statistics(net::Net; title="Network Statistics")
   @info("---------------------------------------------------------")
   @info("")
 end
+function reset_statistics(net::Net)
+  for i = 1:length(net.layers)
+    if isa(net.layers[i], StatLayer)
+      reset(net.states[i])
+    end
+  end
+end
 
 function forward_backward(net::Net)
   obj_val = forward(net)
@@ -126,12 +133,21 @@ Net(sys::System, layers :: Vector{Layer}) = begin
     end
 
     if haskey(sys.layer_registry, layers[i])
-      @debug("Sharing parameter with existing layer $(layers[i])")
-      states[i] = sys.layer_registry[layers[i]]
+      shared_state = sys.layer_registry[layers[i]]
+      states[i] = setup(sys, layers[i], shared_state, blob_fwd)
+
+      # shared parameters, don't re-initialize
+      for param in states[i].parameters
+        param.initializer = NullInitializer()
+      end
     else
       states[i] = setup(sys, layers[i], blob_fwd)
-      sys.layer_registry[layers[i]] = states[i]
+      if :parameters ∈ names(states[i])
+        # has parameters, save in registry
+        sys.layer_registry[layers[i]] = states[i]
+      end
     end
+
     if :tops ∈ names(layer)
       for j = 1:length(layer.tops)
         output_blobs[layer.tops[j]] = states[i].blobs[j]

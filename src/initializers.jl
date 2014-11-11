@@ -5,6 +5,11 @@ export XavierInitializer
 
 abstract Initializer # The root type of all initializer
 
+type NullInitializer <: Initializer end
+function init(::NullInitializer, blob::Blob)
+  # do nothing
+end
+
 type ConstantInitializer <: Initializer
   value
 end

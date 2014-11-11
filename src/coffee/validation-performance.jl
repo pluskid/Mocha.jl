@@ -17,6 +17,7 @@ function enjoy(coffee::ValidationPerformance, ::Net, ::SolverState)
   end
 
   show_statistics(coffee.validation_net)
+  reset_statistics(coffee.validation_net)
 end
 function destroy(coffee::ValidationPerformance, ::Net) 
   destroy(coffee.validation_net)

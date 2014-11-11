@@ -38,7 +38,7 @@ type ConvolutionLayerState <: LayerState
   bias    :: Blob
   ∇bias   :: Blob
 
-  ConvolutionLayerState(sys::System, layer::ConvolutionLayer, inputs::Vector{Blob}) = begin
+  ConvolutionLayerState(sys::System, layer::ConvolutionLayer, shared_state, inputs::Vector{Blob}) = begin
     channels = get_chann(inputs[1])
     @assert channels % layer.n_group == 0
     @assert layer.n_filter % layer.n_group == 0
@@ -71,12 +71,23 @@ type ConvolutionLayerState <: LayerState
         blobs_diff[i] = cudnn_make_tensor_blob(dtype, width_out, height_out, layer.n_filter, batch_size)
       end
 
-      filter = cudnn_make_tensor_blob(dtype, layer.kernel[1], layer.kernel[2], 
-          int(channels/layer.n_group), layer.n_filter)
-      ∇filter = cudnn_make_tensor_blob(dtype, layer.kernel[1], layer.kernel[2], 
-          int(channels/layer.n_group), layer.n_filter)
-      bias = cudnn_make_tensor_blob(dtype, layer.n_filter)
-      ∇bias = cudnn_make_tensor_blob(dtype, layer.n_filter)
+      if isa(shared_state, ConvolutionLayerState)
+        @assert size(shared_state.filter) == tuple(layer.kernel...,int(channels/layer.n_group),layer.n_filter)
+        @assert eltype(shared_state.filter) == dtype
+        @debug("Sharing filters and bias with an existing ConvolutionLayer")
+
+        filter = shared_state.filter
+        ∇filter = shared_state.∇filter
+        bias = shared_state.bias
+        ∇bias = shared_state.bias
+      else
+        filter = cudnn_make_tensor_blob(dtype, layer.kernel[1], layer.kernel[2], 
+            int(channels/layer.n_group), layer.n_filter)
+        ∇filter = cudnn_make_tensor_blob(dtype, layer.kernel[1], layer.kernel[2], 
+            int(channels/layer.n_group), layer.n_filter)
+        bias = cudnn_make_tensor_blob(dtype, layer.n_filter)
+        ∇bias = cudnn_make_tensor_blob(dtype, layer.n_filter)
+      end
 
       filter_desc = CuDNN.create_filter_descriptor(dtype, (layer.kernel[1], layer.kernel[2],
           int(channels/layer.n_group), int(layer.n_filter/layer.n_group)))
@@ -129,8 +140,8 @@ type ConvolutionLayerState <: LayerState
   etc        :: Any # whatever status a computation backend needs to maintain
 end
 
-function setup(sys::System, layer::ConvolutionLayer, inputs::Vector{Blob})
-  return ConvolutionLayerState(sys, layer, inputs)
+function setup(sys::System, layer::ConvolutionLayer, shared_state, inputs::Vector{Blob})
+  return ConvolutionLayerState(sys, layer, shared_state, inputs)
 end
 
 function forward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs::Vector{Blob})

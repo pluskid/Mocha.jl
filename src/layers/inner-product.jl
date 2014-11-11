@@ -24,7 +24,7 @@ type InnerProductLayerState <: LayerState
   # a all-1 vector used in gemm to help bias calculation
   bias_multiplier :: Blob
 
-  InnerProductLayerState(sys::System, layer::InnerProductLayer, inputs::Vector{Blob}) = begin
+  InnerProductLayerState(sys::System, layer::InnerProductLayer, shared_state, inputs::Vector{Blob}) = begin
     dims = size(inputs[1])
     nums = dims[4]
     fea_dim = dims[1:3]
@@ -56,10 +56,22 @@ type InnerProductLayerState <: LayerState
       end
 
       state = new(layer, blobs, blobs_diff)
-      state.W  = cudnn_make_tensor_blob(data_type, fea_size, out_dim)
-      state.∇W = cudnn_make_tensor_blob(data_type, fea_size, out_dim)
-      state.b  = cudnn_make_tensor_blob(data_type, out_dim)
-      state.∇b = cudnn_make_tensor_blob(data_type, out_dim)
+      
+      if isa(shared_state, InnerProductLayerState)
+        @assert size(shared_state.W) == (1, 1, fea_size, out_dim)
+        @assert eltype(shared_state.W) == data_type
+        @debug("Sharing weights and bias with an existing InnerProductLayer")
+
+        state.W  = shared_state.W
+        state.∇W = shared_state.∇W
+        state.b  = shared_state.b
+        state.∇b = shared_state.∇b
+      else
+        state.W  = cudnn_make_tensor_blob(data_type, fea_size, out_dim)
+        state.∇W = cudnn_make_tensor_blob(data_type, fea_size, out_dim)
+        state.b  = cudnn_make_tensor_blob(data_type, out_dim)
+        state.∇b = cudnn_make_tensor_blob(data_type, out_dim)
+      end
 
       state.bias_multiplier = cudnn_make_tensor_blob(data_type, nums)
       fill!(state.bias_multiplier, 1)
@@ -74,8 +86,8 @@ type InnerProductLayerState <: LayerState
   end
 end
 
-function setup(sys::System, layer::InnerProductLayer, inputs::Vector{Blob})
-  state = InnerProductLayerState(sys, layer, inputs)
+function setup(sys::System, layer::InnerProductLayer, shared_state, inputs::Vector{Blob})
+  state = InnerProductLayerState(sys, layer, shared_state, inputs)
   return state
 end
 
