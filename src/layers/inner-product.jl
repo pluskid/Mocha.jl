@@ -1,4 +1,5 @@
 @defstruct InnerProductLayer CompLayer (
+  name :: String = "inner-product",
   (tops :: Vector{Symbol} = Symbol[], length(tops) >= 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(tops)),
   (output_dim :: Int = 0, output_dim > 0),

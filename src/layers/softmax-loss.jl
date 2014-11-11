@@ -2,6 +2,7 @@
 # Softmax Loss
 ############################################################
 @defstruct SoftmaxLossLayer LossLayer (
+  name :: String = "softmax-loss",
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 

@@ -2,6 +2,7 @@
 # Multinomial Logistic Loss
 ############################################################
 @defstruct MultinomialLogisticLossLayer LossLayer (
+  name :: String = "multinomial-logistic-loss",
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 

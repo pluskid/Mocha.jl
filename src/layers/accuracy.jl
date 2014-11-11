@@ -1,4 +1,5 @@
 @defstruct AccuracyLayer StatLayer (
+  name :: String = "accuracy",
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 
@@ -26,7 +27,7 @@ function reset(state::AccuracyLayerState)
 end
 function summarize(state::AccuracyLayerState)
   accuracy = @sprintf("%.4f%%", state.accuracy*100)
-  @info("Accuracy (avg over $(state.n_accum)) = $accuracy")
+  @info("  Accuracy (avg over $(state.n_accum)) = $accuracy")
 end
 
 function forward(sys::System{CPUBackend}, layer::AccuracyLayer, inputs::Vector{Blob})

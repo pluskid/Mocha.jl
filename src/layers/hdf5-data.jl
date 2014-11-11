@@ -1,6 +1,7 @@
 using HDF5
 
 @defstruct HDF5DataLayer DataLayer (
+  name :: String = "hdf5-data",
   (source :: String = "", source != ""),
   (batch_size :: Int = 0, batch_size > 0),
   (tops :: Vector{Symbol} = Symbol[:data,:label], length(tops) > 0)

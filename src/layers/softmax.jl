@@ -2,6 +2,7 @@
 # Softmax Layer
 ############################################################
 @defstruct SoftmaxLayer CompLayer (
+  name :: String = "softmax",
   tops :: Vector{Symbol} = Symbol[],
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(tops))
 )

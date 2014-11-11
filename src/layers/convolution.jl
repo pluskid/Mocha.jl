@@ -1,4 +1,5 @@
 @defstruct ConvolutionLayer CompLayer (
+  name :: String = "convolution",
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) > 0),
   (tops :: Vector{Symbol} = Symbol[], length(tops) == length(bottoms)),
   (kernel :: NTuple{2,Int} = (1,1), length(kernel)==2 && all([kernel...] .> 0)),
