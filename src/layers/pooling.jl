@@ -50,14 +50,15 @@ function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob})
   end
 
   if isa(sys.backend, CPUBackend) 
-    error("TODO")
     if isa(layer.pooling, Pooling.Max)
-      layer.pooling.masks = Array(Blob, length(inputs))
+      masks = Array(Array, length(inputs))
       for i = 1:length(inputs)
-        layer.pooling.masks[i] = Array(Int, size(blobs[i]))
+        masks[i] = Array(Int, size(blobs[i]))
       end
+      etc = masks
+    else
+      etc = nothing
     end
-    etc = nothing
   elseif isa(sys.backend, CuDNNBackend)
     if layer.pad[1] == 0 && layer.pad[2] == 0
       if isa(layer.pooling, Pooling.Max)
@@ -89,33 +90,37 @@ end
 function forward(sys::System{CPUBackend}, state::PoolingLayerState, inputs::Vector{Blob})
   forward(sys, state.layer.pooling, state, inputs)
 end
-function forward(sys::System{CPUBackend}, pool::Pooling.Max, state::PoolingLayerState, inputs::Vector{Blob})
-  channels, height, width = size(inputs[1])[2:end]
-  pooled_height, pooled_width = size(state.blobs[1])[3:end]
+
+function pooling_local_fwd(::Pooling.Max, state::PoolingLayerState, i, location, region, k_size)
+  index = indmax(region)
+  state.etc[i][location...] = index
+  return region[index]
+end
+
+function pooling_local_fwd(::Pooling.Mean, state::PoolingLayerState, i, location, region, k_size)
+  return sum(region) / k_size
+end
+function forward(sys::System{CPUBackend}, pool::PoolingFunction, state::PoolingLayerState, inputs::Vector{Blob})
+  width, height, channels, num = size(inputs[1])
+  pooled_width = get_width(state.blobs[1])
+  pooled_height = get_height(state.blobs[1])
+  kernel_size = state.layer.kernel[1] * state.layer.kernel[2]
 
   for i = 1:length(inputs)
     input = inputs[i].data
     output = state.blobs[i].data
-    mask = pool.masks[i]
 
-    fill!(output, -Inf)
-    for n = 1:size(input,1)
+    for n = 1:num
       for c = 1:channels
         for ph = 1:pooled_height
           for pw = 1:pooled_width
-            hstart = max(1, (ph-1)*state.layer.stride[1] - state.layer.pad[1] + 1)
-            wstart = max(1, (pw-1)*state.layer.stride[2] - state.layer.pad[2] + 1)
-            hend = min(hstart + state.layer.kernel[1] - 1, height)
-            wend = min(wstart + state.layer.kernel[2] - 1, width)
+            hstart = max(1, (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1)
+            wstart = max(1, (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1)
+            hend = min(hstart + state.layer.kernel[2] - 1, height)
+            wend = min(wstart + state.layer.kernel[1] - 1, width)
 
-            for h = hstart:hend
-              for w = wstart:wend
-                if input[n, c, h, w] > output[n, c, ph, pw]
-                  output[n, c, ph, pw] = input[n, c, h, w]
-                  mask[n, c, ph, pw] = h*width + w
-                end
-              end
-            end
+            region = sub(input, wstart:wend, hstart:hend, c, n)
+            output[pw,ph,c,n] = pooling_local_fwd(pool, state, i, (pw, ph, c, n), region, kernel_size)
           end
         end
       end
@@ -126,32 +131,43 @@ end
 function backward(sys::System{CPUBackend}, state::PoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   backward(sys, state.layer.pooling, state, inputs, diffs)
 end
-function backward(sys::System{CPUBackend}, pool::Pooling.Max, state::PoolingLayerState,
+
+function pooling_local_bwd(::Pooling.Max, state::PoolingLayerState, i, location, region, diff, k_size)
+  index = state.etc[i][location...]
+  region[index] += diff
+end
+function pooling_local_bwd(::Pooling.Mean, state::PoolingLayerState, i, location, region, diff, k_size)
+  region[:] += diff / k_size
+end
+function backward(sys::System{CPUBackend}, pool::PoolingFunction, state::PoolingLayerState,
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
-  channels, height, width = size(inputs[1])[2:end]
-  pooled_height, pooled_width = size(state.blobs[1])[3:end]
+  width, height, channels, num = size(inputs[1])
+  pooled_width = get_width(state.blobs[1])
+  pooled_height = get_height(state.blobs[1])
+  kernel_size = state.layer.kernel[1] * state.layer.kernel[2]
 
   for i = 1:length(inputs)
     diff = diffs[i]
     if !isa(diff, NullBlob)
-      fill!(diff.data, 0)
+      diff = diff.data
+      fill!(diff, 0)
     else
       continue # nothing to do if not propagating back
     end
 
-    output = state.blobs_diff[i].data
-    mask = pool.masks[i]
-
-    for n = 1:size(output,1)
+    for n = 1:num
       for c = 1:channels
         for ph = 1:pooled_height
           for pw = 1:pooled_width
-            index = mask[n,c,ph,pw]
-            w = index % width
-            h = floorint(index / width)
+            hstart = max(1, (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1)
+            wstart = max(1, (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1)
+            hend = min(hstart + state.layer.kernel[2] - 1, height)
+            wend = min(wstart + state.layer.kernel[1] - 1, width)
 
-            diff.data[n,c,h,w] += output[n,c,ph,pw]
+            region = sub(diff, wstart:wend, hstart:hend, c, n)
+            pooling_local_bwd(pool, state, i, (pw,ph,c,n), region, 
+                state.blobs_diff[i].data[pw,ph,c,n], kernel_size)
           end
         end
       end
