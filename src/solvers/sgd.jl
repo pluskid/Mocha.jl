@@ -19,6 +19,8 @@ function solve(sgd::SGD, net::Net)
   solver_state = SolverState(0, 0.0)
 
   while true
+    check_coffee_breaks(CoffeeBreakTime.Morning(), sgd, solver_state, net)
+
     obj_val = forward_backward(net)
     learning_rate = get_learning_rate(sgd.params.lr_policy, sgd.params.base_lr, solver_state)
 
@@ -37,7 +39,7 @@ function solve(sgd::SGD, net::Net)
     end
 
     update_solver_state(solver_state, obj_val)
-    check_coffee_breaks(sgd, solver_state, net)
+    check_coffee_breaks(CoffeeBreakTime.Evening(), sgd, solver_state, net)
 
     if stop_condition_satisfied(sgd, solver_state, net)
       break

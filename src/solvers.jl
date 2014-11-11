@@ -57,9 +57,9 @@ function init_coffee_breaks(solver::Solver, net::Net)
     init(cb.coffee, net)
   end
 end
-function check_coffee_breaks(solver::Solver, state::SolverState, net::Net)
+function check_coffee_breaks(t::CoffeeBreakTimeType, solver::Solver, state::SolverState, net::Net)
   for cb in solver.coffee_breaks
-    check_coffee_break(cb, state, net)
+    check_coffee_break(cb, t, state, net)
   end
 end
 function destroy_coffee_breaks(solver::Solver, net::Net)

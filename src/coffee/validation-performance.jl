@@ -7,7 +7,7 @@ end
 function init(coffee::ValidationPerformance, ::Net) 
   init(coffee.validation_net)
 end
-function enjoy(coffee::ValidationPerformance, ::Net, ::SolverState) 
+function enjoy(coffee::ValidationPerformance, ::CoffeeBreakTime.Evening, ::Net, ::SolverState) 
   epoch = get_epoch(coffee.validation_net)
   while true
     forward(coffee.validation_net)
@@ -16,7 +16,7 @@ function enjoy(coffee::ValidationPerformance, ::Net, ::SolverState)
     end
   end
 
-  show_statistics(coffee.validation_net, "Performance on Validation Set")
+  show_statistics(coffee.validation_net, title="Performance on Validation Set")
   reset_statistics(coffee.validation_net)
 end
 function destroy(coffee::ValidationPerformance, ::Net) 

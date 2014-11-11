@@ -3,6 +3,7 @@ module Mocha
 include("macros.jl")
 include("logging.jl")
 include("base.jl")
+include("io.jl")
 
 include("backend.jl")
 include("system.jl")
