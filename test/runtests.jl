@@ -1,8 +1,8 @@
 using Mocha
 using Base.Test
 
-global test_cpu   = false
-global test_cudnn = true
+global test_cpu   = true
+global test_cudnn = false
 
 if test_cpu
   backend_cpu = CPUBackend()
@@ -15,6 +15,12 @@ if test_cudnn
   sys_cudnn     = System(backend_cudnn)
   init(sys_cudnn)
 end
+
+
+############################################################
+# Utilities functions
+############################################################
+include("utils/blas.jl")
 
 if test_cudnn
   include("cuda/mocha.jl")

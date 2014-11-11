@@ -3,7 +3,10 @@ module Mocha
 include("macros.jl")
 include("logging.jl")
 include("base.jl")
-include("io.jl")
+
+include("utils/blas.jl")
+include("utils/io.jl")
+include("utils/im2col.jl")
 
 include("backend.jl")
 include("system.jl")

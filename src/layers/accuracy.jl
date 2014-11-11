@@ -30,12 +30,23 @@ function show_statistics(state::AccuracyLayerState)
   @info("  Accuracy (avg over $(state.n_accum)) = $accuracy")
 end
 
-function forward(sys::System{CPUBackend}, layer::AccuracyLayer, inputs::Vector{Blob})
+function forward(sys::System{CPUBackend}, state::AccuracyLayerState, inputs::Vector{Blob})
   pred = inputs[1].data
   label = inputs[2].data
 
-  accuracy = sum(int(pred) == int(label)) / length(label)
-  println("  accuracy = $accuracy")
+  width, height, channels, num = size(pred)
+  accuracy = 0.0
+  for w = 1:width
+    for h = 1:height
+      for n = 1:num
+        if pred[w,h,int(label[w,h,1,n])+1,n] >= maximum(sub(pred, w, h, 1:channels, n))
+          accuracy += 1.0
+        end
+      end
+    end
+  end
+  state.accuracy = float64(state.accuracy * state.n_accum + accuracy) / (state.n_accum + length(label))
+  state.n_accum += length(label)
 end
 
 function forward(sys::System{CuDNNBackend}, state::AccuracyLayerState, inputs::Vector{Blob})

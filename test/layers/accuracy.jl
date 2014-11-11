@@ -40,7 +40,7 @@ function test_accuracy_layer(sys::System)
   @test abs(state.accuracy - expected_acc) < eps
 
   println("    > Forward Again and Again")
-  reset(state)
+  reset_statistics(state)
   forward(sys, state, inputs)
   @test state.n_accum == width*height*num
   @test abs(state.accuracy - expected_acc) < eps
