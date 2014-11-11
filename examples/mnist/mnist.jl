@@ -22,7 +22,8 @@ fc1_layer  = InnerProductLayer(name="ip1", output_dim=500, neuron=Neurons.ReLU()
 fc2_layer  = InnerProductLayer(name="ip2", output_dim=10, bottoms=[:ip1], tops=[:ip2])
 loss_layer = SoftmaxLossLayer(bottoms=[:ip2,:label])
 
-sys = System(CuDNNBackend())
+#sys = System(CuDNNBackend())
+sys = System(CPUBackend())
 init(sys)
 
 common_layers = [conv_layer, pool_layer, conv2_layer, pool2_layer, fc1_layer, fc2_layer]
@@ -33,7 +34,7 @@ params = SolverParameters(max_iter=10000, regu_coef=0.0005, base_lr=0.01, moment
 solver = SGD(params)
 
 # report training progress every 100 iterations
-add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
+add_coffee_break(solver, TrainingSummary(), every_n_iter=1)
 
 # show performance on test data every 1000 iterations
 data_layer_test = HDF5DataLayer(source=source_fns[2], batch_size=100)
