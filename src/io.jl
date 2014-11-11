@@ -5,8 +5,12 @@ export save_network, load_network
 ############################################################
 function mkdir_p(path::String)
   # I bet $5 this bad recursion is not a problem for our usages here
-  if !isdir(basename(path))
-    mkdir_p(basename(path))
+  if isempty(path) || isdir(path)
+    return
+  end
+
+  if !isdir(dirname(path))
+    mkdir_p(dirname(path))
   end
   mkdir(path)
 end
@@ -45,7 +49,7 @@ function save_network(file, net)
       params_all[key] = params
     end
   end
-  file[NETWORK_SAVE_NAME] = params_all
+  write(file, NETWORK_SAVE_NAME, params_all)
 end
 
 function get_param_data(param)
@@ -56,7 +60,7 @@ function get_param_data(param)
 end
 
 function load_network(file, net)
-  params_all = file[NETWORK_SAVE_NAME]
+  params_all = read(file, NETWORK_SAVE_NAME)
   for i = 1:length(net.layers)
     if :parameters ∈ names(net.states[i])
       key = net.layers[i].name
@@ -69,7 +73,7 @@ function load_network(file, net)
       @assert length(params) == length(net.states[i].parameters)
 
       for j = 1:length(params)
-        @assert size(params[j]) == size(net.states[i].parameters[j])
+        @assert size(params[j]) == size(net.states[i].parameters[j].blob)
         copy!(net.states[i].parameters[j].blob, params[j])
         net.states[i].parameters[j].initializer = NullInitializer()
       end

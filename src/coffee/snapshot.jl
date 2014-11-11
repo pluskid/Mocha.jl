@@ -5,6 +5,10 @@ export Snapshot
 type Snapshot <: Coffee
   dir :: String
   auto_load :: Bool
+  also_load_solver_state :: Bool
+
+  Snapshot(dir; auto_load=true, also_load_solver_state=true) = 
+      new(dir, auto_load, also_load_solver_state)
 end
 
 function init(coffee::Snapshot, ::Net)
@@ -27,7 +31,10 @@ function enjoy(coffee::Snapshot, ::CoffeeBreakTime.Morning, net::Net, state::Sol
       @info("Auto-loading from the latest snapshot $snapshot...")
       jldopen(joinpath(coffee.dir, snapshot)) do file
         load_network(file, net)
-        copy_solver_state!(state, file[SOLVER_STATE_KEY])
+        if coffee.also_load_solver_state
+          saved_state = read(file, SOLVER_STATE_KEY)
+          copy_solver_state!(state, saved_state)
+        end
       end
     end
   end
@@ -39,9 +46,10 @@ function enjoy(coffee::Snapshot, ::CoffeeBreakTime.Evening, net::Net, state::Sol
   path = joinpath(coffee.dir, fn)
   if isfile(path)
     @warn("Overwriting $path...")
-    jldopen(path, "w") do file
-      save_network(file, net)
-      file[SOLVER_STATE_KEY] = state
-    end
+  end
+
+  jldopen(path, "w") do file
+    save_network(file, net)
+    write(file, SOLVER_STATE_KEY, state)
   end
 end

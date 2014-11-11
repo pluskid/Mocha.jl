@@ -1,5 +1,6 @@
 export Net
 export init, destroy, forward, backward, forward_backward, get_epoch
+export show_statistics, reset_statistics
 
 type Net{T <: Backend}
   sys :: System{T}
@@ -43,7 +44,7 @@ function show_statistics(net::Net; title="Network Statistics")
   @info("---------------------------------------------------------")
   for i = 1:length(net.layers)
     if isa(net.layers[i], StatLayer)
-      summarize(net.states[i])
+      show_statistics(net.states[i])
     end
   end
   @info("---------------------------------------------------------")
@@ -52,7 +53,7 @@ end
 function reset_statistics(net::Net)
   for i = 1:length(net.layers)
     if isa(net.layers[i], StatLayer)
-      reset(net.states[i])
+      reset_statistics(net.states[i])
     end
   end
 end

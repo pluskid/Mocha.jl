@@ -7,7 +7,7 @@ export AccuracyLayer
 
 export setup, forward, backward
 
-export reset, summarize # for statistics layers
+export reset_statistics, show_statistics
 
 ############################################################
 # Implementing a Layer

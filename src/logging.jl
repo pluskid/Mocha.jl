@@ -1,2 +1,2 @@
 using Logging
-@Logging.configure(level=DEBUG)
+@Logging.configure(level=DEBUG, output=STDOUT)

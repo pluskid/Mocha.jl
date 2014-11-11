@@ -1,4 +1,5 @@
 examples/mnist/data
+examples/mnist/snapshots
 
 src/cuda/kernels/*
 !src/cuda/kernels/*.cu

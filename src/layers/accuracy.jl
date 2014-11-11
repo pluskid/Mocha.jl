@@ -21,11 +21,11 @@ function setup(sys::System, layer::AccuracyLayer, inputs::Vector{Blob})
   return AccuracyLayerState(layer, 0.0, 0, etc)
 end
 
-function reset(state::AccuracyLayerState)
+function reset_statistics(state::AccuracyLayerState)
   state.n_accum = 0
   state.accuracy = 0.0
 end
-function summarize(state::AccuracyLayerState)
+function show_statistics(state::AccuracyLayerState)
   accuracy = @sprintf("%.4f%%", state.accuracy*100)
   @info("  Accuracy (avg over $(state.n_accum)) = $accuracy")
 end
