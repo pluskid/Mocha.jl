@@ -49,7 +49,7 @@ function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob})
         (pooled_width,pooled_height,get_chann(inputs[i]),get_num(inputs[i])))
   end
 
-  if isa(sys.backend, CPUBackend) 
+  if isa(sys.backend, CPUBackend)
     if isa(layer.pooling, Pooling.Max)
       masks = Array(Array, length(inputs))
       for i = 1:length(inputs)
@@ -73,9 +73,9 @@ function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob})
       inputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
       outputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
       for i = 1:length(inputs)
-        inputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype, 
+        inputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype,
             (width,height,get_chann(inputs[i]),get_num(inputs[i])))
-        outputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype, 
+        outputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype,
             (pooled_width,pooled_height,get_chann(inputs[i]),get_num(inputs[i])))
       end
       etc = CuDNNPoolingState(pooling_desc, inputs_desc, outputs_desc)
@@ -91,15 +91,6 @@ function forward(sys::System{CPUBackend}, state::PoolingLayerState, inputs::Vect
   forward(sys, state.layer.pooling, state, inputs)
 end
 
-function pooling_local_fwd(::Pooling.Max, state::PoolingLayerState, i, location, region, k_size)
-  index = indmax(region)
-  state.etc[i][location...] = index
-  return region[index]
-end
-
-function pooling_local_fwd(::Pooling.Mean, state::PoolingLayerState, i, location, region, k_size)
-  return sum(region) / k_size
-end
 function forward(sys::System{CPUBackend}, pool::PoolingFunction, state::PoolingLayerState, inputs::Vector{Blob})
   width, height, channels, num = size(inputs[1])
   pooled_width = get_width(state.blobs[1])
@@ -118,9 +109,31 @@ function forward(sys::System{CPUBackend}, pool::PoolingFunction, state::PoolingL
             wstart = max(1, (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1)
             hend = min(hstart + state.layer.kernel[2] - 1, height)
             wend = min(wstart + state.layer.kernel[1] - 1, width)
-
-            region = sub(input, wstart:wend, hstart:hend, c, n)
-            output[pw,ph,c,n] = pooling_local_fwd(pool, state, i, (pw, ph, c, n), region, kernel_size)
+            if isa(pool, Pooling.Max)
+              maxval = -Inf
+              maxw = 0
+              maxh = 0
+              for w = wstart:wend
+                for h = hstart:hend
+                  val = input[w,h,c,n]
+                  if val > maxval
+                    maxval = val
+                    maxw = w
+                    maxh = h
+                  end
+                end
+              end
+              output[pw,ph,c,n] = maxval
+              state.etc[i][pw,ph,c,n] = (h-1) * width + w-1
+            elseif isa(pool, Pooling.Mean)
+              the_sum = 0.0
+              for w = wstart:wend
+                for h = hstart:hend
+                  the_sum += input[w,h,c,n]
+                end
+              end
+              output[pw,ph,c,n] = the_sum / kernel_size
+            end
           end
         end
       end
@@ -132,13 +145,6 @@ function backward(sys::System{CPUBackend}, state::PoolingLayerState, inputs::Vec
   backward(sys, state.layer.pooling, state, inputs, diffs)
 end
 
-function pooling_local_bwd(::Pooling.Max, state::PoolingLayerState, i, location, region, diff, k_size)
-  index = state.etc[i][location...]
-  region[index] += diff
-end
-function pooling_local_bwd(::Pooling.Mean, state::PoolingLayerState, i, location, region, diff, k_size)
-  region[:] += diff / k_size
-end
 function backward(sys::System{CPUBackend}, pool::PoolingFunction, state::PoolingLayerState,
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
@@ -155,19 +161,30 @@ function backward(sys::System{CPUBackend}, pool::PoolingFunction, state::Pooling
     else
       continue # nothing to do if not propagating back
     end
+    top_diff = state.blobs_diff[i]
 
     for n = 1:num
       for c = 1:channels
         for ph = 1:pooled_height
           for pw = 1:pooled_width
-            hstart = max(1, (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1)
-            wstart = max(1, (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1)
-            hend = min(hstart + state.layer.kernel[2] - 1, height)
-            wend = min(wstart + state.layer.kernel[1] - 1, width)
+            if isa(pool, Pooling.Max)
+              index = state.etc[i][pw,ph,c,n]
+              idx_w = (index % width) + 1
+              idx_h = floorint(index / width) + 1
+              diff[idx_w, idx_h, c, n] = top_diff[pw,ph,c,n]
+            elseif isa(pool, Pooling.Mean)
+              hstart = max(1, (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1)
+              wstart = max(1, (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1)
+              hend = min(hstart + state.layer.kernel[2] - 1, height)
+              wend = min(wstart + state.layer.kernel[1] - 1, width)
 
-            region = sub(diff, wstart:wend, hstart:hend, c, n)
-            pooling_local_bwd(pool, state, i, (pw,ph,c,n), region, 
-                state.blobs_diff[i].data[pw,ph,c,n], kernel_size)
+              val = top_diff[pw,ph,c,n] / kernel_size
+              for w = wstart:wend
+                for h = hstart:hend
+                  diff[w,h,c,n] = val
+                end
+              end
+            end
           end
         end
       end
@@ -177,7 +194,7 @@ end
 
 function forward(sys::System{CuDNNBackend}, state::PoolingLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
-    CuDNN.pooling_forward(sys.backend.cudnn_ctx, state.etc.pooling_desc, 
+    CuDNN.pooling_forward(sys.backend.cudnn_ctx, state.etc.pooling_desc,
         state.etc.inputs_desc[i], inputs[i].ptr,
         state.etc.outputs_desc[i], state.blobs[i].ptr)
   end
