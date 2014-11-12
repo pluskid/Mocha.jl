@@ -1,2 +1,2 @@
-run(`pwd`)
-run(`make`)
+println("Hello World")
+println(pwd())

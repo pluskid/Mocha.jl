@@ -1,4 +1,4 @@
-function im2col{T}(img::Array{T}, col::Array{T}, width::Int, height::Int, channels::Int, kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
+function im2col_jl{T}(img::Array{T}, col::Array{T}, width::Int, height::Int, channels::Int, kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
   kernel_w, kernel_h = kernel
   pad_w, pad_h = pad
   stride_w, stride_h = stride
@@ -26,7 +26,7 @@ function im2col{T}(img::Array{T}, col::Array{T}, width::Int, height::Int, channe
   end
 end
 
-function col2im{T}(col::Array{T}, img::Array{T}, width::Int, height::Int, channels::Int, kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
+function col2im_jl{T}(col::Array{T}, img::Array{T}, width::Int, height::Int, channels::Int, kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
   kernel_w, kernel_h = kernel
   pad_w, pad_h = pad
   stride_w, stride_h = stride
@@ -52,3 +52,4 @@ function col2im{T}(col::Array{T}, img::Array{T}, width::Int, height::Int, channe
     end
   end
 end
+
