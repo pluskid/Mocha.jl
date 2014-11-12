@@ -39,7 +39,7 @@ function forward(sys::System{CPUBackend}, state::AccuracyLayerState, inputs::Vec
   for w = 1:width
     for h = 1:height
       for n = 1:num
-        if pred[w,h,int(label[w,h,1,n])+1,n] >= maximum(sub(pred, w, h, 1:channels, n))
+        if pred[w,h,int(label[w,h,1,n])+1,n] >= maximum(pred[w, h, 1:channels, n])
           accuracy += 1.0
         end
       end

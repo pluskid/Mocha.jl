@@ -64,10 +64,16 @@ end
 # Rectified-Linear
 ############################################################
 function forward(sys :: System{CPUBackend}, neuron :: Neurons.ReLU, output :: Blob)
-  output.data = max(output.data, 0)
+  for i = 1:length(output.data)
+    output.data[i] = max(0, output.data[i])
+  end
 end
 function backward(sys :: System{CPUBackend}, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
-  gradient.data .*= (output.data .> 0)
+  for i = 1:length(output.data)
+    if output.data[i] <= 0
+      gradient.data[i] = 0
+    end
+  end
 end
 
 function forward(sys :: System{CuDNNBackend}, neuron :: Neurons.ReLU, output :: Blob)
