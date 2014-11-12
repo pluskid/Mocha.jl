@@ -38,11 +38,11 @@ function test_convolution_layer(sys::System)
 
   state = setup(sys, layer, inputs)
 
-  if isa(sys.backend, CuDNNBackend)
-    # test that we are getting the correct output shape
-    out_blob_dims = CuDNN.get_output_tensor4d_dim(state.etc.conv_desc[1], CuDNN.CUDNN_CONVOLUTION_FWD)
-    @test out_blob_dims == (get_width(state.blobs[1]), get_height(state.blobs[1]), int(get_chann(state.blobs[1])/n_group), input_num)
-  end
+  #if isa(sys.backend, CuDNNBackend)
+  #  # test that we are getting the correct output shape
+  #  out_blob_dims = CuDNN.get_output_tensor4d_dim(state.etc.conv_desc[1], CuDNN.CUDNN_CONVOLUTION_FWD)
+  #  @test out_blob_dims == (get_width(state.blobs[1]), get_height(state.blobs[1]), int(get_chann(state.blobs[1])/n_group), input_num)
+  #end
 
   println("    > Forward")
   filter = rand(filter_dims)

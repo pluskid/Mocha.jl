@@ -49,7 +49,7 @@ function solve(sgd::SGD, net::Net)
   destroy_coffee_breaks(sgd, net)
 end
 
-function update_parameters(net::Net{CPUBackend}, solver, learning_rate, state, param_blob, blob, gradient, data_type)
+function update_parameters(net::Net{CPUBackend}, solver::SGD, learning_rate, state, param_blob, blob, gradient, data_type)
   # blob = momentum * blob
   BLAS.scal!(length(blob), convert(data_type, solver.params.momentum), blob.data, 1)
   # blob = - learning_rate * gradient + blob
@@ -58,17 +58,4 @@ function update_parameters(net::Net{CPUBackend}, solver, learning_rate, state, p
   # update parameter
   # param_blob += blob
   BLAS.axpy!(length(blob), convert(data_type, 1), blob.data, 1, param_blob.data, 1)
-end
-function update_parameters(net::Net{CuDNNBackend}, solver, learning_rate, state, param_blob, blob, gradient, data_type)
-  # blob = net.sys.momentum * blob
-  CuBLAS.scal(net.sys.backend.cublas_ctx, length(blob), convert(data_type, solver.params.momentum),
-      blob.ptr, 1)
-  # blob = - net.sys.learning_rate * gradient + blob
-  CuBLAS.axpy(net.sys.backend.cublas_ctx, length(blob), convert(data_type, -learning_rate),
-      gradient.ptr, 1, blob.ptr, 1)
-
-  # update parameter
-  # param_blob += blob
-  CuBLAS.axpy(net.sys.backend.cublas_ctx, length(blob), convert(data_type, 1),
-      blob.ptr, 1, param_blob.ptr, 1)
 end

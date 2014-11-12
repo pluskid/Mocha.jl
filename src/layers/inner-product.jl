@@ -36,49 +36,30 @@ type InnerProductLayerState <: LayerState
     blobs = Array(Blob, length(inputs))
     blobs_diff = Array(Blob, length(inputs))
 
-    if isa(sys.backend, CPUBackend)
-      for i = 1:length(inputs)
-        blobs[i] = CPUBlob(data_type, out_dim, nums)
-        blobs_diff[i] = CPUBlob(data_type, out_dim, nums)
-      end
-
-      state = new(layer, blobs, blobs_diff)
-      state.W  = CPUBlob(data_type, fea_size, out_dim)
-      state.∇W = CPUBlob(data_type, fea_size, out_dim)
-      state.b  = CPUBlob(data_type, out_dim)
-      state.∇b = CPUBlob(data_type, out_dim)
-
-      state.bias_multiplier = CPUBlob(data_type, nums)
-      fill!(state.bias_multiplier, 1)
-    elseif isa(sys.backend, CuDNNBackend)
-      for i = 1:length(inputs)
-        blobs[i] = cudnn_make_tensor_blob(data_type, out_dim, nums)
-        blobs_diff[i] = cudnn_make_tensor_blob(data_type, out_dim, nums)
-      end
-
-      state = new(layer, blobs, blobs_diff)
-
-      if isa(shared_state, InnerProductLayerState)
-        @assert size(shared_state.W) == (1, 1, fea_size, out_dim)
-        @assert eltype(shared_state.W) == data_type
-        @debug("Sharing weights and bias with an existing InnerProductLayer")
-
-        state.W  = shared_state.W
-        state.∇W = shared_state.∇W
-        state.b  = shared_state.b
-        state.∇b = shared_state.∇b
-      else
-        state.W  = cudnn_make_tensor_blob(data_type, fea_size, out_dim)
-        state.∇W = cudnn_make_tensor_blob(data_type, fea_size, out_dim)
-        state.b  = cudnn_make_tensor_blob(data_type, out_dim)
-        state.∇b = cudnn_make_tensor_blob(data_type, out_dim)
-      end
-
-      state.bias_multiplier = cudnn_make_tensor_blob(data_type, nums)
-      fill!(state.bias_multiplier, 1)
-    else
-      error("Backend $(sys.backend) not supported")
+    for i = 1:length(inputs)
+      blobs[i] = make_blob(sys.backend, data_type, out_dim, nums)
+      blobs_diff[i] = make_blob(sys.backend, data_type, out_dim, nums)
     end
+
+    state = new(layer, blobs, blobs_diff)
+
+    if isa(shared_state, InnerProductLayerState)
+      @assert size(shared_state.W) == (1, 1, fea_size, out_dim)
+      @assert eltype(shared_state.W) == data_type
+      @debug("Sharing weights and bias with an existing InnerProductLayer")
+
+      state.W  = shared_state.W
+      state.∇W = shared_state.∇W
+      state.b  = shared_state.b
+      state.∇b = shared_state.∇b
+    else
+      state.W  = make_blob(sys.backend, data_type, fea_size, out_dim)
+      state.∇W = make_blob(sys.backend, data_type, fea_size, out_dim)
+      state.b  = make_blob(sys.backend, data_type, out_dim)
+      state.∇b = make_blob(sys.backend, data_type, out_dim)
+    end
+    state.bias_multiplier = make_blob(sys.backend, data_type, nums)
+    fill!(state.bias_multiplier, 1)
 
     state.parameters = [Parameter(state.W, state.∇W, layer.weight_init, layer.weight_regu),
                         Parameter(state.b, state.∇b, layer.bias_init, layer.bias_regu)]
@@ -145,51 +126,3 @@ function backward(sys::System{CPUBackend}, state::InnerProductLayerState, inputs
 end
 
 
-function forward(sys::System{CuDNNBackend}, state::InnerProductLayerState, inputs::Vector{Blob})
-  M = size(state.W, 4)   # target dim
-  N = size(inputs[1], 4) # batch size
-  K = size(state.W, 3)   # source dim
-  dtype = eltype(state.W)
-  for i = 1:length(inputs)
-    input = inputs[i]
-    output = state.blobs[i]
-    # output = W^T * X
-    CuBLAS.gemm(sys.backend.cublas_ctx, CuBLAS.OP_T, CuBLAS.OP_N, M, N, K, convert(dtype, 1),
-                state.W.ptr, K, input.ptr, K, convert(dtype, 0), output.ptr, M)
-    # output += bias
-    CuBLAS.gemm(sys.backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_N, M, N, 1, convert(dtype, 1),
-                state.b.ptr, M, state.bias_multiplier.ptr, 1, convert(dtype, 1), output.ptr, M)
-  end
-end
-
-function backward(sys::System{CuDNNBackend}, state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  target_dim = size(state.W, 4)
-  source_dim = size(state.W, 3)
-  batch_size = size(inputs[1], 4)
-  data_type  = eltype(state.W)
-
-  # used in BLAS, at first it is zero, indicating overwriting the data
-  # then it becomes one, indicating adding to the data
-  zero_and_then_one = convert(data_type, 0)
-
-  for i = 1:length(inputs)
-    # ∂f/∂W = input * [∂f/∂o]^T
-    input = inputs[i]
-    ∂f_∂o = state.blobs_diff[i]
-    CuBLAS.gemm(sys.backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_T, source_dim, target_dim, batch_size,
-        convert(data_type, 1), input.ptr, source_dim, ∂f_∂o.ptr, target_dim, zero_and_then_one, state.∇W.ptr, source_dim)
-
-    # ∂f/∂b = sum(∂f/∂o, 2)
-    CuBLAS.gemm(sys.backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_N, target_dim, 1, batch_size,
-        convert(data_type, 1), ∂f_∂o.ptr, target_dim, state.bias_multiplier.ptr, batch_size, zero_and_then_one, state.∇b.ptr, target_dim)
-
-    zero_and_then_one = convert(data_type, 1)
-
-    # if back propagate down
-    if isa(diffs[i], CuTensorBlob)
-      # ∂f/∂x = W * [∂f/∂o]
-      CuBLAS.gemm(sys.backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_N, source_dim, batch_size, target_dim,
-          convert(data_type, 1), state.W.ptr, source_dim, ∂f_∂o.ptr, target_dim, convert(data_type, 0), diffs[i].ptr, source_dim)
-    end
-  end
-end

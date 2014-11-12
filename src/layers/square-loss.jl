@@ -19,13 +19,7 @@ end
 
 function setup(sys::System, layer::SquareLossLayer, inputs::Vector{Blob})
   data_type = eltype(inputs[1])
-  if isa(sys.backend, CPUBackend)
-    pred_copy = CPUBlob(data_type, size(inputs[1])...)
-  elseif isa(sys.backend, CuDNNBackend)
-    pred_copy = cudnn_make_tensor_blob(data_type, size(inputs[1])...)
-  else
-    error("Backend $(sys.backend) not supported")
-  end
+  pred_copy = make_blob(sys.backend, data_type, size(inputs[1])...)
 
   state = SquareLossLayerState(layer, convert(data_type, 0), pred_copy)
   return state
@@ -59,32 +53,4 @@ function backward(sys::System{CPUBackend}, state::SquareLossLayerState, inputs::
   end
 end
 
-
-function forward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs::Vector{Blob})
-  pred = inputs[1]
-  label = inputs[2]
-
-  data_type = eltype(pred)
-  n = length(pred)
-
-  copy!(state.pred_copy, pred)
-  CuBLAS.axpy(sys.backend.cublas_ctx, n, convert(data_type, -1), label.ptr, 1, state.pred_copy.ptr, 1)
-  state.loss = 0.5/get_num(pred)*CuBLAS.dot(sys.backend.cublas_ctx, data_type, n, state.pred_copy.ptr, 1, state.pred_copy.ptr, 1)
-end
-
-function backward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  diff = diffs[1]
-  if isa(diff, CuTensorBlob)
-    pred = inputs[1]
-    label = inputs[2]
-
-    data_type = eltype(pred)
-    n = length(pred)
-    num = get_num(pred)
-
-    erase!(diff)
-    CuBLAS.axpy(sys.backend.cublas_ctx, n, convert(data_type, 1.0/num), pred.ptr, 1, diff.ptr, 1)
-    CuBLAS.axpy(sys.backend.cublas_ctx, n, convert(data_type, -1.0/num), label.ptr, 1, diff.ptr, 1)
-  end
-end
 

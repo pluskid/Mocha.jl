@@ -1,8 +1,12 @@
+const test_cpu   = true
+const test_cudnn = false
+
+if test_cudnn
+  ENV["MOCHA_USE_CUDA"] = "true"
+end
+
 using Mocha
 using Base.Test
-
-global test_cpu   = true
-global test_cudnn = true
 
 if test_cpu
   backend_cpu = CPUBackend()
