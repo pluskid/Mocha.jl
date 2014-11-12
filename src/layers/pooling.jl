@@ -115,7 +115,7 @@ function forward(sys::System{CPUBackend}, pool::PoolingFunction, state::PoolingL
               maxh = 0
               for w = wstart:wend
                 for h = hstart:hend
-                  val = input[w,h,c,n]
+                  @inbounds val = input[w,h,c,n]
                   if val > maxval
                     maxval = val
                     maxw = w
@@ -123,16 +123,16 @@ function forward(sys::System{CPUBackend}, pool::PoolingFunction, state::PoolingL
                   end
                 end
               end
-              output[pw,ph,c,n] = maxval
-              state.etc[i][pw,ph,c,n] = (maxh-1) * width + maxw-1
+              @inbounds output[pw,ph,c,n] = maxval
+              @inbounds state.etc[i][pw,ph,c,n] = (maxh-1) * width + maxw-1
             elseif isa(pool, Pooling.Mean)
               the_sum = 0.0
               for w = wstart:wend
                 for h = hstart:hend
-                  the_sum += input[w,h,c,n]
+                  @inbounds the_sum += input[w,h,c,n]
                 end
               end
-              output[pw,ph,c,n] = the_sum / kernel_size
+              @inbounds output[pw,ph,c,n] = the_sum / kernel_size
             end
           end
         end
@@ -171,17 +171,17 @@ function backward(sys::System{CPUBackend}, pool::PoolingFunction, state::Pooling
               index = state.etc[i][pw,ph,c,n]
               idx_w = (index % width) + 1
               idx_h = div(index, width) + 1
-              diff[idx_w, idx_h, c, n] += top_diff[pw,ph,c,n]
+              @inbounds diff[idx_w, idx_h, c, n] += top_diff[pw,ph,c,n]
             elseif isa(pool, Pooling.Mean)
               hstart = max(1, (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1)
               wstart = max(1, (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1)
               hend = min(hstart + state.layer.kernel[2] - 1, height)
               wend = min(wstart + state.layer.kernel[1] - 1, width)
 
-              val = top_diff[pw,ph,c,n] / kernel_size
+              @inbounds val = top_diff[pw,ph,c,n] / kernel_size
               for w = wstart:wend
                 for h = hstart:hend
-                  diff[w,h,c,n] += val
+                  @inbounds diff[w,h,c,n] += val
                 end
               end
             end
