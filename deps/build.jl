@@ -1,0 +1,2 @@
+run(`pwd`)
+run(`make`)

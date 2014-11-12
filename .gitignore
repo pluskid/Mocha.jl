@@ -1,7 +1,7 @@
 examples/mnist/data
 examples/mnist/snapshots
 
-benchmarks/native-im2col/*.so
+*.so
 
 src/cuda/kernels/*
 !src/cuda/kernels/*.cu
