@@ -1,5 +1,5 @@
 const test_cpu   = true
-const test_cudnn = true
+const test_cudnn = false
 
 if test_cudnn
   ENV["MOCHA_USE_CUDA"] = "true"

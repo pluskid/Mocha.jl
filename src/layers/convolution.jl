@@ -25,7 +25,7 @@ type CPUConvState
   img_buffer      :: Array
 end
 
-function setup_etc(sys::System{CPUBackend}, layer::ConvolutionLayer, dtype, width, height, 
+function setup_etc(sys::System{CPUBackend}, layer::ConvolutionLayer, dtype, width, height,
     channels, batch_size, width_out, height_out, inputs)
 
   if layer.kernel[1] == 1 && layer.kernel[2] == 1 &&
@@ -144,7 +144,7 @@ function forward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs::
         col_buffer = convert(Ptr{dtype}, input.data) + img_offset * (n-1)
       else
         col_buffer = state.etc.col_buffer.data
-        im2col(input.data[:, :, :, n], col_buffer,
+        im2col(input.data, n, col_buffer,
             width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
         col_buffer = convert(Ptr{dtype}, col_buffer)
       end
@@ -190,7 +190,7 @@ function backward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs:
         col_buffer = convert(Ptr{dtype}, input.data) + img_offset * (n-1)
       else
         col_buffer = state.etc.col_buffer.data
-        im2col(input.data[:, :, :, n], col_buffer,
+        im2col(input.data, n, col_buffer,
             width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
         col_buffer = convert(Ptr{dtype}, col_buffer)
       end
@@ -221,9 +221,8 @@ function backward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs:
               convert(dtype, 0), col_buffer + col_offset * (g-1))
         end
         if !(isa(state.etc.col_buffer, NullBlob))
-           col2im(state.etc.col_buffer.data, state.etc.img_buffer,
+           col2im(state.etc.col_buffer.data, diff.data, n, state.etc.img_buffer,
               width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
-           diff.data[:,:,:,n] = state.etc.img_buffer
         end
       end
     end

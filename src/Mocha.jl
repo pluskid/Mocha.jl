@@ -3,6 +3,10 @@ module Mocha
 include("logging.jl")
 include("config.jl")
 
+if Config.use_native_extension
+  include("native.jl")
+end
+
 include("macros.jl")
 include("base.jl")
 
@@ -10,6 +14,7 @@ include("utils/blas.jl")
 include("utils/io.jl")
 
 if Config.use_native_extension
+  include("utils/im2col-native.jl")
 else
   include("utils/im2col.jl")
 end
