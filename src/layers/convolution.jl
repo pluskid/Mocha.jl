@@ -25,7 +25,9 @@ type CPUConvState
   img_buffer      :: Array
 end
 
-function setup_etc(sys::System{CPUBackend}, layer::ConvolutionLayer, dtype, width, height, channels, width_out, height_out)
+function setup_etc(sys::System{CPUBackend}, layer::ConvolutionLayer, dtype, width, height, 
+    channels, batch_size, width_out, height_out, inputs)
+
   if layer.kernel[1] == 1 && layer.kernel[2] == 1 &&
      layer.stride[1] == 1 && layer.stride[2] == 1 &&
      layer.pad[1] == 0 && layer.pad[2] == 0
@@ -94,7 +96,7 @@ type ConvolutionLayerState <: LayerState
       ∇bias = make_blob(sys.backend, dtype, layer.n_filter)
     end
 
-    etc = setup_etc(sys, layer, dtype, width, height, channels, width_out, height_out)
+    etc = setup_etc(sys, layer, dtype, width, height, channels, batch_size, width_out, height_out, inputs)
 
     parameters = [Parameter(filter, ∇filter, layer.filter_init, layer.filter_regu),
                   Parameter(bias, ∇bias, layer.bias_init, layer.bias_regu)]

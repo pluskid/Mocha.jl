@@ -11,7 +11,9 @@ type CuDNNConvState
   bias_offset   :: Int
 end
 
-function setup_etc(sys::System{CuDNNBackend}, layer::ConvolutionLayer, dtype, width, height, channels, width_out, height_out)
+function setup_etc(sys::System{CuDNNBackend}, layer::ConvolutionLayer, dtype, width, height, channels, 
+    batch_size, width_out, height_out, inputs)
+
   filter_desc = CuDNN.create_filter_descriptor(dtype, (layer.kernel[1], layer.kernel[2],
       div(channels,layer.n_group), div(layer.n_filter,layer.n_group)))
   bias_desc = CuDNN.create_tensor4d_descriptor(dtype, (1,1,div(layer.n_filter,layer.n_group),1))

@@ -7,6 +7,10 @@ end
 function setup_etc(sys::System{CuDNNBackend}, layer::PoolingLayer, inputs,
     pooled_width, pooled_height)
 
+  dtype = eltype(inputs[1])
+  width = get_width(inputs[1])
+  height = get_height(inputs[1])
+
   if layer.pad[1] == 0 && layer.pad[2] == 0
     if isa(layer.pooling, Pooling.Max)
       pooling_mode = CuDNN.CUDNN_POOLING_MAX
