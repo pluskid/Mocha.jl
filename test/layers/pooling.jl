@@ -4,7 +4,7 @@ function test_pooling_layer(sys::System, pooling::PoolingFunction, has_padding::
 
   if has_padding
     input_w   = 16
-    inpu_h    = 10
+    input_h   = 10
     padding   = (2,2)
   else
     input_w   = 18
@@ -129,6 +129,10 @@ end
 function test_pooling_layer(sys::System)
   test_pooling_layer(sys, Pooling.Max(), false)
   test_pooling_layer(sys, Pooling.Mean(), false)
+  if !isa(sys.backend, CuDNNBackend)
+    test_pooling_layer(sys, Pooling.Max(), true)
+    test_pooling_layer(sys, Pooling.Mean(), true)
+  end
 end
 
 if test_cpu
