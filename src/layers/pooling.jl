@@ -31,7 +31,7 @@ function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob})
 
   # make sure the last pooling is not purely pooling padded area
   if layer.pad[1] > 0 || layer.pad[2] > 0
-    if ((pooled_height-1) * layer.strade[2] >= height + layer.pad[2])
+    if ((pooled_height-1) * layer.stride[2] >= height + layer.pad[2])
       pooled_height -= 1
     end
     if ((pooled_width-1) * layer.stride[1] >= width + layer.pad[1])
