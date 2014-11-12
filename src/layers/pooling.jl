@@ -170,7 +170,7 @@ function backward(sys::System{CPUBackend}, pool::PoolingFunction, state::Pooling
             if isa(pool, Pooling.Max)
               index = state.etc[i][pw,ph,c,n]
               idx_w = (index % width) + 1
-              idx_h = floorint(index / width) + 1
+              idx_h = div(index, width) + 1
               diff[idx_w, idx_h, c, n] += top_diff[pw,ph,c,n]
             elseif isa(pool, Pooling.Mean)
               hstart = max(1, (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1)
