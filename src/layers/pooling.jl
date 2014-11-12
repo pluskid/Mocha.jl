@@ -124,7 +124,7 @@ function forward(sys::System{CPUBackend}, pool::PoolingFunction, state::PoolingL
                 end
               end
               output[pw,ph,c,n] = maxval
-              state.etc[i][pw,ph,c,n] = (h-1) * width + w-1
+              state.etc[i][pw,ph,c,n] = (maxh-1) * width + maxw-1
             elseif isa(pool, Pooling.Mean)
               the_sum = 0.0
               for w = wstart:wend
@@ -161,7 +161,7 @@ function backward(sys::System{CPUBackend}, pool::PoolingFunction, state::Pooling
     else
       continue # nothing to do if not propagating back
     end
-    top_diff = state.blobs_diff[i]
+    top_diff = state.blobs_diff[i].data
 
     for n = 1:num
       for c = 1:channels
@@ -171,7 +171,7 @@ function backward(sys::System{CPUBackend}, pool::PoolingFunction, state::Pooling
               index = state.etc[i][pw,ph,c,n]
               idx_w = (index % width) + 1
               idx_h = floorint(index / width) + 1
-              diff[idx_w, idx_h, c, n] = top_diff[pw,ph,c,n]
+              diff[idx_w, idx_h, c, n] += top_diff[pw,ph,c,n]
             elseif isa(pool, Pooling.Mean)
               hstart = max(1, (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1)
               wstart = max(1, (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1)
@@ -181,7 +181,7 @@ function backward(sys::System{CPUBackend}, pool::PoolingFunction, state::Pooling
               val = top_diff[pw,ph,c,n] / kernel_size
               for w = wstart:wend
                 for h = hstart:hend
-                  diff[w,h,c,n] = val
+                  diff[w,h,c,n] += val
                 end
               end
             end
