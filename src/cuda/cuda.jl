@@ -257,11 +257,3 @@ end
 
 end # module CUDA
 
-############################################################
-# Rest of the story
-############################################################
-include("cublas.jl")
-include("cudnn.jl")
-include("backend.jl")
-include("blob.jl")
-

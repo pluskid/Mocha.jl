@@ -1,29 +1,54 @@
 module Mocha
 
-include("native.jl")
+include("logging.jl")
+include("config.jl")
 
 include("macros.jl")
-include("logging.jl")
 include("base.jl")
 
 include("utils/blas.jl")
 include("utils/io.jl")
-include("utils/im2col.jl")
+
+if Config.use_native_extension
+else
+  include("utils/im2col.jl")
+end
 
 include("backend.jl")
 include("system.jl")
 include("blob.jl")
-include("cuda/cuda.jl")
+
+if Config.use_cuda
+  include("cuda/cuda.jl")
+  include("cuda/cublas.jl")
+  include("cuda/cudnn.jl")
+  include("cuda/backend.jl")
+  include("cuda/blob.jl")
+end
+
 include("initializers.jl")
 include("regularizers.jl")
 include("neurons.jl")
+
+if Config.use_cuda
+  include("cuda/regularizers.jl")
+  include("cuda/neurons.jl")
+end
+
 include("pooling-functions.jl")
-
 include("parameter.jl")
-include("layers.jl")
-include("net.jl")
 
+include("layers.jl")
+if Config.use_cuda
+  include("cuda/layers.jl")
+end
+
+include("net.jl")
 include("coffee-break.jl")
+
 include("solvers.jl")
+if Config.use_cuda
+  include("cuda/solvers.jl")
+end
 
 end # module

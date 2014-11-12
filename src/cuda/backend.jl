@@ -19,7 +19,7 @@ type MochaKernels
     mod_path = joinpath(dirname(@__FILE__), "kernels", "kernels.ptx")
     mod = CUDA.CuModule(mod_path)
     kernels = new(mod)
-  
+
     kernels.logistic_loss_forward_float = CUDA.CuFunction(mod, "logistic_loss_forward_float")
     kernels.logistic_loss_forward_double = CUDA.CuFunction(mod, "logistic_loss_forward_double")
     kernels.softmax_loss_backward_float = CUDA.CuFunction(mod, "softmax_loss_backward_float")
@@ -38,7 +38,7 @@ function shutdown(mocha :: MochaKernels)
   CUDA.unload(mocha.mod)
 end
 
-type CuDNNBackend <: Backend
+type CuDNNBackend <: AbstractCuDNNBackend
   initialized:: Bool
   cu_ctx     :: CUDA.CuContext
   cublas_ctx :: CuBLAS.Handle

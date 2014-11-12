@@ -131,5 +131,5 @@ function copy!{T}(dst :: CPUBlob{T}, src :: CPUBlob{T})
   dst.data[:] = src.data[:]
 end
 function fill!{T}(dst :: CPUBlob{T}, src)
-  dst.data[:] = convert(T, src)
+  fill!(dst.data, src)
 end

@@ -40,13 +40,7 @@ type HDF5DataLayerState <: LayerState
       dims = tuple(dims[1:3]..., layer.batch_size)
 
       dset = state.curr_hdf5_file[state.dsets[i]]
-      if isa(sys.backend, CPUBackend)
-        state.blobs[i] = CPUBlob(eltype(dset), dims)
-      elseif isa(sys.backend, CuDNNBackend)
-        state.blobs[i] = cudnn_make_tensor_blob(eltype(dset), dims...)
-      else
-        error("Backend $(sys.backend) not supported")
-      end
+      state.blobs[i] = make_blob(sys.backend, eltype(dset), dims)
     end
     state.curr_index = 1
 
@@ -96,9 +90,4 @@ function set_blob_data(data::Array, blob::CPUBlob, blob_idx::Int)
   n_fea = prod(size(blob)[1:3])
   idx_start = (blob_idx-1)*n_fea
   blob.data[idx_start+1:idx_start+length(data)] = data
-end
-function set_blob_data{T}(data::Array{T}, blob::CuTensorBlob{T}, blob_idx::Int)
-  n_fea = prod(size(data)[1:3])
-  ptr = convert(Ptr{Void}, blob.ptr.p) + sizeof(T) * n_fea * (blob_idx-1) # note 0-based indexing in CUDA Vector
-  CuBLAS.set_vector(length(data), sizeof(T), convert(Ptr{Void},data), 1, ptr, 1)
 end

@@ -129,7 +129,7 @@ end
 function test_pooling_layer(sys::System)
   test_pooling_layer(sys, Pooling.Max(), false)
   test_pooling_layer(sys, Pooling.Mean(), false)
-  if !isa(sys.backend, CuDNNBackend)
+  if !isa(sys.backend, AbstractCuDNNBackend)
     test_pooling_layer(sys, Pooling.Max(), true)
     test_pooling_layer(sys, Pooling.Mean(), true)
   end
