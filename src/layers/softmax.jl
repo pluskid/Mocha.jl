@@ -41,13 +41,30 @@ end
 function forward(sys::System{CPUBackend}, state::SoftmaxLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input  = inputs[i].data
+    output = state.blobs[i].data
 
-    output = copy(input)
-    output .-= maximum(output, 3) # subtract max along channel dimension
-    output = exp(output)
-    output ./= sum(output, 3) # normalize along channel dimension
+    width, height, channels, num = size(input)
 
-    state.blobs[i].data = output
+    for w = 1:width
+      for h = 1:height
+        for n = 1:num
+          maxval = -Inf
+          @simd for c = 1:channels
+            @inbounds maxval = max(maxval, input[w,h,c,n])
+          end
+          @simd for c = 1:channels
+            @inbounds output[w,h,c,n] = exp(input[w,h,c,n]-maxval)
+          end
+          the_sum = 0.0
+          @simd for c = 1:channels
+            @inbounds the_sum += output[w,h,c,n]
+          end
+          @simd for c = 1:channels
+            @inbounds output[w,h,c,n] /= the_sum
+          end
+        end
+      end
+    end
   end
 end
 
@@ -77,7 +94,7 @@ end
 #    if isa(diff, CuTensorBlob)
 #      CuDNN.softmax_backward(sys.backend.cudnn_ctx, CuDNN.CUDNN_SOFTMAX_ACCURATE,
 #          CuDNN.CUDNN_SOFTMAX_MODE_CHANNEL, state.etc.outputs_desc[i], state.blobs[i].ptr,
-#          state.etc.outputs_desc[i], state.blobs_diff[i].ptr, 
+#          state.etc.outputs_desc[i], state.blobs_diff[i].ptr,
 #          state.etc.inputs_desc[i], diffs[i].ptr)
 #    end
 #  end
