@@ -57,7 +57,7 @@ type InnerProductLayerState <: LayerState
       end
 
       state = new(layer, blobs, blobs_diff)
-      
+
       if isa(shared_state, InnerProductLayerState)
         @assert size(shared_state.W) == (1, 1, fea_size, out_dim)
         @assert eltype(shared_state.W) == data_type

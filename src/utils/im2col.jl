@@ -1,4 +1,4 @@
-function im2col(img, col, width, height, channels, kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
+function im2col{T}(img::Array{T}, col::Array{T}, width::Int, height::Int, channels::Int, kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
   kernel_w, kernel_h = kernel
   pad_w, pad_h = pad
   stride_w, stride_h = stride
@@ -16,17 +16,17 @@ function im2col(img, col, width, height, channels, kernel::NTuple{2,Int}, pad::N
         h_pad = h*stride_h - pad_h + h_offset
         w_pad = w*stride_w - pad_w + w_offset
         if (h_pad >= 0 && h_pad < height && w_pad >= 0 && w_pad < width)
-            col[1 + (c*height_col+h) * width_col + w] =
+            @inbounds col[1 + (c*height_col+h) * width_col + w] =
                 img[1 + (c_im * height + h_pad) * width + w_pad]
         else
-          col[1 + (c*height_col+h) * width_col + w] = 0
+          @inbounds col[1 + (c*height_col+h) * width_col + w] = 0
         end
       end
     end
   end
 end
 
-function col2im(col, img, width, height, channels, kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
+function col2im{T}(col::Array{T}, img::Array{T}, width::Int, height::Int, channels::Int, kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
   kernel_w, kernel_h = kernel
   pad_w, pad_h = pad
   stride_w, stride_h = stride
@@ -45,7 +45,7 @@ function col2im(col, img, width, height, channels, kernel::NTuple{2,Int}, pad::N
         h_pad = h * stride_h - pad_h + h_offset
         w_pad = w * stride_w - pad_w + w_offset
         if h_pad >= 0 && h_pad < height && w_pad >= 0 && w_pad < width
-          img[1 + (c_im * height + h_pad) * width + w_pad] +=
+          @inbounds img[1 + (c_im * height + h_pad) * width + w_pad] +=
               col[1 + (c * height_col + h) * width_col + w]
         end
       end

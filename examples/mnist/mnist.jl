@@ -29,7 +29,7 @@ init(sys)
 common_layers = [conv_layer, pool_layer, conv2_layer, pool2_layer, fc1_layer, fc2_layer]
 net = Net(sys, [data_layer, common_layers..., loss_layer])
 
-params = SolverParameters(max_iter=10, regu_coef=0.0005, base_lr=0.01, momentum=0.9,
+params = SolverParameters(max_iter=10000, regu_coef=0.0005, base_lr=0.01, momentum=0.9,
     lr_policy=LRPolicy.Inv(0.0001, 0.75))
 solver = SGD(params)
 
@@ -40,18 +40,19 @@ add_coffee_break(solver, TrainingSummary(), every_n_iter=1)
 data_layer_test = HDF5DataLayer(source=source_fns[2], batch_size=100)
 acc_layer = AccuracyLayer(bottoms=[:ip2, :label])
 test_net = Net(sys, [data_layer_test, common_layers..., acc_layer])
-add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
+add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=10)
 
 # save snapshots every 5000 iterations
 add_coffee_break(solver, 
     Snapshot("snapshots", auto_load=true, also_load_solver_state=false), 
     every_n_iter=5000)
 
-#solve(solver, net)
-Profile.init(int(1e8), 0.001)
-@profile solve(solver, net)
-open("profile.txt", "w") do out
-  Profile.print(out)
-end
+blas_set_num_threads(10)
+solve(solver, net)
+#Profile.init(int(1e8), 0.001)
+#@profile solve(solver, net)
+#open("profile.txt", "w") do out
+#  Profile.print(out)
+#end
 
 shutdown(sys)

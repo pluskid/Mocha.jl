@@ -35,6 +35,7 @@ type CPUConvState
 
   # a all-1 vector used in gemm to help bias calculation
   bias_multiplier :: Blob
+  img_buffer      :: Array
 end
 
 type ConvolutionLayerState <: LayerState
@@ -101,7 +102,8 @@ type ConvolutionLayerState <: LayerState
       K = div(channels * layer.kernel[1] * layer.kernel[2], layer.n_group)
       bias_multiplier = CPUBlob(dtype, M)
       fill!(bias_multiplier, convert(dtype,1))
-      etc = CPUConvState(col_buffer, M, N, K, bias_multiplier)
+      img_buffer = Array(dtype, width, height, channels)
+      etc = CPUConvState(col_buffer, M, N, K, bias_multiplier, img_buffer)
     elseif isa(sys.backend, CuDNNBackend)
       filter_desc = CuDNN.create_filter_descriptor(dtype, (layer.kernel[1], layer.kernel[2],
           div(channels,layer.n_group), div(layer.n_filter,layer.n_group)))
@@ -176,7 +178,7 @@ function forward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs::
         col_buffer = convert(Ptr{dtype}, input.data) + img_offset * (n-1)
       else
         col_buffer = state.etc.col_buffer.data
-        im2col(sub(input.data, 1:width, 1:height, 1:channels, n), col_buffer,
+        im2col(input.data[:, :, :, n], col_buffer,
             width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
         col_buffer = convert(Ptr{dtype}, col_buffer)
       end
@@ -222,7 +224,7 @@ function backward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs:
         col_buffer = convert(Ptr{dtype}, input.data) + img_offset * (n-1)
       else
         col_buffer = state.etc.col_buffer.data
-        im2col(sub(input.data, 1:width, 1:height, 1:channels, n), col_buffer,
+        im2col(input.data[:, :, :, n], col_buffer,
             width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
         col_buffer = convert(Ptr{dtype}, col_buffer)
       end
@@ -253,8 +255,9 @@ function backward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs:
               convert(dtype, 0), col_buffer + col_offset * (g-1))
         end
         if !(isa(state.etc.col_buffer, NullBlob))
-          col2im(state.etc.col_buffer.data, sub(diff.data, 1:width, 1:height, 1:channels, n),
+           col2im(state.etc.col_buffer.data, state.etc.img_buffer,
               width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
+           diff.data[:,:,:,n] = state.etc.img_buffer
         end
       end
     end
