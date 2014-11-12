@@ -14,6 +14,14 @@ using Benchmark
 # |-----|----------------------|-----------|----------|--------------|
 # | 1   | "pool_single_proc"   | 0.0333833 | 1.0      | 50           |
 # | 2   | "pool_multiple_proc" | 4.48791   | 134.436  | 50           |
+#
+#------------------------------------------------------------
+# On a server with
+# julia -p 8:
+# | Row | Function             | Average   | Relative | Replications |
+# |-----|----------------------|-----------|----------|--------------|
+# | 1   | "pool_single_proc"   | 0.0387865 | 1.0      | 50           |
+# | 2   | "pool_multiple_proc" | 5.88758   | 151.795  | 50           |
 
 require("parallel-pool-module")
 
