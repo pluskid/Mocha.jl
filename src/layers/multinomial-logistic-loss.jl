@@ -22,9 +22,9 @@ function forward(sys::System{CPUBackend}, state::MultinomialLogisticLossLayerSta
   label = inputs[2].data
   width, height, channels, num = size(pred)
 
-  loss = sum(-log(max(broadcast_getindex(pred, reshape(collect(1:width), (width, 1, 1, 1)),
-      reshape(collect(1:height), (1, height, 1, 1)),
-      int(label)+1, reshape(collect(1:num), (1, 1, 1, num))), 1e-20)))
+  loss = sum(-log(max(broadcast_getindex(pred, reshape(1:width, (width, 1, 1, 1)),
+      reshape(1:height, (1, height, 1, 1)),
+      int(label)+1, reshape(1:num, (1, 1, 1, num))), 1e-20)))
   state.loss = loss / (width*height*num)
 end
 

@@ -36,9 +36,9 @@ function backward(sys::System{CPUBackend}, state::SoftmaxLossLayerState, inputs:
     copy!(diff, state.softmax.blobs[1])
     width, height, channels, num = size(diff)
 
-    index = (reshape(collect(1:width), (width, 1, 1, 1)),
-        reshape(collect(1:height), (1, height, 1, 1)),
-        int(inputs[2].data)+1, reshape(collect(1:num), (1, 1, 1, num)))
+    index = (reshape(1:width, (width, 1, 1, 1)),
+        reshape(1:height, (1, height, 1, 1)),
+        int(inputs[2].data)+1, reshape(1:num, (1, 1, 1, num)))
     broadcast_setindex!(diff.data, broadcast_getindex(diff.data, index...)-1, index...)
     diff.data /= width*height*num
   end
