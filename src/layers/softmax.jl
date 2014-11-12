@@ -49,17 +49,17 @@ function forward(sys::System{CPUBackend}, state::SoftmaxLayerState, inputs::Vect
       for h = 1:height
         for n = 1:num
           maxval = -Inf
-          @simd for c = 1:channels
+          for c = 1:channels
             @inbounds maxval = max(maxval, input[w,h,c,n])
           end
-          @simd for c = 1:channels
+          for c = 1:channels
             @inbounds output[w,h,c,n] = exp(input[w,h,c,n]-maxval)
           end
           the_sum = 0.0
-          @simd for c = 1:channels
+          for c = 1:channels
             @inbounds the_sum += output[w,h,c,n]
           end
-          @simd for c = 1:channels
+          for c = 1:channels
             @inbounds output[w,h,c,n] /= the_sum
           end
         end
