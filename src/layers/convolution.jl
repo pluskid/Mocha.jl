@@ -58,8 +58,8 @@ type ConvolutionLayerState <: LayerState
     batch_size = get_num(inputs[1])
     height = get_height(inputs[1])
     width  = get_width(inputs[1])
-    width_out  = floorint((width  + 2*layer.pad[1]-layer.kernel[1]) / layer.stride[1]) + 1
-    height_out = floorint((height + 2*layer.pad[2]-layer.kernel[2]) / layer.stride[2]) + 1
+    width_out  = div(width  + 2*layer.pad[1]-layer.kernel[1], layer.stride[1]) + 1
+    height_out = div(height + 2*layer.pad[2]-layer.kernel[2], layer.stride[2]) + 1
 
     dtype = eltype(inputs[1])
 
@@ -72,7 +72,7 @@ type ConvolutionLayerState <: LayerState
     end
 
     if isa(shared_state, ConvolutionLayerState)
-      @assert size(shared_state.filter) == tuple(layer.kernel...,floorint(channels/layer.n_group),layer.n_filter)
+      @assert size(shared_state.filter) == tuple(layer.kernel...,div(channels,layer.n_group),layer.n_filter)
       @assert eltype(shared_state.filter) == dtype
       @debug("Sharing filters and bias with an existing ConvolutionLayer")
 
@@ -82,9 +82,9 @@ type ConvolutionLayerState <: LayerState
       ∇bias = shared_state.bias
     else
       filter = make_blob(sys.backend, dtype, layer.kernel[1], layer.kernel[2],
-          floorint(channels/layer.n_group), layer.n_filter)
+          div(channels,layer.n_group), layer.n_filter)
       ∇filter = make_blob(sys.backend, dtype, layer.kernel[1], layer.kernel[2],
-          floorint(channels/layer.n_group), layer.n_filter)
+          div(channels,layer.n_group), layer.n_filter)
       bias = make_blob(sys.backend, dtype, layer.n_filter)
       ∇bias = make_blob(sys.backend, dtype, layer.n_filter)
     end
@@ -98,33 +98,33 @@ type ConvolutionLayerState <: LayerState
         col_buffer = CPUBlob(Array(dtype, width_out, height_out, channels*prod(layer.kernel), 1))
       end
       M = height_out * width_out
-      N = floorint(layer.n_filter / layer.n_group)
-      K = floorint(channels * layer.kernel[1] * layer.kernel[2] / layer.n_group)
+      N = div(layer.n_filter, layer.n_group)
+      K = div(channels * layer.kernel[1] * layer.kernel[2], layer.n_group)
       bias_multiplier = CPUBlob(dtype, M)
       fill!(bias_multiplier, convert(dtype,1))
       img_buffer = Array(dtype, width, height, channels)
       etc = CPUConvState(col_buffer, M, N, K, bias_multiplier, img_buffer)
     elseif isa(sys.backend, CuDNNBackend)
       filter_desc = CuDNN.create_filter_descriptor(dtype, (layer.kernel[1], layer.kernel[2],
-          floorint(channels/layer.n_group), floorint(layer.n_filter/layer.n_group)))
-      bias_desc = CuDNN.create_tensor4d_descriptor(dtype, (1,1,floorint(layer.n_filter/layer.n_group),1))
+          div(channels,layer.n_group), div(layer.n_filter,layer.n_group)))
+      bias_desc = CuDNN.create_tensor4d_descriptor(dtype, (1,1,div(layer.n_filter,layer.n_group),1))
 
       inputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
       outputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
       conv_desc = Array(CuDNN.ConvolutionDescriptor, length(inputs))
       for i = 1:length(inputs)
-        inputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype, (width,height,floorint(channels/layer.n_group),batch_size),
+        inputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype, (width,height,div(channels,layer.n_group),batch_size),
             (1, width, width*height, width*height*channels))
-        outputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype, (width_out, height_out, floorint(layer.n_filter/layer.n_group), batch_size),
+        outputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype, (width_out, height_out, div(layer.n_filter,layer.n_group), batch_size),
             (1, width_out, width_out*height_out, width_out*height_out*layer.n_filter))
         conv_desc[i] = CuDNN.create_convolution_descriptor(inputs_desc[i], filter_desc, layer.pad,
             layer.stride, (1,1), CuDNN.CUDNN_CROSS_CORRELATION)
       end
 
-      bottom_offset = floorint(channels/layer.n_group) * height * width * sizeof(dtype)
-      top_offset = floorint(layer.n_filter/layer.n_group) * height_out * width_out * sizeof(dtype)
-      weight_offset = floorint(layer.n_filter/layer.n_group) * floorint(channels/layer.n_group) * layer.kernel[1] * layer.kernel[2] * sizeof(dtype)
-      bias_offset = floorint(layer.n_filter/layer.n_group) * sizeof(dtype)
+      bottom_offset = div(channels,layer.n_group) * height * width * sizeof(dtype)
+      top_offset = div(layer.n_filter,layer.n_group) * height_out * width_out * sizeof(dtype)
+      weight_offset = div(layer.n_filter,layer.n_group) * div(channels,layer.n_group) * layer.kernel[1] * layer.kernel[2] * sizeof(dtype)
+      bias_offset = div(layer.n_filter,layer.n_group) * sizeof(dtype)
 
       etc = CuDNNConvState(inputs_desc, outputs_desc, conv_desc, filter_desc, bias_desc,
           bottom_offset, top_offset, weight_offset, bias_offset)
@@ -215,7 +215,7 @@ function backward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs:
 
       #----------------------------------------------
       # bias gradient
-      RawBLAS.gemv!('T', state.etc.M, state.layer.n_filter, convert(dtype, 1), top_diff_ptr, 
+      RawBLAS.gemv!('T', state.etc.M, state.layer.n_filter, convert(dtype, 1), top_diff_ptr,
           state.etc.bias_multiplier.data, convert(dtype, 1), state.∇bias.data)
 
       #----------------------------------------------

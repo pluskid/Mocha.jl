@@ -4,7 +4,6 @@ include("macros.jl")
 include("logging.jl")
 include("base.jl")
 
-include("utils/math.jl")
 include("utils/blas.jl")
 include("utils/io.jl")
 include("utils/im2col.jl")

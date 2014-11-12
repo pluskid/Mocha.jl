@@ -3,14 +3,14 @@ function im2col{T}(img::Array{T}, col::Array{T}, width::Int, height::Int, channe
   pad_w, pad_h = pad
   stride_w, stride_h = stride
 
-  height_col = floorint((height + 2pad_h - kernel_h) / stride_h) + 1
-  width_col = floorint((width + 2pad_w - kernel_w) / stride_w) + 1
+  height_col = div(height + 2pad_h - kernel_h, stride_h) + 1
+  width_col = div(width + 2pad_w - kernel_w, stride_w) + 1
   channels_col = channels * kernel_h * kernel_w
 
   for c = 0:channels_col-1
     w_offset = c % kernel_w
-    h_offset = floorint(c / kernel_w) % kernel_h
-    c_im = floorint(c / kernel_h / kernel_w) # channel
+    h_offset = div(c, kernel_w) % kernel_h
+    c_im = div(c, kernel_h * kernel_w) # channel
     for h = 0:height_col-1
       for w = 0:width_col-1
         h_pad = h*stride_h - pad_h + h_offset
@@ -31,15 +31,15 @@ function col2im{T}(col::Array{T}, img::Array{T}, width::Int, height::Int, channe
   pad_w, pad_h = pad
   stride_w, stride_h = stride
 
-  height_col = floorint((height + 2pad_h - kernel_h) / stride_h) + 1
-  width_col = floorint((width + 2pad_w - kernel_w) / stride_w) + 1
+  height_col = div(height + 2pad_h - kernel_h, stride_h) + 1
+  width_col = div(width + 2pad_w - kernel_w, stride_w) + 1
   channels_col = channels * kernel_h * kernel_w
 
   fill!(img, 0)
   for c = 0:channels_col-1
     w_offset = c % kernel_w
-    h_offset = floorint(c / kernel_w) % kernel_h
-    c_im = floorint(c / kernel_w / kernel_h)
+    h_offset = div(c, kernel_w) % kernel_h
+    c_im = div(c, kernel_w * kernel_h)
     for h = 0:height_col-1
       for w = 0:width_col-1
         h_pad = h * stride_h - pad_h + h_offset
