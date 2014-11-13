@@ -22,7 +22,8 @@ function setup_etc(sys::System{CPUBackend}, layer::PoolingLayer, inputs,
   if isa(layer.pooling, Pooling.Max)
     masks = Array(Array, length(inputs))
     for i = 1:length(inputs)
-      masks[i] = Array(Int, pooled_width, pooled_height, get_chann(inputs[i]), get_num(inputs[i]))
+      masks[i] = Array(Csize_t, pooled_width, pooled_height, 
+          get_chann(inputs[i]), get_num(inputs[i]))
     end
     etc = masks
   else
@@ -67,51 +68,16 @@ function forward(sys::System{CPUBackend}, state::PoolingLayerState, inputs::Vect
 end
 
 function forward(sys::System{CPUBackend}, pool::PoolingFunction, state::PoolingLayerState, inputs::Vector{Blob})
-  width, height, channels, num = size(inputs[1])
-  pooled_width = get_width(state.blobs[1])
-  pooled_height = get_height(state.blobs[1])
-  kernel_size = state.layer.kernel[1] * state.layer.kernel[2]
-
   for i = 1:length(inputs)
     input = inputs[i].data
     output = state.blobs[i].data
 
-    for n = 1:num
-      for c = 1:channels
-        for ph = 1:pooled_height
-          for pw = 1:pooled_width
-            hstart = max(1, (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1)
-            wstart = max(1, (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1)
-            hend = min(hstart + state.layer.kernel[2] - 1, height)
-            wend = min(wstart + state.layer.kernel[1] - 1, width)
-            if isa(pool, Pooling.Max)
-              maxval = -Inf
-              maxw = 0
-              maxh = 0
-              for w = wstart:wend
-                for h = hstart:hend
-                  @inbounds val = input[w,h,c,n]
-                  if val > maxval
-                    maxval = val
-                    maxw = w
-                    maxh = h
-                  end
-                end
-              end
-              @inbounds output[pw,ph,c,n] = maxval
-              @inbounds state.etc[i][pw,ph,c,n] = (maxh-1) * width + maxw-1
-            elseif isa(pool, Pooling.Mean)
-              the_sum = 0.0
-              for w = wstart:wend
-                for h = hstart:hend
-                  @inbounds the_sum += input[w,h,c,n]
-                end
-              end
-              @inbounds output[pw,ph,c,n] = the_sum / kernel_size
-            end
-          end
-        end
-      end
+    if isa(pool, Pooling.Max)
+      max_pooling_forward(input, output, state.etc[i], state.layer)
+    elseif isa(pool, Pooling.Mean)
+      mean_pooling_forward(input, output, state.layer)
+    else
+      error("Pooling for $pool not implemented yet")
     end
   end
 end
@@ -131,38 +97,15 @@ function backward(sys::System{CPUBackend}, pool::PoolingFunction, state::Pooling
   for i = 1:length(inputs)
     diff = diffs[i]
     if !isa(diff, NullBlob)
-      diff = diff.data
-      fill!(diff, 0)
+      if isa(pool, Pooling.Max)
+        max_pooling_backward(diff.data, state.blobs_diff[i].data, state.etc[i], state.layer)
+      elseif isa(pool, Pooling.Mean)
+        mean_pooling_backward(diff.data, state.blobs_diff[i].data, state.layer)
+      else
+        error("Pooling for $pool not implemented yet")
+      end
     else
       continue # nothing to do if not propagating back
-    end
-    top_diff = state.blobs_diff[i].data
-
-    for n = 1:num
-      for c = 1:channels
-        for ph = 1:pooled_height
-          for pw = 1:pooled_width
-            if isa(pool, Pooling.Max)
-              index = state.etc[i][pw,ph,c,n]
-              idx_w = (index % width) + 1
-              idx_h = div(index, width) + 1
-              @inbounds diff[idx_w, idx_h, c, n] += top_diff[pw,ph,c,n]
-            elseif isa(pool, Pooling.Mean)
-              hstart = max(1, (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1)
-              wstart = max(1, (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1)
-              hend = min(hstart + state.layer.kernel[2] - 1, height)
-              wend = min(wstart + state.layer.kernel[1] - 1, width)
-
-              @inbounds val = top_diff[pw,ph,c,n] / kernel_size
-              for w = wstart:wend
-                for h = hstart:hend
-                  @inbounds diff[w,h,c,n] += val
-                end
-              end
-            end
-          end
-        end
-      end
     end
   end
 end

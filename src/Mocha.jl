@@ -48,6 +48,8 @@ if Config.use_cuda
   include("cuda/layers.jl")
 end
 
+include("layers/pooling/julia-impl.jl")
+
 include("net.jl")
 include("coffee-break.jl")
 
