@@ -40,12 +40,14 @@ function im2col{T}(img::Array{T}, col::Array{T}, width::Int, height::Int, channe
   end
 end
 
+library = dlopen("./libextim2col.so")
+func_handle = dlsym(library, :im2col)
 function im2col_native(img::Array{Float64}, col::Array{Float64}, width::Int, height::Int, channels::Int, kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
   kernel_w, kernel_h = kernel
   pad_w, pad_h = pad
   stride_w, stride_h = stride
 
-  ccall((:im2col, "libextim2col"), Void, 
+  ccall(func_handle, Void,
       (Ptr{Float64},Ptr{Float64}, Cint, Cint, Cint,
       Cint, Cint, # kernel
       Cint, Cint, # pad
