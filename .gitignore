@@ -8,3 +8,4 @@ docs/_build
 src/cuda/kernels/*
 !src/cuda/kernels/*.cu
 !src/cuda/kernels/*.impl
+!src/cuda/kernels/Makefile

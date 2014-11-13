@@ -1,8 +1,6 @@
 # Mocha
 
-<!--
 [![Build Status](https://travis-ci.org/pluskid/Mocha.jl.svg?branch=master)](https://travis-ci.org/pluskid/Mocha.jl)
--->
 
 Deep Learning framework for julia. Multiple backends are supported, currently including CUDA+CuDNN, and CPU (working in progress). See [`examples/mnist/mnist.jl`](examples/mnist/mnist.jl) for an example of LeNet training on MNIST.
 
