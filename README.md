@@ -6,7 +6,7 @@
 
 Deep Learning framework for julia. Multiple backends are supported, currently including CUDA+CuDNN, and CPU (working in progress). See [`examples/mnist/mnist.jl`](examples/mnist/mnist.jl) for an example of LeNet training on MNIST.
 
-Currently CPU backend is not complete yet. To use CUDA backend, one needs to
+CPU backend and CUDA backend are supported. To use CUDA backend, one needs to
 
 - install CUDA
 - install [CuDNN](https://developer.nvidia.com/cuDNN) (currently NOT available on Mac OS X)
