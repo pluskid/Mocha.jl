@@ -16,6 +16,23 @@ using Benchmark
 # | 2   | "pooling_native" | 0.0990383 | 1.0      | 100          |
 ################################################################################
 
+################################################################################
+# OpenMP significantly improved the result.
+#
+# On a linux server with OMP_NUM_THREADS=16
+# | Row | Function         | Average   | Relative | Replications |
+# |-----|------------------|-----------|----------|--------------|
+# | 1   | "pooling_julia"  | 0.12026   | 9.82832  | 100          |
+# | 2   | "pooling_native" | 0.0122361 | 1.0      | 100          |
+#
+# On the same linux server without setting OMP_NUM_THREADS
+# | Row | Function         | Average   | Relative | Replications |
+# |-----|------------------|-----------|----------|--------------|
+# | 1   | "pooling_julia"  | 0.130325  | 7.58476  | 100          |
+# | 2   | "pooling_native" | 0.0171824 | 1.0      | 100          |
+################################################################################
+
+
 function pooling(input::Array, output::Array, mask::Array, kernel, pad, stride)
   width, height, channels, num = size(input)
   pooled_width  = int(ceil(float(width +2*pad[1]-kernel[1]) / stride[1]))+1

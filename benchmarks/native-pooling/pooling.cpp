@@ -2,15 +2,21 @@
 #include <limits>
 
 template <typename T>
-void max_pooling_impl(const T *input, T *output, size_t *mask, int width, int height, int channels, int num,
+void max_pooling_impl(const T *global_input, T *global_output, size_t *global_mask, int width, int height, int channels, int num,
     int pooled_width, int pooled_height, int kernel_w, int kernel_h, int pad_w, int pad_h,
     int stride_w, int stride_h) {
 
   int input_offset = width*height;
   int output_offset = pooled_width*pooled_height;
 
+  #pragma omp parallel for
   for (int n = 0; n < num; ++n) {
     for (int c = 0; c < channels; ++c) {
+      int offset = (n * channels + c);
+      const T *input = global_input + input_offset * offset;
+      T *output = global_output + output_offset * offset;
+      size_t *mask = global_mask + output_offset * offset;
+
       for (int ph = 0; ph < pooled_height; ++ph) {
         for (int pw = 0; pw < pooled_width; ++pw) {
           int hstart = std::max(ph*stride_h - pad_h, 0);
@@ -35,9 +41,9 @@ void max_pooling_impl(const T *input, T *output, size_t *mask, int width, int he
         }
       }
 
-      input += input_offset;
-      output += output_offset;
-      mask += output_offset;
+      //input += input_offset;
+      //output += output_offset;
+      //mask += output_offset;
     }
   }
 }
