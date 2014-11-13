@@ -1,6 +1,8 @@
 examples/mnist/data
 examples/mnist/snapshots
 
+docs/_build
+
 *.so
 
 src/cuda/kernels/*
