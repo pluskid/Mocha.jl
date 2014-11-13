@@ -29,12 +29,12 @@ function solve(sgd::SGD, net::Net)
       state = param_states[i]
       history = param_history[i]
       for j = 1:length(state.parameters)
-        blob = history[j]
+        hist_blob = history[j]
         gradient = state.parameters[j].gradient
-        data_type = eltype(blob)
+        data_type = eltype(hist_blob)
 
-        update_parameters(net, sgd, learning_rate, state, state.parameters[j].blob,
-            blob, gradient, data_type)
+        update_parameters(net, sgd, state.parameters[j].learning_rate * learning_rate, 
+            state, state.parameters[j].blob, hist_blob, gradient, data_type)
       end
     end
 
@@ -49,13 +49,13 @@ function solve(sgd::SGD, net::Net)
   destroy_coffee_breaks(sgd, net)
 end
 
-function update_parameters(net::Net{CPUBackend}, solver::SGD, learning_rate, state, param_blob, blob, gradient, data_type)
-  # blob = momentum * blob
-  BLAS.scal!(length(blob), convert(data_type, solver.params.momentum), blob.data, 1)
-  # blob = - learning_rate * gradient + blob
-  BLAS.axpy!(length(blob), convert(data_type, -learning_rate), gradient.data, 1, blob.data, 1)
+function update_parameters(net::Net{CPUBackend}, solver::SGD, learning_rate, state, param_blob, hist_blob, gradient, data_type)
+  # hist_blob = momentum * hist_blob
+  BLAS.scal!(length(hist_blob), convert(data_type, solver.params.momentum), hist_blob.data, 1)
+  # hist_blob = - learning_rate * gradient + hist_blob
+  BLAS.axpy!(length(hist_blob), convert(data_type, -learning_rate), gradient.data, 1, hist_blob.data, 1)
 
   # update parameter
-  # param_blob += blob
-  BLAS.axpy!(length(blob), convert(data_type, 1), blob.data, 1, param_blob.data, 1)
+  # param_blob += hist_blob
+  BLAS.axpy!(length(hist_blob), convert(data_type, 1), hist_blob.data, 1, param_blob.data, 1)
 end
