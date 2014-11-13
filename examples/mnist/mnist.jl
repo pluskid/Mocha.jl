@@ -11,6 +11,8 @@ for i = 1:length(hdf5_fns)
   end
 end
 
+ENV["MOCHA_USE_NATIVE_EXT"] = "true"
+
 using Mocha
 
 data_layer = HDF5DataLayer(source=source_fns[1], batch_size=64)
@@ -29,7 +31,7 @@ init(sys)
 common_layers = [conv_layer, pool_layer, conv2_layer, pool2_layer, fc1_layer, fc2_layer]
 net = Net(sys, [data_layer, common_layers..., loss_layer])
 
-params = SolverParameters(max_iter=20, regu_coef=0.0005, base_lr=0.01, momentum=0.9,
+params = SolverParameters(max_iter=10, regu_coef=0.0005, base_lr=0.01, momentum=0.9,
     lr_policy=LRPolicy.Inv(0.0001, 0.75))
 solver = SGD(params)
 

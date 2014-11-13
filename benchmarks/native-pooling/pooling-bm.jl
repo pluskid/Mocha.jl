@@ -1,10 +1,17 @@
 using Benchmark
-#
-# On my laptop:
+################################################################################
+# On my laptop (OS X):
 # | Row | Function         | Average   | Relative | Replications |
 # |-----|------------------|-----------|----------|--------------|
 # | 1   | "pooling_julia"  | 0.096299  | 1.0461   | 100          |
 # | 2   | "pooling_native" | 0.0920551 | 1.0      | 100          |
+#
+# On a linux server
+# | Row | Function         | Average   | Relative | Replications |
+# |-----|------------------|-----------|----------|--------------|
+# | 1   | "pooling_julia"  | 0.129456  | 1.30713  | 100          |
+# | 2   | "pooling_native" | 0.0990383 | 1.0      | 100          |
+################################################################################
 
 function pooling(input::Array, output::Array, mask::Array, kernel, pad, stride)
   width, height, channels, num = size(input)

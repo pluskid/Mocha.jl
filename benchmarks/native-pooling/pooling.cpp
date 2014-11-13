@@ -8,7 +8,6 @@ void max_pooling_impl(const T *input, T *output, size_t *mask, int width, int he
 
   int input_offset = width*height;
   int output_offset = pooled_width*pooled_height;
-  std::fill(output, output + pooled_width*pooled_height*channels*num, -std::numeric_limits<T>::max());
 
   for (int n = 0; n < num; ++n) {
     for (int c = 0; c < channels; ++c) {
@@ -20,15 +19,19 @@ void max_pooling_impl(const T *input, T *output, size_t *mask, int width, int he
           int wend   = std::min(wstart + kernel_w, width);
 
           int pool_index = ph * pooled_width + pw;
+          T maxval = -std::numeric_limits<T>::max();
+          size_t maxidx = 0;
           for (int h = hstart; h < hend; ++h) {
             for (int w = wstart; w < wend; ++w) {
               int index = h * width + w;
-              if (input[index] > output[pool_index]) {
-                output[pool_index] = input[index];
-                mask[pool_index] = index;
+              if (input[index] > maxval) {
+                maxval = input[index];
+                maxidx = index;
               }
             }
           }
+          output[pool_index] = maxval;
+          mask[pool_index] = maxidx;
         }
       }
 
