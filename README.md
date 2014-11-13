@@ -2,10 +2,12 @@
 
 [![Build Status](https://travis-ci.org/pluskid/Mocha.jl.svg?branch=master)](https://travis-ci.org/pluskid/Mocha.jl)
 
-Deep Learning framework for julia. Multiple backends are supported, currently including CUDA+CuDNN, and CPU (working in progress). See [`examples/mnist/mnist.jl`](examples/mnist/mnist.jl) for an example of LeNet training on MNIST.
+Mocha is a Deep Learning framework for julia, inspired by the C++ Deep Learning framework [Caffe](http://caffe.berkeleyvision.org/). Mocha support multiple backends:
 
-CPU backend and CUDA backend are supported. To use CUDA backend, one needs to
+- Plain CPU: Implemented in pure Julia; Runs out of the box without any external dependency; Already pretty fast thanks to Julia's LLVM-based just-in-time (JIT) compiler and [Performance Annotations](http://julia.readthedocs.org/en/latest/manual/performance-tips/#performance-annotations) that eliminate unnecessary bound checkings.
+- CPU with native extension: Some bottleneck computations (Convolution and Pooling) have C++ implementations. When compiled and enabled, could be slightly faster than the pure Julia backend (on the MNIST example, roughly 2 times faster, similar to the speed of Caffe's CPU backend).
+- CUDA + cuDNN: An interface to NVidia® [cuDNN](https://developer.nvidia.com/cuDNN) GPU accelerated deep learning library. When run with CUDA GPU devices, could be much faster depending on the size of the problem (MNIST is roughly 20 times faster than the pure Julia backend).
 
-- install CUDA
-- install [CuDNN](https://developer.nvidia.com/cuDNN) (currently NOT available on Mac OS X)
-- compile CUDA files in `src/cuda/kernels` by `nvcc -ptx kernels.cu`
+## Installation
+
+
