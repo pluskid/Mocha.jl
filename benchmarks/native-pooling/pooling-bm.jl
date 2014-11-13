@@ -1,10 +1,13 @@
 using Benchmark
 ################################################################################
+# While the C++ implementation is only slightly faster than the julia version,
+# my laptop is actually faster than the server......
+#
 # On my laptop (OS X):
-# | Row | Function         | Average   | Relative | Replications |
+#  Row | Function         | Average   | Relative | Replications |
 # |-----|------------------|-----------|----------|--------------|
-# | 1   | "pooling_julia"  | 0.096299  | 1.0461   | 100          |
-# | 2   | "pooling_native" | 0.0920551 | 1.0      | 100          |
+# | 1   | "pooling_julia"  | 0.100337  | 2.23666  | 100          |
+# | 2   | "pooling_native" | 0.0448601 | 1.0      | 100          |
 #
 # On a linux server
 # | Row | Function         | Average   | Relative | Replications |
