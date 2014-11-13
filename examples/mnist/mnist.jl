@@ -12,6 +12,8 @@ for i = 1:length(hdf5_fns)
 end
 
 ENV["MOCHA_USE_NATIVE_EXT"] = "true"
+ENV["OMP_NUM_THREADS"] = 1
+blas_set_num_threads(4)
 
 using Mocha
 
@@ -31,7 +33,7 @@ init(sys)
 common_layers = [conv_layer, pool_layer, conv2_layer, pool2_layer, fc1_layer, fc2_layer]
 net = Net(sys, [data_layer, common_layers..., loss_layer])
 
-params = SolverParameters(max_iter=10, regu_coef=0.0005, base_lr=0.01, momentum=0.9,
+params = SolverParameters(max_iter=10000, regu_coef=0.0005, base_lr=0.01, momentum=0.9,
     lr_policy=LRPolicy.Inv(0.0001, 0.75))
 solver = SGD(params)
 
@@ -49,12 +51,11 @@ add_coffee_break(solver,
     Snapshot("snapshots", auto_load=true, also_load_solver_state=false),
     every_n_iter=5000)
 
-blas_set_num_threads(16)
-#solve(solver, net)
-Profile.init(int(1e8), 0.001)
-@profile solve(solver, net)
-open("profile.txt", "w") do out
-  Profile.print(out)
-end
+solve(solver, net)
+#Profile.init(int(1e8), 0.001)
+#@profile solve(solver, net)
+#open("profile.txt", "w") do out
+#  Profile.print(out)
+#end
 
 shutdown(sys)
