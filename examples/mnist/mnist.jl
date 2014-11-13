@@ -13,7 +13,7 @@ end
 
 ENV["MOCHA_USE_NATIVE_EXT"] = "true"
 ENV["OMP_NUM_THREADS"] = 1
-blas_set_num_threads(4)
+blas_set_num_threads(1)
 
 using Mocha
 

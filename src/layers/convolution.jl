@@ -11,7 +11,9 @@
   filter_init :: Initializer = XavierInitializer(),
   bias_init :: Initializer = ConstantInitializer(0),
   filter_regu :: Regularizer = L2Regu(1),
-  bias_regu :: Regularizer = NoRegu()
+  bias_regu :: Regularizer = NoRegu(),
+  filter_lr :: FloatingPoint = 1.0,
+  bias_lr :: FloatingPoint = 2.0,
 )
 
 type CPUConvState
@@ -98,8 +100,8 @@ type ConvolutionLayerState <: LayerState
 
     etc = setup_etc(sys, layer, dtype, width, height, channels, batch_size, width_out, height_out, inputs)
 
-    parameters = [Parameter(filter, ∇filter, layer.filter_init, layer.filter_regu),
-                  Parameter(bias, ∇bias, layer.bias_init, layer.bias_regu)]
+    parameters = [Parameter(filter, ∇filter, layer.filter_init, layer.filter_regu, layer.filter_lr),
+                  Parameter(bias, ∇bias, layer.bias_init, layer.bias_regu, layer.bias_lr)]
 
     state = new(layer, blobs, blobs_diff, parameters)
     state.filter = filter
