@@ -22,16 +22,10 @@ in Julia console. To install the latest development version (currently the only 
 Pkg.clone("https://github.com/pluskid/Mocha.jl.git")
 ```
 
-Dependencies should be automatically installed. However, currently, Mocha depends on a feature of [HDF5.jl](https://github.com/timholy/HDF5.jl) that is only available in the development version. To checkout the development version of HDF5.jl, run
-
-```
-Pkg.checkout("HDF5")
-```
-
-You can run the built-in unit tests with
+Then you can run the built-in unit tests with
 
 ```
 Pkg.test("Mocha")
 ```
 
-to verify that everything is functioning properly on your machine.
+to verify that everything is functioning properly on your machine. Checkout [`examples/mnist/mnist.jl`](examples/mnist/mnist.jl) for a demo on MNIST. Detailed documents are coming soon.

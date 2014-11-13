@@ -1,6 +1,9 @@
 language: cpp
+os:
+  - linux
+  - osx
 compiler:
-  - clang
+  - gcc
 notifications:
   email: false
 env:
@@ -8,10 +11,21 @@ env:
     - JULIAVERSION="juliareleases"
     - JULIAVERSION="julianightlies"
 before_install:
-  - sudo add-apt-repository ppa:staticfloat/julia-deps -y
-  - sudo add-apt-repository ppa:staticfloat/${JULIAVERSION} -y
-  - sudo apt-get update -qq -y
-  - sudo apt-get install libpcre3-dev julia -y
+  - if [ `uname` = "Linux" ]; then
+      sudo add-apt-repository ppa:staticfloat/julia-deps -y;
+      sudo add-apt-repository ppa:staticfloat/${JULIAVERSION} -y;
+      sudo apt-get update -qq -y;
+      sudo apt-get install libpcre3-dev julia -y;
+    elif [ `uname` = "Darwin" ]; then
+      if [ "$JULIAVERSION" = "julianightlies" ]; then
+        wget -O julia.dmg "http://status.julialang.org/download/osx10.7+";
+      else
+        wget -O julia.dmg "http://status.julialang.org/stable/osx10.7+";
+      fi;
+      hdiutil mount julia.dmg;
+      cp -Ra /Volumes/Julia/*.app/Contents/Resources/julia ~;
+      export PATH="$PATH:$(echo ~)/julia/bin";
+    fi
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 script:
   - julia -e 'Pkg.init(); Pkg.clone(pwd()); Pkg.test("Mocha")'
