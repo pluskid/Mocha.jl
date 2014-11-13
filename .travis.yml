@@ -29,3 +29,4 @@ before_install:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 script:
   - julia -e 'Pkg.init(); Pkg.clone(pwd()); Pkg.test("Mocha")'
+  - MOCHA_USE_NATIVE_EXT=true julia -e 'Pkg.build("Mocha"); Pkg.test("Mocha")'
