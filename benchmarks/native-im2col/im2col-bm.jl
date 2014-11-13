@@ -10,6 +10,13 @@ using Benchmark
 # |-----|-------------|-------------|----------|--------------|
 # | 1   | "im2col_jl" | 0.000590041 | 1.77187  | 50           |
 # | 2   | "im2col_c"  | 0.000333004 | 1.0      | 50           |
+#
+# Note if we add omp parallel for to the outer-most for loop, the performance
+# deteriorate significantly.
+# | Row | Function    | Average     | Relative | Replications |
+# |-----|-------------|-------------|----------|--------------|
+# | 1   | "im2col_jl" | 0.000831314 | 1.0      | 50           |
+# | 2   | "im2col_c"  | 0.00514862  | 6.19335  | 50           |
 ################################################################################
 
 function im2col{T}(img::Array{T}, col::Array{T}, width::Int, height::Int, channels::Int, kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
