@@ -1,5 +1,5 @@
-Tutorial: Training LeNet on MNIST
-=================================
+Training LeNet on MNIST
+=======================
 
 This tutorial goes through the code in ``examples/mnist`` to explain the basic usages of Mocha. We will use the architecture known as [LeNet]_, which is a deep convolutional neural network known to work well on handwritten digit classification tasks. More specifically, we will use the Caffe's modified architecture, by replacing the sigmoid activation functions with Rectified Learning Unit (ReLU) activation functions.
 

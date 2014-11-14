@@ -1,12 +1,10 @@
-.. Mocha documentation master file, created by
-   sphinx-quickstart on Thu Nov 13 00:43:40 2014.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+%%%%%%%%%%%%%%%%%%%
+Mocha Documentation
+%%%%%%%%%%%%%%%%%%%
 
-Welcome to Mocha's documentation!
-=================================
-
-Contents:
+#########
+Tutorials
+#########
 
 .. toctree::
    :maxdepth: 2
