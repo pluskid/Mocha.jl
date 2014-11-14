@@ -11,6 +11,14 @@ Tutorials
 
    tutorial/mnist
 
+############
+User Manuals
+############
+
+.. toctree::
+   :maxdepth: 2
+
+   manual/backend
 
 Indices and tables
 ==================
