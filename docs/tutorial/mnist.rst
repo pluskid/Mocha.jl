@@ -304,32 +304,47 @@ and many factors.
   14-Nov 11:58:01:INFO:root:002100 :: TRAIN obj-val = 0.18091436
   14-Nov 11:58:21:INFO:root:002200 :: TRAIN obj-val = 0.14225903
 
-..
-    The training could run faster by enabling native extension for the CPU backend,
-    or use a CUDA backend if CUDA compatible GPU devices are available. **TODO**:
-    give a pointer to the document on how to enable other backend when those
-    documents are available.
+The training could run faster by enabling native extension for the CPU backend,
+or use a CUDA backend if CUDA compatible GPU devices are available. **TODO**:
+give a pointer to the document on how to enable other backend when those
+documents are available.
 
-    Just to give you a feeling, this is a sample log from running with Native
-    Extension enabled CPU backend. It takes about 5 seconds to run 100 iterations.
+Just to give you a feeling, this is a sample log from running with Native
+Extension enabled CPU backend. It takes about 5 seconds to run 100 iterations.
 
-    .. code-block:: text
+.. code-block:: text
 
-       14-Nov 12:15:56:INFO:root:001700 :: TRAIN obj-val = 0.82937032
-       14-Nov 12:16:01:INFO:root:001800 :: TRAIN obj-val = 0.35497263
-       14-Nov 12:16:06:INFO:root:001900 :: TRAIN obj-val = 0.31351241
-       14-Nov 12:16:11:INFO:root:002000 :: TRAIN obj-val = 0.10048970
-       14-Nov 12:16:14:INFO:root:
-       14-Nov 12:16:14:INFO:root:## Performance on Validation Set
-       14-Nov 12:16:14:INFO:root:---------------------------------------------------------
-       14-Nov 12:16:14:INFO:root:  Accuracy (avg over 10000) = 94.5700%
-       14-Nov 12:16:14:INFO:root:---------------------------------------------------------
-       14-Nov 12:16:14:INFO:root:
-       14-Nov 12:16:18:INFO:root:002100 :: TRAIN obj-val = 0.20689486
-       14-Nov 12:16:23:INFO:root:002200 :: TRAIN obj-val = 0.17757215
+   14-Nov 12:15:56:INFO:root:001700 :: TRAIN obj-val = 0.82937032
+   14-Nov 12:16:01:INFO:root:001800 :: TRAIN obj-val = 0.35497263
+   14-Nov 12:16:06:INFO:root:001900 :: TRAIN obj-val = 0.31351241
+   14-Nov 12:16:11:INFO:root:002000 :: TRAIN obj-val = 0.10048970
+   14-Nov 12:16:14:INFO:root:
+   14-Nov 12:16:14:INFO:root:## Performance on Validation Set
+   14-Nov 12:16:14:INFO:root:---------------------------------------------------------
+   14-Nov 12:16:14:INFO:root:  Accuracy (avg over 10000) = 94.5700%
+   14-Nov 12:16:14:INFO:root:---------------------------------------------------------
+   14-Nov 12:16:14:INFO:root:
+   14-Nov 12:16:18:INFO:root:002100 :: TRAIN obj-val = 0.20689486
+   14-Nov 12:16:23:INFO:root:002200 :: TRAIN obj-val = 0.17757215
 
-    Note the accuracy from two different trains are different due to different
-    random initialization.
+The accuracy from two different trains are different due to different
+random initialization. The followings are a sample log from running with the
+CUDA backend. It runs about 300 iterations per second.
+
+.. code-block:: text
+
+   14-Nov 12:57:07:INFO:root:001700 :: TRAIN obj-val = 0.33347249
+   14-Nov 12:57:07:INFO:root:001800 :: TRAIN obj-val = 0.16477060
+   14-Nov 12:57:07:INFO:root:001900 :: TRAIN obj-val = 0.18155883
+   14-Nov 12:57:08:INFO:root:002000 :: TRAIN obj-val = 0.06635486
+   14-Nov 12:57:08:INFO:root:
+   14-Nov 12:57:08:INFO:root:## Performance on Validation Set
+   14-Nov 12:57:08:INFO:root:---------------------------------------------------------
+   14-Nov 12:57:08:INFO:root:  Accuracy (avg over 10000) = 96.2200%
+   14-Nov 12:57:08:INFO:root:---------------------------------------------------------
+   14-Nov 12:57:08:INFO:root:
+   14-Nov 12:57:08:INFO:root:002100 :: TRAIN obj-val = 0.20724633
+   14-Nov 12:57:08:INFO:root:002200 :: TRAIN obj-val = 0.14952177
 
 
 .. [LeNet] Lecun, Y.; Bottou, L.; Bengio, Y.; Haffner, P.,
