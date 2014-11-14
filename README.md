@@ -1,6 +1,7 @@
 # Mocha
 
 [![Build Status](https://travis-ci.org/pluskid/Mocha.jl.svg?branch=master)](https://travis-ci.org/pluskid/Mocha.jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/342vcj5lj2jyegsp?svg=true)](https://ci.appveyor.com/project/pluskid/mocha-jl)
 [![Documentation Status](https://readthedocs.org/projects/mochajl/badge/?version=latest)](https://readthedocs.org/projects/mochajl/?badge=latest)
 
 
