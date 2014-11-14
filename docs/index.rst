@@ -2,6 +2,9 @@
 Mocha Documentation
 %%%%%%%%%%%%%%%%%%%
 
+`Mocha <https://github.com/pluskid/Mocha.jl>`_ is a Deep Learning framework for
+`Julia <http://julialang.org/>`_.
+
 #########
 Tutorials
 #########

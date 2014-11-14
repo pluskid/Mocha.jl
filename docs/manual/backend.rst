@@ -82,9 +82,79 @@ OpenMP on Mac OS X
 When compiling the native extension on Mac OS X, you will get a warning that
 OpenMP is disabled. This is because currently clang, the built-in compiler for
 OS X, does not officially support OpenMP yet. If you want to try OpenMP on OS X,
-`Clang-OMP <http://clang-omp.github.io/>`_
+please refer to `Clang-OMP <http://clang-omp.github.io/>`_ and compile manually
+(see below).
 
 Native Extension on Windows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The automatic building script does not work on Windows.
+The native extension does not support Windows because automatic building script
+does not work on Windows. However, the native codes themselves does not use any
+OS specific features. If you have a compiler installed on Windows, you could try
+to compile the native extension manually. However, I have **not** tested the
+native extension on Windows personally.
+
+Compile Native Extension Manually
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The native codes are located in the ``deps`` directory of Mocha. Use
+
+.. code-block:: julia
+
+   Pkg.dir("Mocha")
+
+to find out where Mocha is installed. You should compile it as a shared library
+(DLL on Windows). However, currently the filename for the library is hard-coded
+to be ``libmochaext.so``, with a ``.so`` extension, regardless of the underlying
+OS.
+
+
+CUDA Backend
+------------
+
+GPU has been shown to be very effective at training large scale deep neural
+networks. NVidia® recently released a GPU accelerated library of primitives for
+deep neural networks called `cuDNN <https://developer.nvidia.com/cuDNN>`_. Mocha
+implemented a CUDA backend by combining cuDNN, `cuBLAS
+<https://developer.nvidia.com/cublas>`_ and plain CUDA kernels.
+
+In order to use the CUDA backend, you need to have CUDA-compatible GPU devices.
+The CUDA toolkit should be installed in order to compile the Mocha CUDA kernels.
+cuBLAS is included in CUDA distribution. But cuDNN needs to be installed
+separately. You could obtain cuDNN from `Nvidia's website
+<https://developer.nvidia.com/cuDNN>`_ by registering as a CUDA developer for
+free [1]_.
+
+Before using the CUDA backend, Mocha kernels needs to be compiled. The kernels
+are located in ``src/cuda/kernels``. Please use ``Pkg.dir("Mocha")`` to find out
+where Mocha is installed on your system. We have included a Makefile for
+convenience, but if you don't have ``make`` installed, the compiling command is
+as simple as
+
+.. code-block:: bash
+
+   nvcc -ptx kernels.cu
+
+After compiling the kernels, you can now start to use the CUDA backend by
+setting the environment variable ``MOCHA_USE_CUDA``. For example:
+
+.. code-block:: julia
+
+   ENV["MOCHA_USE_CUDA"] = "true"
+
+   using Mocha
+
+   sys = System(CuDNNBackend())
+   init(sys)
+
+   # ...
+
+   shutdown(sys)
+
+Note instead of instantiate a ``CPUBackend``, you now construct
+a ``CuDNNBackend``. The environment variable should be set **before** loading
+Mocha. It is designed to use conditional loading so that the pure CPU backend
+could still run on machines without any GPU device or CUDA library installed.
+
+.. [1] cuDNN requires CUDA 6.5 to run, and currently cuDNN is available to Linux
+   and Windows only.

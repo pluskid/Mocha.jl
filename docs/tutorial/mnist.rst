@@ -120,7 +120,9 @@ property. An activation function could be added to almost all
 computation layers (e.g. convolution layer). By default, no activation
 function, or the *identity activation function* is used. We don't use
 activation function for the last inner product layer, because that
-layer acts as a linear classifier.
+layer acts as a linear classifier. Also the output dimension of the last inner
+product layer is 10, which corresponds to the number of classes (digits 0~9) of
+our problem.
 
 This is the basic structure of LeNet. In order to train this network,
 we need to define a loss function. This is done by adding a loss
