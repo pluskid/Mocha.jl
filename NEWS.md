@@ -6,6 +6,7 @@
   * Ability to import caffe trained model?
 * Network
   * Sigmoid activation function
+  * Local Response Normalization Layer
 * Documentation
   * Complete MNIST demo
   * Detailed document on each component

@@ -11,9 +11,10 @@ for i = 1:length(hdf5_fns)
   end
 end
 
-ENV["MOCHA_USE_NATIVE_EXT"] = "true"
-ENV["OMP_NUM_THREADS"] = 1
-blas_set_num_threads(1)
+#ENV["MOCHA_USE_NATIVE_EXT"] = "true"
+#ENV["OMP_NUM_THREADS"] = 1
+ENV["MOCHA_USE_CUDA"] = "true"
+#blas_set_num_threads(1)
 
 using Mocha
 
@@ -26,8 +27,8 @@ fc1_layer  = InnerProductLayer(name="ip1", output_dim=500, neuron=Neurons.ReLU()
 fc2_layer  = InnerProductLayer(name="ip2", output_dim=10, bottoms=[:ip1], tops=[:ip2])
 loss_layer = SoftmaxLossLayer(bottoms=[:ip2,:label])
 
-#sys = System(CuDNNBackend())
-sys = System(CPUBackend())
+sys = System(CuDNNBackend())
+#sys = System(CPUBackend())
 init(sys)
 
 common_layers = [conv_layer, pool_layer, conv2_layer, pool2_layer, fc1_layer, fc2_layer]

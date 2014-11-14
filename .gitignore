@@ -1,6 +1,9 @@
 examples/mnist/data
 examples/mnist/snapshots
 
+examples/cifar10/data
+examples/cifar10/snapshots
+
 docs/_build
 
 *.so
