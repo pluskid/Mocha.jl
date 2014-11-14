@@ -13,13 +13,13 @@ Mocha is a Deep Learning framework for [Julia](http://julialang.org/), inspired 
 
 ## Installation
 
-To install the release version (nothing released yet), simply run
+To install the release version, simply run
 
 ```
 Pkg.add("Mocha")
 ```
 
-in Julia console. To install the latest development version (currently the only way of installing), run the following command instead:
+in Julia console. To install the latest development version, run the following command instead:
 
 ```
 Pkg.clone("https://github.com/pluskid/Mocha.jl.git")
