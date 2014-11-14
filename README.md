@@ -31,7 +31,7 @@ Then you can run the built-in unit tests with
 Pkg.test("Mocha")
 ```
 
-to verify that everything is functioning properly on your machine. Checkout [`examples/mnist/mnist.jl`](examples/mnist/mnist.jl) for a demo on MNIST. Detailed documents are coming soon.
+to verify that everything is functioning properly on your machine.
 
 ## Documentation
 
