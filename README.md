@@ -1,6 +1,8 @@
 # Mocha
 
 [![Build Status](https://travis-ci.org/pluskid/Mocha.jl.svg?branch=master)](https://travis-ci.org/pluskid/Mocha.jl)
+[![Documentation Status](https://readthedocs.org/projects/mochajl/badge/?version=latest)](https://readthedocs.org/projects/mochajl/?badge=latest)
+
 
 Mocha is a Deep Learning framework for [Julia](http://julialang.org/), inspired by the C++ Deep Learning framework [Caffe](http://caffe.berkeleyvision.org/). Mocha support multiple backends:
 
@@ -29,3 +31,8 @@ Pkg.test("Mocha")
 ```
 
 to verify that everything is functioning properly on your machine. Checkout [`examples/mnist/mnist.jl`](examples/mnist/mnist.jl) for a demo on MNIST. Detailed documents are coming soon.
+
+## Documentation
+
+The Mocha documentation is hosted on [readthedocs.org](http://mochajl.readthedocs.org/).
+
