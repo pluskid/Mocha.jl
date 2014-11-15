@@ -13,7 +13,7 @@ function test_accuracy_layer(sys::System)
   inputs = Blob[input_blob, label_blob]
 
   layer = AccuracyLayer(bottoms=[:pred, :labels])
-  state = setup(sys, layer, inputs)
+  state = setup(sys, layer, inputs, Blob[])
 
   println("    > Forward")
   forward(sys, state, inputs)

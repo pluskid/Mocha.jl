@@ -5,6 +5,7 @@ function test_softmax_loss_layer(sys::System)
   width, height, channels, num = (5, 6, 7, 8)
   input = rand(width, height, channels, num)
   input_blob = make_blob(sys.backend, input)
+  diff_blob = make_blob(sys.backend, Float64, size(input))
 
   label = abs(rand(Int, (width, height, 1, num))) % channels
   label = convert(Array{Float64}, label)
@@ -13,7 +14,7 @@ function test_softmax_loss_layer(sys::System)
   inputs = Blob[input_blob, label_blob]
 
   layer = SoftmaxLossLayer(bottoms=[:pred, :labels])
-  state = setup(sys, layer, inputs)
+  state = setup(sys, layer, inputs, Blob[diff_blob])
 
   println("    > Forward")
   forward(sys, state, inputs)
@@ -33,13 +34,12 @@ function test_softmax_loss_layer(sys::System)
   end
   expected_loss /= (width*height*num)
   expected_grad /= (width*height*num)
-        
+
   #println("loss = $(state.loss)")
   #println("expected_loss = $expected_loss")
   @test -eps < state.loss - expected_loss < eps
 
   println("    > Backward")
-  diff_blob = make_blob(sys.backend, Float64, size(input))
   backward(sys, state, inputs, Blob[diff_blob])
   grad = zeros(size(input))
   copy!(grad, diff_blob)

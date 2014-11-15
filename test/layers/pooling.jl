@@ -25,9 +25,10 @@ function test_pooling_layer(sys::System, pooling::PoolingFunction, has_padding::
   input_dims = (input_w, input_h, input_chann, input_num)
   input = rand(input_dims)
   inputs = Blob[make_blob(sys.backend, Float64, input_dims)]
+  diffs = Blob[make_blob(sys.backend, Float64, input_dims)]
   copy!(inputs[1], input)
 
-  state = setup(sys, layer, inputs)
+  state = setup(sys, layer, inputs, diffs)
 
   println("    > Forward")
   forward(sys, state, inputs)
@@ -41,7 +42,6 @@ function test_pooling_layer(sys::System, pooling::PoolingFunction, has_padding::
   top_diff = rand(size(state.blobs[1]))
   copy!(state.blobs_diff[1], top_diff)
 
-  diffs = Blob[make_blob(sys.backend, Float64, size(input))]
   backward(sys, state, inputs, diffs)
 
   expected_grad = pooling_backward(state, input, top_diff, payload)

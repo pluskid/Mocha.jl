@@ -16,9 +16,17 @@ type PowerLayerState <: LayerState
   blobs_diff :: Vector{Blob}
 end
 
-function setup(sys::System, layer::PowerLayer, inputs::Vector{Blob})
+function setup(sys::System, layer::PowerLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   blobs = Blob[make_blob(sys.backend, eltype(x), size(x)) for x in inputs]
-  blobs_diff = Blob[make_blob(sys.backend, eltype(x), size(x)) for x in inputs]
+  blobs_diff = Array(Blob, length(inputs))
+  for i = 1:length(inputs)
+    # if the bottom layer does not need back propagate, I don't need, either
+    if isa(diffs[i], NullBlob)
+      blobs_diff[i] = NullBlob()
+    else
+      blobs_diff[i] = make_blob(sys.backend, eltype(inputs[i]), size(inputs[i]))
+    end
+  end
   state = PowerLayerState(layer, blobs, blobs_diff)
 end
 

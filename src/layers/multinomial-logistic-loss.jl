@@ -11,7 +11,7 @@ type MultinomialLogisticLossLayerState{T} <: LayerState
   loss  :: T
 end
 
-function setup(sys::System, layer::MultinomialLogisticLossLayer, inputs::Vector{Blob})
+function setup(sys::System, layer::MultinomialLogisticLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
   state = MultinomialLogisticLossLayerState(layer, convert(data_type, 0))
   return state

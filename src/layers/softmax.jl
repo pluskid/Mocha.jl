@@ -18,7 +18,7 @@ function setup_etc(sys::System{CPUBackend}, layer::SoftmaxLayer, data_type, inpu
   nothing
 end
 
-function setup(sys::System, layer::SoftmaxLayer, inputs::Vector{Blob})
+function setup(sys::System, layer::SoftmaxLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type  = eltype(inputs[1])
   blobs      = Blob[make_blob(sys.backend, data_type, size(input)) for input in inputs]
   etc        = setup_etc(sys, layer, data_type, inputs)

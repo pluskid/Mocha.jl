@@ -89,8 +89,8 @@ abstract TrainableLayer <: CompLayer # Layer that could be trained
 #############################################################
 # Overload when there is no shared_state
 #############################################################
-function setup(sys::System, layer::Layer, inputs::Vector{Blob})
-  setup(sys, layer, nothing, inputs)
+function setup(sys::System, layer::Layer, inputs::Vector{Blob}, diffs::Vector{Blob})
+  setup(sys, layer, nothing, inputs, diffs)
 end
 
 #############################################################

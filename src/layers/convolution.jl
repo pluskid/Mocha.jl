@@ -124,7 +124,7 @@ type ConvolutionLayerState <: LayerState
   etc        :: Any # whatever status a computation backend needs to maintain
 end
 
-function setup(sys::System, layer::ConvolutionLayer, shared_state, inputs::Vector{Blob})
+function setup(sys::System, layer::ConvolutionLayer, shared_state, inputs::Vector{Blob}, diffs::Vector{Blob})
   return ConvolutionLayerState(sys, layer, shared_state, inputs)
 end
 

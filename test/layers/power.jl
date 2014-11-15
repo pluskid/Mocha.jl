@@ -5,10 +5,11 @@ function test_power_layer(sys::System, scale, shift, power)
   width, height, channels, num = (5, 6, 7, 8)
   input = rand(width, height, channels, num)
   input_blob = make_blob(sys.backend, input)
+  grad_blob = make_blob(sys.backend, eltype(input), size(input))
 
   layer = PowerLayer(tops = [:prob], bottoms = [:response],
       scale=scale, shift=shift, power=power)
-  state = setup(sys, layer, Blob[input_blob])
+  state = setup(sys, layer, Blob[input_blob], Blob[grad_blob])
 
   forward(sys, state, Blob[input_blob])
 
@@ -21,7 +22,6 @@ function test_power_layer(sys::System, scale, shift, power)
   top_diff = rand(size(input))
   copy!(state.blobs_diff[1], top_diff)
 
-  grad_blob = make_blob(sys.backend, top_diff)
   backward(sys, state, Blob[input_blob], Blob[grad_blob])
 
   grad = power * scale * (scale * input + shift) .^ (power - 1) .* top_diff

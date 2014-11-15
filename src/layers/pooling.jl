@@ -22,7 +22,7 @@ function setup_etc(sys::System{CPUBackend}, layer::PoolingLayer, inputs,
   if isa(layer.pooling, Pooling.Max)
     masks = Array(Array, length(inputs))
     for i = 1:length(inputs)
-      masks[i] = Array(Csize_t, pooled_width, pooled_height, 
+      masks[i] = Array(Csize_t, pooled_width, pooled_height,
           get_chann(inputs[i]), get_num(inputs[i]))
     end
     etc = masks
@@ -32,7 +32,7 @@ function setup_etc(sys::System{CPUBackend}, layer::PoolingLayer, inputs,
   return etc
 end
 
-function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob})
+function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   width    = get_width(inputs[1])
   height   = get_height(inputs[1])
 
@@ -55,8 +55,12 @@ function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob})
   for i = 1:length(inputs)
     blobs[i] = make_blob(sys.backend,dtype,
         (pooled_width,pooled_height,get_chann(inputs[i]),get_num(inputs[i])))
-    blobs_diff[i] = make_blob(sys.backend,dtype,
-        (pooled_width,pooled_height,get_chann(inputs[i]),get_num(inputs[i])))
+    if isa(diffs[i], NullBlob)
+      blobs_diff[i] = NullBlob() # don't need back propagation unless bottom layer want
+    else
+      blobs_diff[i] = make_blob(sys.backend,dtype,
+          (pooled_width,pooled_height,get_chann(inputs[i]),get_num(inputs[i])))
+    end
   end
 
   etc = setup_etc(sys, layer, inputs, pooled_width, pooled_height)

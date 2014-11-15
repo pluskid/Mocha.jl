@@ -15,7 +15,7 @@ function setup_etc(sys::System{CPUBackend}, layer::AccuracyLayer, inputs)
   nothing
 end
 
-function setup(sys::System, layer::AccuracyLayer, inputs::Vector{Blob})
+function setup(sys::System, layer::AccuracyLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   etc = setup_etc(sys, layer, inputs)
   return AccuracyLayerState(layer, 0.0, 0, etc)
 end

@@ -35,8 +35,9 @@ function test_convolution_layer(sys::System)
   input = rand(input_dims)
   inputs = Blob[make_blob(sys.backend, Float64, input_dims)]
   copy!(inputs[1], input)
+  data_diffs = Blob[make_blob(sys.backend, Float64, size(input))]
 
-  state = setup(sys, layer, inputs)
+  state = setup(sys, layer, inputs, data_diffs)
 
   #if isa(sys.backend, CuDNNBackend)
   #  # test that we are getting the correct output shape
@@ -60,7 +61,6 @@ function test_convolution_layer(sys::System)
   println("    > Backward")
   top_diff = rand(size(expected_output))
   copy!(state.blobs_diff[1], top_diff)
-  data_diffs = Blob[make_blob(sys.backend, Float64, size(input))]
 
   backward(sys, state, inputs, data_diffs)
 

@@ -25,7 +25,7 @@ type MemoryDataLayerState <: LayerState
   end
 end
 
-function setup(sys::System, layer::MemoryDataLayer, inputs::Vector{Blob})
+function setup(sys::System, layer::MemoryDataLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   @assert length(inputs) == 0
   for i = 1:length(layer.data)
     dims = size(layer.data[i])

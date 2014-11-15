@@ -135,14 +135,14 @@ Net(sys::System, layers :: Vector{Layer}) = begin
 
     if haskey(sys.layer_registry, layers[i])
       shared_state = sys.layer_registry[layers[i]]
-      states[i] = setup(sys, layers[i], shared_state, blob_fwd)
+      states[i] = setup(sys, layers[i], shared_state, blob_fwd, blob_bwd)
 
       # shared parameters, don't re-initialize
       for param in states[i].parameters
         param.initializer = NullInitializer()
       end
     else
-      states[i] = setup(sys, layers[i], blob_fwd)
+      states[i] = setup(sys, layers[i], blob_fwd, blob_bwd)
       if isa(layers[i], TrainableLayer)
         # has parameters, save in registry
         sys.layer_registry[layers[i]] = states[i]
@@ -152,7 +152,9 @@ Net(sys::System, layers :: Vector{Layer}) = begin
     if :tops ∈ names(layer)
       for j = 1:length(layer.tops)
         output_blobs[layer.tops[j]] = states[i].blobs[j]
-        if :blobs_diff ∈ names(states[i])
+      end
+      if :blobs_diff ∈ names(states[i])
+        for j = 1:length(layer.tops)
           diff_blobs[layer.tops[j]] = states[i].blobs_diff[j]
         end
       end

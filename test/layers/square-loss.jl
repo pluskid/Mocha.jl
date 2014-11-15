@@ -27,7 +27,7 @@ function test_square_loss_layer(sys::System)
   inputs = Blob[pred_blob, label_blob]
   diffs = Blob[diff_blob]
 
-  state  = setup(sys, layer, inputs)
+  state  = setup(sys, layer, inputs, diffs)
 
   forward(sys, state, inputs)
 
