@@ -1,4 +1,4 @@
-@defstruct InnerProductLayer CompLayer (
+@defstruct InnerProductLayer TrainableLayer (
   name :: String = "inner-product",
   (tops :: Vector{Symbol} = Symbol[], length(tops) >= 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(tops)),

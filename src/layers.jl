@@ -1,4 +1,4 @@
-export DataLayer, LossLayer, StatLayer, CompLayer
+export DataLayer, LossLayer, StatLayer, CompLayer, TrainableLayer
 
 export HDF5DataLayer, MemoryDataLayer
 export InnerProductLayer, ConvolutionLayer, PoolingLayer, SoftmaxLayer
@@ -83,6 +83,7 @@ abstract DataLayer <: Layer # Layer that provide data
 abstract LossLayer <: Layer # Layer that defines loss function for learning
 abstract StatLayer <: Layer # Layer that provide statistics (e.g. Accuracy)
 abstract CompLayer <: Layer # Layer that do computation
+abstract TrainableLayer <: CompLayer # Layer that could be trained
 
 #############################################################
 # Overload when there is no shared_state

@@ -1,4 +1,4 @@
-@defstruct ConvolutionLayer CompLayer (
+@defstruct ConvolutionLayer TrainableLayer (
   name :: String = "convolution",
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) > 0),
   (tops :: Vector{Symbol} = Symbol[], length(tops) == length(bottoms)),

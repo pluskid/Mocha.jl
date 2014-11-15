@@ -24,7 +24,7 @@ end
 function init(net::Net, regu_coef :: FloatingPoint = 0.0)
   for i = 1:length(net.layers)
     state = net.states[i]
-    if :parameters ∈ names(state)
+    if isa(net.layers[i], TrainableLayer)
       for param in state.parameters
         init(param.initializer, param.blob)
 
@@ -80,7 +80,7 @@ function forward(net::Net)
     end
 
     # handle regularization
-    if :parameters ∈ names(net.states[i])
+    if isa(net.layers[i], TrainableLayer)
       for param in net.states[i].parameters
         obj_val += forward(net.sys, param.regularizer, param.blob)
       end
@@ -101,7 +101,7 @@ function backward(net::Net)
     backward(net.sys, net.states[i], net.blobs_forward[i], net.blobs_backward[i])
 
     # handle regularization
-    if :parameters ∈ names(net.states[i])
+    if isa(net.layers[i], TrainableLayer)
       for param in net.states[i].parameters
         backward(net.sys, param.regularizer, param.blob, param.gradient)
       end
@@ -143,7 +143,7 @@ Net(sys::System, layers :: Vector{Layer}) = begin
       end
     else
       states[i] = setup(sys, layers[i], blob_fwd)
-      if :parameters ∈ names(states[i])
+      if isa(layers[i], TrainableLayer)
         # has parameters, save in registry
         sys.layer_registry[layers[i]] = states[i]
       end
