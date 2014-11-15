@@ -1,0 +1,98 @@
+############################################################
+# Power Layer
+############################################################
+@defstruct PowerLayer CompLayer (
+  name :: String = "power",
+  (power :: Int = 1, power > 0),
+  (scale :: Number = 1, isreal(scale)),
+  (shift :: Number = 0, isreal(shift)),
+  tops :: Vector{Symbol} = Symbol[],
+  (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(tops)),
+)
+
+type PowerLayerState <: LayerState
+  layer      :: PowerLayer
+  blobs      :: Vector{Blob}
+  blobs_diff :: Vector{Blob}
+end
+
+function setup(sys::System, layer::PowerLayer, inputs::Vector{Blob})
+  blobs = Blob[make_blob(sys.backend, eltype(x), size(x)) for x in inputs]
+  blobs_diff = Blob[make_blob(sys.backend, eltype(x), size(x)) for x in inputs]
+  state = PowerLayerState(layer, blobs, blobs_diff)
+end
+
+function forward(sys::System{CPUBackend}, state::PowerLayerState, inputs::Vector{Blob})
+  for i = 1:length(inputs)
+    input = inputs[i]
+    output = state.blobs[i]
+
+    # output = input
+    copy!(output, input)
+
+    # output *= scale
+    if state.layer.scale != 1
+      BLAS.scal!(length(output), convert(eltype(output),state.layer.scale), output.data, 1)
+    end
+
+    if state.layer.shift != 0
+      # output += shift
+      Vec.add_scal!(output.data, state.layer.shift)
+    end
+
+    # output = output ^ power
+    if state.layer.power > 1
+      if state.layer.power == 2
+        Vec.mul!(output.data, output.data)
+      else
+        Vec.pow!(output.data, state.layer.power)
+      end
+    end
+  end
+end
+
+function backward(sys::System{CPUBackend}, state::PowerLayerState,
+    inputs::Vector{Blob}, diffs::Vector{Blob})
+
+  pow_scale = state.layer.power * state.layer.scale
+  for i = 1:length(inputs)
+    if state.layer.power == 1 || state.layer.scale == 0
+      # trivial case, derivative is constant
+      fill!(diffs[i], pow_scale)
+    else
+      input = inputs[i]
+      output = state.blobs[i]
+      diff = diffs[i]
+
+      erase!(diff)
+
+      if state.layer.power == 2
+        # dO/dI = 2 * scale * (scale * I + shift)
+        #       = pow_scale * scale * I + pow_scale * shift
+        BLAS.axpy!(length(input), pow_scale*state.layer.scale,
+            input.data, 1, diff.data, 1)
+        if state.layer.shift != 0
+          Vec.add_scal!(diff.data, pow_scale * state.layer.shift)
+        end
+      elseif state.layer.shift == 0
+        # dO/dI = power * scale * (scale * I) ^ (power - 1)
+        #       = power * O / I
+        BLAS.axpy!(length(input), convert(eltype(input),state.layer.power),
+            output.data, 1, diff.data, 1)
+        Vec.div!(diff.data, input.data)
+      else
+        # general case
+        # dO/dI = power * scale * (scale * I + shift) ^ (power - 1)
+        #       = power * scale * O / (scale * I + shift)
+        copy!(diff, input)
+        if state.layer.scale != 1
+          BLAS.scal!(length(diff), convert(eltype(diff),state.layer.scale), diff.data, 1)
+        end
+        Vec.add_scal!(diff.data, state.layer.shift)
+        Vec.div2!(output.data, diff.data)
+        BLAS.scal!(length(diff), pow_scale, diff.data, 1)
+      end
+      Vec.mul!(diff.data, state.blobs_diff[i].data)
+    end
+  end
+end

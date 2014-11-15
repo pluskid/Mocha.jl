@@ -11,6 +11,7 @@ include("macros.jl")
 include("base.jl")
 
 include("utils/blas.jl")
+include("utils/math.jl")
 include("utils/io.jl")
 include("utils/hdf5.jl")
 

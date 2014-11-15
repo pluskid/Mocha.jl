@@ -56,6 +56,7 @@ include("layers/inner-product.jl")
 include("layers/convolution.jl")
 include("layers/pooling.jl")
 include("layers/softmax.jl")
+include("layers/power.jl")
 
 #-- Loss Layers
 include("layers/square-loss.jl")

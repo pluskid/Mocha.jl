@@ -85,6 +85,9 @@ end
 ############################################################
 type NullBlob <: Blob
 end
+function fill!(dst :: NullBlob, val)
+  # do nothing
+end
 
 function make_blob()
   return NullBlob()
