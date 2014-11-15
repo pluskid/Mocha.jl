@@ -4,6 +4,7 @@
 
 * Infrastructure
   * Ability to import caffe trained model?
+  * Properly release all the allocated resources upon backend shutdown
 * Network
   * Sigmoid activation function
   * Local Response Normalization Layer

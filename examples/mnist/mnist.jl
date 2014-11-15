@@ -49,7 +49,7 @@ add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
 
 # save snapshots every 5000 iterations
 add_coffee_break(solver,
-    Snapshot("snapshots", auto_load=true, also_load_solver_state=false),
+    Snapshot("snapshots", auto_load=true),
     every_n_iter=5000)
 
 solve(solver, net)
