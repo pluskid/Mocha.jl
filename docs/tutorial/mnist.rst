@@ -239,8 +239,15 @@ Note how we re-use the ``common_layers`` variable defined a moment
 ago to reuse the description of the network architecture. By passing
 **the same** layer object used to define the training net to the
 constructor of the validation net, Mocha will be able to automatically
-setup parameter sharing between the two networks. Now we are ready to
-add another coffee break to report the validation performance:
+setup parameter sharing between the two networks. The two networks will look
+like this:
+
+.. image:: images/MNIST-network.*
+   :scale: 70
+   :align: center
+
+Now we are ready to add another coffee break to report the validation
+performance:
 
 .. code-block:: julia
 

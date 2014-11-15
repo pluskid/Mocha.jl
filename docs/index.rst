@@ -21,6 +21,9 @@ User Manuals
 .. toctree::
    :maxdepth: 2
 
+   manual/network
+   manual/blob
+   manual/layers/index
    manual/backend
 
 Indices and tables
