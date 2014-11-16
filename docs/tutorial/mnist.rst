@@ -9,6 +9,12 @@ will use the Caffe's modified architecture, by replacing the sigmoid
 activation functions with Rectified Learning Unit (ReLU) activation
 functions.
 
+.. [LeNet] Lecun, Y.; Bottou, L.; Bengio, Y.; Haffner, P.,
+           *Gradient-based learning applied to document recognition*,
+           Proceedings of the IEEE, vol.86, no.11, pp.2278-2324,
+           Nov 1998.
+
+
 Preparing the Data
 ------------------
 
@@ -354,10 +360,4 @@ CUDA backend. It runs about 300 iterations per second.
    14-Nov 12:57:08:INFO:root:
    14-Nov 12:57:08:INFO:root:002100 :: TRAIN obj-val = 0.20724633
    14-Nov 12:57:08:INFO:root:002200 :: TRAIN obj-val = 0.14952177
-
-
-.. [LeNet] Lecun, Y.; Bottou, L.; Bengio, Y.; Haffner, P.,
-           *Gradient-based learning applied to document recognition*,
-           Proceedings of the IEEE, vol.86, no.11, pp.2278-2324,
-           Nov 1998.
 
