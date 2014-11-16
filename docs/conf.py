@@ -19,6 +19,8 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath("sphinx"))
+import julia
 
 # -- General configuration ------------------------------------------------
 
@@ -30,6 +32,7 @@ import os
 # ones.
 extensions = [
     'sphinx.ext.mathjax',
+    'julia'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -92,6 +95,9 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
+primary_domain = 'jl'
+highlight_language = 'julia'
+
 # If true, keep warnings as "system message" paragraphs in the built documents.
 #keep_warnings = False
 
@@ -99,8 +105,19 @@ pygments_style = 'sphinx'
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
+# a list of builtin theme
 html_theme = 'default'
+
+import os
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
+if not on_rtd:  # only import and set the theme if we're building docs locally
+    try:
+        import sphinx_rtd_theme
+        html_theme = "sphinx_rtd_theme"
+        html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+    except:
+        pass
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
