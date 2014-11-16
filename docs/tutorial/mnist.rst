@@ -320,9 +320,8 @@ and many factors.
   14-Nov 11:58:21:INFO:root:002200 :: TRAIN obj-val = 0.14225903
 
 The training could run faster by enabling native extension for the CPU backend,
-or use a CUDA backend if CUDA compatible GPU devices are available. **TODO**:
-give a pointer to the document on how to enable other backend when those
-documents are available.
+or use a CUDA backend if CUDA compatible GPU devices are available. Please refer
+to :doc:`/manual/backend` for how to use different backends.
 
 Just to give you a feeling, this is a sample log from running with Native
 Extension enabled CPU backend. It takes about 5 seconds to run 100 iterations.
