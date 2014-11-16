@@ -55,6 +55,7 @@ if Config.use_native_extension
 else
   include("layers/pooling/julia-impl.jl")
 end
+include("layers/pooling/channel-pooling.jl")
 
 include("net.jl")
 include("coffee-break.jl")
