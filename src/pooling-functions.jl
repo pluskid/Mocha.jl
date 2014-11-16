@@ -1,10 +1,11 @@
 export PoolingFunction, Pooling
 abstract PoolingFunction
+abstract StdPoolingFunction <: PoolingFunction # built-in poolings
 
 module Pooling
-using ..Mocha.PoolingFunction
+using ..Mocha.StdPoolingFunction
 
-type Max <: PoolingFunction end
-type Mean <: PoolingFunction end
+type Max <: StdPoolingFunction end
+type Mean <: StdPoolingFunction end
 
 end # module Pooling

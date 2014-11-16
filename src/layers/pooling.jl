@@ -2,9 +2,9 @@
   name :: String = "pooling",
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) > 0),
   (tops :: Vector{Symbol} = Symbol[], length(tops) == length(bottoms)),
-  (kernel :: NTuple{2, Int} = (1,1), length(kernel)==2 && all([kernel...] .> 0)),
-  (stride :: NTuple{2, Int} = (1,1), length(stride)==2 && all([stride...] .> 0)),
-  (pad :: NTuple{2, Int} = (0,0), length(pad)==2 && all([pad...] .>= 0)),
+  (kernel :: NTuple{2, Int} = (1,1), all([kernel...] .> 0)),
+  (stride :: NTuple{2, Int} = (1,1), all([stride...] .> 0)),
+  (pad :: NTuple{2, Int} = (0,0), all([pad...] .>= 0)),
   pooling :: PoolingFunction = Pooling.Max()
 )
 
@@ -71,7 +71,7 @@ function forward(sys::System{CPUBackend}, state::PoolingLayerState, inputs::Vect
   forward(sys, state.layer.pooling, state, inputs)
 end
 
-function forward(sys::System{CPUBackend}, pool::PoolingFunction, state::PoolingLayerState, inputs::Vector{Blob})
+function forward(sys::System{CPUBackend}, pool::StdPoolingFunction, state::PoolingLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input = inputs[i].data
     output = state.blobs[i].data
@@ -90,7 +90,7 @@ function backward(sys::System{CPUBackend}, state::PoolingLayerState, inputs::Vec
   backward(sys, state.layer.pooling, state, inputs, diffs)
 end
 
-function backward(sys::System{CPUBackend}, pool::PoolingFunction, state::PoolingLayerState,
+function backward(sys::System{CPUBackend}, pool::StdPoolingFunction, state::PoolingLayerState,
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   width, height, channels, num = size(inputs[1])
