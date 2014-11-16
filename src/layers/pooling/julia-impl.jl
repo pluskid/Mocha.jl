@@ -160,7 +160,7 @@ function mean_channel_pooling_forward{T}(input::Array{T}, output::Array{T}, inte
 
   for n = 1:num
     input_ptr = convert(Ptr{T}, input) + fea_dim*(n-1)
-    output_ptr = convert(Ptr{T}, input) + output_fea_dim*(n-1)
+    output_ptr = convert(Ptr{T}, output) + output_fea_dim*(n-1)
     integral_ptr = convert(Ptr{T}, integral)
 
     # compute integral image
@@ -168,7 +168,7 @@ function mean_channel_pooling_forward{T}(input::Array{T}, output::Array{T}, inte
     for c = 2:channels
       BLAS.blascopy!(spatial_dim_T, input_ptr + (c-1)*spatial_dim, 1,
           integral_ptr + (c-1)*spatial_dim, 1)
-      BLAS.axpy!(spatial_dim_T, one, integral_ptr + (c-1)*spatial_dim, 1,
+      BLAS.axpy!(spatial_dim_T, one, integral_ptr + (c-2)*spatial_dim, 1,
           integral_ptr + (c-1)*spatial_dim, 1)
     end
 

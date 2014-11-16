@@ -1,7 +1,7 @@
 function test_element_wise_layer(sys::System, op::ElementWiseFunctorType, jl_op::Function)
   println("-- Testing ElementWiseLayer{$op} on $(typeof(sys.backend))...")
 
-  eps = 1e-10
+  eps = 1e-5
   NArg = get_num_args(op)
   inputs = [rand(4,5,6,7) for i = 1:NArg]
   input_blobs = Blob[make_blob(sys.backend, x) for x in inputs]
