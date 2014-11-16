@@ -25,6 +25,16 @@ function test_channel_pooling_layer(sys::System, pooling::PoolingFunction)
   got_output = similar(expected_output)
   copy!(got_output, state.blobs[1])
   @test all(-eps .< expected_output-got_output .< eps)
+
+  println("    > Backward")
+  top_diff = rand(size(state.blobs[1]))
+  copy!(state.blobs_diff[1], top_diff)
+  backward(sys, state, inputs, diffs)
+
+  expected_output = channel_pooling_backward(state, input, top_diff, payload)
+  got_output = similar(expected_output)
+  copy!(got_output, diffs[1])
+  @test all(-eps .< expected_output - got_output .< eps)
 end
 
 function channel_pooling_forward(state, input::Array)
@@ -58,6 +68,31 @@ function channel_pooling_forward(state, input::Array)
   else
     return (output, nothing)
   end
+end
+
+function channel_pooling_backward(state, input::Array, diff::Array, payload::Any)
+  width, height, channels, num = size(input)
+  pooled_chann = get_chann(state.blobs[1])
+
+  gradient = zeros(width, height, channels, num)
+  for n = 1:num
+    for pc = 1:pooled_chann
+      cstart = max(1, (pc-1)*state.layer.stride - state.layer.pad[1] + 1)
+      cend = min(cstart + state.layer.kernel - 1, channels)
+      if isa(state.layer.pooling, Pooling.Max)
+        region = sub(gradient,1:width,1:height,cstart:cend,n)
+        maxidx = payload[:,:,pc,n]
+        region[maxidx] += diff[:,:,pc,n]
+      elseif isa(state.layer.pooling, Pooling.Mean)
+        for c = cstart:cend
+          gradient[:,:,c,n] += diff[:,:,pc,n] / state.layer.kernel
+        end
+      else
+        error("Unknown pooling $(state.layer.pooling)")
+      end
+    end
+  end
+  return gradient
 end
 
 function test_channel_pooling_layer(sys::System)

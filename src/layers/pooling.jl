@@ -93,11 +93,6 @@ end
 function backward(sys::System{CPUBackend}, pool::StdPoolingFunction, state::PoolingLayerState,
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
-  width, height, channels, num = size(inputs[1])
-  pooled_width = get_width(state.blobs[1])
-  pooled_height = get_height(state.blobs[1])
-  kernel_size = state.layer.kernel[1] * state.layer.kernel[2]
-
   for i = 1:length(inputs)
     diff = diffs[i]
     if !isa(diff, NullBlob)

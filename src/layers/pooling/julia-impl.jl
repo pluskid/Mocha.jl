@@ -187,3 +187,51 @@ function mean_channel_pooling_forward{T}(input::Array{T}, output::Array{T}, inte
     end
   end
 end
+
+function max_channel_pooling_backward{T}(input::Array{T}, output::Array{T}, mask::Array{Csize_t}, layer)
+  width, height, channels, num = size(input)
+  pooled_chann = size(output, 3)
+
+  fill!(input, 0)
+  for n = 1:num
+    for pc = 1:pooled_chann
+      cstart = max(1, (pc-1)*layer.stride - layer.pad[1] + 1)
+      cend   = min(cstart + layer.kernel - 1, channels)
+
+      for w = 1:width
+        for h = 1:height
+          @inbounds input[w,h,mask[w,h,pc,n],n] += output[w,h,pc,n]
+        end
+      end
+    end
+  end
+end
+
+function mean_channel_pooling_backward{T}(input::Array{T}, output::Array{T}, layer)
+  width, height, channels, num = size(input)
+  pooled_chann = size(output, 3)
+  scale = 1/convert(T, layer.kernel)
+
+  fill!(input, 0)
+
+  spatial_dim_T = width*height
+  spatial_dim = spatial_dim_T * sizeof(T)
+  fea_dim = spatial_dim * channels
+  output_fea_dim = spatial_dim * pooled_chann
+
+  for n = 1:num
+    input_ptr = convert(Ptr{T}, input) + fea_dim*(n-1)
+    output_ptr = convert(Ptr{T}, output) + output_fea_dim*(n-1)
+
+    for pc = 1:pooled_chann
+      cstart = max(1, (pc-1)*layer.stride - layer.pad[1] + 1)
+      cend   = min(cstart + layer.kernel - 1, channels)
+      output_ptr_pc = output_ptr + (pc-1)*spatial_dim
+
+      for c = cstart:cend
+        BLAS.axpy!(spatial_dim_T, scale, output_ptr_pc, 1,
+            input_ptr + (c-1)*spatial_dim, 1)
+      end
+    end
+  end
+end

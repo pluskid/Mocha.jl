@@ -81,3 +81,27 @@ function forward(sys::System{CPUBackend}, pool::StdPoolingFunction,
     end
   end
 end
+
+function backward(sys::System{CPUBackend}, state::ChannelPoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+  backward(sys, state.layer.pooling, state, inputs, diffs)
+end
+
+function backward(sys::System{CPUBackend}, pool::StdPoolingFunction, state::ChannelPoolingLayerState,
+    inputs::Vector{Blob}, diffs::Vector{Blob})
+
+  for i = 1:length(inputs)
+    diff = diffs[i]
+    if !isa(diff, NullBlob)
+      if isa(pool, Pooling.Max)
+        max_channel_pooling_backward(diff.data, state.blobs_diff[i].data, state.etc[i], state.layer)
+      elseif isa(pool, Pooling.Mean)
+        mean_channel_pooling_backward(diff.data, state.blobs_diff[i].data, state.layer)
+      else
+        error("Pooling for $pool not implemented yet")
+      end
+    else
+      continue # nothing to do if not propagating back
+    end
+  end
+end
+
