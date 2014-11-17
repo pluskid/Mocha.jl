@@ -33,7 +33,7 @@ function div2!{T}(X::Array{T}, Y::Array{T})
 end
 
 # X[i] = X[i]^p
-function pow!{T}(X::Array{T}, p)
+function pow!{T}(X::Array{T}, p::Number)
   leng = length(X)
   @simd for i = 1:leng
     @inbounds X[i] = X[i]^p

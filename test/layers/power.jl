@@ -1,7 +1,7 @@
 function test_power_layer(sys::System, scale, shift, power)
   println("    > scale=$scale, shift=$shift, power=$power")
 
-  eps = 1e-10
+  eps = 1e-8
   width, height, channels, num = (5, 6, 7, 8)
   input = rand(width, height, channels, num)
   input_blob = make_blob(sys.backend, input)
@@ -37,6 +37,10 @@ function test_power_layer(sys::System)
   test_power_layer(sys, rand(), rand(), 2)
   test_power_layer(sys, rand(), 0, 3)
   test_power_layer(sys, rand(), rand(), 4)
+
+  test_power_layer(sys, rand(), rand(), 0)
+  test_power_layer(sys, rand(), rand(), 1)
+  test_power_layer(sys, rand(), rand(), -1)
 end
 
 if test_cpu

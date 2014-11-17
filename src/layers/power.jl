@@ -3,7 +3,7 @@
 ############################################################
 @defstruct PowerLayer CompLayer (
   name :: String = "power",
-  (power :: Int = 1, power > 0),
+  (power :: Number = 1, isreal(power)),
   (scale :: Number = 1, isreal(scale)),
   (shift :: Number = 0, isreal(shift)),
   tops :: Vector{Symbol} = Symbol[],
@@ -49,7 +49,7 @@ function forward(sys::System{CPUBackend}, state::PowerLayerState, inputs::Vector
     end
 
     # output = output ^ power
-    if state.layer.power > 1
+    if state.layer.power != 1
       if state.layer.power == 2
         Vec.mul!(output.data, output.data)
       else
@@ -64,13 +64,13 @@ function backward(sys::System{CPUBackend}, state::PowerLayerState,
 
   pow_scale = state.layer.power * state.layer.scale
   for i = 1:length(inputs)
+    diff = diffs[i]
     if state.layer.power == 1 || state.layer.scale == 0
       # trivial case, derivative is constant
-      fill!(diffs[i], pow_scale)
+      fill!(diff, pow_scale)
     else
       input = inputs[i]
       output = state.blobs[i]
-      diff = diffs[i]
 
       erase!(diff)
 
@@ -100,7 +100,7 @@ function backward(sys::System{CPUBackend}, state::PowerLayerState,
         Vec.div2!(output.data, diff.data)
         BLAS.scal!(length(diff), pow_scale, diff.data, 1)
       end
-      Vec.mul!(diff.data, state.blobs_diff[i].data)
     end
+    Vec.mul!(diff.data, state.blobs_diff[i].data)
   end
 end
