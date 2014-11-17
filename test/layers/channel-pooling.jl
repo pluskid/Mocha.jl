@@ -3,7 +3,7 @@ function test_channel_pooling_layer(sys::System, pooling::PoolingFunction)
   println("    > Setup")
 
   width, height, channels, num = (2, 3, 7, 1)
-  pad = (1,2)
+  pad = (2,2)
   kernel = 3
   stride = 2
   eps = 1e-7

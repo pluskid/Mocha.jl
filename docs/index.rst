@@ -15,16 +15,24 @@ Tutorials
    tutorial/mnist
 
 ############
-User Manuals
+User's Guide
 ############
 
 .. toctree::
    :maxdepth: 2
 
-   manual/network
-   manual/blob
-   manual/layers/index
-   manual/backend
+   user-guide/network
+   user-guide/layers/index
+   user-guide/backend
+
+#################
+Developer's Guide
+#################
+
+.. toctree::
+   :maxdepth: 2
+
+   dev-guide/blob
 
 Indices and tables
 ==================
