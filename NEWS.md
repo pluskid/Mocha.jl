@@ -7,13 +7,9 @@
   * Properly release all the allocated resources upon backend shutdown
 * Network
   * Sigmoid activation function
-<<<<<<< HEAD
-  * Local Response Normalization Layer
-=======
   * Power, Split, Element-wise layers
   * Local Response Normalization layer
   * Channel Pooling layer
->>>>>>> 0de1d781f228eb725cae83c415f0f188efe66e1d
 * Documentation
   * Complete MNIST demo
   * Detailed document on each component
