@@ -11,35 +11,44 @@ export add_coffee_break, solve
 abstract LearningRatePolicy
 module LRPolicy
 using ..Mocha.LearningRatePolicy
-type Fixed <: LearningRatePolicy end
+type Fixed <: LearningRatePolicy 
+  base_lr :: FloatingPoint
+end
 
 # base_lr * gamma ^ (floor(iter / stepsize))
 type Step <: LearningRatePolicy
-  gamma :: FloatingPoint
+  base_lr  :: FloatingPoint
+  gamma    :: FloatingPoint
   stepsize :: Int
 end
 
 # base_lr * gamma ^ iter
 type Exp <: LearningRatePolicy 
-  gamma :: FloatingPoint
+  base_lr :: FloatingPoint
+  gamma   :: FloatingPoint
 end
+
 type Inv <: LearningRatePolicy 
-  gamma :: FloatingPoint
-  power :: FloatingPoint
+  base_lr :: FloatingPoint
+  gamma   :: FloatingPoint
+  power   :: FloatingPoint
+end
+
+type Staged <: LearningRatePolicy
+  stages :: Vector{(Int, LearningRatePolicy)}
 end
 end # module LRPolicy
-get_learning_rate(policy::LRPolicy.Fixed, base_lr, state::SolverState) = base_lr
-get_learning_rate(policy::LRPolicy.Step, base_lr, state::SolverState) = 
-    base_lr * policy.gamma ^ (floor(state.iter / policy.stepsize))
-get_learning_rate(policy::LRPolicy.Exp, base_lr, state::SolverState) =
-    base_lr * policy.gamma ^ state.iter
-get_learning_rate(policy::LRPolicy.Inv, base_lr, state::SolverState) =
-    base_lr * (1 + policy.gamma * state.iter) ^ (-policy.power)
+get_learning_rate(policy::LRPolicy.Fixed, state::SolverState) = policy.base_lr
+get_learning_rate(policy::LRPolicy.Step, state::SolverState) = 
+    policy.base_lr * policy.gamma ^ (floor(state.iter / policy.stepsize))
+get_learning_rate(policy::LRPolicy.Exp, state::SolverState) =
+    policy.base_lr * policy.gamma ^ state.iter
+get_learning_rate(policy::LRPolicy.Inv, state::SolverState) =
+    policy.base_lr * (1 + policy.gamma * state.iter) ^ (-policy.power)
 
 
 @defstruct SolverParameters Any (
-  (base_lr :: FloatingPoint = 0.01, base_lr > 0),
-  lr_policy :: LearningRatePolicy = LRPolicy.Fixed(),
+  lr_policy :: LearningRatePolicy = LRPolicy.Fixed(0.01),
   (momentum :: FloatingPoint = 0.9, 0 <= momentum < 1),
   (max_iter :: Int = 0, max_iter > 0),
   (regu_coef :: FloatingPoint = 0.0005, regu_coef >= 0),

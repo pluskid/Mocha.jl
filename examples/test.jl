@@ -35,7 +35,7 @@ net = Net(sys, [loss_layer, weight_layer, data_layer])
 ############################################################
 # Solve
 ############################################################
-params = SolverParameters(regu_coef=0.0005, base_lr=0.01, momentum=0.9, max_iter=1000)
+params = SolverParameters(regu_coef=0.0005, momentum=0.9, max_iter=1000)
 solver = SGD(params)
 add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
 

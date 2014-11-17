@@ -34,8 +34,8 @@ init(sys)
 common_layers = [conv_layer, pool_layer, conv2_layer, pool2_layer, fc1_layer, fc2_layer]
 net = Net(sys, [data_layer, common_layers..., loss_layer])
 
-params = SolverParameters(max_iter=10000, regu_coef=0.0005, base_lr=0.01, momentum=0.9,
-    lr_policy=LRPolicy.Inv(0.0001, 0.75))
+params = SolverParameters(max_iter=10000, regu_coef=0.0005, momentum=0.9,
+    lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75))
 solver = SGD(params)
 
 # report training progress every 100 iterations
