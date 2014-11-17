@@ -62,7 +62,7 @@ end
 function backward(sys::System{CPUBackend}, state::PowerLayerState,
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
-  pow_scale = state.layer.power * state.layer.scale
+  pow_scale = convert(eltype(inputs[1]),state.layer.power * state.layer.scale)
   for i = 1:length(inputs)
     diff = diffs[i]
     if state.layer.power == 1 || state.layer.scale == 0

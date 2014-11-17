@@ -77,3 +77,17 @@ function forward(sys::System, state::LRNLayerState, inputs::Vector{Blob})
   forward(sys, state.do_power, state.do_pool.blobs)
   forward(sys, state.do_div, Blob[state.do_split.blobs[2],state.do_power.blobs[1]])
 end
+
+function backward(sys::System, state::LRNLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+  if !isa(diffs[1], NullBlob)
+    backward(sys, state.do_div,
+        Blob[state.do_split.blobs[2],state.do_power.blobs[1]],
+        Blob[state.do_split.blobs_diff[2],state.do_power.blobs_diff[1]])
+    backward(sys, state.do_power, state.do_pool.blobs, state.do_pool.blobs_diff)
+    backward(sys, state.do_pool, state.do_square.blobs, state.do_square.blobs_diff)
+    backward(sys, state.do_square,
+        Blob[state.do_split.blobs[1]],
+        Blob[state.do_split.blobs_diff[1]])
+    backward(sys, state.do_split, inputs, diffs)
+  end
+end
