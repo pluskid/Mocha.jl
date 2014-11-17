@@ -11,6 +11,7 @@ include("macros.jl")
 include("base.jl")
 
 include("utils/blas.jl")
+include("utils/math.jl")
 include("utils/io.jl")
 include("utils/hdf5.jl")
 
@@ -54,6 +55,7 @@ if Config.use_native_extension
 else
   include("layers/pooling/julia-impl.jl")
 end
+include("layers/pooling/channel-pooling.jl")
 
 include("net.jl")
 include("coffee-break.jl")

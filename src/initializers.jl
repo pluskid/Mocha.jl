@@ -20,7 +20,7 @@ function init(initializer::ConstantInitializer, blob::Blob)
 end
 
 ################################################################################
-# A Filler based on the paper [Bengio and Glorot 2010]: Understanding
+# An initializer  based on the paper [Bengio and Glorot 2010]: Understanding
 # the difficulty of training deep feedforward neuralnetworks, but does not
 # use the fan_out value.
 #

@@ -16,15 +16,15 @@ type SoftmaxLossLayerState{T} <: LayerState
   etc      :: Any
 end
 
-function setup(sys::System, layer::SoftmaxLossLayer, inputs::Vector{Blob})
+function setup(sys::System, layer::SoftmaxLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
   etc = nothing
 
   softmax_layer = SoftmaxLayer(tops=Array(Symbol, length(inputs)), bottoms=Array(Symbol, length(inputs)))
-  softmax = setup(sys, softmax_layer, Blob[inputs[1]])
+  softmax = setup(sys, softmax_layer, Blob[inputs[1]], Blob[])
 
   logistic_layer = MultinomialLogisticLossLayer(bottoms=Array(Symbol, 2))
-  logistic = setup(sys, logistic_layer, inputs)
+  logistic = setup(sys, logistic_layer, inputs, Blob[])
 
   state = SoftmaxLossLayerState(layer, convert(data_type, 0), softmax, logistic, etc)
   return state

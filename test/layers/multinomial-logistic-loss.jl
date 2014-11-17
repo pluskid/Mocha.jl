@@ -13,7 +13,7 @@ function test_multinomial_logistic_loss_layer(sys::System)
   inputs = Blob[prob_blob, label_blob]
 
   layer = MultinomialLogisticLossLayer(bottoms=[:pred, :labels])
-  state = setup(sys, layer, inputs)
+  state = setup(sys, layer, inputs, Blob[])
 
   forward(sys, state, inputs)
 

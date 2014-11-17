@@ -19,15 +19,16 @@ function test_pooling_layer(sys::System, pooling::PoolingFunction, has_padding::
   stride_h    = 2
   eps         = 1e-10
 
-  layer = PoolingLayer(; kernel=(kernel_w,kernel_h), stride=(stride_w,stride_h), pad=padding,
+  layer = PoolingLayer(kernel=(kernel_w,kernel_h), stride=(stride_w,stride_h), pad=padding,
       tops=[:output], bottoms=[:input], pooling=pooling)
 
   input_dims = (input_w, input_h, input_chann, input_num)
   input = rand(input_dims)
   inputs = Blob[make_blob(sys.backend, Float64, input_dims)]
+  diffs = Blob[make_blob(sys.backend, Float64, input_dims)]
   copy!(inputs[1], input)
 
-  state = setup(sys, layer, inputs)
+  state = setup(sys, layer, inputs, diffs)
 
   println("    > Forward")
   forward(sys, state, inputs)
@@ -41,7 +42,6 @@ function test_pooling_layer(sys::System, pooling::PoolingFunction, has_padding::
   top_diff = rand(size(state.blobs[1]))
   copy!(state.blobs_diff[1], top_diff)
 
-  diffs = Blob[make_blob(sys.backend, Float64, size(input))]
   backward(sys, state, inputs, diffs)
 
   expected_grad = pooling_backward(state, input, top_diff, payload)
@@ -65,10 +65,12 @@ function pooling_forward(state, input::Array)
     for c = 1:channels
       for ph = 1:pooled_height
         for pw = 1:pooled_width
-          hstart = max(1, (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1)
-          wstart = max(1, (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1)
+          hstart = (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1
+          wstart = (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1
           hend = min(hstart + state.layer.kernel[2] - 1, height)
           wend = min(wstart + state.layer.kernel[1] - 1, width)
+          hstart = max(1, hstart)
+          wstart = max(1, wstart)
 
           region = sub(input, wstart:wend, hstart:hend, c, n)
           if isa(state.layer.pooling, Pooling.Max)
@@ -104,10 +106,12 @@ function pooling_backward(state, input::Array, diff::Array, payload::Any)
     for c = 1:channels
       for ph = 1:pooled_height
         for pw = 1:pooled_width
-          hstart = max(1, (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1)
-          wstart = max(1, (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1)
+          hstart = (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1
+          wstart = (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1
           hend = min(hstart + state.layer.kernel[2] - 1, height)
           wend = min(wstart + state.layer.kernel[1] - 1, width)
+          hstart = max(1, hstart)
+          wstart = max(1, wstart)
 
           region = sub(gradient, wstart:wend, hstart:hend, c, n)
           if isa(state.layer.pooling, Pooling.Max)

@@ -32,7 +32,7 @@ function test_hdf5_data_layer(sys::System)
 
   # batch size is determined by
   layer = HDF5DataLayer(; source = source_fn, tops = [:data], batch_size=batch_size)
-  state = setup(sys, layer, Blob[])
+  state = setup(sys, layer, Blob[], Blob[])
   @test state.epoch == 0
 
   data = cat(4, data_all...)
@@ -46,6 +46,14 @@ function test_hdf5_data_layer(sys::System)
     @test all(-eps .< layer_data - data[data_idx..., i:i+batch_size-1] .< eps)
   end
   @test state.epoch == 3
+
+  ############################################################
+  # Clean up
+  ############################################################
+  rm(source_fn)
+  for fn in h5fn_all
+    rm(fn)
+  end
 end
 
 if test_cpu

@@ -17,7 +17,7 @@ type SquareLossLayerState{T} <: LayerState
   pred_copy :: Blob
 end
 
-function setup(sys::System, layer::SquareLossLayer, inputs::Vector{Blob})
+function setup(sys::System, layer::SquareLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
   pred_copy = make_blob(sys.backend, data_type, size(inputs[1])...)
 

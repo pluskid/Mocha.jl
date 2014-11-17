@@ -1,4 +1,4 @@
-@defstruct InnerProductLayer CompLayer (
+@defstruct InnerProductLayer TrainableLayer (
   name :: String = "inner-product",
   (tops :: Vector{Symbol} = Symbol[], length(tops) >= 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(tops)),
@@ -70,7 +70,7 @@ type InnerProductLayerState <: LayerState
   end
 end
 
-function setup(sys::System, layer::InnerProductLayer, shared_state, inputs::Vector{Blob})
+function setup(sys::System, layer::InnerProductLayer, shared_state, inputs::Vector{Blob}, diffs::Vector{Blob})
   state = InnerProductLayerState(sys, layer, shared_state, inputs)
   return state
 end

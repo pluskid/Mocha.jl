@@ -1,7 +1,9 @@
-export DataLayer, LossLayer, StatLayer, CompLayer
+export DataLayer, LossLayer, StatLayer, CompLayer, TrainableLayer
 
 export HDF5DataLayer, MemoryDataLayer
 export InnerProductLayer, ConvolutionLayer, PoolingLayer, SoftmaxLayer
+export PowerLayer, SplitLayer, ElementWiseLayer, ChannelPoolingLayer
+export LRNLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export AccuracyLayer
 
@@ -83,12 +85,13 @@ abstract DataLayer <: Layer # Layer that provide data
 abstract LossLayer <: Layer # Layer that defines loss function for learning
 abstract StatLayer <: Layer # Layer that provide statistics (e.g. Accuracy)
 abstract CompLayer <: Layer # Layer that do computation
+abstract TrainableLayer <: CompLayer # Layer that could be trained
 
 #############################################################
 # Overload when there is no shared_state
 #############################################################
-function setup(sys::System, layer::Layer, inputs::Vector{Blob})
-  setup(sys, layer, nothing, inputs)
+function setup(sys::System, layer::Layer, inputs::Vector{Blob}, diffs::Vector{Blob})
+  setup(sys, layer, nothing, inputs, diffs)
 end
 
 #############################################################
@@ -110,6 +113,11 @@ include("layers/inner-product.jl")
 include("layers/convolution.jl")
 include("layers/pooling.jl")
 include("layers/softmax.jl")
+include("layers/power.jl")
+include("layers/split.jl")
+include("layers/element-wise.jl")
+include("layers/channel-pooling.jl")
+include("layers/lrn.jl")
 
 #############################################################
 # Loss Layers

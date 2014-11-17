@@ -7,7 +7,7 @@ function test_softmax_layer(sys::System)
   input_blob = make_blob(sys.backend, input)
 
   layer = SoftmaxLayer(tops = [:prob], bottoms = [:response])
-  state = setup(sys, layer, Blob[input_blob])
+  state = setup(sys, layer, Blob[input_blob], Blob[])
 
   forward(sys, state, Blob[input_blob])
 
