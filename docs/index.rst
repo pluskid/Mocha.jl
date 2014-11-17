@@ -24,6 +24,8 @@ User's Guide
    user-guide/network
    user-guide/layers/index
    user-guide/initializer
+   user-guide/regularizer
+   user-guide/solver
    user-guide/backend
 
 #################

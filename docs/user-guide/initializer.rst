@@ -1,7 +1,8 @@
 Initializers
 ============
 
-Initializers provide init values for network parameter blobs.
+Initializers provide init values for network parameter blobs. In Caffe, they are
+called *Fillers*.
 
 .. class:: NullInitializer
 

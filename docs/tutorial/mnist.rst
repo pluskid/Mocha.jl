@@ -321,7 +321,7 @@ and many factors.
 
 The training could run faster by enabling native extension for the CPU backend,
 or use a CUDA backend if CUDA compatible GPU devices are available. Please refer
-to :doc:`/manual/backend` for how to use different backends.
+to :doc:`/user-guide/backend` for how to use different backends.
 
 Just to give you a feeling, this is a sample log from running with Native
 Extension enabled CPU backend. It takes about 5 seconds to run 100 iterations.
@@ -341,8 +341,7 @@ Extension enabled CPU backend. It takes about 5 seconds to run 100 iterations.
    14-Nov 12:16:18:INFO:root:002100 :: TRAIN obj-val = 0.20689486
    14-Nov 12:16:23:INFO:root:002200 :: TRAIN obj-val = 0.17757215
 
-The accuracy from two different trains are different due to different
-random initialization. The followings are a sample log from running with the
+The followings are a sample log from running with the
 CUDA backend. It runs about 300 iterations per second.
 
 .. code-block:: text
@@ -360,3 +359,10 @@ CUDA backend. It runs about 300 iterations per second.
    14-Nov 12:57:08:INFO:root:002100 :: TRAIN obj-val = 0.20724633
    14-Nov 12:57:08:INFO:root:002200 :: TRAIN obj-val = 0.14952177
 
+Remarks
+-------
+
+The accuracy from two different trains are different due to different random
+initialization. The objective function values are also slightly different to
+Caffe's, as Mocha also counts regularizers in the forward stage (see
+:doc:`/user-guide/regularizer`).
