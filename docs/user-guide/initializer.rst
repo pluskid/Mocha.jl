@@ -28,3 +28,16 @@ called *Fillers*.
    .. [BengioGlorot2010] Y. Bengio and X. Glorot, *Understanding the
       difficulty of training deep feedforward neural networks*, in Proceedings of
       AISTATS 2010, pp. 249-256.
+
+.. class:: GaussianInitializer
+
+   Initialize each element in the parameter blob as independent and identically
+   distributed Gaussian random variables.
+
+   .. attribute:: mean
+
+      Default 0.
+
+   .. attribute:: std
+
+      Default 1.
