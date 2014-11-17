@@ -19,10 +19,12 @@ void max_pooling_impl(const T *global_input, T *global_output, size_t *global_ma
 
       for (int ph = 0; ph < pooled_height; ++ph) {
         for (int pw = 0; pw < pooled_width; ++pw) {
-          int hstart = std::max(ph*stride_h - pad_h, 0);
-          int wstart = std::max(pw*stride_w - pad_w, 0);
+          int hstart = ph*stride_h - pad_h;
+          int wstart = pw*stride_w - pad_w;
           int hend   = std::min(hstart + kernel_h, height);
           int wend   = std::min(wstart + kernel_w, width);
+          hstart = std::max(hstart, 0);
+          wstart = std::max(wstart, 0);
 
           int pool_index = ph * pooled_width + pw;
           T maxval = -std::numeric_limits<T>::max();

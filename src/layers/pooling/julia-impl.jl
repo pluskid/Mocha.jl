@@ -48,10 +48,12 @@ function mean_pooling_forward{T}(input::Array{T}, output::Array{T}, layer)
     for c = 1:channels
       for ph = 1:pooled_height
         for pw = 1:pooled_width
-          hstart = max(1, (ph-1)*layer.stride[2] - layer.pad[2] + 1)
-          wstart = max(1, (pw-1)*layer.stride[1] - layer.pad[1] + 1)
+          hstart = (ph-1)*layer.stride[2] - layer.pad[2] + 1
+          wstart = (pw-1)*layer.stride[1] - layer.pad[1] + 1
           hend = min(hstart + layer.kernel[2] - 1, height)
           wend = min(wstart + layer.kernel[1] - 1, width)
+          hstart = max(hstart, 1)
+          wstart = max(wstart, 1)
 
           the_sum = 0.0
           for w = wstart:wend
@@ -97,10 +99,12 @@ function mean_pooling_backward{T}(input::Array{T}, output::Array{T}, layer)
     for c = 1:channels
       for ph = 1:pooled_height
         for pw = 1:pooled_width
-          hstart = max(1, (ph-1)*layer.stride[2] - layer.pad[2] + 1)
-          wstart = max(1, (pw-1)*layer.stride[1] - layer.pad[1] + 1)
+          hstart = (ph-1)*layer.stride[2] - layer.pad[2] + 1
+          wstart = (pw-1)*layer.stride[1] - layer.pad[1] + 1
           hend = min(hstart + layer.kernel[2] - 1, height)
           wend = min(wstart + layer.kernel[1] - 1, width)
+          hstart = max(1, hstart)
+          wstart = max(1, wstart)
 
           @inbounds val = output[pw,ph,c,n] / kernel_size
           for w = wstart:wend

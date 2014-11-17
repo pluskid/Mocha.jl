@@ -65,10 +65,12 @@ function pooling_forward(state, input::Array)
     for c = 1:channels
       for ph = 1:pooled_height
         for pw = 1:pooled_width
-          hstart = max(1, (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1)
-          wstart = max(1, (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1)
+          hstart = (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1
+          wstart = (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1
           hend = min(hstart + state.layer.kernel[2] - 1, height)
           wend = min(wstart + state.layer.kernel[1] - 1, width)
+          hstart = max(1, hstart)
+          wstart = max(1, wstart)
 
           region = sub(input, wstart:wend, hstart:hend, c, n)
           if isa(state.layer.pooling, Pooling.Max)
@@ -104,10 +106,12 @@ function pooling_backward(state, input::Array, diff::Array, payload::Any)
     for c = 1:channels
       for ph = 1:pooled_height
         for pw = 1:pooled_width
-          hstart = max(1, (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1)
-          wstart = max(1, (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1)
+          hstart = (ph-1)*state.layer.stride[2] - state.layer.pad[2] + 1
+          wstart = (pw-1)*state.layer.stride[1] - state.layer.pad[1] + 1
           hend = min(hstart + state.layer.kernel[2] - 1, height)
           wend = min(wstart + state.layer.kernel[1] - 1, width)
+          hstart = max(1, hstart)
+          wstart = max(1, wstart)
 
           region = sub(gradient, wstart:wend, hstart:hend, c, n)
           if isa(state.layer.pooling, Pooling.Max)

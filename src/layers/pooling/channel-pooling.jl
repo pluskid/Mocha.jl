@@ -7,8 +7,10 @@ function max_channel_pooling_forward{T}(input::Array{T}, output::Array{T}, mask:
 
   for n = 1:num
     for pc = 1:pooled_chann
-      cstart = max(1, (pc-1)*layer.stride - layer.pad[1] + 1)
+      cstart = (pc-1)*layer.stride - layer.pad[1] + 1
       cend   = min(cstart + layer.kernel - 1, channels)
+      cstart = max(1, cstart)
+
       for w = 1:width
         for h = 1:height
           @inbounds output[w,h,pc,n] = input[w,h,cstart,n]
@@ -59,8 +61,10 @@ function mean_channel_pooling_forward{T}(input::Array{T}, output::Array{T}, inte
     end
 
     for pc = 1:pooled_chann
-      cstart = max(1, (pc-1)*layer.stride - layer.pad[1] + 1)
+      cstart = (pc-1)*layer.stride - layer.pad[1] + 1
       cend   = min(cstart + layer.kernel - 1, channels)
+      cstart = max(1, cstart)
+
       output_ptr_pc = output_ptr + (pc-1)*spatial_dim
 
       BLAS.blascopy!(spatial_dim_T, integral_ptr + (cend-1)*spatial_dim, 1,
@@ -81,8 +85,9 @@ function max_channel_pooling_backward{T}(input::Array{T}, output::Array{T}, mask
   fill!(input, 0)
   for n = 1:num
     for pc = 1:pooled_chann
-      cstart = max(1, (pc-1)*layer.stride - layer.pad[1] + 1)
+      cstart = (pc-1)*layer.stride - layer.pad[1] + 1
       cend   = min(cstart + layer.kernel - 1, channels)
+      cstart = max(1, cstart)
 
       for w = 1:width
         for h = 1:height
@@ -110,8 +115,9 @@ function mean_channel_pooling_backward{T}(input::Array{T}, output::Array{T}, lay
     output_ptr = convert(Ptr{T}, output) + output_fea_dim*(n-1)
 
     for pc = 1:pooled_chann
-      cstart = max(1, (pc-1)*layer.stride - layer.pad[1] + 1)
+      cstart = (pc-1)*layer.stride - layer.pad[1] + 1
       cend   = min(cstart + layer.kernel - 1, channels)
+      cstart = max(1, cstart)
       output_ptr_pc = output_ptr + (pc-1)*spatial_dim
 
       for c = cstart:cend

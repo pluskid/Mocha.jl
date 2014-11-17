@@ -42,10 +42,12 @@ function pooling(input::Array, output::Array, mask::Array, kernel, pad, stride)
     for c = 1:channels
       for ph = 1:pooled_height
         for pw = 1:pooled_width
-          hstart = max(1, (ph-1)*stride[2] - pad[2] + 1)
-          wstart = max(1, (pw-1)*stride[1] - pad[1] + 1)
+          hstart = (ph-1)*stride[2] - pad[2] + 1
+          wstart = (pw-1)*stride[1] - pad[1] + 1
           hend = min(hstart + kernel[2] - 1, height)
           wend = min(wstart + kernel[1] - 1, width)
+          hstart = max(1, hstart)
+          wstart = max(1, wstart)
 
           maxval = -Inf
           maxw = 0

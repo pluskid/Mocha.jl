@@ -1,5 +1,5 @@
 function test_channel_pooling_layer(sys::System, pooling::PoolingFunction)
-  println("-- Testing Pooling($(typeof(pooling))) on $(typeof(sys.backend))...")
+  println("-- Testing ChannelPooling($(typeof(pooling))) on $(typeof(sys.backend))...")
   println("    > Setup")
 
   width, height, channels, num = (2, 3, 7, 1)
@@ -48,8 +48,10 @@ function channel_pooling_forward(state, input::Array)
 
   for n = 1:num
     for pc = 1:pooled_chann
-      cstart = max(1, (pc-1)*state.layer.stride - state.layer.pad[1] + 1)
+      cstart = (pc-1)*state.layer.stride - state.layer.pad[1] + 1
       cend = min(cstart + state.layer.kernel - 1, channels)
+      cstart = max(1, cstart)
+
       region = input[:,:,cstart:cend, n]
       if isa(state.layer.pooling, Pooling.Max)
         maxval, maxidx = findmax(region, 3)
@@ -77,8 +79,10 @@ function channel_pooling_backward(state, input::Array, diff::Array, payload::Any
   gradient = zeros(width, height, channels, num)
   for n = 1:num
     for pc = 1:pooled_chann
-      cstart = max(1, (pc-1)*state.layer.stride - state.layer.pad[1] + 1)
+      cstart = (pc-1)*state.layer.stride - state.layer.pad[1] + 1
       cend = min(cstart + state.layer.kernel - 1, channels)
+      cstart = max(1, cstart)
+
       if isa(state.layer.pooling, Pooling.Max)
         region = sub(gradient,1:width,1:height,cstart:cend,n)
         maxidx = payload[:,:,pc,n]
