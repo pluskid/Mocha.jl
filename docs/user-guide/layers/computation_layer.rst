@@ -31,6 +31,61 @@ Computation Layers
 
       Blob names for output and input.
 
+.. class:: LRNLayer
+
+   Local Response Normalization Layer. It performs normalization over local
+   input regions via the following mapping
+
+   .. math::
+
+      x \rightarrow y = \frac{x}{\left( \beta + (\alpha/n)\sum_{x_j\in N(x)}x_j^2
+      \right)^p}
+
+   Here :math:`\beta` is the shift, :math:`\alpha` is the scale, :math:`p` is
+   the power, and :math:`n` is the size of the local neighborhood. :math:`N(x)`
+   denotes the local neighborhood of :math:`x` of size :math:`n` (including
+   :math:`x` itself). There are two types of local neighborhood:
+
+   * ``LRNMode.AcrossChannel()``: The local neighborhood is a region of shape
+     (1, 1, :math:`k`, 1) centered at :math:`x`. In other words, the region
+     extends across nearby channels (with zero padding if needed), but has no
+     spatial extent. Here :math:`k` is the kernel size, and :math:`n=k` in this
+     case.
+   * ``LRNMode.WithinChannel()``: The local neighborhood is a region of shape
+     (:math:`k`, :math:`k`, 1, 1) centered at :math:`x`. In other words, the
+     region extends spatially (in **both** the width and the channel dimension),
+     again with zero padding when needed. But it does not extend across
+     different channels. In this case :math:`n=k^2`.
+
+   .. attribute:: kernel
+
+      Default 5, an integer indicating the kernel size. See :math:`k` in the
+      descriptions above.
+
+   .. attribute:: scale
+
+      Default 1.
+
+   .. attribute:: shift
+
+      Default 1 (yes, 1, not 0).
+
+   .. attribute:: power
+
+      Default 0.75.
+
+   .. attribute:: mode
+
+      Default ``LRNMode.AcrossChannel()``.
+
+   .. attribute::
+      tops
+      bottoms
+
+      Names for output and input blobs. Only one input and one output blob are
+      allowed.
+
+
 .. class:: ElementWiseLayer
 
    Element-wise layer implements basic element-wise operations on inputs.
@@ -55,7 +110,7 @@ Computation Layers
 
    .. math::
 
-     O = (aI + b)^p
+     y = (ax + b)^p
 
    where :math:`a` is ``scale``, :math:`b` is ``shift``, and :math:`p` is
    ``power``. During back propagation, the following element-wise derivatives are
@@ -63,7 +118,7 @@ Computation Layers
 
    .. math::
 
-     \frac{\partial O}{\partial I} = pa(aI + b)^{p-1}
+     \frac{\partial y}{\partial x} = pa(ax + b)^{p-1}
 
    Power layer is implemented separately instead of as an Element-wise layer
    for better performance because there are some many special cases of Power layer that

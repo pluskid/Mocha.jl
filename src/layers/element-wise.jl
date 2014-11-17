@@ -21,7 +21,7 @@ end # module ElementWiseFunctors
 ############################################################
 @defstruct ElementWiseLayer CompLayer (
   name :: String = "element-wise",
-  operation :: ElementWiseFunctorType = Add(),
+  operation :: ElementWiseFunctorType = ElementWiseFunctors.Add(),
   (tops :: Vector{Symbol} = Symbol[], length(tops) == 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == get_num_args(operation)),
 )

@@ -23,5 +23,5 @@ Notations
 
 In the document for the layers, the following common notations will be used
 
-* :math:`I`: the input tensor of a layer.
-* :math:`O`: the output tensor of a layer.
+* :math:`x`: the input tensor of a layer.
+* :math:`y`: the output tensor of a layer.
