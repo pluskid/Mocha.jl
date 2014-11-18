@@ -42,6 +42,13 @@ function test_cublas(sys::System)
   copy!(result, blob_C)
   @test all(-eps .< A*B+C - result .< eps)
 
+  println("    > blas copy")
+  x = rand(size(x))
+  copy!(x_blob, x)
+  CuBLAS.copy(sys.backend.cublas_ctx, Float64, length(x), x_blob.ptr.p, 1, x2_blob.ptr.p, 1)
+  copy!(x2, x2_blob)
+  @test all(-eps .< x2-x .< eps)
+
 end
 
 test_cublas(sys_cudnn)

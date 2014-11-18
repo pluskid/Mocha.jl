@@ -101,29 +101,47 @@ get_vector{T}(src::CuPtr, dest::Array{T}) = get_vector(src, 1, dest, 1)
 ############################################################
 # y = α y
 ############################################################
-function scal(handle::Handle, n::Int, alpha::Float32, x::CuPtr, incx::Int)
+function scal(handle::Handle, n::Int, alpha::Float32, x, incx::Int)
+  x = convert(Ptr{Void}, x)
   alpha_box = Float32[alpha]
   @cublascall(:cublasSscal_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint),
-              handle, n, alpha_box, x.p, incx)
+              handle, n, alpha_box, x, incx)
 end
-function scal(handle::Handle, n::Int, alpha::Float64, x::CuPtr, incx::Int)
+function scal(handle::Handle, n::Int, alpha::Float64, x, incx::Int)
+  x = convert(Ptr{Void}, x)
   alpha_box = Float64[alpha]
   @cublascall(:cublasDscal_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint),
-              handle, n, alpha_box, x.p, incx)
+              handle, n, alpha_box, x, incx)
+end
+function scal(handle::Handle, n::Int, alpha::Float32, x::CuPtr, incx::Int)
+  scal(handle, n, alpha, x.p, incx)
+end
+function scal(handle::Handle, n::Int, alpha::Float64, x::CuPtr, incx::Int)
+  scal(handle, n, alpha, x.p, incx)
 end
 
 ############################################################
 # y = α x + y
 ############################################################
-function axpy(handle::Handle, n::Int, alpha::Float32, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+function axpy(handle::Handle, n::Int, alpha::Float32, x, incx::Int, y, incy::Int)
+  x = convert(Ptr{Void}, x)
+  y = convert(Ptr{Void}, y)
   alpha_box = Float32[alpha]
   @cublascall(:cublasSaxpy_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint, Ptr{Void}, Cint),
-      handle, n, alpha_box, x.p, incx, y.p, incy)
+      handle, n, alpha_box, x, incx, y, incy)
 end
-function axpy(handle::Handle, n::Int, alpha::Float64, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+function axpy(handle::Handle, n::Int, alpha::Float64, x, incx::Int, y, incy::Int)
+  x = convert(Ptr{Void}, x)
+  y = convert(Ptr{Void}, y)
   alpha_box = Float64[alpha]
   @cublascall(:cublasDaxpy_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint, Ptr{Void}, Cint),
-      handle, n, alpha_box, x.p, incx, y.p, incy)
+      handle, n, alpha_box, x, incx, y, incy)
+end
+function axpy(handle::Handle, n::Int, alpha::Float32, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+  axpy(handle, n, alpha, x.p, incx, y.p, incy)
+end
+function axpy(handle::Handle, n::Int, alpha::Float64, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+  axpy(handle, n, alpha, x.p, incx, y.p, incy)
 end
 
 ############################################################
@@ -140,6 +158,25 @@ function dot(handle::Handle, ::Type{Float64}, n::Int, x::CuPtr, incx::Int, y::Cu
   @cublascall(:cublasDdot_v2, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
       handle, n, x.p, incx, y.p, incy, result)
   return result[1]
+end
+
+############################################################
+# blas copy
+# Note blascopy is copying from x to y, while most of the
+# copy! functions in julia and also for blobs are copying
+# from y to x.
+############################################################
+function copy(handle::Handle, ::Type{Float32}, n::Int, x, incx::Int, y, incy::Int)
+  x = convert(Ptr{Void}, x)
+  y = convert(Ptr{Void}, y)
+  @cublascall(:cublasScopy_v2, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
+      handle, n, x, incx, y, incy)
+end
+function copy(handle::Handle, ::Type{Float64}, n::Int, x, incx::Int, y, incy::Int)
+  x = convert(Ptr{Void}, x)
+  y = convert(Ptr{Void}, y)
+  @cublascall(:cublasDcopy_v2, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
+      handle, n, x, incx, y, incy)
 end
 
 ############################################################

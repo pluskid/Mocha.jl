@@ -59,8 +59,8 @@ include("layers/pooling.jl")
 include("layers/softmax.jl")
 include("layers/power.jl")
 include("layers/split.jl")
-include("layers/element-wise.jl")
 include("layers/channel-pooling.jl")
+include("layers/element-wise.jl")
 include("layers/lrn.jl")
 
 #-- Loss Layers
