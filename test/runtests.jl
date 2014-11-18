@@ -1,5 +1,5 @@
-const test_cpu   = true
-const test_cudnn = false
+const test_cpu   = false
+const test_cudnn = true
 
 if test_cudnn
   ENV["MOCHA_USE_CUDA"] = "true"
@@ -27,6 +27,7 @@ end
 include("utils/blas.jl")
 
 if test_cudnn
+  include("cuda/cuvec.jl")
   include("cuda/mocha.jl")
   include("cuda/cublas.jl")
 end

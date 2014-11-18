@@ -31,6 +31,7 @@ if Config.use_cuda
   include("cuda/cudnn.jl")
   include("cuda/backend.jl")
   include("cuda/blob.jl")
+  include("cuda/utils/math.jl")
 end
 
 include("initializers.jl")

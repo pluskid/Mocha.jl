@@ -1,3 +1,14 @@
+function cuda_geometry(:: ActivationFunction, output :: Blob)
+  width, height, channels, num = size(output)
+  spatial_dim = width*height
+
+  x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X));
+  y_block = int(ceil(float64(channels)/CUDA.THREADS_PER_BLOCK_Y));
+  z_block = int(ceil(float64(spatial_dim)/CUDA.THREADS_PER_BLOCK_Z));
+  return (((x_block,y_block,z_block),(CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z)),
+          (num, channels, spatial_dim))
+end
+
 ############################################################
 # Rectified-Linear
 ############################################################

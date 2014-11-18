@@ -13,6 +13,7 @@ Tutorials
    :maxdepth: 2
 
    tutorial/mnist
+   tutorial/cifar10
 
 ############
 User's Guide

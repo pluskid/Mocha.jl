@@ -1,7 +1,7 @@
 #ENV["MOCHA_USE_CUDA"] = "true"
 ENV["MOCHA_USE_NATIVE_EXT"] = "true"
 ENV["OMP_NUM_THREADS"] = 1
-#blas_set_num_threads(16)
+blas_set_num_threads(1)
 
 using Mocha
 
@@ -46,7 +46,7 @@ lr_policy = LRPolicy.Staged(
   (5000, LRPolicy.Fixed(0.0001)),
   (5000, LRPolicy.Fixed(0.00001)),
 )
-solver_params = SolverParameters(max_iter=20,
+solver_params = SolverParameters(max_iter=70000,
     regu_coef=0.004, momentum=0.9, lr_policy=lr_policy)
 solver = SGD(solver_params)
 
@@ -62,11 +62,11 @@ add_coffee_break(solver,
     Snapshot("snapshots", auto_load=true),
     every_n_iter=5000)
 
-Profile.init(int(1e8), 0.001)
-@profile solve(solver, net)
-open("profile.txt", "w") do out
-  Profile.print(out)
-end
+#Profile.init(int(1e8), 0.001)
+#@profile solve(solver, net)
+#open("profile.txt", "w") do out
+#  Profile.print(out)
+#end
 
-#solve(solver, net)
+solve(solver, net)
 shutdown(sys)

@@ -40,7 +40,7 @@ __device__ void elem_pow(T1 *X, T2 p, int spatial_dim, int channels, int num) {
   __global__ void elem_ ## NAME ## _float(float *X, float *Y, int spatial_dim, int channels, int num) { \
     elem_##NAME(X, Y, spatial_dim, channels, num); \
   } \
-  __global__ void NAME ## _double(double *X, double *Y, int spatial_dim, int channels, int num) { \
+  __global__ void elem_ ## NAME ## _double(double *X, double *Y, int spatial_dim, int channels, int num) { \
     elem_##NAME(X, Y, spatial_dim, channels, num); \
   }
 

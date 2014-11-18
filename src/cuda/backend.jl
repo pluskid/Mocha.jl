@@ -15,6 +15,23 @@ type MochaKernels
   accuracy_forward_float       :: CUDA.CuFunction
   accuracy_forward_double      :: CUDA.CuFunction
 
+  add_scal_float               :: CUDA.CuFunction
+  add_scal_double              :: CUDA.CuFunction
+  elem_add_float               :: CUDA.CuFunction
+  elem_add_double              :: CUDA.CuFunction
+  elem_mul_float               :: CUDA.CuFunction
+  elem_mul_double              :: CUDA.CuFunction
+  elem_sub_float               :: CUDA.CuFunction
+  elem_sub_double              :: CUDA.CuFunction
+  elem_div_float               :: CUDA.CuFunction
+  elem_div_double              :: CUDA.CuFunction
+  elem_div2_float              :: CUDA.CuFunction
+  elem_div2_double             :: CUDA.CuFunction
+  elem_pow_fi                  :: CUDA.CuFunction
+  elem_pow_di                  :: CUDA.CuFunction
+  elem_pow_ff                  :: CUDA.CuFunction
+  elem_pow_dd                  :: CUDA.CuFunction
+
   MochaKernels() = begin
     mod_path = joinpath(dirname(@__FILE__), "kernels", "kernels.ptx")
     mod = CUDA.CuModule(mod_path)
@@ -31,6 +48,22 @@ type MochaKernels
     kernels.accuracy_forward_float = CUDA.CuFunction(mod, "accuracy_forward_float")
     kernels.accuracy_forward_double = CUDA.CuFunction(mod, "accuracy_forward_double")
 
+    kernels.add_scal_float  = CUDA.CuFunction(mod, "add_scal_float")
+    kernels.add_scal_double = CUDA.CuFunction(mod, "add_scal_double")
+    kernels.elem_add_float   = CUDA.CuFunction(mod, "elem_add_float")
+    kernels.elem_add_double  = CUDA.CuFunction(mod, "elem_add_double")
+    kernels.elem_mul_float   = CUDA.CuFunction(mod, "elem_mul_float")
+    kernels.elem_mul_double  = CUDA.CuFunction(mod, "elem_mul_double")
+    kernels.elem_sub_float   = CUDA.CuFunction(mod, "elem_sub_float")
+    kernels.elem_sub_double  = CUDA.CuFunction(mod, "elem_sub_double")
+    kernels.elem_div_float   = CUDA.CuFunction(mod, "elem_div_float")
+    kernels.elem_div_double  = CUDA.CuFunction(mod, "elem_div_double")
+    kernels.elem_div2_float  = CUDA.CuFunction(mod, "elem_div2_float")
+    kernels.elem_div2_double = CUDA.CuFunction(mod, "elem_div2_double")
+    kernels.elem_pow_fi      = CUDA.CuFunction(mod, "elem_pow_fi")
+    kernels.elem_pow_di      = CUDA.CuFunction(mod, "elem_pow_di")
+    kernels.elem_pow_ff      = CUDA.CuFunction(mod, "elem_pow_ff")
+    kernels.elem_pow_dd      = CUDA.CuFunction(mod, "elem_pow_dd")
     return kernels
   end
 end
