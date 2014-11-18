@@ -7,7 +7,7 @@ export LRNLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export AccuracyLayer
 
-export setup, forward, backward
+export setup, forward, backward, shutdown
 
 export reset_statistics, show_statistics
 

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <limits>
 #include <cstring>
+#include <cstdio>
 
 template <typename T>
 void max_pooling_fwd(const T* global_input, T *global_output, size_t *global_mask,
@@ -197,7 +198,7 @@ void mean_pooling_fwd_float(const float* global_input, float *global_output,
     int width, int height, int channels, int num,
     int pooled_width, int pooled_height,
     int kernel_w, int kernel_h, int pad_w, int pad_h, int stride_w, int stride_h) {
-  mean_pooling_fwd_float(global_input, global_output,
+  mean_pooling_fwd(global_input, global_output,
     width, height, channels, num, pooled_width, pooled_height,
     kernel_w, kernel_h, pad_w, pad_h, stride_w, stride_h);
 }

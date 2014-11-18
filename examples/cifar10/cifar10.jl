@@ -61,5 +61,11 @@ add_coffee_break(solver,
     Snapshot("snapshots", auto_load=true),
     every_n_iter=5000)
 
+#Profile.init(int(1e8), 0.001)
+#@profile solve(solver, net)
+#open("profile.txt", "w") do out
+#  Profile.print(out)
+#end
+
 solve(solver, net)
 shutdown(sys)

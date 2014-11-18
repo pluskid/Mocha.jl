@@ -33,7 +33,7 @@ function solve(sgd::SGD, net::Net)
         gradient = state.parameters[j].gradient
         data_type = eltype(hist_blob)
 
-        update_parameters(net, sgd, state.parameters[j].learning_rate * learning_rate, 
+        update_parameters(net, sgd, state.parameters[j].learning_rate * learning_rate,
             state, state.parameters[j].blob, hist_blob, gradient, data_type)
       end
     end
