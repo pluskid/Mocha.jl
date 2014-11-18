@@ -1,5 +1,5 @@
-export cuVec
-module cuVec
+export CuVec
+module CuVec
 using ..Mocha
 
 function cuda_geometry(sp_dim::Int, chann::Int, num::Int)
