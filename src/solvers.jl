@@ -11,7 +11,7 @@ export add_coffee_break, solve
 abstract LearningRatePolicy
 module LRPolicy
 using ..Mocha.LearningRatePolicy
-type Fixed <: LearningRatePolicy 
+type Fixed <: LearningRatePolicy
   base_lr :: FloatingPoint
 end
 
@@ -23,12 +23,12 @@ type Step <: LearningRatePolicy
 end
 
 # base_lr * gamma ^ iter
-type Exp <: LearningRatePolicy 
+type Exp <: LearningRatePolicy
   base_lr :: FloatingPoint
   gamma   :: FloatingPoint
 end
 
-type Inv <: LearningRatePolicy 
+type Inv <: LearningRatePolicy
   base_lr :: FloatingPoint
   gamma   :: FloatingPoint
   power   :: FloatingPoint
@@ -66,6 +66,7 @@ function get_learning_rate(policy::LRPolicy.Staged, state::SolverState)
   if iter >= maxiter
     policy.iter_base = iter
     policy.curr_stage += 1
+    @info("Staged learning rate policy: switching to stage $(policy.curr_stage)")
   end
   return get_learning_rate(policy.stages[policy.curr_stage][2], state)
 end
