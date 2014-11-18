@@ -360,6 +360,7 @@ Remarks
 -------
 
 The accuracy from two different trains are different due to different random
-initialization. The objective function values are also slightly different to
-Caffe's, as Mocha also counts regularizers in the forward stage (see
-:doc:`/user-guide/regularizer`).
+initialization. The objective function values shown here are also slightly
+different to Caffe's, as until recently, Mocha counts regularizers in the
+forward stage and add them into objective functions. This behavior is removed to
+avoid unnecessary computation in more recent versions of Mocha.
