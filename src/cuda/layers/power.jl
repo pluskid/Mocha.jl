@@ -16,13 +16,13 @@ function forward(sys::System{CuDNNBackend}, state::PowerLayerState, inputs::Vect
 
     # output *= scale
     if state.layer.scale != 1
-      CuBLAS.scal(sys.backend.cublas_ctx, length(output), 
+      CuBLAS.scal(sys.backend.cublas_ctx, length(output),
           convert(data_type,state.layer.scale), output.ptr, 1)
     end
 
     if state.layer.shift != 0
       # output += shift
-      CuVec.add_scal!(sys, data_type, output.ptr.p, convert(data_type, state.layer.shift), 
+      CuVec.add_scal!(sys, data_type, output.ptr.p, convert(data_type, state.layer.shift),
           spatial_dim, channels, num)
     end
 
@@ -31,7 +31,8 @@ function forward(sys::System{CuDNNBackend}, state::PowerLayerState, inputs::Vect
       if state.layer.power == 2
         CuVec.mul!(sys, data_type, output.ptr.p, output.ptr.p, spatial_dim, channels, num)
       else
-        CuVec.pow!(sys, data_type, output.ptr.p, state.layer.power, 
+        CuVec.pow!(sys, data_type, output.ptr.p, 
+            isinteger(state.layer.power) ? int(state.layer.power) : convert(data_type, state.layer.power),
             spatial_dim, channels, num)
       end
     end
