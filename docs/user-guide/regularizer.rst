@@ -3,11 +3,13 @@ Regularizers
 
 Regularizers add extra penalties or constraints for network parameters to
 restrict the model complexity. The correspondences in Caffe are weight decays.
-Regularizers and weight decays are equivalent in back-propagation. However, when
-treated as weight decay, they are not considered as parts of the objective function,
-thus computations in the forward pass can be avoided. Mocha chooses the
-regularizers point of view and accumulates regularizers into the objective
-function value in the forward pass.
+Regularizers and weight decays are equivalent in back-propagation. The
+*conceptual* difference in the forward pass is that when treated as weight
+decay, they are not considered as parts of the objective function. However, in
+order to save computation, Mocha also omit forward computation for regularizers
+by default. We choose to use the term regularization instead of weight decay
+just because it is easier to understand when generalizing to sparse,
+group-sparse or even more complicated structural regularizations.
 
 All regularizers have the property ``coefficient``, corresponding to the
 regularization coefficient. During training, a global regularization coefficient
