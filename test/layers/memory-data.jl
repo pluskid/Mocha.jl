@@ -36,6 +36,8 @@ function test_memory_data_layer(sys::System)
   copy!(layer_data, state.blobs[1])
   @test all(-eps .< layer_data - data_aug[data_idx..., 2batch_size+1:3batch_size] .< eps)
   @test state.epoch == 2
+
+  shutdown(sys, state)
 end
 
 if test_cpu

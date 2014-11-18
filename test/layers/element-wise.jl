@@ -42,6 +42,8 @@ function test_element_wise_layer(sys::System, op::ElementWiseFunctorType, jl_op:
   else
     error("Unknown operation $jl_op")
   end
+
+  shutdown(sys, state)
 end
 
 function test_element_wise_layer(sys::System)

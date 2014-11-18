@@ -11,5 +11,5 @@ tar xf $ARCHIVE
 
 julia ../convert.jl
 
-echo train.hdf5 > train.txt
-echo test.hdf5 > test.txt
+echo data/train.hdf5 > train.txt
+echo data/test.hdf5 > test.txt

@@ -32,6 +32,8 @@ function test_split_layer(sys::System)
   got_grad = zeros(size(expected_grad))
   copy!(got_grad, diff_blob)
   @test all(abs(got_grad - expected_grad) .< eps)
+
+  shutdown(sys, state)
 end
 
 if test_cpu

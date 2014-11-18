@@ -100,6 +100,9 @@ end
 function backward(sys::System, state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
 
+function shutdown(sys::System, state::LayerState)
+end
+
 #############################################################
 # Data Layers
 #############################################################

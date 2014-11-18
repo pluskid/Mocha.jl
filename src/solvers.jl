@@ -35,17 +35,40 @@ type Inv <: LearningRatePolicy
 end
 
 type Staged <: LearningRatePolicy
-  stages :: Vector{(Int, LearningRatePolicy)}
+  stages     :: Vector{(Int, LearningRatePolicy)}
+  curr_stage :: Int
+  iter_base  :: Int
+  Staged(stages...) = begin
+    new([(n,convert(LearningRatePolicy,p)) for (n,p) in stages], 1, 0)
+  end
 end
+
 end # module LRPolicy
+
 get_learning_rate(policy::LRPolicy.Fixed, state::SolverState) = policy.base_lr
-get_learning_rate(policy::LRPolicy.Step, state::SolverState) = 
+get_learning_rate(policy::LRPolicy.Step, state::SolverState) =
     policy.base_lr * policy.gamma ^ (floor(state.iter / policy.stepsize))
 get_learning_rate(policy::LRPolicy.Exp, state::SolverState) =
     policy.base_lr * policy.gamma ^ state.iter
 get_learning_rate(policy::LRPolicy.Inv, state::SolverState) =
     policy.base_lr * (1 + policy.gamma * state.iter) ^ (-policy.power)
 
+function get_learning_rate(policy::LRPolicy.Staged, state::SolverState)
+  maxiter = policy.stages[policy.curr_stage][1]
+  if maxiter <= 0 || policy.curr_stage == length(policy.stages)
+    # stay in this stage forever if
+    #  - maxiter is set to 0
+    #  - this is already the last stage
+    return get_learning_rate(policy.stages[policy.curr_stage][2], state)
+  end
+
+  iter = state.iter - policy.iter_base
+  if iter >= maxiter
+    policy.iter_base = iter
+    policy.curr_stage += 1
+  end
+  return get_learning_rate(policy.stages[policy.curr_stage][2], state)
+end
 
 @defstruct SolverParameters Any (
   lr_policy :: LearningRatePolicy = LRPolicy.Fixed(0.01),
@@ -85,7 +108,7 @@ function update_solver_state(state::SolverState, obj_val :: Float64)
   state.obj_val = obj_val
 end
 function stop_condition_satisfied(solver::Solver, state::SolverState, net::Net)
-  if state.iter > solver.params.max_iter
+  if state.iter >= solver.params.max_iter
     return true
   end
   return false

@@ -61,6 +61,8 @@ function test_inner_product_layer(sys::System)
   back_grad = similar(X_mat)
   copy!(back_grad, diffs[1])
   @test all(-eps .< vec(back_grad) - vec(W * top_diff) .< eps)
+
+  shutdown(sys, state)
 end
 
 if test_cpu

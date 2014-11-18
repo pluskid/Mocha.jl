@@ -45,6 +45,8 @@ function test_softmax_loss_layer(sys::System)
   copy!(grad, diff_blob)
 
   @test all(-eps .< grad - expected_grad .< eps)
+
+  shutdown(sys, state)
 end
 
 if test_cpu

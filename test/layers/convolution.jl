@@ -73,6 +73,8 @@ function test_convolution_layer(sys::System)
   for i = 1:length(gradients_expected)
     @test all(-eps .< gradients_got[i] - gradients_expected[i] .< eps)
   end
+
+  shutdown(sys, state)
 end
 
 # naive implementation of convolution forward, used to check the correctness

@@ -28,6 +28,8 @@ function test_softmax_layer(sys::System)
   copy!(got_output, state.blobs[1])
 
   @test all(-eps .< output - got_output .< eps)
+
+  shutdown(sys, state)
 end
 
 if test_cpu

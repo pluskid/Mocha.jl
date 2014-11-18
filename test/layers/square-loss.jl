@@ -40,6 +40,8 @@ function test_square_loss_layer(sys::System)
   copy!(diff, diffs[1])
 
   @test all(-eps .< grad - diff .< eps)
+
+  shutdown(sys, state)
 end
 
 if test_cpu

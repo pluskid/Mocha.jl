@@ -44,6 +44,8 @@ function test_accuracy_layer(sys::System)
   forward(sys, state, inputs)
   @test state.n_accum == width*height*num
   @test abs(state.accuracy - expected_acc) < eps
+
+  shutdown(sys, state)
 end
 
 if test_cpu
