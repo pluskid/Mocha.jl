@@ -1,3 +1,4 @@
+export Vec
 module Vec
 
 # X[i] += a
