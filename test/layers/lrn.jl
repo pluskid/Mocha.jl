@@ -3,7 +3,8 @@ function test_lrn_layer(sys::System, mode::LRNModeType)
   println("    > Setup")
 
   eps = 1e-5
-  input = float(int(100*rand(7,8,9,10)))/100
+  #input = float(int(100*rand(7,8,9,10)))/100
+  input = rand(7,8,9,10)
   input_blobs = Blob[make_blob(sys.backend, input)]
   diff_blobs = Blob[make_blob(sys.backend, input)]
 
@@ -20,7 +21,8 @@ function test_lrn_layer(sys::System, mode::LRNModeType)
   @test all(abs(got_output - expected_output) .< eps)
 
   println("    > Backward")
-  top_diff = float(int(100*rand(size(input))))/100
+  #top_diff = float(int(100*rand(size(input))))/100
+  top_diff = rand(size(input))
   copy!(state.blobs_diff[1], top_diff)
   backward(sys, state, input_blobs, diff_blobs)
   got_grad = zeros(size(input))
