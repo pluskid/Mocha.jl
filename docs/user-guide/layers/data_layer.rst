@@ -19,6 +19,12 @@ Data Layers
    if the label for each sample is only one number, the HDF5 dataset should
    still be created with dimension (1, 1, 1, number).
 
+   The numerical types of the HDF5 datasets should either be ``Float32`` or
+   ``Float64``. Even for multi-class labels, the integer class indicators should
+   still be stored as floating point. Note for N class multi-class labels, the
+   labels should be numerical values from 0 to N-1, even though Julia use
+   1-based indexing (See :class:`SoftmaxLossLayer`).
+
    The HDF5 dataset format is compatible with Caffe. If you want to compare
    the results of Mocha to Caffe on the same data, you could use Caffe's HDF5
    Data Layer to read from the same HDF5 files Mocha is using.
@@ -34,9 +40,9 @@ Data Layers
 
    .. attribute:: tops
 
-      List of symbols, specifying the name of the blobs to feed to the top
-      layers. The names also correspond to the datasets to load from the HDF5
-      files specified in the data source.
+      Default ``[:data, :label]``. List of symbols, specifying the name of the
+      blobs to feed to the top layers. The names also correspond to the datasets
+      to load from the HDF5 files specified in the data source.
 
 .. class:: MemoryDataLayer
 

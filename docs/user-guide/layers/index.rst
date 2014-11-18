@@ -7,3 +7,4 @@ Layers
    overview
    data_layer
    computation_layer
+   loss_layer
