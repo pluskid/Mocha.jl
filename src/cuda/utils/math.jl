@@ -38,6 +38,23 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
   end
 end
 
+# define add!, sub!, mul!, div!, div2! for blobs
+for name in [:add, :sub, :mul, :div, :div2]
+  @eval begin
+    function $(symbol("$(name)!")){T}(sys::System{CuDNNBackend}, X::CuTensorBlob{T}, Y::CuTensorBlob{T})
+      width, height, channels, num = size(X)
+      sp_dim = width*height
+      $(symbol("$(name)!"))(sys, T, X.ptr.p, Y.ptr.p, sp_dim, channels, num)
+    end
+  end
+end
+function add_scal!{T}(sys::System{CuDNNBackend}, X::CuTensorBlob{T}, Y)
+  Y = convert(T, Y)
+  width, height, channels, num = size(X)
+  sp_dim = width*height
+  add_scal!(sys, T, X.ptr.p, Y, sp_dim, channels, num)
+end
+
 for (postfix, dt1, dt2) in [(:fi, Float32, Int), (:di, Float64, Int),
                             (:ff, Float32, Float32), (:dd, Float64, Float64)]
   @eval begin

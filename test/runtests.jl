@@ -1,5 +1,5 @@
-const test_cpu   = true
-const test_cudnn = false
+const test_cpu   = false
+const test_cudnn = true
 
 if test_cudnn
   ENV["MOCHA_USE_CUDA"] = "true"
@@ -59,8 +59,8 @@ include("layers/pooling.jl")
 include("layers/softmax.jl")
 include("layers/power.jl")
 include("layers/split.jl")
-include("layers/channel-pooling.jl")
 include("layers/element-wise.jl")
+include("layers/channel-pooling.jl")
 include("layers/lrn.jl")
 
 #-- Loss Layers
