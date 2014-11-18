@@ -37,9 +37,17 @@ end
 type Staged <: LearningRatePolicy
   stages     :: Vector{(Int, LearningRatePolicy)}
   curr_stage :: Int
-  iter_base  :: Int
+
   Staged(stages...) = begin
-    new([(n,convert(LearningRatePolicy,p)) for (n,p) in stages], 1, 0)
+    accum_stages = Array((Int, LearningRatePolicy), length(stages))
+    accum_iter = 0
+    for i = 1:length(stages)
+      (n, lrp) = stages[i]
+      accum_iter += n
+      accum_stages[i] = (accum_iter, convert(LearningRatePolicy, lrp))
+    end
+
+    new(accum_stages, 1)
   end
 end
 
@@ -54,19 +62,15 @@ get_learning_rate(policy::LRPolicy.Inv, state::SolverState) =
     policy.base_lr * (1 + policy.gamma * state.iter) ^ (-policy.power)
 
 function get_learning_rate(policy::LRPolicy.Staged, state::SolverState)
-  maxiter = policy.stages[policy.curr_stage][1]
-  if maxiter <= 0 || policy.curr_stage == length(policy.stages)
-    # stay in this stage forever if
-    #  - maxiter is set to 0
-    #  - this is already the last stage
-    return get_learning_rate(policy.stages[policy.curr_stage][2], state)
-  end
-
-  iter = state.iter - policy.iter_base
-  if iter >= maxiter
-    policy.iter_base = iter
-    policy.curr_stage += 1
-    @info("Staged learning rate policy: switching to stage $(policy.curr_stage)")
+  if policy.curr_stage == length(policy.stages)
+    # already in the last stage, stick there forever
+  else
+    maxiter = policy.stages[policy.curr_stage][1]
+    while state.iter >= maxiter && policy.curr_stage < length(policy.stages)
+      policy.curr_stage += 1
+      @info("Staged learning rate policy: switching to stage $(policy.curr_stage)")
+      maxiter = policy.stages[policy.curr_stage][1]
+    end
   end
   return get_learning_rate(policy.stages[policy.curr_stage][2], state)
 end
