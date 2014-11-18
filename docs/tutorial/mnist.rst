@@ -179,7 +179,7 @@ deep network.
 .. code-block:: julia
 
    params = SolverParameters(max_iter=10000, regu_coef=0.0005,
-       base_lr=0.01, momentum=0.9, lr_policy=LRPolicy.Inv(0.0001, 0.75))
+       momentum=0.9, lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75))
    solver = SGD(params)
 
 The behavior of the solver is specified in the following parameters
@@ -193,9 +193,6 @@ The behavior of the solver is specified in the following parameters
   customized for each layer individually. The parameter here is just a
   global scaling factor for all the local regularization coefficients
   if any.
-``base_lr``
-  This is the base learning rate. Again this is a global scaling
-  factor, and each layer could specify their own local learning rate.
 ``momentum``
   The momentum used in SGD. See the `Caffe document
   <http://caffe.berkeleyvision.org/tutorial/solver.html>`_ for *rules

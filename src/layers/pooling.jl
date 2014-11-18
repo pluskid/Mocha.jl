@@ -5,7 +5,8 @@
   (kernel :: NTuple{2, Int} = (1,1), all([kernel...] .> 0)),
   (stride :: NTuple{2, Int} = (1,1), all([stride...] .> 0)),
   (pad :: NTuple{2, Int} = (0,0), all([pad...] .>= 0)),
-  pooling :: PoolingFunction = Pooling.Max()
+  pooling :: PoolingFunction = Pooling.Max(),
+  neuron :: ActivationFunction = Neurons.Identity(),
 )
 
 type PoolingLayerState <: LayerState

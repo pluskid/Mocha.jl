@@ -26,11 +26,9 @@ function test_lrn_layer(sys::System, mode::LRNModeType)
   got_grad = zeros(size(input))
   copy!(got_grad, diff_blobs[1])
   expected_grad = lrn_backward(input, top_diff, state)
-  #println("in $(input[:])")
-  #println("top_diff $(top_diff[:])")
-  #println("exp $(expected_grad[:])")
-  #println("got $(got_grad[:])")
   @test all(abs(got_grad - expected_grad) .< eps)
+
+  shutdown(sys, state)
 end
 
 function lrn_forward_across_channel{T}(input::Array{T}, state)

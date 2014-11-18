@@ -22,7 +22,7 @@ function solve(sgd::SGD, net::Net)
     check_coffee_breaks(CoffeeBreakTime.Morning(), sgd, solver_state, net)
 
     obj_val = forward_backward(net)
-    learning_rate = get_learning_rate(sgd.params.lr_policy, sgd.params.base_lr, solver_state)
+    learning_rate = get_learning_rate(sgd.params.lr_policy, solver_state)
 
     # update parameters
     for i = 1:length(param_states)
@@ -33,7 +33,7 @@ function solve(sgd::SGD, net::Net)
         gradient = state.parameters[j].gradient
         data_type = eltype(hist_blob)
 
-        update_parameters(net, sgd, state.parameters[j].learning_rate * learning_rate, 
+        update_parameters(net, sgd, state.parameters[j].learning_rate * learning_rate,
             state, state.parameters[j].blob, hist_blob, gradient, data_type)
       end
     end

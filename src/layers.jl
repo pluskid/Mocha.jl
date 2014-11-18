@@ -7,7 +7,7 @@ export LRNLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export AccuracyLayer
 
-export setup, forward, backward
+export setup, forward, backward, shutdown
 
 export reset_statistics, show_statistics
 
@@ -98,6 +98,9 @@ end
 # Default procedures for layers that do not need them
 #############################################################
 function backward(sys::System, state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+end
+
+function shutdown(sys::System, state::LayerState)
 end
 
 #############################################################

@@ -48,6 +48,8 @@ function test_pooling_layer(sys::System, pooling::PoolingFunction, has_padding::
   got_grad = similar(expected_grad)
   copy!(got_grad, diffs[1])
   @test all(-eps .< expected_grad - got_grad .< eps)
+
+  shutdown(sys, state)
 end
 
 function pooling_forward(state, input::Array)

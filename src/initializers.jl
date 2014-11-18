@@ -2,6 +2,7 @@
 export Initializer
 export ConstantInitializer
 export XavierInitializer
+export GaussianInitializer
 
 abstract Initializer # The root type of all initializer
 
@@ -37,13 +38,14 @@ function init(initializer::XavierInitializer, blob::Blob)
   copy!(blob, init_val)
 end
 
-
 type GaussianInitializer <: Initializer
   mean :: FloatingPoint
   std  :: FloatingPoint
 end
 GaussianInitializer(;mean=0.0, std=1.0) = GaussianInitializer(mean, std)
+
 function init(initializer::GaussianInitializer, blob::Blob)
   init_val = randn(size(blob)) * initializer.std + initializer.mean
+  init_val = convert(Array{eltype(blob)}, init_val)
   copy!(blob, init_val)
 end

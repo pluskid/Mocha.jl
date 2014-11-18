@@ -28,6 +28,8 @@ function test_power_layer(sys::System, scale, shift, power)
   got_grad = zeros(size(grad))
   copy!(got_grad, grad_blob)
   @test all(-eps .< got_grad - grad .< eps)
+
+  shutdown(sys, state)
 end
 
 function test_power_layer(sys::System)

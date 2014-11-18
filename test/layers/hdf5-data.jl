@@ -50,6 +50,7 @@ function test_hdf5_data_layer(sys::System)
   ############################################################
   # Clean up
   ############################################################
+  shutdown(sys, state)
   rm(source_fn)
   for fn in h5fn_all
     rm(fn)

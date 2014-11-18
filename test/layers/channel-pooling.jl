@@ -35,6 +35,8 @@ function test_channel_pooling_layer(sys::System, pooling::PoolingFunction)
   got_output = similar(expected_output)
   copy!(got_output, diffs[1])
   @test all(-eps .< expected_output - got_output .< eps)
+
+  shutdown(sys, state)
 end
 
 function channel_pooling_forward(state, input::Array)

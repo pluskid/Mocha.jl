@@ -27,9 +27,9 @@ function test_multinomial_logistic_loss_layer(sys::System)
   end
   expected_loss /= (width*height*num)
 
-  #println("loss = $(state.loss)")
-  #println("expected_loss = $expected_loss")
   @test -eps < state.loss - expected_loss < eps
+
+  shutdown(sys, state)
 end
 
 if test_cpu
