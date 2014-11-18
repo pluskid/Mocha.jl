@@ -10,8 +10,8 @@ include("layers/inner-product.jl")
 include("layers/convolution.jl")
 include("layers/pooling.jl")
 include("layers/softmax.jl")
-
 include("layers/power.jl")
+include("layers/split.jl")
 
 #############################################################
 # Loss Layers
