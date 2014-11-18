@@ -1,0 +1,40 @@
+/**
+ * Helper utilities to copy a 4D tensor to a width-height padded 4D tensor
+ * and back. Used in pooling to do explict padding because CuDNN does not
+ * support padded pooling yet.
+ */
+#define PADCOPY_BOUNDS_AND_INDEX \
+  int n = threadIdx.x + blockIdx.x * blockDim.x; \
+  int w = threadIdx.y + blockIdx.y * blockDim.y; \
+  int h = threadIdx.z + blockIdx.z * blockDim.z; \
+  if (n >= chann_num || w >= width || h >= height) \
+    return; \
+  int padded_width = width + 2*pw; \
+  int padded_height = height + 2*ph; \
+  int idx = w + width*(h + n*height); \
+  int pad_idx = pw + w + padded_width*(ph+h + n*padded_height)
+
+template <typename T>
+__device__ void dense_to_padded(T *dst, T *src, int width, int height, int pw, int ph, int chann_num) {
+  PADCOPY_BOUNDS_AND_INDEX;
+  dst[pad_idx] = src[idx];
+}
+template <typename T>
+__device__ void padded_to_dense(T *dst, T *src, int width, int height, int pw, int ph, int chann_num) {
+  PADCOPY_BOUNDS_AND_INDEX;
+  dst[idx] = src[pad_idx];
+}
+
+#define DEF_PAD_COPY(name, dtype) \
+  __global__ void name ## _ ## dtype(dtype *dst, dtype *src, int width, int height, int pw, int ph, int chann_num) { \
+    name(dst, src, width, height, pw, ph, chann_num); \
+  }
+
+extern "C" {
+DEF_PAD_COPY(dense_to_padded, float)
+DEF_PAD_COPY(dense_to_padded, double)
+DEF_PAD_COPY(padded_to_dense, float)
+DEF_PAD_COPY(padded_to_dense, double)
+} // extern "C"
+
+// vim: ft=cuda

@@ -37,6 +37,11 @@ type MochaKernels
   max_channel_pooling_backward_float  :: CUDA.CuFunction
   max_channel_pooling_backward_double :: CUDA.CuFunction
 
+  dense_to_padded_float        :: CUDA.CuFunction
+  dense_to_padded_double       :: CUDA.CuFunction
+  padded_to_dense_float        :: CUDA.CuFunction
+  padded_to_dense_double       :: CUDA.CuFunction
+
   MochaKernels() = begin
     mod_path = joinpath(dirname(@__FILE__), "kernels", "kernels.ptx")
     mod = CUDA.CuModule(mod_path)
@@ -74,6 +79,11 @@ type MochaKernels
     kernels.max_channel_pooling_forward_double  = CUDA.CuFunction(mod, "max_channel_pooling_forward_double")
     kernels.max_channel_pooling_backward_float  = CUDA.CuFunction(mod, "max_channel_pooling_backward_float")
     kernels.max_channel_pooling_backward_double = CUDA.CuFunction(mod, "max_channel_pooling_backward_double")
+
+    kernels.dense_to_padded_float  = CUDA.CuFunction(mod, "dense_to_padded_float")
+    kernels.dense_to_padded_double = CUDA.CuFunction(mod, "dense_to_padded_double")
+    kernels.padded_to_dense_float  = CUDA.CuFunction(mod, "padded_to_dense_float")
+    kernels.padded_to_dense_double = CUDA.CuFunction(mod, "padded_to_dense_double")
     return kernels
   end
 end

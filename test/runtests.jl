@@ -27,6 +27,7 @@ end
 include("utils/blas.jl")
 
 if test_cudnn
+  include("cuda/padded_copy.jl")
   include("cuda/cuvec.jl")
   include("cuda/mocha.jl")
   include("cuda/cublas.jl")

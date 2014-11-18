@@ -32,6 +32,7 @@ if Config.use_cuda
   include("cuda/backend.jl")
   include("cuda/blob.jl")
   include("cuda/utils/math.jl")
+  include("cuda/utils/padded_copy.jl")
 end
 
 include("initializers.jl")
