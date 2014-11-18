@@ -79,12 +79,17 @@ function forward(net::Net)
       obj_val += net.states[i].loss
     end
 
-    # handle regularization
-    if isa(net.layers[i], TrainableLayer)
-      for param in net.states[i].parameters
-        obj_val += forward(net.sys, param.regularizer, param.blob)
-      end
-    end
+    #-- Whether or not computing regularizer forward does not affect the
+    #-- back propagation results. It just makes the objective function
+    #-- look more "consistent". To comment out the computation by default
+    #-- just to save computational resources.
+    #
+    # # handle regularization
+    # if isa(net.layers[i], TrainableLayer)
+    #   for param in net.states[i].parameters
+    #     obj_val += forward(net.sys, param.regularizer, param.blob)
+    #   end
+    # end
   end
 
   return obj_val

@@ -12,11 +12,6 @@ function test_relu_neuron(sys::System)
   got_data = zeros(size(data))
   copy!(got_data, data_blob)
 
-  #diff_idx = find(abs(got_data - expected_data) .> eps)
-  #println("diff-idx = $diff_idx")
-  #println("$(got_data[diff_idx])")
-  #println("$(expected_data[diff_idx])")
-
   @test all(-eps .< got_data - expected_data .< eps)
 
   println("    > Backward")
@@ -24,7 +19,7 @@ function test_relu_neuron(sys::System)
   grad_blob = make_blob(sys.backend, grad)
   backward(sys, neuron, data_blob, grad_blob)
 
-  expected_grad = grad .* (expected_data .> 0)
+  expected_grad = grad .* (data .> 0)
   got_grad = zeros(size(expected_grad))
   copy!(got_grad, grad_blob)
 

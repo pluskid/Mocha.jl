@@ -4,6 +4,8 @@
 
 #define LOG_THRESHOLD 1e-20
 
+#include "elementwise.impl"
+
 #include "logistic_loss.impl"
 #include "softmax_loss.impl"
 

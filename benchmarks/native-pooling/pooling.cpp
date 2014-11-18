@@ -42,10 +42,6 @@ void max_pooling_impl(const T *global_input, T *global_output, size_t *global_ma
           mask[pool_index] = maxidx;
         }
       }
-
-      //input += input_offset;
-      //output += output_offset;
-      //mask += output_offset;
     }
   }
 }

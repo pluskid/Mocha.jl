@@ -29,7 +29,14 @@ for (key, sources) in datasets
         rp = randperm(batch_size)
 
         label = convert(Array{Float32},mat[1, rp])
-        img = convert(Array{Float32},mat[2:end, rp]) / 256 # scale into [0,1)
+        # If I divide by 256 as in the MNIST example, then
+        # training on the giving DNN gives me random
+        # performance: objective function not changing,
+        # and test performance is always 10%...
+        # The same results could be observed when
+        # running Caffe, as our HDF5 dataset is
+        # compatible with Caffe.
+        img = convert(Array{Float32},mat[2:end, rp])
         img = reshape(img, width, height, channels, batch_size)
 
         if key == "train"
