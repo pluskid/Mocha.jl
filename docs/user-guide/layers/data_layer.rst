@@ -19,6 +19,10 @@ Data Layers
    if the label for each sample is only one number, the HDF5 dataset should
    still be created with dimension (1, 1, 1, number).
 
+   The HDF5 dataset format is compatible with Caffe. If you want to compare
+   the results of Mocha to Caffe on the same data, you could use Caffe's HDF5
+   Data Layer to read from the same HDF5 files Mocha is using.
+
    .. attribute:: source
 
       File name of the data source. The source should be a text file, in which
