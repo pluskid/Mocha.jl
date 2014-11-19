@@ -2,8 +2,9 @@ function setup_etc(sys::System{CuDNNBackend}, layer::DropoutLayer, inputs::Vecto
   cuda_rand_states = Array(CuPtr, length(inputs))
   kernel = sys.backend.mocha.dropout_init
   rnd_state_size = Csize_t[0]
-  CUDA.launch(sys.backend.mocha.dropout_alloc_size, 1, 1, (rnd_state_size))
+  CUDA.launch(sys.backend.mocha.dropout_alloc_size, 1, 1, (rnd_state_size, ))
   rnd_state_size = rnd_state_size[1]
+  @debug("rnd_state_size = $rnd_state_size")
 
   for i = 1:length(inputs)
     len = length(inputs[i])
@@ -23,6 +24,7 @@ end
 
 function forward(sys::System{CuDNNBackend}, state::DropoutLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
+    len = length(inputs[i])
     x_block = int(ceil(float64(len)/CUDA.THREADS_PER_BLOCK_X))
     data_type = eltype(inputs[i])
     if data_type == Float32
@@ -38,9 +40,10 @@ function forward(sys::System{CuDNNBackend}, state::DropoutLayerState, inputs::Ve
   end
 end
 
-function backward(sys::System{CPUBackend}, state::DropoutLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(sys::System{CuDNNBackend}, state::DropoutLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   for i = 1:length(diffs)
     if !isa(diffs[i], NullBlob)
+      len = length(inputs[i])
       x_block = int(ceil(float64(len)/CUDA.THREADS_PER_BLOCK_X))
       data_type = eltype(inputs[i])
       if data_type == Float32

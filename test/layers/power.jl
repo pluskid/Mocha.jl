@@ -31,21 +31,24 @@ function test_power_layer(sys::System, scale, shift, power, T, eps)
   shutdown(sys, state)
 end
 
+function simple_rand()
+  int(100*rand())/100
+end
 function test_power_layer(sys::System, T, eps)
   println("-- Testing PowerLayer on $(typeof(sys.backend)){$T}...")
-  test_power_layer(sys, rand(), rand(), 2, T, eps)
-  test_power_layer(sys, 0, rand(), abs(rand(Int)) % 5 + 2, T, eps)
-  test_power_layer(sys, rand(), rand(), 2, T, eps)
-  test_power_layer(sys, rand(), 0, 3, T, eps)
-  test_power_layer(sys, rand(), rand(), 4, T, eps)
+  test_power_layer(sys, simple_rand(), simple_rand(), 2, T, eps)
+  test_power_layer(sys, 0, simple_rand(), abs(rand(Int)) % 5 + 2, T, eps)
+  test_power_layer(sys, simple_rand(), simple_rand(), 2, T, eps)
+  test_power_layer(sys, simple_rand(), 0, 3, T, eps)
+  test_power_layer(sys, simple_rand(), simple_rand(), 4, T, eps)
 
-  test_power_layer(sys, rand(), rand(), 0, T, eps)
-  test_power_layer(sys, rand(), rand(), 1, T, eps)
-  test_power_layer(sys, rand(), rand(), -1, T, eps)
+  test_power_layer(sys, simple_rand(), simple_rand(), 0, T, eps)
+  test_power_layer(sys, simple_rand(), simple_rand(), 1, T, eps)
+  test_power_layer(sys, simple_rand(), simple_rand(), -1, T, eps)
 end
 
 function test_power_layer(sys::System)
-  test_power_layer(sys, Float32, 1e-3)
+  test_power_layer(sys, Float32, 1e-4)
   test_power_layer(sys, Float64, 1e-10)
 end
 
