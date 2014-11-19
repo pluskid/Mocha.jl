@@ -31,8 +31,8 @@ __global__ void dropout_init(curandState *state, int len) {
     curand_init(3085, idx, 0, &state[idx]);
 }
 
-__global__ void dropout_alloc_size(size_t *psize) {
-  *psize = sizeof(curandState);
+__global__ void dropout_alloc_size(double *psize) {
+  *psize = (double)sizeof(curandState);
 }
 
 DEF_DROPOUT_API(dropout_forward, float)

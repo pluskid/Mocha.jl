@@ -37,7 +37,8 @@ function test_element_wise_layer(sys::System, op::ElementWiseFunctorType, jl_op:
     @test all(abs(got_grads[2] - top_diff.*inputs[1]) .< eps)
   elseif jl_op == (./)
     @test all(abs(got_grads[1] - top_diff./inputs[2]) .< eps)
-    @test all(abs(got_grads[2] + top_diff.*inputs[1]./(inputs[2].*inputs[2])) .< eps)
+    #@test all(abs(got_grads[2] + top_diff.*inputs[1]./(inputs[2].*inputs[2])) .< eps)
+    @test all(abs(got_grads[2] + top_diff.*got_res./inputs[2]) .< eps)
   else
     error("Unknown operation $jl_op")
   end

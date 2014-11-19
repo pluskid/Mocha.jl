@@ -1,7 +1,6 @@
-function test_l2_regularizer(sys::System, T)
+function test_l2_regularizer(sys::System, T, eps)
   println("-- Testing L2 regularizer on $(typeof(sys.backend)){$T}...")
 
-  eps = 1e-10
   param = rand(T, 2,3,4,5) - 0.5
   param_blob = make_blob(sys.backend, param)
   regu = L2Regu(1)
@@ -19,8 +18,8 @@ function test_l2_regularizer(sys::System, T)
 end
 
 function test_l2_regularizer(sys::System)
-  test_l2_regularizer(sys, Float32)
-  test_l2_regularizer(sys, Float64)
+  test_l2_regularizer(sys, Float32, 1e-5)
+  test_l2_regularizer(sys, Float64, 1e-10)
 end
 
 if test_cpu

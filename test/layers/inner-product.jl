@@ -1,4 +1,4 @@
-function test_inner_product_layer(sys::System, T)
+function test_inner_product_layer(sys::System, T, eps)
   println("-- Testing InnerProductLayer on $(typeof(sys.backend)){$T}...")
 
   ############################################################
@@ -8,7 +8,6 @@ function test_inner_product_layer(sys::System, T)
   orig_dim_all = (10, 20, 3)
   orig_dim     = prod(orig_dim_all)
   target_dim   = 30
-  eps          = 1e-10
 
   X = rand(T, orig_dim_all..., batch_size)
   W = rand(T, orig_dim, target_dim)
@@ -65,8 +64,8 @@ function test_inner_product_layer(sys::System, T)
   shutdown(sys, state)
 end
 function test_inner_product_layer(sys::System)
-  test_inner_product_layer(sys, Float32)
-  test_inner_product_layer(sys, Float64)
+  test_inner_product_layer(sys, Float32, 1e-3)
+  test_inner_product_layer(sys, Float64, 1e-10)
 end
 
 if test_cpu
