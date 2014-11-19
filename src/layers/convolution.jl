@@ -100,8 +100,8 @@ type ConvolutionLayerState <: LayerState
 
     etc = setup_etc(sys, layer, dtype, width, height, channels, batch_size, width_out, height_out, inputs)
 
-    parameters = [Parameter(filter, ∇filter, layer.filter_init, layer.filter_regu, layer.filter_lr),
-                  Parameter(bias, ∇bias, layer.bias_init, layer.bias_regu, layer.bias_lr)]
+    parameters = [Parameter("filter", filter, ∇filter, layer.filter_init, layer.filter_regu, layer.filter_lr),
+                  Parameter("bias", bias, ∇bias, layer.bias_init, layer.bias_regu, layer.bias_lr)]
 
     state = new(layer, blobs, blobs_diff, parameters)
     state.filter = filter

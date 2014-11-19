@@ -63,8 +63,8 @@ type InnerProductLayerState <: LayerState
     state.bias_multiplier = make_blob(sys.backend, data_type, nums)
     fill!(state.bias_multiplier, 1)
 
-    state.parameters = [Parameter(state.W, state.∇W, layer.weight_init, layer.weight_regu, layer.weight_lr),
-                        Parameter(state.b, state.∇b, layer.bias_init, layer.bias_regu, layer.bias_lr)]
+    state.parameters = [Parameter("weight", state.W, state.∇W, layer.weight_init, layer.weight_regu, layer.weight_lr),
+                        Parameter("bias", state.b, state.∇b, layer.bias_init, layer.bias_regu, layer.bias_lr)]
 
     return state
   end

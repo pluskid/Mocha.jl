@@ -1,6 +1,7 @@
 export Parameter
 
 type Parameter
+  name          :: String
   blob          :: Blob
   gradient      :: Blob
   initializer   :: Initializer
