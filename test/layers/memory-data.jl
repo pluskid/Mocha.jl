@@ -1,5 +1,5 @@
-function test_memory_data_layer(sys::System)
-  println("-- Testing Memory Data Layer on $(typeof(sys.backend))...")
+function test_memory_data_layer(sys::System, T)
+  println("-- Testing Memory Data Layer on $(typeof(sys.backend)){$T}...")
 
   ############################################################
   # Prepare Data for Testing
@@ -8,7 +8,7 @@ function test_memory_data_layer(sys::System)
   data_dim = (2,3,4)
   eps = 1e-15
 
-  data = rand(data_dim..., 9)
+  data = rand(T, data_dim..., 9)
 
   ############################################################
   # Setup
@@ -38,6 +38,10 @@ function test_memory_data_layer(sys::System)
   @test state.epoch == 2
 
   shutdown(sys, state)
+end
+function test_memory_data_layer(sys::System)
+  test_memory_data_layer(sys, Float32)
+  test_memory_data_layer(sys, Float64)
 end
 
 if test_cpu

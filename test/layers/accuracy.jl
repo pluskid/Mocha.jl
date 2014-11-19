@@ -1,13 +1,13 @@
-function test_accuracy_layer(sys::System)
-  println("-- Testing AccuracyLayer on $(typeof(sys.backend))...")
+function test_accuracy_layer(sys::System, T)
+  println("-- Testing AccuracyLayer on $(typeof(sys.backend)){$T}...")
 
   eps = 1e-5
   width, height, channels, num = (5, 6, 7, 8)
-  input = rand(width, height, channels, num)
+  input = rand(T, width, height, channels, num)
   input_blob = make_blob(sys.backend, input)
 
   label = abs(rand(Int, (width, height, 1, num))) % channels
-  label = convert(Array{Float64}, label)
+  label = convert(Array{T}, label)
   label_blob = make_blob(sys.backend, label)
 
   inputs = Blob[input_blob, label_blob]
@@ -46,6 +46,10 @@ function test_accuracy_layer(sys::System)
   @test abs(state.accuracy - expected_acc) < eps
 
   shutdown(sys, state)
+end
+function test_accuracy_layer(sys::System)
+  test_accuracy_layer(sys, Float32)
+  test_accuracy_layer(sys, Float64)
 end
 
 if test_cpu
