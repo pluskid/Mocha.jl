@@ -15,9 +15,12 @@ function solve(sgd::SGD, net::Net)
   end
 
   init(net)
+
+  @debug("Initializing coffee breaks")
   init_coffee_breaks(sgd, net)
   solver_state = SolverState(0, 0.0)
 
+  @debug("Entering solver loop")
   while true
     check_coffee_breaks(CoffeeBreakTime.Morning(), sgd, solver_state, net)
 

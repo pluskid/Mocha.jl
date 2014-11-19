@@ -40,7 +40,7 @@ function setup_etc(sys::System{CPUBackend}, layer::ConvolutionLayer, dtype, widt
   M = height_out * width_out
   N = div(layer.n_filter, layer.n_group)
   K = div(channels * layer.kernel[1] * layer.kernel[2], layer.n_group)
-  bias_multiplier = CPUBlob(dtype, M)
+  bias_multiplier = CPUBlob(dtype, M, 1, 1, 1)
   fill!(bias_multiplier, convert(dtype,1))
   img_buffer = Array(dtype, width, height, channels)
   etc = CPUConvState(col_buffer, M, N, K, bias_multiplier, img_buffer)
@@ -94,8 +94,8 @@ type ConvolutionLayerState <: LayerState
           div(channels,layer.n_group), layer.n_filter)
       ∇filter = make_blob(sys.backend, dtype, layer.kernel[1], layer.kernel[2],
           div(channels,layer.n_group), layer.n_filter)
-      bias = make_blob(sys.backend, dtype, layer.n_filter)
-      ∇bias = make_blob(sys.backend, dtype, layer.n_filter)
+      bias = make_blob(sys.backend, dtype, layer.n_filter, 1, 1, 1)
+      ∇bias = make_blob(sys.backend, dtype, layer.n_filter, 1, 1, 1)
     end
 
     etc = setup_etc(sys, layer, dtype, width, height, channels, batch_size, width_out, height_out, inputs)

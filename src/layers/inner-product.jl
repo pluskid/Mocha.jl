@@ -39,14 +39,14 @@ type InnerProductLayerState <: LayerState
     blobs_diff = Array(Blob, length(inputs))
 
     for i = 1:length(inputs)
-      blobs[i] = make_blob(sys.backend, data_type, out_dim, nums)
-      blobs_diff[i] = make_blob(sys.backend, data_type, out_dim, nums)
+      blobs[i] = make_blob(sys.backend, data_type, 1, 1, out_dim, nums)
+      blobs_diff[i] = make_blob(sys.backend, data_type, 1, 1, out_dim, nums)
     end
 
     state = new(layer, blobs, blobs_diff)
 
     if isa(shared_state, InnerProductLayerState)
-      @assert size(shared_state.W) == (1, 1, fea_size, out_dim)
+      @assert size(shared_state.W) == (fea_size, out_dim, 1, 1)
       @assert eltype(shared_state.W) == data_type
       @debug("Sharing weights and bias with an existing InnerProductLayer")
 
@@ -55,12 +55,12 @@ type InnerProductLayerState <: LayerState
       state.b  = shared_state.b
       state.∇b = shared_state.∇b
     else
-      state.W  = make_blob(sys.backend, data_type, fea_size, out_dim)
-      state.∇W = make_blob(sys.backend, data_type, fea_size, out_dim)
-      state.b  = make_blob(sys.backend, data_type, out_dim)
-      state.∇b = make_blob(sys.backend, data_type, out_dim)
+      state.W  = make_blob(sys.backend, data_type, fea_size, out_dim, 1, 1)
+      state.∇W = make_blob(sys.backend, data_type, fea_size, out_dim, 1, 1)
+      state.b  = make_blob(sys.backend, data_type, out_dim, 1, 1, 1)
+      state.∇b = make_blob(sys.backend, data_type, out_dim, 1, 1, 1)
     end
-    state.bias_multiplier = make_blob(sys.backend, data_type, nums)
+    state.bias_multiplier = make_blob(sys.backend, data_type, nums, 1, 1, 1)
     fill!(state.bias_multiplier, 1)
 
     state.parameters = [Parameter("weight", state.W, state.∇W, layer.weight_init, layer.weight_regu, layer.weight_lr),
@@ -80,9 +80,9 @@ function shutdown(sys::System, state::InnerProductLayerState)
 end
 
 function forward(sys::System{CPUBackend}, state::InnerProductLayerState, inputs::Vector{Blob})
-  M = size(state.W, 4)   # target dim
+  M = size(state.W, 2)   # target dim
   N = size(inputs[1], 4) # batch size
-  K = size(state.W, 3)   # source dim
+  K = size(state.W, 1)   # source dim
   dtype = eltype(state.W)
   for i = 1:length(inputs)
     input = inputs[i]
@@ -97,8 +97,8 @@ function forward(sys::System{CPUBackend}, state::InnerProductLayerState, inputs:
 end
 
 function backward(sys::System{CPUBackend}, state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  target_dim = size(state.W, 4)
-  source_dim = size(state.W, 3)
+  target_dim = size(state.W, 2)
+  source_dim = size(state.W, 1)
   batch_size = size(inputs[1], 4)
   data_type  = eltype(state.W)
 

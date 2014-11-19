@@ -32,7 +32,7 @@ function test_multinomial_logistic_loss_layer(sys::System, T, eps)
 end
 function test_multinomial_logistic_loss_layer(sys::System)
   test_multinomial_logistic_loss_layer(sys, Float32, 1e-3)
-  test_multinomial_logistic_loss_layer(sys, Float64, 1e-7)
+  test_multinomial_logistic_loss_layer(sys, Float64, 1e-5)
 end
 
 if test_cpu

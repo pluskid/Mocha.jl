@@ -3,7 +3,8 @@ export init, destroy, forward, backward, forward_backward, get_epoch
 export show_statistics, reset_statistics
 
 type Net{T <: Backend}
-  sys :: System{T}
+  name :: String
+  sys  :: System{T}
 
   # all layers, sorted in topological order
   layers :: Vector{Layer}
@@ -22,16 +23,21 @@ function get_epoch(net::Net)
 end
 
 function init(net::Net)
+  @debug("Init network $(net.name)")
   for i = 1:length(net.layers)
     state = net.states[i]
     if isa(net.layers[i], TrainableLayer)
       for param in state.parameters
-        init(param.initializer, param.blob)
+        if !isa(param.initializer, NullInitializer)
+          @debug("Init parameter $(param.name) for layer $(net.layers[i].name)")
+          init(param.initializer, param.blob)
+        end
       end
     end
   end
 end
 function destroy(net::Net)
+  @debug("Destroying network $(net.name)")
   for state in net.states
     shutdown(net.sys, state)
   end
@@ -114,7 +120,7 @@ function backward(net::Net, regu_coef :: FloatingPoint = 0.0)
 end
 
 
-Net(sys::System, layers :: Vector{Layer}) = begin
+Net(name::String, sys::System, layers :: Vector{Layer}) = begin
   layers = topological_sort(layers)
   data_layers = find(l -> isa(l, DataLayer), layers)
 
@@ -168,7 +174,7 @@ Net(sys::System, layers :: Vector{Layer}) = begin
     blobs_backward[i] = blob_bwd
   end
 
-  return Net(sys, layers, states, blobs_forward, blobs_backward, data_layers)
+  return Net(name, sys, layers, states, blobs_forward, blobs_backward, data_layers)
 end
 
 

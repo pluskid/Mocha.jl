@@ -95,17 +95,20 @@ function load_network(file::HDF5File, net)
       for j = 1:length(net.states[i].parameters)
         param_obj  = net.states[i].parameters[j]
         param_name = param_obj.name
-        key = "$layer_name___$param_name"
+        key = "$(layer_name)___$(param_name)"
         if !has(file, key)
           if param_name == "bias"
             @warn("No bias found for $layer_name, initializing as zeros")
             fill!(param_obj.blob, 0)
           else
-            @error("No saved parameter $param_name not found for layer $layer_name")
+            error("No saved parameter $param_name not found for layer $layer_name")
           end
         else
-          param = read(file, param_name)
-          @assert size(param) == size(param_obj.blob) "Dimension for saved parameter $param_name does not match"
+          param = read(file, key)
+          if size(param) != size(param_obj.blob)
+            error("Dimension for $param_name not match: got $(size(param)), expect $(size(param_obj.blob))")
+          end
+
           if eltype(param) != eltype(param_obj.blob)
             @warn("Automatic converting saved $param_name from $(eltype(param)) to $(eltype(param_obj.blob))")
             param = convert(Array{eltype(param_obj.blob)}, param)

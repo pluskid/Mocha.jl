@@ -1,7 +1,7 @@
 function setup_etc(sys::System{CuDNNBackend}, layer::DropoutLayer, inputs::Vector{Blob})
   cuda_rand_states = Array(CuPtr, length(inputs))
   kernel = sys.backend.mocha.dropout_init
-  rnd_state_size_blob = make_blob(sys.backend, Float64, 1)
+  rnd_state_size_blob = make_blob(sys.backend, Float64, 1, 1, 1, 1)
   CUDA.launch(sys.backend.mocha.dropout_alloc_size, 1, 1, (rnd_state_size_blob.ptr.p, ))
   rnd_state_size = Float64[0]
   copy!(rnd_state_size, rnd_state_size_blob)

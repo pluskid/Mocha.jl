@@ -15,7 +15,7 @@ function test_mocha_kernels(sys::System, data_type)
   copy!(label_blob, label)
 
   # This should always be float32
-  loss_blob = make_blob(sys.backend, Float32, 1)
+  loss_blob = make_blob(sys.backend, Float32, 1, 1, 1, 1)
   copy!(loss_blob, Float32[0])
 
   spatial_dim = h*w

@@ -27,7 +27,7 @@ conv3_layer = ConvolutionLayer(name="conv3", n_filter=64, kernel=(5,5), pad=(2,2
     bottoms=[:norm2], tops=[:conv3], neuron=Neurons.ReLU())
 pool3_layer = PoolingLayer(kernel=(3,3), stride=(2,2), pooling=Pooling.Mean(),
     bottoms=[:conv3], tops=[:pool3])
-ip1_layer   = InnerProductLayer(output_dim=10, weight_init=GaussianInitializer(std=0.01),
+ip1_layer   = InnerProductLayer(name="ip1", output_dim=10, weight_init=GaussianInitializer(std=0.01),
     weight_regu=L2Regu(250), bottoms=[:pool3], tops=[:ip1])
 
 loss_layer  = SoftmaxLossLayer(bottoms=[:ip1, :label])
@@ -40,7 +40,7 @@ sys = System(CuDNNBackend())
 #sys = System(CPUBackend())
 init(sys)
 
-net = Net(sys, [data_tr_layer, common_layers..., loss_layer])
+net = Net("CIFAR10-train", sys, [data_tr_layer, common_layers..., loss_layer])
 
 lr_policy = LRPolicy.Staged(
   (60000, LRPolicy.Fixed(0.001)),
@@ -54,14 +54,14 @@ solver = SGD(solver_params)
 # report training progress every 200 iterations
 add_coffee_break(solver, TrainingSummary(), every_n_iter=200)
 
-# show performance on test data every 1000 iterations
-test_net = Net(sys, [data_tt_layer, common_layers..., acc_layer])
-add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
-
 # save snapshots every 5000 iterations
-add_coffee_break(solver,
-    Snapshot("snapshots", auto_load=true),
-    every_n_iter=5000)
+# add_coffee_break(solver,
+#     Snapshot("snapshots", auto_load=true),
+#     every_n_iter=5000)
+
+# show performance on test data every 1000 iterations
+test_net = Net("CIFAR10-test", sys, [data_tt_layer, common_layers..., acc_layer])
+add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
 
 #Profile.init(int(1e8), 0.001)
 #@profile solve(solver, net)
@@ -69,7 +69,15 @@ add_coffee_break(solver,
 #  Profile.print(out)
 #end
 
+using HDF5
+h5open("/home/chiyuan/download/caffe/cifar10.hdf5", "r") do h5
+  load_network(h5, net)
+end
+
+
+solve(solver, net)
+
+
 destroy(net)
 destroy(test_net)
-solve(solver, net)
 shutdown(sys)

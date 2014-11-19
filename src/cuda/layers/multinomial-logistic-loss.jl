@@ -11,7 +11,7 @@ function forward(sys::System{CuDNNBackend}, state::MultinomialLogisticLossLayerS
   x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X))
   y_block = spatial_dim
 
-  loss_blob = make_zero_blob(sys.backend, Float32, 1)
+  loss_blob = make_zero_blob(sys.backend, Float32, 1, 1, 1, 1)
 
   if data_type == Float32
     kernel = sys.backend.mocha.logistic_loss_forward_float

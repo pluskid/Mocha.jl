@@ -1,7 +1,7 @@
 function forward(sys::System{CuDNNBackend}, state::InnerProductLayerState, inputs::Vector{Blob})
-  M = size(state.W, 4)   # target dim
+  M = size(state.W, 2)   # target dim
   N = size(inputs[1], 4) # batch size
-  K = size(state.W, 3)   # source dim
+  K = size(state.W, 1)   # source dim
   dtype = eltype(state.W)
   for i = 1:length(inputs)
     input = inputs[i]
@@ -16,8 +16,8 @@ function forward(sys::System{CuDNNBackend}, state::InnerProductLayerState, input
 end
 
 function backward(sys::System{CuDNNBackend}, state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  target_dim = size(state.W, 4)
-  source_dim = size(state.W, 3)
+  target_dim = size(state.W, 2)
+  source_dim = size(state.W, 1)
   batch_size = size(inputs[1], 4)
   data_type  = eltype(state.W)
 

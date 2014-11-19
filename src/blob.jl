@@ -78,7 +78,8 @@ function blob_canonical_dims(dims...)
   end
   if length(dims) < 4
     # add singleton dimensions
-    dims = tuple(ones(Int, 4-length(dims))..., dims...)
+    dims = tuple(dims..., ones(Int, 4-length(dims))...)
+    error("In order to avoid potential bugs, now we require specifying the 4 dimensions explicitly")
   end
   return dims
 end
