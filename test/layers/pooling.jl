@@ -1,5 +1,5 @@
-function test_pooling_layer(sys::System, pooling::PoolingFunction, has_padding::Bool)
-  println("-- Testing Pooling($(typeof(pooling))) on $(typeof(sys.backend))...")
+function test_pooling_layer(sys::System, pooling::PoolingFunction, has_padding::Bool, T, eps)
+  println("-- Testing Pooling($(typeof(pooling))) on $(typeof(sys.backend)){$T}...")
   println("    > Setup")
 
   if has_padding
@@ -17,15 +17,14 @@ function test_pooling_layer(sys::System, pooling::PoolingFunction, has_padding::
   kernel_h    = 4
   stride_w    = 1
   stride_h    = 2
-  eps         = 1e-10
 
   layer = PoolingLayer(kernel=(kernel_w,kernel_h), stride=(stride_w,stride_h), pad=padding,
       tops=[:output], bottoms=[:input], pooling=pooling)
 
   input_dims = (input_w, input_h, input_chann, input_num)
-  input = rand(input_dims)
-  inputs = Blob[make_blob(sys.backend, Float64, input_dims)]
-  diffs = Blob[make_blob(sys.backend, Float64, input_dims)]
+  input = rand(T, input_dims)
+  inputs = Blob[make_blob(sys.backend, T, input_dims)]
+  diffs = Blob[make_blob(sys.backend, T, input_dims)]
   copy!(inputs[1], input)
 
   state = setup(sys, layer, inputs, diffs)
@@ -39,7 +38,7 @@ function test_pooling_layer(sys::System, pooling::PoolingFunction, has_padding::
   @test all(-eps .< expected_output - got_output .< eps)
 
   println("    > Backward")
-  top_diff = rand(size(state.blobs[1]))
+  top_diff = rand(T, size(state.blobs[1]))
   copy!(state.blobs_diff[1], top_diff)
 
   backward(sys, state, inputs, diffs)
@@ -58,7 +57,7 @@ function pooling_forward(state, input::Array)
   pooled_height = get_height(state.blobs[1])
   kernel_size = state.layer.kernel[1] * state.layer.kernel[2]
 
-  output = zeros(pooled_width, pooled_height, channels, num)
+  output = zeros(eltype(input), pooled_width, pooled_height, channels, num)
   if isa(state.layer.pooling, Pooling.Max)
     mask = similar(output, Int)
   end
@@ -102,7 +101,7 @@ function pooling_backward(state, input::Array, diff::Array, payload::Any)
   pooled_height = get_height(state.blobs[1])
   kernel_size = state.layer.kernel[1] * state.layer.kernel[2]
 
-  gradient = zeros(size(input))
+  gradient = zeros(eltype(input), size(input))
 
   for n = 1:num
     for c = 1:channels
@@ -132,13 +131,16 @@ function pooling_backward(state, input::Array, diff::Array, payload::Any)
   return gradient
 end
 
+function test_pooling_layer(sys::System, T, eps)
+  test_pooling_layer(sys, Pooling.Max(), false, T, eps)
+  test_pooling_layer(sys, Pooling.Mean(), false, T, eps)
+  test_pooling_layer(sys, Pooling.Max(), true, T, eps)
+  test_pooling_layer(sys, Pooling.Mean(), true, T, eps)
+end
+
 function test_pooling_layer(sys::System)
-  test_pooling_layer(sys, Pooling.Max(), false)
-  test_pooling_layer(sys, Pooling.Mean(), false)
-  if !isa(sys.backend, AbstractCuDNNBackend)
-    test_pooling_layer(sys, Pooling.Max(), true)
-    test_pooling_layer(sys, Pooling.Mean(), true)
-  end
+  test_pooling_layer(sys, Float64, 1e-10)
+  test_pooling_layer(sys, Float32, 1e-3)
 end
 
 if test_cpu
