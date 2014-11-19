@@ -21,15 +21,12 @@ function get_epoch(net::Net)
   return net.states[net.data_layers[1]].epoch
 end
 
-function init(net::Net, regu_coef :: FloatingPoint = 0.0)
+function init(net::Net)
   for i = 1:length(net.layers)
     state = net.states[i]
     if isa(net.layers[i], TrainableLayer)
       for param in state.parameters
         init(param.initializer, param.blob)
-
-        # scale per-layer regularization coefficient globally
-        param.regularizer.coefficient *= regu_coef
       end
     end
   end
@@ -60,13 +57,13 @@ function reset_statistics(net::Net)
   end
 end
 
-function forward_backward(net::Net)
-  obj_val = forward(net)
-  backward(net)
+function forward_backward(net::Net, regu_coef :: FloatingPoint = 0.0)
+  obj_val = forward(net, regu_coef)
+  backward(net, regu_coef)
   return obj_val
 end
 
-function forward(net::Net)
+function forward(net::Net, regu_coef :: FloatingPoint = 0.0)
   obj_val = 0.0
 
   for i = 1:length(net.layers)
@@ -89,7 +86,7 @@ function forward(net::Net)
     # # handle regularization
     # if isa(net.layers[i], TrainableLayer)
     #   for param in net.states[i].parameters
-    #     obj_val += forward(net.sys, param.regularizer, param.blob)
+    #     obj_val += forward(net.sys, param.regularizer, regu_coef, param.blob)
     #   end
     # end
   end
@@ -97,7 +94,7 @@ function forward(net::Net)
   return obj_val
 end
 
-function backward(net::Net)
+function backward(net::Net, regu_coef :: FloatingPoint = 0.0)
   for i = length(net.layers):-1:1
     if :neuron ∈ names(net.layers[i]) && !isa(net.layers[i].neuron, Neurons.Identity)
       state = net.states[i]
@@ -110,7 +107,7 @@ function backward(net::Net)
     # handle regularization
     if isa(net.layers[i], TrainableLayer)
       for param in net.states[i].parameters
-        backward(net.sys, param.regularizer, param.blob, param.gradient)
+        backward(net.sys, param.regularizer, param.blob, regu_coef, param.gradient)
       end
     end
   end
