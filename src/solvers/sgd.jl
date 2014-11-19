@@ -47,6 +47,7 @@ function solve(sgd::SGD, net::Net)
   end
 
   destroy_coffee_breaks(sgd, net)
+  map(destroy, param_history)
 end
 
 function update_parameters(net::Net{CPUBackend}, solver::SGD, learning_rate, state, param_blob, hist_blob, gradient, data_type)
@@ -59,3 +60,4 @@ function update_parameters(net::Net{CPUBackend}, solver::SGD, learning_rate, sta
   # param_blob += -hist_blob
   BLAS.axpy!(length(hist_blob), convert(data_type, -1), hist_blob.data, 1, param_blob.data, 1)
 end
+
