@@ -68,6 +68,11 @@ function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob}, diffs::Ve
   state = PoolingLayerState(layer, blobs, blobs_diff, etc)
 end
 
+function shutdown(sys::System{CPUBackend}, state::PoolingLayerState)
+  map(destroy, state.blobs)
+  map(destroy, state.blobs_diff)
+end
+
 function forward(sys::System{CPUBackend}, state::PoolingLayerState, inputs::Vector{Blob})
   forward(sys, state.layer.pooling, state, inputs)
 end

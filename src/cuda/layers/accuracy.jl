@@ -4,6 +4,10 @@ function setup_etc(sys::System{CuDNNBackend}, layer::AccuracyLayer, inputs)
   return etc
 end
 
+function shutdown(sys::System{CuDNNBackend}, state::AccuracyLayerState)
+  destroy(state.etc)
+end
+
 function forward(sys::System{CuDNNBackend}, state::AccuracyLayerState, inputs::Vector{Blob})
   pred = inputs[1]
   label = inputs[2]

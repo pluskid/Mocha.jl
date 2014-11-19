@@ -38,7 +38,7 @@ function setup_etc(sys::System{CuDNNBackend}, layer::PoolingLayer, inputs,
   else
     # TODO: CuDNN does not support pooling with padding yet, I think that instead
     # of implementing our own pooling in GPU, it should be easier and computationally
-    # more efficient to do explicit padding and call the CuDNN pooling. If in the 
+    # more efficient to do explicit padding and call the CuDNN pooling. If in the
     # future CuDNN supports pooling with padding, this workaround could be removed.
     padded_width = width + 2*layer.pad[1]
     padded_height = height + 2*layer.pad[2]
@@ -55,10 +55,20 @@ function setup_etc(sys::System{CuDNNBackend}, layer::PoolingLayer, inputs,
       outputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype,
           (pooled_width,pooled_height,get_chann(inputs[i]),get_num(inputs[i])))
     end
-    etc = CuDNNPoolingState(pooling_desc, inputs_desc, outputs_desc, 
+    etc = CuDNNPoolingState(pooling_desc, inputs_desc, outputs_desc,
         padded_blobs, padded_blobs_diff)
   end
   return etc
+end
+
+function shutdown(sys::System{CuDNNBackend}, state::PoolingLayerState)
+  map(destroy, state.blobs)
+  map(destroy, state.blobs_diff)
+  CuDNN.destroy_pooling_descriotpr(state.etc.pooling_desc)
+  map(CuDNN.destroy_tensor4d_descriptor, state.etc.inputs_desc)
+  map(CuDNN.destroy_tensor4d_descriptor, state.etc.outputs_desc)
+  map(destroy, state.etc.padded_blobs)
+  map(destroy, state.etc.padded_blobs_diff)
 end
 
 function forward(sys::System{CuDNNBackend}, state::PoolingLayerState, inputs::Vector{Blob})

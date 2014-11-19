@@ -44,6 +44,11 @@ function setup(sys::System, layer::ElementWiseLayer, inputs::Vector{Blob}, diffs
   return ElementWiseLayerState{typeof(layer.operation)}(layer, blobs, blobs_diff)
 end
 
+function shutdown(sys::System, state::ElementWiseLayerState)
+  map(destroy, state.blobs)
+  map(destroy, state.blobs_diff)
+end
+
 for (functor, op) in ((ElementWiseFunctors.Add, (+)),
                       (ElementWiseFunctors.Subtract, (-)),
                       (ElementWiseFunctors.Multiply, (*)),

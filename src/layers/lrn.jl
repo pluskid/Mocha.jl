@@ -70,6 +70,14 @@ function setup(sys::System, layer::LRNLayer, inputs::Vector{Blob}, diffs::Vector
       do_split, do_square, do_pool, do_power, do_div)
 end
 
+function shutdown(sys::System, state::LRNLayerState)
+  shutdown(sys, state.do_split)
+  shutdown(sys, state.do_square)
+  shutdown(sys, state.do_pool)
+  shutdown(sys, state.do_power)
+  shutdown(sys, state.do_div)
+end
+
 function forward(sys::System, state::LRNLayerState, inputs::Vector{Blob})
   forward(sys, state.do_split, inputs)
   forward(sys, state.do_square, Blob[state.do_split.blobs[1]])

@@ -54,6 +54,7 @@ function setup(sys::System, layer::HDF5DataLayer, inputs::Vector{Blob}, diffs::V
   return state
 end
 function shutdown(sys::System, state::HDF5DataLayerState)
+  map(destroy, state.blobs)
   close(state.curr_hdf5_file)
 end
 
