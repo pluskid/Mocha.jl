@@ -107,7 +107,7 @@ function backward(net::Net, regu_coef :: FloatingPoint = 0.0)
     # handle regularization
     if isa(net.layers[i], TrainableLayer)
       for param in net.states[i].parameters
-        backward(net.sys, param.regularizer, param.blob, regu_coef, param.gradient)
+        backward(net.sys, param.regularizer, regu_coef, param.blob, param.gradient)
       end
     end
   end

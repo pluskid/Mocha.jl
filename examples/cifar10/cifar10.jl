@@ -47,8 +47,8 @@ lr_policy = LRPolicy.Staged(
   (5000, LRPolicy.Fixed(0.0001)),
   (5000, LRPolicy.Fixed(0.00001)),
 )
-solver_params = SolverParameters(max_iter=1,
-    regu_coef=40000000.0, momentum=0.9, lr_policy=lr_policy)
+solver_params = SolverParameters(max_iter=70000,
+    regu_coef=0.004, momentum=0.9, lr_policy=lr_policy)
 solver = SGD(solver_params)
 
 # report training progress every 200 iterations
