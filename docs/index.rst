@@ -24,6 +24,7 @@ User's Guide
 
    user-guide/network
    user-guide/layers/index
+   user-guide/neuron
    user-guide/initializer
    user-guide/regularizer
    user-guide/solver
