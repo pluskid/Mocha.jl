@@ -27,6 +27,11 @@ function setup(sys::System, layer::SoftmaxLossLayer, inputs::Vector{Blob}, diffs
   return state
 end
 
+function shutdown(sys::System, state::SoftmaxLossLayerState)
+  shutdown(sys, state.softmax)
+  shutdown(sys, state.logistic)
+end
+
 function backward(sys::System{CPUBackend}, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   diff = diffs[1]
   if isa(diff, CPUBlob)

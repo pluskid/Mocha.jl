@@ -25,6 +25,10 @@ function setup(sys::System, layer::SquareLossLayer, inputs::Vector{Blob}, diffs:
   return state
 end
 
+function shutdown(sys::System, state::SquareLossLayerState)
+  destroy(state.pred_copy)
+end
+
 function forward(sys::System{CPUBackend}, state::SquareLossLayerState, inputs::Vector{Blob})
   pred  = inputs[1]
   label = inputs[2]

@@ -13,6 +13,11 @@ function setup_etc(sys::System{CuDNNBackend}, layer::SoftmaxLayer, data_type, in
   etc = CuDNNSoftmaxState(inputs_desc, outputs_desc)
   return etc
 end
+function shutdown(sys::System{CuDNNBackend}, state::SoftmaxLayerState)
+  map(destroy, state.blobs)
+  map(CuDNN.destroy_tensor4d_descriptor, state.etc.inputs_desc)
+  map(CuDNN.destroy_tensor4d_descriptor, state.etc.outputs_desc)
+end
 
 function forward(sys::System{CuDNNBackend}, state::SoftmaxLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
