@@ -3,7 +3,7 @@ export DataLayer, LossLayer, StatLayer, CompLayer, TrainableLayer
 export HDF5DataLayer, MemoryDataLayer
 export InnerProductLayer, ConvolutionLayer, PoolingLayer, SoftmaxLayer
 export PowerLayer, SplitLayer, ElementWiseLayer, ChannelPoolingLayer
-export LRNLayer
+export LRNLayer, DropoutLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export AccuracyLayer
 
@@ -121,6 +121,7 @@ include("layers/split.jl")
 include("layers/element-wise.jl")
 include("layers/channel-pooling.jl")
 include("layers/lrn.jl")
+include("layers/dropout.jl")
 
 #############################################################
 # Loss Layers

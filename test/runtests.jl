@@ -63,6 +63,7 @@ include("layers/split.jl")
 include("layers/element-wise.jl")
 include("layers/channel-pooling.jl")
 include("layers/lrn.jl")
+include("layers/dropout.jl")
 
 #-- Loss Layers
 include("layers/square-loss.jl")
