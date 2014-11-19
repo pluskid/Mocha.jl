@@ -14,14 +14,14 @@ function solve(sgd::SGD, net::Net)
     param_history[i] = [make_zero_blob(net.sys.backend, eltype(x.blob),size(x.blob)...) for x in state.parameters]
   end
 
-  init(net, sgd.params.regu_coef)
+  init(net)
   init_coffee_breaks(sgd, net)
   solver_state = SolverState(0, 0.0)
 
   while true
     check_coffee_breaks(CoffeeBreakTime.Morning(), sgd, solver_state, net)
 
-    obj_val = forward_backward(net)
+    obj_val = forward_backward(net, sgd.params.regu_coef)
     learning_rate = get_learning_rate(sgd.params.lr_policy, solver_state)
 
     # update parameters
