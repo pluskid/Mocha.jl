@@ -1,5 +1,5 @@
-function test_convolution_layer(sys::System)
-  println("-- Testing Convolution on $(typeof(sys.backend))...")
+function test_convolution_layer(sys::System, T, eps)
+  println("-- Testing Convolution on $(typeof(sys.backend)){$T}...")
   println("    > Setup")
   input_w = 16
   input_h = 10
@@ -11,7 +11,6 @@ function test_convolution_layer(sys::System)
   pad_w = 2
   pad_h = 2
   n_filter = 12
-  eps = 1e-10
 
   #input_w = 2
   #input_h = 2
@@ -32,10 +31,10 @@ function test_convolution_layer(sys::System)
   layer = ConvolutionLayer(; kernel=(filter_w, filter_h), stride=(1,2), pad=(pad_w,pad_h), n_filter=n_filter, n_group=n_group,
       tops=[:conv], bottoms=[:data])
 
-  input = rand(input_dims)
-  inputs = Blob[make_blob(sys.backend, Float64, input_dims)]
+  input = rand(T, input_dims)
+  inputs = Blob[make_blob(sys.backend, T, input_dims)]
   copy!(inputs[1], input)
-  data_diffs = Blob[make_blob(sys.backend, Float64, size(input))]
+  data_diffs = Blob[make_blob(sys.backend, T, size(input))]
 
   state = setup(sys, layer, inputs, data_diffs)
 
@@ -46,9 +45,9 @@ function test_convolution_layer(sys::System)
   #end
 
   println("    > Forward")
-  filter = rand(filter_dims)
+  filter = rand(T, filter_dims)
   copy!(state.filter, filter)
-  bias = zeros(bias_dims)#rand(bias_dims)
+  bias = rand(T, bias_dims)
   copy!(state.bias, bias)
 
   forward(sys, state, inputs)
@@ -59,7 +58,7 @@ function test_convolution_layer(sys::System)
   @test all(-eps .< expected_output - got_output .< eps)
 
   println("    > Backward")
-  top_diff = rand(size(expected_output))
+  top_diff = rand(T, size(expected_output))
   copy!(state.blobs_diff[1], top_diff)
 
   backward(sys, state, inputs, data_diffs)
@@ -71,6 +70,8 @@ function test_convolution_layer(sys::System)
   copy!(gradients_got[3], data_diffs[1])
 
   for i = 1:length(gradients_expected)
+    # println(maximum(abs(gradients_got[i] - gradients_expected[i])))
+    # println(mean(abs(gradients_got[i] - gradients_expected[i])))
     @test all(-eps .< gradients_got[i] - gradients_expected[i] .< eps)
   end
 
@@ -126,9 +127,9 @@ end
 
 # naive implementation of convolution backward, used to check correctness
 function convolution_backward(state, filter::Array, bias::Array, input::Array, top_diff::Array)
-  ∇filter = zeros(size(filter))
-  ∇bias   = zeros(size(bias))
-  ∇input  = zeros(size(input))
+  ∇filter = zeros(eltype(filter), size(filter))
+  ∇bias   = zeros(eltype(bias), size(bias))
+  ∇input  = zeros(eltype(input), size(input))
 
   width, height, channels, num = size(input)
   n_group = state.layer.n_group
@@ -173,6 +174,10 @@ function convolution_backward(state, filter::Array, bias::Array, input::Array, t
   return (∇filter, ∇bias, ∇input)
 end
 
+function test_convolution_layer(sys::System)
+  test_convolution_layer(sys, Float64, 1e-10)
+  test_convolution_layer(sys, Float32, 1e-2) # Float32 is sooo inaccurate?
+end
 if test_cpu
   test_convolution_layer(sys_cpu)
 end

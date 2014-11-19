@@ -1,5 +1,5 @@
-function test_inner_product_layer(sys::System)
-  println("-- Testing InnerProductLayer on $(typeof(sys.backend))...")
+function test_inner_product_layer(sys::System, T)
+  println("-- Testing InnerProductLayer on $(typeof(sys.backend)){$T}...")
 
   ############################################################
   # Prepare Data for Testing
@@ -10,16 +10,16 @@ function test_inner_product_layer(sys::System)
   target_dim   = 30
   eps          = 1e-10
 
-  X = rand(orig_dim_all..., batch_size)
-  W = rand(orig_dim, target_dim)
-  b = rand(target_dim)
+  X = rand(T, orig_dim_all..., batch_size)
+  W = rand(T, orig_dim, target_dim)
+  b = rand(T, target_dim)
 
   ############################################################
   # Setup
   ############################################################
   layer  = InnerProductLayer(; output_dim=target_dim, tops = [:result], bottoms=[:input])
-  input_blob = make_blob(sys.backend, Float64, orig_dim_all..., batch_size)
-  diff_blob = make_blob(sys.backend, Float64, size(input_blob)...)
+  input_blob = make_blob(sys.backend, T, orig_dim_all..., batch_size)
+  diff_blob = make_blob(sys.backend, T, size(input_blob)...)
   copy!(input_blob, X)
   inputs = Blob[input_blob]
   diffs = Blob[diff_blob]
@@ -44,7 +44,7 @@ function test_inner_product_layer(sys::System)
   @test all(-eps .< res_layer - res .< eps)
 
   println("    > Backward")
-  top_diff = rand(size(state.blobs_diff[1]))
+  top_diff = rand(T, size(state.blobs_diff[1]))
   copy!(state.blobs_diff[1], top_diff)
   backward(sys, state, inputs, diffs)
 
@@ -63,6 +63,10 @@ function test_inner_product_layer(sys::System)
   @test all(-eps .< vec(back_grad) - vec(W * top_diff) .< eps)
 
   shutdown(sys, state)
+end
+function test_inner_product_layer(sys::System)
+  test_inner_product_layer(sys, Float32)
+  test_inner_product_layer(sys, Float64)
 end
 
 if test_cpu
