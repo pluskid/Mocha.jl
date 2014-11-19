@@ -31,7 +31,7 @@ function forward(sys::System{CuDNNBackend}, state::PowerLayerState, inputs::Vect
       if state.layer.power == 2
         CuVec.mul!(sys, data_type, output.ptr.p, output.ptr.p, spatial_dim, channels, num)
       else
-        CuVec.pow!(sys, data_type, output.ptr.p, 
+        CuVec.pow!(sys, data_type, output.ptr.p,
             isinteger(state.layer.power) ? int(state.layer.power) : convert(data_type, state.layer.power),
             spatial_dim, channels, num)
       end
@@ -61,7 +61,7 @@ function backward(sys::System{CuDNNBackend}, state::PowerLayerState,
       if state.layer.power == 2
         # dO/dI = 2 * scale * (scale * I + shift)
         #       = pow_scale * scale * I + pow_scale * shift
-        CuBLAS.axpy(sys.backend.cublas_ctx, length(input), pow_scale*state.layer.scale,
+        CuBLAS.axpy(sys.backend.cublas_ctx, length(input), convert(data_type, pow_scale*state.layer.scale),
             input.ptr, 1, diff.ptr, 1)
         if state.layer.shift != 0
           CuVec.add_scal!(sys, data_type, diff.ptr.p, pow_scale * state.layer.shift,
