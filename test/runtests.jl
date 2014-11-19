@@ -1,9 +1,9 @@
-const test_cpu   = false
-const test_cudnn = true
-
-if test_cudnn
-  ENV["MOCHA_USE_CUDA"] = "true"
+if haskey(ENV, "MOCHA_USE_CUDA")
+  const test_cudnn = true
+else
+  const test_cudnn = false
 end
+const test_cpu   = true
 
 using Mocha
 using Base.Test
