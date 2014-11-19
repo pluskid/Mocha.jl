@@ -49,8 +49,8 @@ respectively. This looks complicated. But if you compare the files, you will
 find that the three stages are basically using the same solver configurations
 except with a ten-fold learning rate decrease after each stage.
 
-Prepare the Data
-----------------
+Preparing the Data
+------------------
 
 Looking at the data layer of Caffe's network definition, it uses a LevelDB
 database as a data source. The LevelDB database is converted from the original
@@ -65,7 +65,7 @@ and prepare text index files that points to the HDF5 datasets.
 
 Notice in Caffe's data layer, a ``transform_param`` is specified with
 a ``mean_file``. Mocha's data layers does not support data transformations now.
-The philosophy is that unless you are doing massive data augmentation [2]_,
+The excuse for this is that unless you are doing massive data augmentation [2]_,
 it is better to do those data preprocessing off-line. Since pre-processing only
 needs to run once, being able to perform arbitrarily flexible manipulations is
 more important than being super efficient.
@@ -87,7 +87,7 @@ separately, using the same batch size as in Caffe's model definition:
 In order to share the definition of common computation layers, Caffe use the
 same file to define both the training and test networks, and use *phase* to
 include and exclude layers that are used only in training or testing phases.
-Mocha does not need this as the layers defined in Julia code are just Julia
+Mocha does not do this as the layers defined in Julia code are just Julia
 objects. We will simply construct training and test nets with a different
 subsets of those Julia layer objects.
 
@@ -99,13 +99,13 @@ subsets of those Julia layer objects.
    extra transformed data with very cheap operations, such that loading
    pre-generated data is much slower than generating them on the fly.
 
-Define Computation and Loss Layers
-----------------------------------
+Computation and Loss Layers
+---------------------------
 
 Translating the computation layers should be straightforward. For example, the
 ``conv1`` layer is defined in Caffe as
 
-.. code-block:: text
+.. code-block:: protobuf
 
    layers {
      name: "conv1"
@@ -193,11 +193,6 @@ a :class:`CuDNNBackend`. You could use :class:`CPUBackend` if no CUDA-compatible
 GPU devices are available. But it will be much slower (see also
 :doc:`/user-guide/backend`).
 
-Configuring the Solver
-----------------------
-
-
-
 .. code-block:: julia
 
    common_layers = [conv1_layer, pool1_layer, norm1_layer, conv2_layer, pool2_layer, norm2_layer,
@@ -208,6 +203,79 @@ Configuring the Solver
    init(sys)
 
    net = Net(sys, [data_tr_layer, common_layers..., loss_layer])
+
+Configuring the Solver
+----------------------
+
+The configuration for Caffe's solver looks like this
+
+.. code-block:: protobuf
+
+   # reduce learning rate after 120 epochs (60000 iters) by factor 0f 10
+   # then another factor of 10 after 10 more epochs (5000 iters)
+
+   # The train/test net protocol buffer definition
+   net: "examples/cifar10/cifar10_full_train_test.prototxt"
+   # test_iter specifies how many forward passes the test should carry out.
+   # In the case of CIFAR10, we have test batch size 100 and 100 test iterations,
+   # covering the full 10,000 testing images.
+   test_iter: 100
+   # Carry out testing every 1000 training iterations.
+   test_interval: 1000
+   # The base learning rate, momentum and the weight decay of the network.
+   base_lr: 0.001
+   momentum: 0.9
+   weight_decay: 0.004
+   # The learning rate policy
+   lr_policy: "fixed"
+   # Display every 200 iterations
+   display: 200
+   # The maximum number of iterations
+   max_iter: 60000
+   # snapshot intermediate results
+   snapshot: 10000
+   snapshot_prefix: "examples/cifar10/cifar10_full"
+   # solver mode: CPU or GPU
+   solver_mode: GPU
+
+First of all, the learning rate is drop by a factor of 10 [3]_. Caffe
+implements this by having three solver configurations with different learning
+rate for each stage. We could do the same thing for Mocha, but Mocha has
+a staged learning policy that makes this easier:
+
+.. code-block:: julia
+
+   lr_policy = LRPolicy.Staged(
+     (60000, LRPolicy.Fixed(0.001)),
+     (5000, LRPolicy.Fixed(0.0001)),
+     (5000, LRPolicy.Fixed(0.00001)),
+   )
+   solver_params = SolverParameters(max_iter=70000,
+       regu_coef=0.004, momentum=0.9, lr_policy=lr_policy)
+   solver = SGD(solver_params)
+
+The other parameters like regularization coefficient, momentum are directly
+translated from Caffe's solver configuration. Progress report, automatic
+snapshots could equivalently be done in Mocha as *coffee breaks* for the solver:
+
+.. code-block:: julia
+
+   # report training progress every 200 iterations
+   add_coffee_break(solver, TrainingSummary(), every_n_iter=200)
+
+   # show performance on test data every 1000 iterations
+   test_net = Net(sys, [data_tt_layer, common_layers..., acc_layer])
+   add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
+
+   # save snapshots every 5000 iterations
+   add_coffee_break(solver,
+       Snapshot("snapshots", auto_load=true),
+       every_n_iter=5000)
+
+
+
+.. [3] Looking at the Caffe's solver configuration, I happily realized that I am
+   not the only person in the world who sometimes mis-type o as 0. :P
 
 .. code-block:: julia
 

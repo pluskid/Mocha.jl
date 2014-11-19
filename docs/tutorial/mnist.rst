@@ -144,8 +144,8 @@ directly from the HDF5 data layer. It will compute an averaged loss
 over each mini batch, which allows us to initiate back propagation to
 update network parameters.
 
-Setup Backend and Build Network
--------------------------------
+Configuring Backend and Building Network
+----------------------------------------
 
 Now we have defined all the relevant layers. Let's setup the
 computation backend and construct a network with those layers. In this
@@ -170,8 +170,8 @@ A network is built by passing the constructor an initialized system,
 and a list of layers. Note we use ``common_layers`` to collect a
 subset of the layers. We will explain this in a minute.
 
-Setup Solver
-------------
+Configuring Solver
+------------------
 
 We will use Stochastic Gradient Descent (SGD) to solve or train our
 deep network.
