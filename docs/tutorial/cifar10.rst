@@ -1,5 +1,56 @@
-CIFAR10
-=======
+Alex’s CIFAR-10 tutorial in Mocha
+=================================
+
+This example is converted from `Caffe's CIFAR-10 tutorials
+<http://caffe.berkeleyvision.org/gathered/examples/cifar10.html>`_, which was
+originally built based on details from Alex Krizhevsky’s `cuda-convnet
+<https://code.google.com/p/cuda-convnet2/>`_. In this example, we will
+demonstrate how to translate a network definition in Caffe to Mocha, and train
+the network to roughly reproduce the test error rate of 18% (without data
+augmentation) as reported in `Alex Krizhevsky's website
+<http://www.cs.toronto.edu/~kriz/cifar.html>`_.
+
+The `CIFAR-10 dataset <http://www.cs.toronto.edu/~kriz/cifar.html>`_ is
+a labeled subset of the `80 Million Tiny Images
+<http://people.csail.mit.edu/torralba/tinyimages/>`_ dataset, containing 60,000
+32x32 color images in 10 categories. They are split into 50,000 training images
+and 10,000 test images. The number of samples are the same to :doc:`the MNIST
+example </tutorial/mnist>`. However, the images here are a bit larger and have
+3 channels. As we will see soon, the network is also larger, with one extra
+convolution and pooling and two local response normalization layers. It is
+recommended to read :doc:`the MNIST tutorial </tutorial/mnist>` first, as we
+will not repeat many details here.
+
+Caffe's Tutorial and Code
+-------------------------
+
+Caffe's tutorial for CIFAR-10 can be found `on their website
+<http://caffe.berkeleyvision.org/gathered/examples/cifar10.html>`_. The code
+could be located in ``examples/cifar10`` under Caffe's source tree. The code
+folder contains several different definition of networks and solvers. The
+filenames should be self-explanatory. The *quick* files corresponds to a smaller
+network without local response normalization layers. And this is documented in
+Caffe's tutorial, according to which, produces around 75% test accuracy.
+
+We will be using the *full* models, which gives us around 81% test accuracy.
+Caffe's definition of the full model could be found in the file
+`cifar10_full_train_test.prototxt
+<https://github.com/BVLC/caffe/blob/master/examples/cifar10/cifar10_full_train_test.prototxt>`_.
+The training script is
+`train_full.sh
+<https://github.com/BVLC/caffe/blob/master/examples/cifar10/train_full.sh>`_,
+which trains in 3 different stages with solvers defined in
+
+#. `cifar10_full_solver.prototxt <https://github.com/BVLC/caffe/blob/master/examples/cifar10/cifar10_full_solver.prototxt>`_
+#. `cifar10_full_solver_lr1.prototxt <https://github.com/BVLC/caffe/blob/master/examples/cifar10/cifar10_full_solver_lr1.prototxt>`_
+#. `cifar10_full_solver_lr2.prototxt <https://github.com/BVLC/caffe/blob/master/examples/cifar10/cifar10_full_solver_lr2.prototxt>`_
+
+respectively. This looks complicated. But if you compare the files, you will
+find that the three stages are basically using the same solver configurations
+except with a ten-fold learning rate decrease after each stage.
+
+Preparing the Data
+------------------
 
 .. code-block:: julia
 
@@ -34,7 +85,7 @@ CIFAR10
 
    ENV["OMP_NUM_THREADS"] = 16
    blas_set_num_threads(16)
-   
+
 .. code-block:: text
 
    17-Nov 22:24:27:INFO:root:002800 :: TRAIN obj-val = 0.85292178
@@ -57,7 +108,7 @@ CIFAR10
    17-Nov 22:46:12:INFO:root:---------------------------------------------------------
    17-Nov 22:46:12:INFO:root:
    17-Nov 22:49:35:INFO:root:004200 :: TRAIN obj-val = 1.02186918
-   
+
 .. code-block:: text
 
    I1117 21:55:18.451865 33463 solver.cpp:403] Iteration 2800, lr = 0.001
