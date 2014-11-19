@@ -11,6 +11,7 @@
 #include "softmax_loss.impl"
 #include "accuracy.impl"
 #include "channel_pooling.impl"
+#include "dropout.impl"
 
 #include "relu.impl"
 

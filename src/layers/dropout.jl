@@ -14,8 +14,13 @@ type DropoutLayerState{T} <: LayerState
   # for convenience
   ratio      :: T   # layer.ratio
   scale      :: T   # 1 / (1 - layer.ratio)
+
+  etc        :: Any
 end
 
+function setup_etc(sys::System{CPUBackend}, layer::DropoutLayer, inputs::Vector{Blob})
+  return nothing
+end
 function setup(sys::System, layer::DropoutLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
   blobs = Blob[make_blob(sys.backend, data_type, size(x)) for x in inputs]
@@ -29,14 +34,19 @@ function setup(sys::System, layer::DropoutLayer, inputs::Vector{Blob}, diffs::Ve
   end
   rand_vals = Blob[make_blob(sys.backend, data_type, size(x)) for x in inputs]
 
+  etc = setup_etc(sys, layer, inputs)
   return DropoutLayerState(layer, blobs, blobs_diff, rand_vals,
-      convert(data_type, layer.ratio), convert(data_type, 1.0/(1-layer.ratio)))
+      convert(data_type, layer.ratio), convert(data_type, 1.0/(1-layer.ratio)), etc)
 end
 
+function destroy_etc(sys::System{CPUBackend}, state::DropoutLayerState)
+  # do nothing
+end
 function shutdown(sys::System, state::DropoutLayerState)
   map(destroy, state.blobs)
   map(destroy, state.blobs_diff)
   map(destroy, state.rand_vals)
+  destroy_etc(sys, state)
 end
 
 function dropout_forward{T}(input::Array{T}, output::Array{T}, rand_vals::Array{T}, ratio::T, scale::T)

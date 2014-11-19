@@ -42,6 +42,13 @@ type MochaKernels
   padded_to_dense_float        :: CUDA.CuFunction
   padded_to_dense_double       :: CUDA.CuFunction
 
+  dropout_init                 :: CUDA.CuFunction
+  dropout_alloc_size           :: CUDA.CuFunction
+  dropout_forward_float        :: CUDA.CuFunction
+  dropout_forward_double       :: CUDA.CuFunction
+  dropout_backward_float       :: CUDA.CuFunction
+  dropout_backward_double      :: CUDA.CuFunction
+
   MochaKernels() = begin
     mod_path = joinpath(dirname(@__FILE__), "kernels", "kernels.ptx")
     mod = CUDA.CuModule(mod_path)
@@ -84,6 +91,13 @@ type MochaKernels
     kernels.dense_to_padded_double = CUDA.CuFunction(mod, "dense_to_padded_double")
     kernels.padded_to_dense_float  = CUDA.CuFunction(mod, "padded_to_dense_float")
     kernels.padded_to_dense_double = CUDA.CuFunction(mod, "padded_to_dense_double")
+
+    kernels.dropout_init            = CUDA.CuFunction(mod, "dropout_init")
+    kernels.dropout_alloc_size      = CUDA.CuFunction(mod, "dropout_alloc_size")
+    kernels.dropout_forward_float   = CUDA.CuFunction(mod, "dropout_forward_float")
+    kernels.dropout_forward_double  = CUDA.CuFunction(mod, "dropout_forward_double")
+    kernels.dropout_backward_float  = CUDA.CuFunction(mod, "dropout_backward_float")
+    kernels.dropout_backward_double = CUDA.CuFunction(mod, "dropout_backward_double")
     return kernels
   end
 end

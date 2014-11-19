@@ -3,9 +3,9 @@ module CuVec
 using ..Mocha
 
 function cuda_geometry(sp_dim::Int, chann::Int, num::Int)
-  x_block = int(ceil(float64(sp_dim)/CUDA.THREADS_PER_BLOCK_X));
-  y_block = int(ceil(float64(chann)/CUDA.THREADS_PER_BLOCK_Y));
-  z_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_Z));
+  x_block = int(ceil(float64(sp_dim)/CUDA.THREADS_PER_BLOCK_X))
+  y_block = int(ceil(float64(chann)/CUDA.THREADS_PER_BLOCK_Y))
+  z_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_Z))
   return ((x_block,y_block,z_block),
           (CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z))
 end
@@ -14,7 +14,7 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
   # define add!, sub!, mul!, div!, div2!
   for name in [:add, :sub, :mul, :div, :div2]
     @eval begin
-      function $(symbol("$(name)!"))(sys::System{CuDNNBackend}, ::Type{$dtype}, X, Y, 
+      function $(symbol("$(name)!"))(sys::System{CuDNNBackend}, ::Type{$dtype}, X, Y,
           spatial_dim::Int, channels::Int, num::Int)
         X = convert(Ptr{Void},X)
         Y = convert(Ptr{Void},Y)
@@ -27,7 +27,7 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
 
   # define add_scal!
   @eval begin
-    function add_scal!(sys::System{CuDNNBackend}, ::Type{$dtype}, X, Y, 
+    function add_scal!(sys::System{CuDNNBackend}, ::Type{$dtype}, X, Y,
         spatial_dim::Int, channels::Int, num::Int)
       X = convert(Ptr{Void}, X)
       Y = convert($dtype, Y)

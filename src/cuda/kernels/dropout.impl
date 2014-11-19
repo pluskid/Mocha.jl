@@ -1,0 +1,44 @@
+#include <curand_kernel.h>
+
+template <typename T>
+__device__ void dropout_forward(curandState *state, int len,
+    T *input, T *rand_vals, T *output, T ratio, T scale) {
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx < len) {
+    rand_vals[idx] = curand_uniform(&state[idx]);
+    output[idx] = input[idx] * (rand_vals[idx] > ratio) * scale;
+  }
+}
+template <typename T>
+__device__ void dropout_backward(curandState *state, int len,
+    T *grad, T *rand_vals, T *top_diff, T ratio, T scale) {
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx < len) {
+    grad[idx] = top_diff[idx] * (rand_vals[idx] > ratio) * scale;
+  }
+}
+
+#define DEF_DROPOUT_API(NAME, DTYPE) \
+  __global__ void NAME ## _ ## DTYPE (curandState *state, int len, \
+    DTYPE *grad, DTYPE *rand_vals, DTYPE *top_diff, DTYPE ratio, DTYPE scale) { \
+      NAME (state, len, grad, rand_vals, top_diff, ratio, scale); \
+  }
+
+extern "C" {
+__global__ void dropout_init(curandState *state, int len) {
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx < len)
+    curand_init(3085, idx, 0, &state[idx]);
+}
+
+__global__ void dropout_alloc_size(size_t *psize) {
+  *psize = sizeof(curandState);
+}
+
+DEF_DROPOUT_API(dropout_forward, float)
+DEF_DROPOUT_API(dropout_forward, double)
+DEF_DROPOUT_API(dropout_backward, float)
+DEF_DROPOUT_API(dropout_backward, double)
+} // extern "C"
+
+// vim: ft=cuda
