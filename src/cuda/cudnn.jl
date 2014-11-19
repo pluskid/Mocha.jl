@@ -374,7 +374,7 @@ function get_pooling_descriptor(desc::PoolingDescriptor)
   return (mode[1], (w,h), (stride_w, stride_h))
 end
 function destroy_pooling_descriotpr(desc::PoolingDescriptor)
-  @cudnncall(:cudnnDestroyPoolingDescroptor, (PoolingDescriptor,), desc)
+  @cudnncall(:cudnnDestroyPoolingDescriptor, (PoolingDescriptor,), desc)
 end
 
 function pooling_forward(handle::Handle, pooling::PoolingDescriptor,
