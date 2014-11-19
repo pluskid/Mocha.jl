@@ -1,7 +1,7 @@
 function test_cublas(sys::System, T)
-  println("-- Testing CuBLAS Utilities")
+  println("-- Testing CuBLAS Utilities on $T")
   dims = (2,3,5,7)
-  eps = 1e-10
+  eps = 1e-5
 
   println("    > memory copy between device and host")
   x = rand(T, dims)
@@ -30,9 +30,9 @@ function test_cublas(sys::System, T)
   @test all(-eps .< 0.9*x - x2 .< eps)
 
   println("    > gemm")
-  A = rand(5,6)
-  B = rand(6,7)
-  C = rand(5,7)
+  A = rand(T, 5,6)
+  B = rand(T, 6,7)
+  C = rand(T, 5,7)
   blob_A = Mocha.cudnn_make_tensor_blob(T, 5,6)
   blob_B = Mocha.cudnn_make_tensor_blob(T, 6,7)
   blob_C = Mocha.cudnn_make_tensor_blob(T, 5,7)
