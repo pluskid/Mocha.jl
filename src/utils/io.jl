@@ -33,12 +33,13 @@ end
 ############################################################
 # JLD IO procedures to save and load network parameters
 ############################################################
+using HDF5, JLD
 const NETWORK_SAVE_NAME = "params_all"
 
-function save_network(file, net)
+function save_network(file::JLD.JldFile, net)
   params_all = Dict{String, Vector{Array}}()
   for i = 1:length(net.layers)
-    if :parameters ∈ names(net.states[i])
+    if isa(net.layers[i], TrainableLayer)
       key = net.layers[i].name
       if haskey(params_all, key)
         error("Duplicated names ($key) for multiple layers, cannot save parameters")
@@ -59,10 +60,10 @@ function get_param_data(param)
   return data
 end
 
-function load_network(file, net)
+function load_network(file::JLD.JldFile, net)
   params_all = read(file, NETWORK_SAVE_NAME)
   for i = 1:length(net.layers)
-    if :parameters ∈ names(net.states[i])
+    if isa(net.layers[i], TrainableLayer)
       key = net.layers[i].name
       if !haskey(params_all, key)
         error("Cannot find saved parameters for layer $key")
@@ -76,6 +77,45 @@ function load_network(file, net)
         @assert size(params[j]) == size(net.states[i].parameters[j].blob)
         copy!(net.states[i].parameters[j].blob, params[j])
         net.states[i].parameters[j].initializer = NullInitializer()
+      end
+    end
+  end
+end
+
+############################################################
+# Load network parameters from a HDF5 file
+# When mapped correctly, this could be used to import
+# trained network from other tools (e.g. Caffe)
+############################################################
+function load_network(file::HDF5File, net)
+  for i = 1:length(net.layers)
+    if isa(net.layers[i], TrainableLayer)
+      layer_name = net.layers[i].name
+      @debug("Loading parameters from HDF5 for layer $layer_name")
+      if !has(file, layer_name)
+        error("Cannot find saved parameters for layer $layer_name")
+      end
+      dset = file[layer_name]
+      for j = 1:length(net.states[i].parameters)
+        param_obj  = net.states[i].parameters[j]
+        param_name = param_obj.name
+        if !has(dset, param_name)
+          if param_name == "bias"
+            @warn("No bias found for $layer_name, initializing as zeros")
+            fill!(param_obj.blob, 0)
+          else
+            @error("No saved parameter $param_name not found for layer $layer_name")
+          end
+        else
+          param = read(dset, param_name)
+          @assert size(param) == size(param_obj.blob) "Dimension for saved parameter $param_name does not match"
+          if eltype(param) != eltype(param_obj.blob)
+            @warn("Automatic converting saved $param_name from $(eltype(param)) to $(eltype(param_obj.blob))")
+            param = convert(Array{eltype(param_obj.blob)}, param)
+          end
+          copy!(param_obj.blob, param)
+        end
+        param_obj.initializer = NullInitializer()
       end
     end
   end
