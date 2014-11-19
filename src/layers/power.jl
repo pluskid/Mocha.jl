@@ -62,7 +62,8 @@ end
 function backward(sys::System{CPUBackend}, state::PowerLayerState,
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
-  pow_scale = convert(eltype(inputs[1]),state.layer.power * state.layer.scale)
+  data_type = eltype(inputs[1])
+  pow_scale = convert(data_type,state.layer.power * state.layer.scale)
   for i = 1:length(inputs)
     diff = diffs[i]
     if state.layer.power == 1 || state.layer.scale == 0
@@ -77,7 +78,7 @@ function backward(sys::System{CPUBackend}, state::PowerLayerState,
       if state.layer.power == 2
         # dO/dI = 2 * scale * (scale * I + shift)
         #       = pow_scale * scale * I + pow_scale * shift
-        BLAS.axpy!(length(input), pow_scale*state.layer.scale,
+        BLAS.axpy!(length(input), convert(data_type, pow_scale*state.layer.scale),
             input.data, 1, diff.data, 1)
         if state.layer.shift != 0
           Vec.add_scal!(diff.data, pow_scale * state.layer.shift)
@@ -85,7 +86,7 @@ function backward(sys::System{CPUBackend}, state::PowerLayerState,
       elseif state.layer.shift == 0
         # dO/dI = power * scale * (scale * I) ^ (power - 1)
         #       = power * O / I
-        BLAS.axpy!(length(input), convert(eltype(input),state.layer.power),
+        BLAS.axpy!(length(input), convert(data_type,state.layer.power),
             output.data, 1, diff.data, 1)
         Vec.div!(diff.data, input.data)
       else
@@ -94,7 +95,7 @@ function backward(sys::System{CPUBackend}, state::PowerLayerState,
         #       = power * scale * O / (scale * I + shift)
         copy!(diff, input)
         if state.layer.scale != 1
-          BLAS.scal!(length(diff), convert(eltype(diff),state.layer.scale), diff.data, 1)
+          BLAS.scal!(length(diff), convert(data_type,state.layer.scale), diff.data, 1)
         end
         Vec.add_scal!(diff.data, state.layer.shift)
         Vec.div2!(output.data, diff.data)

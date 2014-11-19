@@ -1,18 +1,17 @@
-function test_channel_pooling_layer(sys::System, pooling::PoolingFunction)
-  println("-- Testing ChannelPooling($(typeof(pooling))) on $(typeof(sys.backend))...")
+function test_channel_pooling_layer(sys::System, pooling::PoolingFunction, T, eps)
+  println("-- Testing ChannelPooling($(typeof(pooling))) on $(typeof(sys.backend)){$T}...")
   println("    > Setup")
 
   width, height, channels, num = (2, 3, 7, 1)
   pad = (2,2)
   kernel = 3
   stride = 2
-  eps = 1e-7
 
   layer = ChannelPoolingLayer(kernel=kernel, stride=stride, pad=pad,
       tops=[:top], bottoms=[:bottom], pooling=pooling)
 
   input_dim = (width, height, channels, num)
-  input = rand(input_dim)
+  input = rand(T, input_dim)
   inputs = Blob[make_blob(sys.backend, input)]
   diffs = Blob[make_blob(sys.backend, input)]
 
@@ -27,7 +26,7 @@ function test_channel_pooling_layer(sys::System, pooling::PoolingFunction)
   @test all(-eps .< expected_output-got_output .< eps)
 
   println("    > Backward")
-  top_diff = rand(size(state.blobs[1]))
+  top_diff = rand(T, size(state.blobs[1]))
   copy!(state.blobs_diff[1], top_diff)
   backward(sys, state, inputs, diffs)
 
@@ -43,7 +42,7 @@ function channel_pooling_forward(state, input::Array)
   width, height, channels, num = size(input)
   pooled_chann = get_chann(state.blobs[1])
 
-  output = zeros(width, height, pooled_chann, num)
+  output = zeros(eltype(input), width, height, pooled_chann, num)
   if isa(state.layer.pooling, Pooling.Max)
     mask = similar(output, Int)
   end
@@ -78,7 +77,7 @@ function channel_pooling_backward(state, input::Array, diff::Array, payload::Any
   width, height, channels, num = size(input)
   pooled_chann = get_chann(state.blobs[1])
 
-  gradient = zeros(width, height, channels, num)
+  gradient = zeros(eltype(input), width, height, channels, num)
   for n = 1:num
     for pc = 1:pooled_chann
       cstart = (pc-1)*state.layer.stride - state.layer.pad[1] + 1
@@ -101,9 +100,14 @@ function channel_pooling_backward(state, input::Array, diff::Array, payload::Any
   return gradient
 end
 
+function test_channel_pooling_layer(sys::System, T, eps)
+  test_channel_pooling_layer(sys, Pooling.Max(), T, eps)
+  test_channel_pooling_layer(sys, Pooling.Mean(), T, eps)
+end
+
 function test_channel_pooling_layer(sys::System)
-  test_channel_pooling_layer(sys, Pooling.Max())
-  test_channel_pooling_layer(sys, Pooling.Mean())
+  test_channel_pooling_layer(sys, Float32, 1e-4)
+  test_channel_pooling_layer(sys, Float64, 1e-8)
 end
 
 if test_cpu

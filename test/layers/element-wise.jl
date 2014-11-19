@@ -1,9 +1,8 @@
-function test_element_wise_layer(sys::System, op::ElementWiseFunctorType, jl_op::Function)
-  println("-- Testing ElementWiseLayer{$op} on $(typeof(sys.backend))...")
+function test_element_wise_layer(sys::System, op::ElementWiseFunctorType, jl_op::Function, T, eps)
+  println("-- Testing ElementWiseLayer{$op} on $(typeof(sys.backend)){$T}...")
 
-  eps = 1e-5
   NArg = get_num_args(op)
-  inputs = [rand(4,5,6,7) for i = 1:NArg]
+  inputs = [rand(T, 4,5,6,7) for i = 1:NArg]
   input_blobs = Blob[make_blob(sys.backend, x) for x in inputs]
   diff_blobs = Blob[make_blob(sys.backend, x) for x in inputs]
 
@@ -16,12 +15,12 @@ function test_element_wise_layer(sys::System, op::ElementWiseFunctorType, jl_op:
   copy!(got_res, state.blobs[1])
   @test all(abs(got_res - expected_res) .< eps)
 
-  top_diff = rand(size(inputs[1]))
+  top_diff = rand(T, size(inputs[1]))
   copy!(state.blobs_diff[1], top_diff)
 
   backward(sys, state, input_blobs, diff_blobs)
   got_grads = map(diff_blobs) do blob
-    arr = zeros(size(blob))
+    arr = zeros(T, size(blob))
     copy!(arr, blob)
     arr
   end
@@ -46,13 +45,18 @@ function test_element_wise_layer(sys::System, op::ElementWiseFunctorType, jl_op:
   shutdown(sys, state)
 end
 
-function test_element_wise_layer(sys::System)
+function test_element_wise_layer(sys::System, T, eps)
   for (functor,jl_op) in ((ElementWiseFunctors.Add(), (+)),
                           (ElementWiseFunctors.Subtract(),(-)),
                           (ElementWiseFunctors.Multiply(), (.*)),
                           (ElementWiseFunctors.Divide(), (./)))
-    test_element_wise_layer(sys, functor, jl_op)
+    test_element_wise_layer(sys, functor, jl_op, T, eps)
   end
+end
+
+function test_element_wise_layer(sys::System)
+  test_element_wise_layer(sys, Float32, 1e-1)
+  test_element_wise_layer(sys, Float64, 1e-5)
 end
 
 if test_cpu

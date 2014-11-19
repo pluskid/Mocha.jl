@@ -1,9 +1,8 @@
-function test_softmax_layer(sys::System)
-  println("-- Testing SoftmaxLayer on $(typeof(sys.backend))...")
+function test_softmax_layer(sys::System, T, eps)
+  println("-- Testing SoftmaxLayer on $(typeof(sys.backend)){$T}...")
 
-  eps = 1e-10
   width, height, channels, num = (5, 6, 7, 8)
-  input = rand(width, height, channels, num)
+  input = rand(T, width, height, channels, num)
   input_blob = make_blob(sys.backend, input)
 
   layer = SoftmaxLayer(tops = [:prob], bottoms = [:response])
@@ -24,12 +23,16 @@ function test_softmax_layer(sys::System)
     end
   end
 
-  got_output = zeros(size(output))
+  got_output = zeros(T, size(output))
   copy!(got_output, state.blobs[1])
 
   @test all(-eps .< output - got_output .< eps)
 
   shutdown(sys, state)
+end
+function test_softmax_layer(sys::System)
+  test_softmax_layer(sys, Float32, 1e-5)
+  test_softmax_layer(sys, Float64, 1e-10)
 end
 
 if test_cpu

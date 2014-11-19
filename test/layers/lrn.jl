@@ -1,10 +1,8 @@
-function test_lrn_layer(sys::System, mode::LRNModeType)
-  println("-- Testing LRN($(typeof(mode))) on $(typeof(sys.backend))...")
+function test_lrn_layer(sys::System, mode::LRNModeType, T, eps)
+  println("-- Testing LRN($(typeof(mode))) on $(typeof(sys.backend)){$T}...")
   println("    > Setup")
 
-  eps = 1e-5
-  #input = float(int(100*rand(7,8,9,10)))/100
-  input = rand(7,8,9,10)
+  input = rand(T, 7,8,9,10)
   input_blobs = Blob[make_blob(sys.backend, input)]
   diff_blobs = Blob[make_blob(sys.backend, input)]
 
@@ -22,10 +20,10 @@ function test_lrn_layer(sys::System, mode::LRNModeType)
 
   println("    > Backward")
   #top_diff = float(int(100*rand(size(input))))/100
-  top_diff = rand(size(input))
+  top_diff = rand(T, size(input))
   copy!(state.blobs_diff[1], top_diff)
   backward(sys, state, input_blobs, diff_blobs)
-  got_grad = zeros(size(input))
+  got_grad = zeros(T, size(input))
   copy!(got_grad, diff_blobs[1])
   expected_grad = lrn_backward(input, top_diff, state)
   @test all(abs(got_grad - expected_grad) .< eps)
@@ -92,7 +90,7 @@ function lrn_forward{T}(input::Array{T}, state)
 end
 
 function lrn_backward_across_channel{T}(input::Array{T}, top_diff::Array{T}, state)
-  output = zeros(size(input))
+  output = zeros(T, size(input))
   width, height, channels, num = size(input)
   pre_pad = div(state.layer.kernel-1,2)
   post_pad = state.layer.kernel - pre_pad - 1
@@ -117,7 +115,7 @@ function lrn_backward_across_channel{T}(input::Array{T}, top_diff::Array{T}, sta
   return output
 end
 function lrn_backward_within_channel{T}(input::Array{T}, top_diff::Array{T}, state)
-  output = zeros(size(input))
+  output = zeros(T, size(input))
   width, height, channels, num = size(input)
   pooled_width = width; pooled_height = height
   kernel_size = state.layer.kernel^2
@@ -160,9 +158,14 @@ function lrn_backward{T}(input::Array{T}, top_diff::Array{T}, state)
   end
 end
 
+function test_lrn_layer(sys::System, T, eps)
+  test_lrn_layer(sys, LRNMode.AcrossChannel(), T, eps)
+  test_lrn_layer(sys, LRNMode.WithinChannel(), T, eps)
+end
+
 function test_lrn_layer(sys::System)
-  test_lrn_layer(sys, LRNMode.AcrossChannel())
-  test_lrn_layer(sys, LRNMode.WithinChannel())
+  test_lrn_layer(sys, Float32, 1e-3)
+  test_lrn_layer(sys, Float64, 1e-9)
 end
 
 if test_cpu

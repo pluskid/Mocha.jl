@@ -1,12 +1,11 @@
-function test_multinomial_logistic_loss_layer(sys::System)
+function test_multinomial_logistic_loss_layer(sys::System, T, eps)
   println("-- Testing MultinomialLogisticLossLayer on $(typeof(sys.backend))...")
 
-  eps = 1e-5
   width, height, channels, num = (5, 6, 7, 8)
 
-  prob = abs(rand(width, height, channels, num))
+  prob = abs(rand(T, width, height, channels, num))
   label = abs(rand(Int, (width, height, 1, num))) % channels
-  label = convert(Array{Float64}, label)
+  label = convert(Array{T}, label)
 
   prob_blob = make_blob(sys.backend, prob)
   label_blob = make_blob(sys.backend, label)
@@ -17,7 +16,7 @@ function test_multinomial_logistic_loss_layer(sys::System)
 
   forward(sys, state, inputs)
 
-  expected_loss = 0f0
+  expected_loss = convert(T, 0)
   for w = 1:width
     for h = 1:height
       for n = 1:num
@@ -30,6 +29,10 @@ function test_multinomial_logistic_loss_layer(sys::System)
   @test -eps < state.loss - expected_loss < eps
 
   shutdown(sys, state)
+end
+function test_multinomial_logistic_loss_layer(sys::System)
+  test_multinomial_logistic_loss_layer(sys, Float32, 1e-3)
+  test_multinomial_logistic_loss_layer(sys, Float64, 1e-9)
 end
 
 if test_cpu

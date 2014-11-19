@@ -1,27 +1,20 @@
-function test_square_loss_layer(sys::System)
-  println("-- Testing SquareLossLayer on $(typeof(sys.backend))...")
+function test_square_loss_layer(sys::System, T, eps)
+  println("-- Testing SquareLossLayer on $(typeof(sys.backend)){$T}...")
 
   ############################################################
   # Prepare Data for Testing
   ############################################################
   dims = (20,3,3,40)
-  preds = rand(dims)
-  labels = rand(dims)
-  eps          = 1e-10
+  preds = rand(T, dims)
+  labels = rand(T, dims)
 
   ############################################################
   # Setup
   ############################################################
   layer  = SquareLossLayer(; bottoms=[:predictions, :labels])
-  if isa(sys.backend, CPUBackend)
-    pred_blob  = CPUBlob(Float64, dims...)
-    label_blob = CPUBlob(Float64, dims...)
-    diff_blob  = CPUBlob(Float64, dims...)
-  elseif isa(sys.backend, CuDNNBackend)
-    pred_blob  = Mocha.cudnn_make_tensor_blob(Float64, dims...)
-    label_blob = Mocha.cudnn_make_tensor_blob(Float64, dims...)
-    diff_blob  = Mocha.cudnn_make_tensor_blob(Float64, dims...)
-  end
+  pred_blob  = make_blob(sys.backend, T, dims...)
+  label_blob = make_blob(sys.backend, T, dims...)
+  diff_blob  = make_blob(sys.backend, T, dims...)
   copy!(pred_blob, preds)
   copy!(label_blob, labels)
   inputs = Blob[pred_blob, label_blob]
@@ -42,6 +35,11 @@ function test_square_loss_layer(sys::System)
   @test all(-eps .< grad - diff .< eps)
 
   shutdown(sys, state)
+end
+
+function test_square_loss_layer(sys::System)
+  test_square_loss_layer(sys, Float32, 1e-3)
+  test_square_loss_layer(sys, Float64, 1e-10)
 end
 
 if test_cpu
