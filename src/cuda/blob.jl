@@ -51,3 +51,7 @@ end
 function make_blob(backend::CuDNNBackend, data_type::Type, dims...)
   return cudnn_make_tensor_blob(data_type, dims...)
 end
+function destroy(blob :: CuTensorBlob)
+  CUDA.free(blob.ptr)
+  blob.ptr = CuPtr()
+end

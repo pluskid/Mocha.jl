@@ -28,6 +28,9 @@ end
 function size(blob :: Blob)
   error("Not implemented (should return the size of data)")
 end
+function destroy(blob :: Blob)
+  error("Not implemented (should destroy the blob)")
+end
 function size(blob :: Blob, dim :: Int)
   size(blob)[dim]
 end
@@ -89,6 +92,9 @@ function fill!(dst :: NullBlob, val)
   # do nothing
 end
 
+function destroy(blob::NullBlob)
+  # do nothing
+end
 function make_blob()
   return NullBlob()
 end
@@ -117,6 +123,9 @@ CPUBlob(t :: Type, dims...) = CPUBlob(t, dims)
 
 function make_blob(backend::CPUBackend, data_type::Type, dims...)
   return CPUBlob(data_type, dims...)
+end
+function destroy(blob::CPUBlob)
+  # do nothing... or is there anything that I could do?
 end
 
 eltype{T}(::CPUBlob{T}) = T

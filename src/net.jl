@@ -35,7 +35,9 @@ function init(net::Net, regu_coef :: FloatingPoint = 0.0)
   end
 end
 function destroy(net::Net)
-  # TODO
+  for state in net.states
+    shutdown(net.sys, state)
+  end
 end
 
 function show_statistics(net::Net; title="Network Statistics")

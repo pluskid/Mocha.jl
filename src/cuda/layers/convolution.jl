@@ -11,7 +11,7 @@ type CuDNNConvState
   bias_offset   :: Int
 end
 
-function setup_etc(sys::System{CuDNNBackend}, layer::ConvolutionLayer, dtype, width, height, channels, 
+function setup_etc(sys::System{CuDNNBackend}, layer::ConvolutionLayer, dtype, width, height, channels,
     batch_size, width_out, height_out, inputs)
 
   filter_desc = CuDNN.create_filter_descriptor(dtype, (layer.kernel[1], layer.kernel[2],
@@ -38,6 +38,14 @@ function setup_etc(sys::System{CuDNNBackend}, layer::ConvolutionLayer, dtype, wi
   etc = CuDNNConvState(inputs_desc, outputs_desc, conv_desc, filter_desc, bias_desc,
       bottom_offset, top_offset, weight_offset, bias_offset)
   return etc
+end
+function shutdown_etc(sys::System{CuDNNBackend}, state::ConvolutionLayerState)
+  etc = state.etc
+  CuDNN.destroy_filter_descriptor(etc.filter_desc)
+  CuDNN.destroy_tensor4d_descriptor(etc.bias_desc)
+  map(CuDNN.destroy_tensor4d_descriptor, etc.inputs_desc)
+  map(CuDNN.destroy_tensor4d_descriptor, etc.outputs_desc)
+  map(CuDNN.destroy_convolution_descriptor, etc.conv_desc)
 end
 
 function forward(sys::System{CuDNNBackend}, state::ConvolutionLayerState, inputs::Vector{Blob})
