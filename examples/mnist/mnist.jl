@@ -59,4 +59,6 @@ solve(solver, net)
 #  Profile.print(out)
 #end
 
+destroy(net)
+destroy(test_net)
 shutdown(sys)

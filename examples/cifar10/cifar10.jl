@@ -69,5 +69,7 @@ add_coffee_break(solver,
 #  Profile.print(out)
 #end
 
+destroy(net)
+destroy(test_net)
 solve(solver, net)
 shutdown(sys)
