@@ -1,5 +1,5 @@
 function test_multinomial_logistic_loss_layer(sys::System, T, eps)
-  println("-- Testing MultinomialLogisticLossLayer on $(typeof(sys.backend))...")
+  println("-- Testing MultinomialLogisticLossLayer on $(typeof(sys.backend)){$T}...")
 
   width, height, channels, num = (5, 6, 7, 8)
 
@@ -32,7 +32,7 @@ function test_multinomial_logistic_loss_layer(sys::System, T, eps)
 end
 function test_multinomial_logistic_loss_layer(sys::System)
   test_multinomial_logistic_loss_layer(sys, Float32, 1e-3)
-  test_multinomial_logistic_loss_layer(sys, Float64, 1e-9)
+  test_multinomial_logistic_loss_layer(sys, Float64, 1e-7)
 end
 
 if test_cpu

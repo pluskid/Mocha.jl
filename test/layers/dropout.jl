@@ -31,8 +31,8 @@ function test_dropout_layer(sys::System, T, eps)
   shutdown(sys, state)
 end
 function test_dropout_layer(sys::System)
-  test_dropout_layer(sys, Float32, 1e-4)
   test_dropout_layer(sys, Float64, 1e-10)
+  test_dropout_layer(sys, Float32, 1e-4)
 end
 
 if test_cpu

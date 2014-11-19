@@ -1,10 +1,12 @@
 function setup_etc(sys::System{CuDNNBackend}, layer::DropoutLayer, inputs::Vector{Blob})
   cuda_rand_states = Array(CuPtr, length(inputs))
   kernel = sys.backend.mocha.dropout_init
-  rnd_state_size = Csize_t[0]
-  CUDA.launch(sys.backend.mocha.dropout_alloc_size, 1, 1, (rnd_state_size, ))
-  rnd_state_size = rnd_state_size[1]
-  @debug("rnd_state_size = $rnd_state_size")
+  rnd_state_size_blob = make_blob(sys.backend, Float64, 1)
+  CUDA.launch(sys.backend.mocha.dropout_alloc_size, 1, 1, (rnd_state_size_blob.ptr.p, ))
+  rnd_state_size = Float64[0]
+  copy!(rnd_state_size, rnd_state_size_blob)
+  destroy(rnd_state_size_blob)
+  rnd_state_size = int(rnd_state_size[1])
 
   for i = 1:length(inputs)
     len = length(inputs[i])
@@ -35,7 +37,7 @@ function forward(sys::System{CuDNNBackend}, state::DropoutLayerState, inputs::Ve
 
     CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X,
         (state.etc[i], length(inputs[i]), inputs[i].ptr.p,
-        state.blobs[i].ptr.p, state.rand_vals[i].ptr.p,
+        state.rand_vals[i].ptr.p, state.blobs[i].ptr.p,
         state.ratio, state.scale))
   end
 end
@@ -54,7 +56,7 @@ function backward(sys::System{CuDNNBackend}, state::DropoutLayerState, inputs::V
 
       CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X,
           (state.etc[i], length(inputs[i]), diffs[i].ptr.p,
-          state.blobs_diff[i].ptr.p, state.rand_vals[i].ptr.p,
+          state.rand_vals[i].ptr.p, state.blobs_diff[i].ptr.p,
           state.ratio, state.scale))
     end
   end
