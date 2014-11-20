@@ -3,7 +3,7 @@
 ## v0.0.2 (TODO)
 
 * Infrastructure
-  * Ability to import caffe trained model?
+  * Ability to import caffe trained model
   * Properly release all the allocated resources upon backend shutdown
 * Network
   * Sigmoid activation function
@@ -13,7 +13,8 @@
   * Dropout Layer
 * Documentation
   * Complete MNIST demo
-  * Detailed document on each component
+  * Complete CIFAR-10 demo
+  * Major part of User's Guide
 
 ## v0.0.1 2014.11.13
 

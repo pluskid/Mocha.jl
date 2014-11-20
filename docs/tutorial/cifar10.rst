@@ -64,16 +64,11 @@ directly, which will automatically download the binary files, convert it to HDF5
 and prepare text index files that points to the HDF5 datasets.
 
 Notice in Caffe's data layer, a ``transform_param`` is specified with
-a ``mean_file``. Mocha's data layers does not support data transformations now.
-The excuse for this is that unless you are doing massive data augmentation [2]_,
-it is better to do those data preprocessing off-line. Since pre-processing only
-needs to run once, being able to perform arbitrarily flexible manipulations is
-more important than being super efficient.
-
-In this case, we perform mean subtraction when we convert to the HDF5 dataset.
-See `convert.jl`_ for details. Please refer to the :doc:`user's guide
-</user-guide/layers/data-layer>` for more details about HDF5 data format that
-Mocha reads.
+a ``mean_file``. Since we need to compute the data mean during data conversion,
+for simplicity, we also perform mean subtraction when converting data to
+HDF5 format. See `convert.jl`_ for details. Please refer to the
+:doc:`user's guide </user-guide/layers/data-layer>` for more details about HDF5
+data format that Mocha reads.
 
 After converting the data, you should be ready to load the data in Mocha with
 :class:`HDF5DataLayer`. We define two layers for training data and test data
@@ -95,9 +90,6 @@ subsets of those Julia layer objects.
 
 .. [1] All the CIFAR-10 example related code in Mocha could be found in the
    ``examples/cifar10`` directory under the source tree.
-.. [2] And you are lack of disk spaces. Or you are generating a huge amount of
-   extra transformed data with very cheap operations, such that loading
-   pre-generated data is much slower than generating them on the fly.
 
 Computation and Loss Layers
 ---------------------------
@@ -286,7 +278,33 @@ a controlled comparison, just to get a rough feeling.
 Pure Julia on CPU
 ~~~~~~~~~~~~~~~~~
 
-15 min ?
+The training is quite slow on a pure Julia backend. It takes about 15 minutes to
+run every 200 iterations.
+
+.. code-block:: text
+
+   20-Nov 06:58:26:INFO:root:004600 :: TRAIN obj-val = 1.07695698
+   20-Nov 07:13:25:INFO:root:004800 :: TRAIN obj-val = 1.06556938
+   20-Nov 07:28:26:INFO:root:005000 :: TRAIN obj-val = 1.15177973
+   20-Nov 07:30:35:INFO:root:
+   20-Nov 07:30:35:INFO:root:## Performance on Validation Set
+   20-Nov 07:30:35:INFO:root:---------------------------------------------------------
+   20-Nov 07:30:35:INFO:root:  Accuracy (avg over 10000) = 62.8200%
+   20-Nov 07:30:35:INFO:root:---------------------------------------------------------
+   20-Nov 07:30:35:INFO:root:
+   20-Nov 07:45:33:INFO:root:005200 :: TRAIN obj-val = 0.93760641
+   20-Nov 08:00:30:INFO:root:005400 :: TRAIN obj-val = 0.95650533
+   20-Nov 08:15:29:INFO:root:005600 :: TRAIN obj-val = 1.03291103
+   20-Nov 08:30:21:INFO:root:005800 :: TRAIN obj-val = 1.01833960
+   20-Nov 08:45:17:INFO:root:006000 :: TRAIN obj-val = 1.10167430
+   20-Nov 08:47:27:INFO:root:
+   20-Nov 08:47:27:INFO:root:## Performance on Validation Set
+   20-Nov 08:47:27:INFO:root:---------------------------------------------------------
+   20-Nov 08:47:27:INFO:root:  Accuracy (avg over 10000) = 64.7100%
+   20-Nov 08:47:27:INFO:root:---------------------------------------------------------
+   20-Nov 08:47:27:INFO:root:
+   20-Nov 09:02:24:INFO:root:006200 :: TRAIN obj-val = 0.88323826
+
 
 CPU with Native Extension
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -299,31 +317,32 @@ number of threads to 1:
    ENV["OMP_NUM_THREADS"] = 1
    blas_set_num_threads(1)
 
-According to the log, it takes roughly 130 seconds to finish every 200
+According to the log, it takes roughly 160 seconds to finish every 200
 iterations.
 
 .. code-block:: text
 
-   17-Nov 23:16:48:INFO:root:002800 :: TRAIN obj-val = 0.81475013
-   17-Nov 23:18:53:INFO:root:003000 :: TRAIN obj-val = 0.96854031
-   17-Nov 23:19:21:INFO:root:
-   17-Nov 23:19:21:INFO:root:## Performance on Validation Set
-   17-Nov 23:19:21:INFO:root:---------------------------------------------------------
-   17-Nov 23:19:21:INFO:root:  Accuracy (avg over 10000) = 67.3000%
-   17-Nov 23:19:21:INFO:root:---------------------------------------------------------
-   17-Nov 23:19:21:INFO:root:
-   17-Nov 23:21:27:INFO:root:003200 :: TRAIN obj-val = 1.09695852
-   17-Nov 23:23:36:INFO:root:003400 :: TRAIN obj-val = 0.98007375
-   17-Nov 23:25:49:INFO:root:003600 :: TRAIN obj-val = 0.78248519
-   17-Nov 23:28:01:INFO:root:003800 :: TRAIN obj-val = 0.75499558
-   17-Nov 23:30:14:INFO:root:004000 :: TRAIN obj-val = 0.77041978
-   17-Nov 23:30:45:INFO:root:
-   17-Nov 23:30:45:INFO:root:## Performance on Validation Set
-   17-Nov 23:30:45:INFO:root:---------------------------------------------------------
-   17-Nov 23:30:45:INFO:root:  Accuracy (avg over 10000) = 70.1800%
-   17-Nov 23:30:45:INFO:root:---------------------------------------------------------
-   17-Nov 23:30:45:INFO:root:
-   17-Nov 23:32:59:INFO:root:004200 :: TRAIN obj-val = 0.94838876
+   20-Nov 09:29:10:INFO:root:000800 :: TRAIN obj-val = 1.46420457
+   20-Nov 09:31:48:INFO:root:001000 :: TRAIN obj-val = 1.63248945
+   20-Nov 09:32:22:INFO:root:
+   20-Nov 09:32:22:INFO:root:## Performance on Validation Set
+   20-Nov 09:32:22:INFO:root:---------------------------------------------------------
+   20-Nov 09:32:22:INFO:root:  Accuracy (avg over 10000) = 44.4300%
+   20-Nov 09:32:22:INFO:root:---------------------------------------------------------
+   20-Nov 09:32:22:INFO:root:
+   20-Nov 09:35:00:INFO:root:001200 :: TRAIN obj-val = 1.33312901
+   20-Nov 09:37:38:INFO:root:001400 :: TRAIN obj-val = 1.40529397
+   20-Nov 09:40:16:INFO:root:001600 :: TRAIN obj-val = 1.26366557
+   20-Nov 09:42:54:INFO:root:001800 :: TRAIN obj-val = 1.29758151
+   20-Nov 09:45:32:INFO:root:002000 :: TRAIN obj-val = 1.40923050
+   20-Nov 09:46:06:INFO:root:
+   20-Nov 09:46:06:INFO:root:## Performance on Validation Set
+   20-Nov 09:46:06:INFO:root:---------------------------------------------------------
+   20-Nov 09:46:06:INFO:root:  Accuracy (avg over 10000) = 51.0400%
+   20-Nov 09:46:06:INFO:root:---------------------------------------------------------
+   20-Nov 09:46:06:INFO:root:
+   20-Nov 09:48:44:INFO:root:002200 :: TRAIN obj-val = 1.24579735
+   20-Nov 09:51:22:INFO:root:002400 :: TRAIN obj-val = 1.22985339
 
 We also tried to use multi-thread computing:
 

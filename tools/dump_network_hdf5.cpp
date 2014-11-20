@@ -1,7 +1,9 @@
 // This program takes in a trained network and dump all the network
 // parameters to a HDF5 file that is readable for Mocha.jl
 // Usage:
-//    dump_network_hdf5 network_snapshot hdf5_output_filename
+//    dump_network_hdf5 network_def network_snapshot hdf5_output_filename
+//
+// Please refer to Mocha's document for details on how to use this tool.
 
 #include <string>
 #include <vector>
