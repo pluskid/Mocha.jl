@@ -29,6 +29,7 @@ User's Guide
    user-guide/regularizer
    user-guide/solver
    user-guide/backend
+   user-guide/tools/index
 
 #################
 Developer's Guide

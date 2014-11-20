@@ -351,31 +351,36 @@ We also tried to use multi-thread computing:
    ENV["OMP_NUM_THREADS"] = 16
    blas_set_num_threads(16)
 
-This gave me slower computation time, about 200 seconds every 200 iterations.
-I did not try multi-thread computing with less or more threads.
+By using 16 cores to compute, I got very slight improvement (which may well due
+to external factors as I did not control the comparison environment at all),
+with roughly 150 seconds every 200 iterations. I did not try multi-thread
+computing with less or more threads.
 
 .. code-block:: text
 
-   17-Nov 22:24:27:INFO:root:002800 :: TRAIN obj-val = 0.85292178
-   17-Nov 22:27:50:INFO:root:003000 :: TRAIN obj-val = 0.88822174
-   17-Nov 22:28:31:INFO:root:
-   17-Nov 22:28:31:INFO:root:## Performance on Validation Set
-   17-Nov 22:28:31:INFO:root:---------------------------------------------------------
-   17-Nov 22:28:31:INFO:root:  Accuracy (avg over 10000) = 63.3500%
-   17-Nov 22:28:31:INFO:root:---------------------------------------------------------
-   17-Nov 22:28:31:INFO:root:
-   17-Nov 22:31:58:INFO:root:003200 :: TRAIN obj-val = 1.06246507
-   17-Nov 22:35:22:INFO:root:003400 :: TRAIN obj-val = 0.94288993
-   17-Nov 22:38:46:INFO:root:003600 :: TRAIN obj-val = 0.84770185
-   17-Nov 22:42:12:INFO:root:003800 :: TRAIN obj-val = 0.74366856
-   17-Nov 22:45:33:INFO:root:004000 :: TRAIN obj-val = 0.79406691
-   17-Nov 22:46:12:INFO:root:
-   17-Nov 22:46:12:INFO:root:## Performance on Validation Set
-   17-Nov 22:46:12:INFO:root:---------------------------------------------------------
-   17-Nov 22:46:12:INFO:root:  Accuracy (avg over 10000) = 67.5700%
-   17-Nov 22:46:12:INFO:root:---------------------------------------------------------
-   17-Nov 22:46:12:INFO:root:
-   17-Nov 22:49:35:INFO:root:004200 :: TRAIN obj-val = 1.02186918
+   20-Nov 10:29:34:INFO:root:002400 :: TRAIN obj-val = 1.25820349
+   20-Nov 10:32:04:INFO:root:002600 :: TRAIN obj-val = 1.22480259
+   20-Nov 10:34:32:INFO:root:002800 :: TRAIN obj-val = 1.25739809
+   20-Nov 10:37:02:INFO:root:003000 :: TRAIN obj-val = 1.32196600
+   20-Nov 10:37:36:INFO:root:
+   20-Nov 10:37:36:INFO:root:## Performance on Validation Set
+   20-Nov 10:37:36:INFO:root:---------------------------------------------------------
+   20-Nov 10:37:36:INFO:root:  Accuracy (avg over 10000) = 56.4300%
+   20-Nov 10:37:36:INFO:root:---------------------------------------------------------
+   20-Nov 10:37:36:INFO:root:
+   20-Nov 10:40:06:INFO:root:003200 :: TRAIN obj-val = 1.17503929
+   20-Nov 10:42:40:INFO:root:003400 :: TRAIN obj-val = 1.13562913
+   20-Nov 10:45:09:INFO:root:003600 :: TRAIN obj-val = 1.17141657
+   20-Nov 10:47:40:INFO:root:003800 :: TRAIN obj-val = 1.20520208
+   20-Nov 10:50:12:INFO:root:004000 :: TRAIN obj-val = 1.24686298
+   20-Nov 10:50:47:INFO:root:
+   20-Nov 10:50:47:INFO:root:## Performance on Validation Set
+   20-Nov 10:50:47:INFO:root:---------------------------------------------------------
+   20-Nov 10:50:47:INFO:root:  Accuracy (avg over 10000) = 59.4500%
+   20-Nov 10:50:47:INFO:root:---------------------------------------------------------
+   20-Nov 10:50:47:INFO:root:
+   20-Nov 10:53:16:INFO:root:004200 :: TRAIN obj-val = 1.11022978
+   20-Nov 10:55:49:INFO:root:004400 :: TRAIN obj-val = 1.04538457
 
 CUDA with cuDNN
 ~~~~~~~~~~~~~~~

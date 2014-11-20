@@ -87,7 +87,7 @@ end
 # When mapped correctly, this could be used to import
 # trained network from other tools (e.g. Caffe)
 ############################################################
-function load_network(file::HDF5File, net)
+function load_network(file::HDF5File, net, die_if_not_found=true)
   for i = 1:length(net.layers)
     if isa(net.layers[i], TrainableLayer)
       layer_name = net.layers[i].name
@@ -98,10 +98,16 @@ function load_network(file::HDF5File, net)
         key = "$(layer_name)___$(param_name)"
         if !has(file, key)
           if param_name == "bias"
-            @warn("No bias found for $layer_name, initializing as zeros")
-            fill!(param_obj.blob, 0)
+            @warn("No bias found for $layer_name, use default initialization")
+            init(param_obj.initializer, param_obj.blob)
           else
-            error("No saved parameter $param_name not found for layer $layer_name")
+            if die_if_not_found
+              error("No saved parameter $param_name not found for layer $layer_name")
+            else
+              # show error message but do not die
+              @error("No saved parameter $param_name not found for layer $layer_name, use default initialization")
+              init(param_obj.initializer, param_obj.blob)
+            end
           end
         else
           param = read(file, key)
