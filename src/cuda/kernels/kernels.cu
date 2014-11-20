@@ -14,4 +14,5 @@
 #include "dropout.impl"
 
 #include "relu.impl"
+#include "sigmoid.impl"
 

@@ -1,7 +1,6 @@
-function test_sigmoid_neuron(sys::System, T)
+function test_sigmoid_neuron(sys::System, T, eps)
   println("-- Testing Sigmoid neuron on $(typeof(sys.backend)){$T}...")
 
-  eps = 1e-10
   data = rand(T, 3,4,5,6) - 0.5
   data_blob = make_blob(sys.backend, data)
   neuron = Neurons.Sigmoid()
@@ -26,8 +25,8 @@ function test_sigmoid_neuron(sys::System, T)
   @test all(-eps .< got_grad - expected_grad .< eps)
 end
 function test_sigmoid_neuron(sys::System)
-  test_sigmoid_neuron(sys, Float32)
-  test_sigmoid_neuron(sys, Float64)
+  test_sigmoid_neuron(sys, Float32, 1e-3)
+  test_sigmoid_neuron(sys, Float64, 1e-9)
 end
 
 if test_cpu
@@ -36,6 +35,4 @@ end
 if test_cudnn
   test_sigmoid_neuron(sys_cudnn)
 end
-
-
 

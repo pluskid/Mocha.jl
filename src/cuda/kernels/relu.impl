@@ -15,8 +15,7 @@ __device__ void relu_forward(T *data, int num, int channels, int spatial_dim) {
 template <typename T>
 __device__ void relu_backward(T *data, T *gradient, int num, int channels, int spatial_dim) {
   RELU_BOUNDS_AND_INDEX;
-  if (data[idx] <= 0)
-    gradient[idx] = 0;
+  gradient[idx] *= data[idx] > 0;
 }
 
 extern "C" {
