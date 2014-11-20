@@ -81,8 +81,8 @@ separately, using the same batch size as in Caffe's model definition:
 
 .. code-block:: julia
 
-   data_tr_layer = HDF5DataLayer(source="data/train.txt", batch_size=100)
-   data_tt_layer = HDF5DataLayer(source="data/test.txt", batch_size=100)
+   data_tr_layer = HDF5DataLayer(name="data-train", source="data/train.txt", batch_size=100)
+   data_tt_layer = HDF5DataLayer(name="data-test", source="data/test.txt", batch_size=100)
 
 In order to share the definition of common computation layers, Caffe use the
 same file to define both the training and test networks, and use *phase* to
@@ -137,43 +137,43 @@ This translates to Mocha as:
        stride=(1,1), filter_init=GaussianInitializer(std=0.0001),
        bottoms=[:data], tops=[:conv1])
 
-Several remarks:
+.. Tip::
 
-* The ``pad``, ``kernel_size`` and ``stride`` parameters in Caffe means the same
-  pad for both the *width* and *height* dimension unless specified explicitly.
-  In Mocha, we always explicitly use a 2-tuple to specify the parameters for the
-  two dimensions.
-* A *filler* in Caffe corresponds to an :doc:`initializer
-  </user-guide/initializer>` in Mocha.
-* Mocha has a constant initializer (initialize to 0) for the bias by default, so
-  we do not need to specify it explicitly.
+   * The ``pad``, ``kernel_size`` and ``stride`` parameters in Caffe means the same
+     pad for both the *width* and *height* dimension unless specified explicitly.
+     In Mocha, we always explicitly use a 2-tuple to specify the parameters for the
+     two dimensions.
+   * A *filler* in Caffe corresponds to an :doc:`initializer
+     </user-guide/initializer>` in Mocha.
+   * Mocha has a constant initializer (initialize to 0) for the bias by default, so
+     we do not need to specify it explicitly.
 
 The rest of the translated Mocha computation layers are listed here:
 
 .. code-block:: julia
 
-   pool1_layer = PoolingLayer(kernel=(3,3), stride=(2,2), neuron=Neurons.ReLU(),
+   pool1_layer = PoolingLayer(name="pool1", kernel=(3,3), stride=(2,2), neuron=Neurons.ReLU(),
        bottoms=[:conv1], tops=[:pool1])
-   norm1_layer = LRNLayer(kernel=3, scale=5e-5, power=0.75, mode=LRNMode.WithinChannel(),
+   norm1_layer = LRNLayer(name="norm1", kernel=3, scale=5e-5, power=0.75, mode=LRNMode.WithinChannel(),
        bottoms=[:pool1], tops=[:norm1])
    conv2_layer = ConvolutionLayer(name="conv2", n_filter=32, kernel=(5,5), pad=(2,2),
        stride=(1,1), filter_init=GaussianInitializer(std=0.01),
        bottoms=[:norm1], tops=[:conv2], neuron=Neurons.ReLU())
-   pool2_layer = PoolingLayer(kernel=(3,3), stride=(2,2), pooling=Pooling.Mean(),
+   pool2_layer = PoolingLayer(name="pool2", kernel=(3,3), stride=(2,2), pooling=Pooling.Mean(),
        bottoms=[:conv2], tops=[:pool2])
-   norm2_layer = LRNLayer(kernel=3, scale=5e-5, power=0.75, mode=LRNMode.WithinChannel(),
+   norm2_layer = LRNLayer(name="norm2", kernel=3, scale=5e-5, power=0.75, mode=LRNMode.WithinChannel(),
        bottoms=[:pool2], tops=[:norm2])
    conv3_layer = ConvolutionLayer(name="conv3", n_filter=64, kernel=(5,5), pad=(2,2),
        stride=(1,1), filter_init=GaussianInitializer(std=0.01),
        bottoms=[:norm2], tops=[:conv3], neuron=Neurons.ReLU())
-   pool3_layer = PoolingLayer(kernel=(3,3), stride=(2,2), pooling=Pooling.Mean(),
+   pool3_layer = PoolingLayer(name="pool3", kernel=(3,3), stride=(2,2), pooling=Pooling.Mean(),
        bottoms=[:conv3], tops=[:pool3])
-   ip1_layer   = InnerProductLayer(output_dim=10, weight_init=GaussianInitializer(std=0.01),
+   ip1_layer   = InnerProductLayer(name="ip1", output_dim=10, weight_init=GaussianInitializer(std=0.01),
        weight_regu=L2Regu(250), bottoms=[:pool3], tops=[:ip1])
 
-Another remark that you might have already noticed is that Mocha does not have
-a ReLU layer. Instead, ReLU, like Sigmoid, are treated as :doc:`neurons or
-activation functions </user-guide/neuron>` attached to layers.
+You might have already noticed is that Mocha does not have a ReLU layer.
+Instead, ReLU, like Sigmoid, are treated as :doc:`neurons or activation
+functions </user-guide/neuron>` attached to layers.
 
 Constructing the Network
 ------------------------
@@ -185,8 +185,8 @@ definitions:
 
 .. code-block:: julia
 
-   loss_layer  = SoftmaxLossLayer(bottoms=[:ip1, :label])
-   acc_layer   = AccuracyLayer(bottoms=[:ip1, :label])
+   loss_layer  = SoftmaxLossLayer(name="softmax", bottoms=[:ip1, :label])
+   acc_layer   = AccuracyLayer(name="accuracy", bottoms=[:ip1, :label])
 
 Next we collect the layers, and define a Mocha :class:`Net` on
 a :class:`CuDNNBackend`. You could use :class:`CPUBackend` if no CUDA-compatible
@@ -202,7 +202,7 @@ GPU devices are available. But it will be much slower (see also
    #sys = System(CPUBackend())
    init(sys)
 
-   net = Net(sys, [data_tr_layer, common_layers..., loss_layer])
+   net = Net("CIFAR10-train", sys, [data_tr_layer, common_layers..., loss_layer])
 
 Configuring the Solver
 ----------------------
@@ -263,24 +263,44 @@ snapshots could equivalently be done in Mocha as *coffee breaks* for the solver:
    # report training progress every 200 iterations
    add_coffee_break(solver, TrainingSummary(), every_n_iter=200)
 
-   # show performance on test data every 1000 iterations
-   test_net = Net(sys, [data_tt_layer, common_layers..., acc_layer])
-   add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
-
    # save snapshots every 5000 iterations
    add_coffee_break(solver,
        Snapshot("snapshots", auto_load=true),
        every_n_iter=5000)
 
-
+   # show performance on test data every 1000 iterations
+   test_net = Net("CIFAR10-test", sys, [data_tt_layer, common_layers..., acc_layer])
+   add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
 
 .. [3] Looking at the Caffe's solver configuration, I happily realized that I am
    not the only person in the world who sometimes mis-type o as 0. :P
+
+Training
+--------
+
+Now we could start training by calling ``solve(solver, net)``. Depending on
+different :doc:`backends </user-guide/backend>`, the training speed could vary.
+Here are some sample training logs from my own test. Note this is **not**
+a controlled comparison, just to get a rough feeling.
+
+Pure Julia on CPU
+~~~~~~~~~~~~~~~~~
+
+15 min ?
+
+CPU with Native Extension
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We enabled Mocha's native extension, but disabled OpenMP by setting the OMP
+number of threads to 1:
 
 .. code-block:: julia
 
    ENV["OMP_NUM_THREADS"] = 1
    blas_set_num_threads(1)
+
+According to the log, it takes roughly 130 seconds to finish every 200
+iterations.
 
 .. code-block:: text
 
@@ -305,11 +325,15 @@ snapshots could equivalently be done in Mocha as *coffee breaks* for the solver:
    17-Nov 23:30:45:INFO:root:
    17-Nov 23:32:59:INFO:root:004200 :: TRAIN obj-val = 0.94838876
 
+We also tried to use multi-thread computing:
 
 .. code-block:: julia
 
    ENV["OMP_NUM_THREADS"] = 16
    blas_set_num_threads(16)
+
+This gave me slower computation time, about 200 seconds every 200 iterations.
+I did not try multi-thread computing with less or more threads.
 
 .. code-block:: text
 
@@ -334,35 +358,32 @@ snapshots could equivalently be done in Mocha as *coffee breaks* for the solver:
    17-Nov 22:46:12:INFO:root:
    17-Nov 22:49:35:INFO:root:004200 :: TRAIN obj-val = 1.02186918
 
+CUDA with cuDNN
+~~~~~~~~~~~~~~~
+
+It takes roughly 10 seconds to finish every 200 iterations on the
+``CuDNNBackend``.
+
 .. code-block:: text
 
-   I1117 21:55:18.451865 33463 solver.cpp:403] Iteration 2800, lr = 0.001
-   I1117 21:57:18.176666 33463 solver.cpp:247] Iteration 3000, Testing net (#0)
-   I1117 21:57:47.454730 33463 solver.cpp:298]     Test net output #0: accuracy = 0.5853
-   I1117 21:57:47.454778 33463 solver.cpp:298]     Test net output #1: loss = 1.1544 (* 1 = 1.1544 loss)
-   I1117 21:57:48.058338 33463 solver.cpp:191] Iteration 3000, loss = 1.30168
-   I1117 21:57:48.058384 33463 solver.cpp:206]     Train net output #0: loss = 1.30168 (* 1 = 1.30168 loss)
-   I1117 21:57:48.058395 33463 solver.cpp:403] Iteration 3000, lr = 0.001
-   I1117 21:59:48.495744 33463 solver.cpp:191] Iteration 3200, loss = 1.10434
-   I1117 21:59:48.495982 33463 solver.cpp:206]     Train net output #0: loss = 1.10434 (* 1 = 1.10434 loss)
-   I1117 21:59:48.495995 33463 solver.cpp:403] Iteration 3200, lr = 0.001
-   I1117 22:01:48.953501 33463 solver.cpp:191] Iteration 3400, loss = 1.04567
-   I1117 22:01:48.953748 33463 solver.cpp:206]     Train net output #0: loss = 1.04567 (* 1 = 1.04567 loss)
-   I1117 22:01:48.953762 33463 solver.cpp:403] Iteration 3400, lr = 0.001
-   I1117 22:03:49.428063 33463 solver.cpp:191] Iteration 3600, loss = 1.24852
-   I1117 22:03:49.428390 33463 solver.cpp:206]     Train net output #0: loss = 1.24852 (* 1 = 1.24852 loss)
-   I1117 22:03:49.428403 33463 solver.cpp:403] Iteration 3600, lr = 0.001
-   I1117 22:05:49.946528 33463 solver.cpp:191] Iteration 3800, loss = 0.937274
-   I1117 22:05:49.946780 33463 solver.cpp:206]     Train net output #0: loss = 0.937274 (* 1 = 0.937274 loss)
-   I1117 22:05:49.946794 33463 solver.cpp:403] Iteration 3800, lr = 0.001
-   I1117 22:07:49.897718 33463 solver.cpp:247] Iteration 4000, Testing net (#0)
-   I1117 22:08:19.291095 33463 solver.cpp:298]     Test net output #0: accuracy = 0.6098
-   I1117 22:08:19.291141 33463 solver.cpp:298]     Test net output #1: loss = 1.09563 (* 1 = 1.09563 loss)
-   I1117 22:08:19.894783 33463 solver.cpp:191] Iteration 4000, loss = 1.22756
-   I1117 22:08:19.894830 33463 solver.cpp:206]     Train net output #0: loss = 1.22756 (* 1 = 1.22756 loss)
-   I1117 22:08:19.894841 33463 solver.cpp:403] Iteration 4000, lr = 0.001
-   I1117 22:10:20.511523 33463 solver.cpp:191] Iteration 4200, loss = 1.00094
-   I1117 22:10:20.511780 33463 solver.cpp:206]     Train net output #0: loss = 1.00094 (* 1 = 1.00094 loss)
-   I1117 22:10:20.511791 33463 solver.cpp:403] Iteration 4200, lr = 0.001
-
+   20-Nov 01:16:48:INFO:root:001400 :: TRAIN obj-val = 1.47859097
+   20-Nov 01:16:57:INFO:root:001600 :: TRAIN obj-val = 1.33097243
+   20-Nov 01:17:07:INFO:root:001800 :: TRAIN obj-val = 1.33654988
+   20-Nov 01:17:16:INFO:root:002000 :: TRAIN obj-val = 1.50953197
+   20-Nov 01:17:18:INFO:root:
+   20-Nov 01:17:18:INFO:root:## Performance on Validation Set
+   20-Nov 01:17:18:INFO:root:---------------------------------------------------------
+   20-Nov 01:17:18:INFO:root:  Accuracy (avg over 10000) = 50.2300%
+   20-Nov 01:17:18:INFO:root:---------------------------------------------------------
+   20-Nov 01:17:18:INFO:root:
+   20-Nov 01:17:27:INFO:root:002200 :: TRAIN obj-val = 1.29346514
+   20-Nov 01:17:37:INFO:root:002400 :: TRAIN obj-val = 1.32249010
+   20-Nov 01:17:46:INFO:root:002600 :: TRAIN obj-val = 1.27704692
+   20-Nov 01:17:56:INFO:root:002800 :: TRAIN obj-val = 1.25375235
+   20-Nov 01:18:05:INFO:root:003000 :: TRAIN obj-val = 1.38656604
+   20-Nov 01:18:07:INFO:root:
+   20-Nov 01:18:07:INFO:root:## Performance on Validation Set
+   20-Nov 01:18:07:INFO:root:---------------------------------------------------------
+   20-Nov 01:18:07:INFO:root:  Accuracy (avg over 10000) = 56.6100%
+   20-Nov 01:18:07:INFO:root:---------------------------------------------------------
 
