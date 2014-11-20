@@ -26,6 +26,10 @@ local regularization coefficients.
    During the forward pass, the squared L2-norm :math:`\|W\|^2=\langle
    W,W\rangle` is computed, and :math:`\lambda \|W\|^2` is added to the
    objective function, where :math:`\lambda` is the regularization coefficient.
-   During the backward pass, :math:`\lambda W` is added to the parameter
+   During the backward pass, :math:`2\lambda W` is added to the parameter
    gradient, enforcing a weight decay when the solver moves the parameters
    towards the negative gradient direction.
+
+   Note in Caffe, only :math:`\lambda W` is added as a weight decay in back
+   propagation, which is equivalent to having a L2 regularizer with coefficient
+   :math:`0.5\lambda`.
