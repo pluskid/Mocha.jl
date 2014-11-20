@@ -7,6 +7,6 @@ function forward(sys::System{CuDNNBackend}, regu :: L2Regu, global_regu::Floatin
 end
 function backward(sys::System{CuDNNBackend}, regu :: L2Regu, global_regu::FloatingPoint, param :: Blob, gradient :: Blob)
     CuBLAS.axpy(sys.backend.cublas_ctx, length(param),
-        convert(eltype(param), regu.coefficient * global_regu), param.ptr, 1, gradient.ptr, 1)
+        convert(eltype(param), 2 * regu.coefficient * global_regu), param.ptr, 1, gradient.ptr, 1)
 end
 

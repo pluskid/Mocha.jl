@@ -32,7 +32,7 @@ sys = System(CuDNNBackend())
 init(sys)
 
 common_layers = [conv_layer, pool_layer, conv2_layer, pool2_layer, fc1_layer, fc2_layer]
-net = Net(sys, [data_layer, common_layers..., loss_layer])
+net = Net("MNIST-train", sys, [data_layer, common_layers..., loss_layer])
 
 params = SolverParameters(max_iter=10000, regu_coef=0.0005, momentum=0.9,
     lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75))
@@ -41,16 +41,16 @@ solver = SGD(params)
 # report training progress every 100 iterations
 add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
 
-# show performance on test data every 1000 iterations
-data_layer_test = HDF5DataLayer(source=source_fns[2], batch_size=100)
-acc_layer = AccuracyLayer(bottoms=[:ip2, :label])
-test_net = Net(sys, [data_layer_test, common_layers..., acc_layer])
-add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
-
 # save snapshots every 5000 iterations
 add_coffee_break(solver,
     Snapshot("snapshots", auto_load=true),
     every_n_iter=5000)
+
+# show performance on test data every 1000 iterations
+data_layer_test = HDF5DataLayer(source=source_fns[2], batch_size=100)
+acc_layer = AccuracyLayer(bottoms=[:ip2, :label])
+test_net = Net("MNIST-test", sys, [data_layer_test, common_layers..., acc_layer])
+add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
 
 solve(solver, net)
 #Profile.init(int(1e8), 0.001)

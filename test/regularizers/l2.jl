@@ -14,7 +14,7 @@ function test_l2_regularizer(sys::System, T, eps)
   grad = zeros(T, size(param))
   copy!(grad, grad_blob)
 
-  @test all(-eps .< grad - param .< eps)
+  @test all(-eps .< grad - 2*param .< eps)
 end
 
 function test_l2_regularizer(sys::System)

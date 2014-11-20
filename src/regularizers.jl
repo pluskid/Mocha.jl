@@ -35,6 +35,6 @@ function forward(sys::System{CPUBackend}, regu :: L2Regu, global_regu::FloatingP
   return regu.coefficient * global_regu * vecnorm(param.data)^2
 end
 function backward(sys::System{CPUBackend}, regu :: L2Regu, global_regu::FloatingPoint, param :: Blob, gradient :: Blob)
-  BLAS.axpy!(length(param), convert(eltype(param), regu.coefficient * global_regu), param.data, 1, gradient.data, 1)
+  BLAS.axpy!(length(param), convert(eltype(param), 2 * regu.coefficient * global_regu), param.data, 1, gradient.data, 1)
 end
 
