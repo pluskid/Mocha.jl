@@ -18,10 +18,3 @@ Statistics Layers
   classification accuracy. Statistics could be accumulated throughout multiple
   iterations.
 
-Notations
----------
-
-In the document for the layers, the following common notations will be used
-
-* :math:`x`: the input tensor of a layer.
-* :math:`y`: the output tensor of a layer.

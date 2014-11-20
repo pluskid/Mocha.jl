@@ -1,6 +1,18 @@
 # News for Mocha Development
 
-## v0.0.2 (TODO)
+## TODO
+
+* Interface
+  * IJulia-notebook example
+  * Network architecture visualization
+* Infrastructure
+  * Other solvers?
+  * CUDA Stream?
+* Document
+  * Complete User's Guide
+  * Developer's Guide
+
+## v0.0.2 2014.11.20
 
 * Infrastructure
   * Ability to import caffe trained model

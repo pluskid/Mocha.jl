@@ -266,6 +266,7 @@ like this:
 
 .. image:: images/MNIST-network.*
    :align: center
+   :width: 500px
 
 
 Now we are ready to add another coffee break to report the validation
