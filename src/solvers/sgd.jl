@@ -57,7 +57,7 @@ function update_parameters(net::Net{CPUBackend}, solver::SGD, learning_rate, sta
   # hist_blob = momentum * hist_blob
   BLAS.scal!(length(hist_blob), convert(data_type, solver.params.momentum), hist_blob.data, 1)
   # hist_blob = learning_rate * gradient + hist_blob
-  BLAS.axpy!(length(hist_blob), convert(data_type, -learning_rate), gradient.data, 1, hist_blob.data, 1)
+  BLAS.axpy!(length(hist_blob), convert(data_type, learning_rate), gradient.data, 1, hist_blob.data, 1)
 
   # update parameter
   # param_blob += -hist_blob
