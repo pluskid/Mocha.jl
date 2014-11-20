@@ -49,7 +49,7 @@ input for the network:
 
 .. code-block:: julia
 
-   data_layer = HDF5DataLayer(source="data/train.txt", batch_size=64)
+   data_layer = HDF5DataLayer(name="train-data", source="data/train.txt", batch_size=64)
 
 Note the ``source`` is a simple text file what contains a list of real
 data files (in this case ``data/train.hdf5``). This behavior is the
@@ -70,7 +70,9 @@ There are more parameters we specified here
   disk and loading back, this is used as an identifier to map to the
   correct layer. So if your layer contains learned parameters (a
   convolution layer contains learned filters), you should give it a
-  unique name.
+  unique name. It is a good practice to give every layer a unique name,
+  for the purpose of getting more informative debugging information
+  when there is any potential issues.
 ``n_filter``
   Number of convolution filters.
 ``kernel``
@@ -96,8 +98,8 @@ with more filters this time:
 
 .. code-block:: julia
 
-   pool_layer = PoolingLayer(kernel=(2,2), stride=(2,2), bottoms=[:conv],
-       tops=[:pool])
+   pool_layer = PoolingLayer(name="pool1", kernel=(2,2), stride=(2,2),
+       bottoms=[:conv], tops=[:pool])
    conv2_layer = ConvolutionLayer(name="conv2", n_filter=50, kernel=(5,5),
        bottoms=[:pool], tops=[:conv2])
 
@@ -123,12 +125,13 @@ data stream.
 Note for the first inner product layer, we specifies a Rectified
 Learning Unit (ReLU) activation function via the ``neuron``
 property. An activation function could be added to almost all
-computation layers (e.g. convolution layer). By default, no activation
+computation layers. By default, no activation
 function, or the *identity activation function* is used. We don't use
 activation function for the last inner product layer, because that
-layer acts as a linear classifier. Also the output dimension of the last inner
-product layer is 10, which corresponds to the number of classes (digits 0~9) of
-our problem.
+layer acts as a linear classifier. For more details, see :doc:`/user-guide/neuron`.
+
+The output dimension of the last inner product layer is 10, which corresponds
+to the number of classes (digits 0~9) of our problem.
 
 This is the basic structure of LeNet. In order to train this network,
 we need to define a loss function. This is done by adding a loss
@@ -136,7 +139,7 @@ layer:
 
 .. code-block:: julia
 
-   loss_layer = SoftmaxLossLayer(bottoms=[:ip2,:label])
+   loss_layer = SoftmaxLossLayer(name="loss", bottoms=[:ip2,:label])
 
 Note this softmax loss layer takes as input ``:ip2``, which is the
 output of the last inner product layer, and ``:label``, which comes
@@ -164,7 +167,7 @@ construct our network:
 
    common_layers = [conv_layer, pool_layer, conv2_layer, pool2_layer,
        fc1_layer, fc2_layer]
-   net = Net(sys, [data_layer, common_layers..., loss_layer])
+   net = Net("MNIST-train", sys, [data_layer, common_layers..., loss_layer])
 
 A network is built by passing the constructor an initialized system,
 and a list of layers. Note we use ``common_layers`` to collect a
@@ -219,6 +222,22 @@ First of all, we allow the solver to have a coffee break after every
 training process. Currently ``TrainingSummary`` will print the loss
 function value on the last training mini-batch.
 
+We also add a coffee break to save a snapshot for the trained
+network every 5,000 iterations.
+
+.. code-block:: julia
+
+   add_coffee_break(solver,
+       Snapshot("snapshots", auto_load=true), every_n_iter=5000)
+
+Here ``"snapshots"`` is the name of the directory you want to save snapshots to.
+By setting ``auto_load`` to true, Mocha will automatically search and resume
+from the last saved snapshots.
+
+If you additionally set ``also_load_solver_state`` to false, Mocha will load the
+saved network as initialization, but pretend to be training from scratch. This
+could be useful if you are fine tuning based on some pre-trained network.
+
 In order to see whether we are really making progress or simply
 overfitting, we also wish to see the performance on a separate
 validation set periodically. In this example, we simply use the test
@@ -234,9 +253,9 @@ us.
 
 .. code-block:: julia
 
-   data_layer_test = HDF5DataLayer(source=source_fns[2], batch_size=100)
-   acc_layer = AccuracyLayer(bottoms=[:ip2, :label])
-   test_net = Net(sys, [data_layer_test, common_layers..., acc_layer])
+   data_layer_test = HDF5DataLayer(name="test-data", source="data/test.txt", batch_size=100)
+   acc_layer = AccuracyLayer(name="test-accuracy", bottoms=[:ip2, :label])
+   test_net = Net("MNIST-test", sys, [data_layer_test, common_layers..., acc_layer])
 
 Note how we re-use the ``common_layers`` variable defined a moment
 ago to reuse the description of the network architecture. By passing
@@ -264,22 +283,6 @@ accuracy. You do not need to specify the number of iterations here as
 the HDF5 data layer will report epoch number as it goes through a full
 pass of the whole dataset.
 
-Lastly, we add a final coffee break to save a snapshot for the trained
-network every 5,000 iterations.
-
-.. code-block:: julia
-
-   add_coffee_break(solver,
-       Snapshot("snapshots", auto_load=true), every_n_iter=5000)
-
-Here ``"snapshots"`` is the name of the directory you want to save snapshots to.
-By setting ``auto_load`` to true, Mocha will automatically search and resume
-from the last saved snapshots.
-
-If you additionally set ``also_load_solver_state`` to false, Mocha will load the
-saved network as initialization, but pretend to be training from scratch. This
-could be useful if you are fine tuning based on some pre-trained network.
-
 Training
 --------
 
@@ -288,6 +291,9 @@ Without further due, we could finally start the training process:
 .. code-block:: julia
 
    solve(solver, net)
+
+   destroy(net)
+   destroy(test_net)
    shutdown(sys)
 
 After training, we will shutdown the system to release all the allocated

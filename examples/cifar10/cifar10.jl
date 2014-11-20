@@ -69,10 +69,10 @@ add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
 #  Profile.print(out)
 #end
 
-using HDF5
-h5open("/home/chiyuan/download/caffe/cifar10.hdf5", "r") do h5
-  load_network(h5, net)
-end
+#using HDF5
+#h5open("/home/chiyuan/download/caffe/cifar10.hdf5", "r") do h5
+#  load_network(h5, net)
+#end
 
 
 solve(solver, net)

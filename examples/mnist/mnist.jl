@@ -13,19 +13,19 @@ end
 
 #ENV["MOCHA_USE_NATIVE_EXT"] = "true"
 #ENV["OMP_NUM_THREADS"] = 1
-ENV["MOCHA_USE_CUDA"] = "true"
 #blas_set_num_threads(1)
+ENV["MOCHA_USE_CUDA"] = "true"
 
 using Mocha
 
-data_layer = HDF5DataLayer(source=source_fns[1], batch_size=64)
+data_layer = HDF5DataLayer(name="train-data", source=source_fns[1], batch_size=64)
 conv_layer = ConvolutionLayer(name="conv1", n_filter=20, kernel=(5,5), bottoms=[:data], tops=[:conv])
-pool_layer = PoolingLayer(kernel=(2,2), stride=(2,2), bottoms=[:conv], tops=[:pool])
+pool_layer = PoolingLayer(name="pool1", kernel=(2,2), stride=(2,2), bottoms=[:conv], tops=[:pool])
 conv2_layer = ConvolutionLayer(name="conv2", n_filter=50, kernel=(5,5), bottoms=[:pool], tops=[:conv2])
-pool2_layer = PoolingLayer(kernel=(2,2), stride=(2,2), bottoms=[:conv2], tops=[:pool2])
+pool2_layer = PoolingLayer(name="pool2", kernel=(2,2), stride=(2,2), bottoms=[:conv2], tops=[:pool2])
 fc1_layer  = InnerProductLayer(name="ip1", output_dim=500, neuron=Neurons.ReLU(), bottoms=[:pool2], tops=[:ip1])
 fc2_layer  = InnerProductLayer(name="ip2", output_dim=10, bottoms=[:ip1], tops=[:ip2])
-loss_layer = SoftmaxLossLayer(bottoms=[:ip2,:label])
+loss_layer = SoftmaxLossLayer(name="loss", bottoms=[:ip2,:label])
 
 sys = System(CuDNNBackend())
 #sys = System(CPUBackend())
@@ -47,12 +47,13 @@ add_coffee_break(solver,
     every_n_iter=5000)
 
 # show performance on test data every 1000 iterations
-data_layer_test = HDF5DataLayer(source=source_fns[2], batch_size=100)
-acc_layer = AccuracyLayer(bottoms=[:ip2, :label])
+data_layer_test = HDF5DataLayer(name="test-data", source=source_fns[2], batch_size=100)
+acc_layer = AccuracyLayer(name="test-accuracy", bottoms=[:ip2, :label])
 test_net = Net("MNIST-test", sys, [data_layer_test, common_layers..., acc_layer])
 add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
 
 solve(solver, net)
+
 #Profile.init(int(1e8), 0.001)
 #@profile solve(solver, net)
 #open("profile.txt", "w") do out
