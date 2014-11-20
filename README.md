@@ -41,14 +41,14 @@ Please refer to [the MNIST tutorial](http://mochajl.readthedocs.org/en/latest/tu
 ```julia
 using Mocha
 
-data = HDF5DataLayer(name="train-data",source="train-data-list.txt",batch_size=64)
-conv = ConvolutionLayer(name="conv1",n_filter=20,kernel=(5,5),bottoms=[:data],tops=[:conv])
-pool = PoolingLayer(name="pool1",kernel=(2,2),stride=(2,2),bottoms=[:conv],tops=[:pool])
-conv2 = ConvolutionLayer(name="conv2",n_filter=50,kernel=(5,5),bottoms=[:pool],tops=[:conv2])
-pool2 = PoolingLayer(name="pool2",kernel=(2,2),stride=(2,2),bottoms=[:conv2],tops=[:pool2])
-fc = InnerProductLayer(name="ip1",output_dim=500,neuron=Neurons.ReLU(),bottoms=[:pool2],tops=[:ip1])
-fc2 = InnerProductLayer(name="ip2",output_dim=10,bottoms=[:ip1],tops=[:ip2])
-loss = SoftmaxLossLayer(name="loss",bottoms=[:ip2,:label])
+data=HDF5DataLayer(name="train-data",source="train-data-list.txt",batch_size=64)
+conv=ConvolutionLayer(name="conv1",n_filter=20,kernel=(5,5),bottoms=[:data],tops=[:conv])
+pool=PoolingLayer(name="pool1",kernel=(2,2),stride=(2,2),bottoms=[:conv],tops=[:pool])
+conv2=ConvolutionLayer(name="conv2",n_filter=50,kernel=(5,5),bottoms=[:pool],tops=[:conv2])
+pool2=PoolingLayer(name="pool2",kernel=(2,2),stride=(2,2),bottoms=[:conv2],tops=[:pool2])
+fc1=InnerProductLayer(name="ip1",output_dim=500,neuron=Neurons.ReLU(),bottoms=[:pool2],tops=[:ip1])
+fc2=InnerProductLayer(name="ip2",output_dim=10,bottoms=[:ip1],tops=[:ip2])
+loss=SoftmaxLossLayer(name="loss",bottoms=[:ip2,:label])
 
 sys = System(CuDNNBackend())
 init(sys)
