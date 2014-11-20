@@ -26,13 +26,13 @@ end
 #
 # It fills the incoming matrix by randomly sampling uniform data from
 # [-scale, scale] where scale = sqrt(3 / fan_in) where fan_in is the number
-# of input nodes. You should make sure the input blob has shape (a, b, c, num)
-# where a * b * c = fan_in.
+# of input nodes. The first dimension of the blob is considered as the
+# fan in, which is consistent with the weight blob layout for InnerProductLayer.
 ################################################################################
 type XavierInitializer <: Initializer
 end
 function init(initializer::XavierInitializer, blob::Blob)
-  fan_in = get_width(blob)*get_height(blob)*get_chann(blob)
+  fan_in = size(blob, 1)
   scale = sqrt(3.0) / fan_in
   init_val = rand(eltype(blob), size(blob)) * 2scale - scale
   copy!(blob, init_val)
