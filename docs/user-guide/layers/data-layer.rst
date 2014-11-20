@@ -21,9 +21,13 @@ Data Layers
 
    The numerical types of the HDF5 datasets should either be ``Float32`` or
    ``Float64``. Even for multi-class labels, the integer class indicators should
-   still be stored as floating point. Note for N class multi-class labels, the
-   labels should be numerical values from 0 to N-1, even though Julia use
-   1-based indexing (See :class:`SoftmaxLossLayer`).
+   still be stored as floating point.
+
+   .. note::
+
+      For N class multi-class labels, the labels should be numerical values from
+      0 to N-1, even though Julia use 1-based indexing (See
+      :class:`SoftmaxLossLayer`).
 
    The HDF5 dataset format is compatible with Caffe. If you want to compare
    the results of Mocha to Caffe on the same data, you could use Caffe's HDF5

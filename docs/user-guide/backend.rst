@@ -123,7 +123,12 @@ The CUDA toolkit should be installed in order to compile the Mocha CUDA kernels.
 cuBLAS is included in CUDA distribution. But cuDNN needs to be installed
 separately. You could obtain cuDNN from `Nvidia's website
 <https://developer.nvidia.com/cuDNN>`_ by registering as a CUDA developer for
-free [1]_.
+free.
+
+.. note::
+
+   cuDNN requires CUDA 6.5 to run, and currently cuDNN is available to Linux
+   and Windows only.
 
 Before using the CUDA backend, Mocha kernels needs to be compiled. The kernels
 are located in ``src/cuda/kernels``. Please use ``Pkg.dir("Mocha")`` to find out
@@ -156,5 +161,3 @@ a ``CuDNNBackend``. The environment variable should be set **before** loading
 Mocha. It is designed to use conditional loading so that the pure CPU backend
 could still run on machines without any GPU device or CUDA library installed.
 
-.. [1] cuDNN requires CUDA 6.5 to run, and currently cuDNN is available to Linux
-   and Windows only.

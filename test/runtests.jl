@@ -37,6 +37,7 @@ end
 # Activation Functions
 ############################################################
 include("neurons/relu.jl")
+include("neurons/sigmoid.jl")
 
 ############################################################
 # Regularizers

@@ -66,11 +66,16 @@ end
 
 ############################################################
 # Sigmoid
-# TODO: rewrite this
 ############################################################
 function forward(sys :: System{CPUBackend}, neuron :: Neurons.Sigmoid, output :: Blob)
-  output.data = 1 ./ (1 + exp(-output.data))
+  len = length(output)
+  @simd for i = 1:len
+    @inbounds output.data[i] = 1 / (1 + exp(-output.data[i]))
+  end
 end
 function backward(sys :: System{CPUBackend}, neuron :: Neurons.Sigmoid, output :: Blob, gradient :: Blob)
-  gradient.data .*= (output.data .* (1-output.data))
+  len = length(output)
+  @simd for i = 1:len
+    @inbounds gradient.data[i] *= output.data[i] * (1-output.data[i])
+  end
 end

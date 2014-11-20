@@ -22,8 +22,8 @@ called *Fillers*.
    value. It fills the parameter blob by randomly sampling uniform data from
    :math:`[-S,S]` where the scale :math:`S=\sqrt{3 / F_{\text{in}}}`. Here
    :math:`F_{\text{in}}` is the fan-in: the number of input nodes. For a 4D
-   tensor parameter blob with the shape :math:`(M,N,P,Q)`, :math:`M\times
-   N\times P` is considered as the fan-in, and :math:`Q` as the fan-out.
+   tensor parameter blob with the shape :math:`(M,N,P,Q)`, :math:`M` is
+   considered as the fan-in.
 
    .. [BengioGlorot2010] Y. Bengio and X. Glorot, *Understanding the
       difficulty of training deep feedforward neural networks*, in Proceedings of
