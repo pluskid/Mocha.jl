@@ -10,13 +10,13 @@ const height     = 32
 const channels   = 3
 const batch_size = 10000
 
-mean_model = zeros(Float64, width, height, channels, 1)
+mean_model = zeros(Float32, width, height, channels, 1)
 
 for (key, sources) in datasets
   h5open("$key.hdf5", "w") do h5
-    dset_data = d_create(h5, "data", datatype(Float64), 
+    dset_data = d_create(h5, "data", datatype(Float32), 
         dataspace(width, height, channels, batch_size * length(sources)))
-    dset_label = d_create(h5, "label", datatype(Float64), 
+    dset_label = d_create(h5, "label", datatype(Float32), 
         dataspace(1,1,1, batch_size * length(sources)))
 
     for n = 1:length(sources)
@@ -28,7 +28,7 @@ for (key, sources) in datasets
         # random shuffle within batch
         rp = randperm(batch_size)
 
-        label = convert(Array{Float64},mat[1, rp])
+        label = convert(Array{Float32},mat[1, rp])
         # If I divide by 256 as in the MNIST example, then
         # training on the giving DNN gives me random
         # performance: objective function not changing,
@@ -36,7 +36,7 @@ for (key, sources) in datasets
         # The same results could be observed when
         # running Caffe, as our HDF5 dataset is
         # compatible with Caffe.
-        img = convert(Array{Float64},mat[2:end, rp])
+        img = convert(Array{Float32},mat[2:end, rp])
         img = reshape(img, width, height, channels, batch_size)
 
         if key == "train"

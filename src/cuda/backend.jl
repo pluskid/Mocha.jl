@@ -53,6 +53,11 @@ type MochaKernels
   dropout_backward_float       :: CUDA.CuFunction
   dropout_backward_double      :: CUDA.CuFunction
 
+  l1_forward_float             :: CUDA.CuFunction
+  l1_forward_double            :: CUDA.CuFunction
+  l1_backward_float            :: CUDA.CuFunction
+  l1_backward_double           :: CUDA.CuFunction
+
   MochaKernels() = begin
     mod_path = joinpath(dirname(@__FILE__), "kernels", "kernels.ptx")
     mod = CUDA.CuModule(mod_path)
@@ -106,6 +111,12 @@ type MochaKernels
     kernels.dropout_forward_double  = CUDA.CuFunction(mod, "dropout_forward_double")
     kernels.dropout_backward_float  = CUDA.CuFunction(mod, "dropout_backward_float")
     kernels.dropout_backward_double = CUDA.CuFunction(mod, "dropout_backward_double")
+
+    kernels.l1_forward_float = CUDA.CuFunction(mod, "l1_forward_float")
+    kernels.l1_forward_double = CUDA.CuFunction(mod, "l1_forward_double")
+    kernels.l1_backward_float = CUDA.CuFunction(mod, "l1_backward_float")
+    kernels.l1_backward_double = CUDA.CuFunction(mod, "l1_backward_double")
+
     return kernels
   end
 end
