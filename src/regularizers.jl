@@ -1,5 +1,5 @@
 export Regularizer
-export NoRegu, L2Regu
+export NoRegu, L2Regu, L1Regu
 export forward, backward
 
 abstract Regularizer
@@ -10,6 +10,10 @@ end
 NoRegu() = NoRegu(0.0)
 
 immutable L2Regu <: Regularizer
+  coefficient :: FloatingPoint
+end
+
+immutable L1Regu <: Regularizer
   coefficient :: FloatingPoint
 end
 
@@ -38,3 +42,16 @@ function backward(sys::System{CPUBackend}, regu :: L2Regu, global_regu::Floating
   BLAS.axpy!(length(param), convert(eltype(param), 2 * regu.coefficient * global_regu), param.data, 1, gradient.data, 1)
 end
 
+############################################################
+# L2 regularization
+############################################################
+function forward(sys::System{CPUBackend}, regu :: L1Regu, global_regu::FloatingPoint, param :: Blob)
+  return regu.coefficient * global_regu * sum(abs(param.data))
+end
+function backward(sys::System{CPUBackend}, regu :: L1Regu, global_regu::FloatingPoint, param :: Blob, gradient :: Blob)
+  coef = convert(eltype(param), regu.coefficient * global_regu)
+  len = length(param)
+  @simd for i = 1:len
+    @inbounds gradient.data[i] += coef * sign(param.data[i])
+  end
+end

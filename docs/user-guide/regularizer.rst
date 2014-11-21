@@ -30,6 +30,22 @@ local regularization coefficients.
    gradient, enforcing a weight decay when the solver moves the parameters
    towards the negative gradient direction.
 
-   Note in Caffe, only :math:`\lambda W` is added as a weight decay in back
-   propagation, which is equivalent to having a L2 regularizer with coefficient
-   :math:`0.5\lambda`.
+   .. note::
+
+      Caffe, only :math:`\lambda W` is added as a weight decay in back propagation,
+      which is equivalent to having a L2 regularizer with coefficient
+      :math:`0.5\lambda`.
+
+.. class:: L1Regu
+
+   L1 regularizer. The parameter blob :math:`W` is treated as a 1D vector.
+   During the forward pass, the L1-norm
+
+   .. math::
+
+      \|W\|_1 = \sum_i |W_i|
+
+   is computed. And :math:`\lambda \|W\|_1` is added to the objective function.
+   During the backward pass, :math:`\lambda\text{sign}(W)` is added to the
+   parameter gradient. The L1 regularizer has the property of encouraging
+   sparsity in the parameters.
