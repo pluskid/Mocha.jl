@@ -1,6 +1,59 @@
 Computation Layers
 ~~~~~~~~~~~~~~~~~~
 
+.. class:: InnerProductLayer
+
+   Densely connected linear layer. The output is computed as
+
+   .. math::
+
+      y_i = \sum_j w_{ij}x_j + b_i
+
+   where :math:`w_{ij}` are the weights and :math:`b_i` are bias.
+
+   .. attribute:: output_dim
+
+      Output dimension of the linear map. The input dimension is automatically
+      decided via the inputs.
+
+   .. attribute:: weight_init
+
+      Default ``XavierInitializer()``. Specify how the weights :math:`w_{ij}` should
+      be initialized.
+
+   .. attribute:: bias_init
+
+      Default ``ConstantInitializer(0)``, initializing the bias :math:`b_i`
+      to 0.
+
+   .. attribute:: weight_regu
+
+      Default ``L2Regu(1)``. :doc:`Regularizer </user-guide/regularizer>` for the weights.
+
+   .. attribute:: bias_regu
+
+      Default ``NoRegu()``. Regularizer for the bias. Typically no
+      regularization should be applied to the bias.
+
+   .. attribute:: weight_lr
+
+      Default 1.0. The local learning rate for the weights.
+
+   .. attribute:: bias_lr
+
+      Default 2.0. The local learning rate for the bias.
+
+   .. attribute:: neuron
+
+      Default ``Neurons.Identity()``, an optional :doc:`activation function
+      </user-guide/neuron>` for the output of this layer.
+
+   .. attribute::
+      tops
+      bottoms
+
+      Blob names for output and input.
+
 .. class:: PoolingLayer
 
    2D pooling over the 2 image dimensions (width and height).
