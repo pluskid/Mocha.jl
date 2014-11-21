@@ -6,12 +6,12 @@ export GaussianInitializer
 
 abstract Initializer # The root type of all initializer
 
-type NullInitializer <: Initializer end
+immutable NullInitializer <: Initializer end
 function init(::NullInitializer, blob::Blob)
   # do nothing
 end
 
-type ConstantInitializer <: Initializer
+immutable ConstantInitializer <: Initializer
   value
 end
 
@@ -29,7 +29,7 @@ end
 # of input nodes. The first dimension of the blob is considered as the
 # fan in, which is consistent with the weight blob layout for InnerProductLayer.
 ################################################################################
-type XavierInitializer <: Initializer
+immutable XavierInitializer <: Initializer
 end
 function init(initializer::XavierInitializer, blob::Blob)
   fan_in = size(blob, 1)
@@ -38,7 +38,7 @@ function init(initializer::XavierInitializer, blob::Blob)
   copy!(blob, init_val)
 end
 
-type GaussianInitializer <: Initializer
+immutable GaussianInitializer <: Initializer
   mean :: FloatingPoint
   std  :: FloatingPoint
 end

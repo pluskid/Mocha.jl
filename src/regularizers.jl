@@ -4,12 +4,12 @@ export forward, backward
 
 abstract Regularizer
 
-type NoRegu <: Regularizer
+immutable NoRegu <: Regularizer
   coefficient :: FloatingPoint # not used, just for consistent API
 end
 NoRegu() = NoRegu(0.0)
 
-type L2Regu <: Regularizer
+immutable L2Regu <: Regularizer
   coefficient :: FloatingPoint
 end
 
