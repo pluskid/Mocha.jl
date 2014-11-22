@@ -47,6 +47,8 @@ end
 include("pooling-functions.jl")
 include("parameter.jl")
 
+include("data-transformers.jl")
+
 include("layers.jl")
 if Config.use_cuda
   include("cuda/layers.jl")

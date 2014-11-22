@@ -1,4 +1,5 @@
 export DataLayer, LossLayer, StatLayer, CompLayer, TrainableLayer
+export LayerState
 
 export HDF5DataLayer, MemoryDataLayer
 export InnerProductLayer, ConvolutionLayer, PoolingLayer, SoftmaxLayer
