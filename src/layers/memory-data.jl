@@ -39,6 +39,9 @@ function setup(sys::System, layer::MemoryDataLayer, inputs::Vector{Blob}, diffs:
   state = MemoryDataLayerState(sys, layer)
   return state
 end
+function shutdown(sys::System, state::MemoryDataLayerState)
+  map(destroy, state.blobs)
+end
 
 function forward(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob})
   n_done = 0
@@ -69,9 +72,5 @@ function prepare_backward(sys::System, state::MemoryDataLayerState)
 end
 
 function backward(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-end
-
-function shutdown(sys::System, state::MemoryDataLayerState)
-  map(destroy, state.blobs)
 end
 

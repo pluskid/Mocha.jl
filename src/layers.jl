@@ -90,8 +90,15 @@ abstract TrainableLayer <: CompLayer # Layer that could be trained
 #############################################################
 # Overload when there is no shared_state
 #############################################################
+function setup(sys::System, layer::Layer, shared_state, inputs::Vector{Blob}, diffs::Vector{Blob})
+  error("Not implemented, should setup layer state")
+end
 function setup(sys::System, layer::Layer, inputs::Vector{Blob}, diffs::Vector{Blob})
   setup(sys, layer, nothing, inputs, diffs)
+end
+
+function shutdown(sys::System, state::LayerState)
+  error("Not implemented, please define an empty function explicitly if not needed")
 end
 
 #############################################################
@@ -108,10 +115,6 @@ function prepare_backward(sys::System, state::LayerState)
 end
 
 function backward(sys::System, state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  error("Not implemented, please define an empty function explicitly if not needed")
-end
-
-function shutdown(sys::System, state::LayerState)
   error("Not implemented, please define an empty function explicitly if not needed")
 end
 

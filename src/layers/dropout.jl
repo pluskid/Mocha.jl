@@ -38,6 +38,15 @@ function setup(sys::System, layer::DropoutLayer, inputs::Vector{Blob}, diffs::Ve
   return DropoutLayerState(layer, blobs, blobs_diff, rand_vals,
       convert(data_type, layer.ratio), convert(data_type, 1.0/(1-layer.ratio)), etc)
 end
+function destroy_etc(sys::System{CPUBackend}, state::DropoutLayerState)
+  # do nothing
+end
+function shutdown(sys::System, state::DropoutLayerState)
+  map(destroy, state.blobs)
+  map(destroy, state.blobs_diff)
+  map(destroy, state.rand_vals)
+  destroy_etc(sys, state)
+end
 
 function dropout_forward{T}(input::Array{T}, output::Array{T}, rand_vals::Array{T}, ratio::T, scale::T)
   len = length(input)
@@ -64,15 +73,5 @@ function backward(sys::System{CPUBackend}, state::DropoutLayerState, inputs::Vec
       dropout_backward(diffs[i].data, state.blobs_diff[i].data, state.rand_vals[i].data, state.ratio, state.scale)
     end
   end
-end
-
-function destroy_etc(sys::System{CPUBackend}, state::DropoutLayerState)
-  # do nothing
-end
-function shutdown(sys::System, state::DropoutLayerState)
-  map(destroy, state.blobs)
-  map(destroy, state.blobs_diff)
-  map(destroy, state.rand_vals)
-  destroy_etc(sys, state)
 end
 

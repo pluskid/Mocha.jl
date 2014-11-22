@@ -69,6 +69,13 @@ function setup(sys::System, layer::LRNLayer, inputs::Vector{Blob}, diffs::Vector
   state = LRNLayerState(layer, do_div.blobs, do_div.blobs_diff,
       do_split, do_square, do_pool, do_power, do_div)
 end
+function shutdown(sys::System, state::LRNLayerState)
+  shutdown(sys, state.do_split)
+  shutdown(sys, state.do_square)
+  shutdown(sys, state.do_pool)
+  shutdown(sys, state.do_power)
+  shutdown(sys, state.do_div)
+end
 
 function forward(sys::System, state::LRNLayerState, inputs::Vector{Blob})
   forward(sys, state.do_split, inputs)
@@ -98,13 +105,5 @@ function backward(sys::System, state::LRNLayerState, inputs::Vector{Blob}, diffs
         Blob[state.do_split.blobs_diff[1]])
     backward(sys, state.do_split, inputs, diffs)
   end
-end
-
-function shutdown(sys::System, state::LRNLayerState)
-  shutdown(sys, state.do_split)
-  shutdown(sys, state.do_square)
-  shutdown(sys, state.do_pool)
-  shutdown(sys, state.do_power)
-  shutdown(sys, state.do_div)
 end
 

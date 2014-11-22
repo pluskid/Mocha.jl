@@ -19,6 +19,8 @@ function setup(sys::System, layer::AccuracyLayer, inputs::Vector{Blob}, diffs::V
   etc = setup_etc(sys, layer, inputs)
   return AccuracyLayerState(layer, 0.0, 0, etc)
 end
+function shutdown(sys::System{CPUBackend}, state::AccuracyLayerState)
+end
 
 function reset_statistics(state::AccuracyLayerState)
   state.n_accum = 0
@@ -54,5 +56,3 @@ end
 function backward(sys::System, state::AccuracyLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
 
-function shutdown(sys::System{CPUBackend}, state::AccuracyLayerState)
-end

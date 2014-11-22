@@ -16,6 +16,8 @@ function setup(sys::System, layer::MultinomialLogisticLossLayer, inputs::Vector{
   state = MultinomialLogisticLossLayerState(layer, convert(data_type, 0))
   return state
 end
+function shutdown(sys::System, state::MultinomialLogisticLossLayerState)
+end
 
 function forward(sys::System{CPUBackend}, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob})
   pred = inputs[1].data
@@ -32,8 +34,5 @@ function prepare_backward(sys::System, state::MultinomialLogisticLossLayerState)
 end
 
 function backward(sys::System, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-end
-
-function shutdown(sys::System, state::MultinomialLogisticLossLayerState)
 end
 

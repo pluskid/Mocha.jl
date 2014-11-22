@@ -3,6 +3,9 @@ function setup_etc(sys::System{CuDNNBackend}, layer::AccuracyLayer, inputs)
   etc = make_blob(sys.backend, eltype(inputs[1]), (width,height,1,num))
   return etc
 end
+function shutdown(sys::System{CuDNNBackend}, state::AccuracyLayerState)
+  destroy(state.etc)
+end
 
 function forward(sys::System{CuDNNBackend}, state::AccuracyLayerState, inputs::Vector{Blob})
   pred = inputs[1]
@@ -31,9 +34,5 @@ function forward(sys::System{CuDNNBackend}, state::AccuracyLayerState, inputs::V
   # accumulate accuracy
   state.accuracy = (state.accuracy * state.n_accum + accuracy) / (N + state.n_accum)
   state.n_accum += N
-end
-
-function shutdown(sys::System{CuDNNBackend}, state::AccuracyLayerState)
-  destroy(state.etc)
 end
 

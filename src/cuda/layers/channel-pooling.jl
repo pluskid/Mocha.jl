@@ -18,6 +18,15 @@ function setup_etc(sys::System{CuDNNBackend}, layer::ChannelPoolingLayer, inputs
   end
   return etc
 end
+function shutdown_etc(sys::System{CuDNNBackend}, state::ChannelPoolingLayerState)
+  if isa(state.layer.pooling, Pooling.Max)
+    map(CUDA.free, state.etc)
+  elseif isa(state.layer.pooling, Pooling.Mean)
+    map(CUDA.free, state.etc)
+  else
+    error("Unknown pooling $(state.layer.pooling)")
+  end
+end
 
 function forward(sys::System{CuDNNBackend}, state::ChannelPoolingLayerState, inputs::Vector{Blob})
   forward(sys, state.layer.pooling, state, inputs)
@@ -190,12 +199,3 @@ function cuda_max_channel_pooling_backward{T}(sys::System{CuDNNBackend}, input::
       pooled_chann, layer.kernel, layer.stride, layer.pad[1]))
 end
 
-function shutdown_etc(sys::System{CuDNNBackend}, state::ChannelPoolingLayerState)
-  if isa(state.layer.pooling, Pooling.Max)
-    map(CUDA.free, state.etc)
-  elseif isa(state.layer.pooling, Pooling.Mean)
-    map(CUDA.free, state.etc)
-  else
-    error("Unknown pooling $(state.layer.pooling)")
-  end
-end

@@ -30,6 +30,12 @@ function setup(sys::System, layer::SplitLayer, inputs::Vector{Blob}, diffs::Vect
 
   return SplitLayerState{N}(layer, blobs, blobs_diff)
 end
+function shutdown(sys::System, state::SplitLayerState)
+  # some blobs are shared, but never mind, blob destroy function has
+  # a guard that does not cause problems on double destroying
+  map(destroy, state.blobs)
+  map(destroy, state.blobs_diff)
+end
 
 function forward(sys::System, state::SplitLayerState, inputs::Vector{Blob})
   # do nothing
@@ -44,12 +50,5 @@ function backward{N}(sys::System{CPUBackend}, state::SplitLayerState{N}, inputs:
       BLAS.axpy!(len, one, state.blobs_diff[i].data, 1, diff.data, 1)
     end
   end
-end
-
-function shutdown(sys::System, state::SplitLayerState)
-  # some blobs are shared, but never mind, blob destroy function has
-  # a guard that does not cause problems on double destroying
-  map(destroy, state.blobs)
-  map(destroy, state.blobs_diff)
 end
 
