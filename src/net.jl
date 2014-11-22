@@ -64,16 +64,21 @@ function reset_statistics(net::Net)
 end
 
 function forward_backward(net::Net, regu_coef :: FloatingPoint = 0.0)
-  obj_val = forward(net, regu_coef)
+  obj_val = forward(net, regu_coef, true)
   backward(net, regu_coef)
   return obj_val
 end
 
-function forward(net::Net, regu_coef :: FloatingPoint = 0.0)
+function forward(net::Net, regu_coef :: FloatingPoint = 0.0, reset_diff = false)
   obj_val = 0.0
 
   for i = 1:length(net.layers)
-    forward(net.sys, net.states[i], net.blobs_forward[i])
+    if reset_diff
+      forward_and_reset_diff(net.sys, net.states[i], net.blobs_forward[i])
+    else
+      forward(net.sys, net.states[i], net.blobs_forward[i])
+    end
+
     if :neuron ∈ names(net.layers[i]) && !isa(net.layers[i].neuron, Neurons.Identity)
       for blob in net.states[i].blobs
         forward(net.sys, net.layers[i].neuron, blob)
