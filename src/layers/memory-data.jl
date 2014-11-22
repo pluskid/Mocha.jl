@@ -68,10 +68,6 @@ function forward(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob})
   end
 end
 
-function forward_and_reset_diff(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob})
-  forward(sys, state, inputs)
-end
-
 function backward(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
 

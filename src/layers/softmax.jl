@@ -60,10 +60,6 @@ function forward(sys::System{CPUBackend}, state::SoftmaxLayerState, inputs::Vect
   end
 end
 
-function forward_and_reset_diff(sys::System, state::SoftmaxLayerState, inputs::Vector{Blob})
-  forward(sys, state, inputs)
-end
-
 function backward(sys::System, state::SoftmaxLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
 

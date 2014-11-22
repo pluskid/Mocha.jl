@@ -96,10 +96,6 @@ function set_blob_data(data::Array, blob::CPUBlob, blob_idx::Int)
   blob.data[idx_start+1:idx_start+length(data)] = data
 end
 
-function forward_and_reset_diff(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob})
-  forward(sys, state, inputs)
-end
-
 function backward(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
 

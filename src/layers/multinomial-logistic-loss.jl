@@ -30,10 +30,6 @@ function forward(sys::System{CPUBackend}, state::MultinomialLogisticLossLayerSta
   state.loss = loss / (width*height*num)
 end
 
-function forward_and_reset_diff(sys::System, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob})
-  forward(sys, state, inputs)
-end
-
 function backward(sys::System, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
 
