@@ -70,20 +70,20 @@ function setup(sys::System, layer::LRNLayer, inputs::Vector{Blob}, diffs::Vector
       do_split, do_square, do_pool, do_power, do_div)
 end
 
-function shutdown(sys::System, state::LRNLayerState)
-  shutdown(sys, state.do_split)
-  shutdown(sys, state.do_square)
-  shutdown(sys, state.do_pool)
-  shutdown(sys, state.do_power)
-  shutdown(sys, state.do_div)
-end
-
 function forward(sys::System, state::LRNLayerState, inputs::Vector{Blob})
   forward(sys, state.do_split, inputs)
   forward(sys, state.do_square, Blob[state.do_split.blobs[1]])
   forward(sys, state.do_pool, state.do_square.blobs)
   forward(sys, state.do_power, state.do_pool.blobs)
   forward(sys, state.do_div, Blob[state.do_split.blobs[2],state.do_power.blobs[1]])
+end
+
+function prepare_backward(sys::System, state::LRNLayerState)
+  prepare_backward(sys, state.do_split)
+  prepare_backward(sys, state.do_square)
+  prepare_backward(sys, state.do_pool)
+  prepare_backward(sys, state.do_power)
+  prepare_backward(sys, state.do_div)
 end
 
 function backward(sys::System, state::LRNLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
@@ -99,3 +99,12 @@ function backward(sys::System, state::LRNLayerState, inputs::Vector{Blob}, diffs
     backward(sys, state.do_split, inputs, diffs)
   end
 end
+
+function shutdown(sys::System, state::LRNLayerState)
+  shutdown(sys, state.do_split)
+  shutdown(sys, state.do_square)
+  shutdown(sys, state.do_pool)
+  shutdown(sys, state.do_power)
+  shutdown(sys, state.do_div)
+end
+

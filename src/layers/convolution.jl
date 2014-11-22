@@ -128,20 +128,6 @@ function setup(sys::System, layer::ConvolutionLayer, shared_state, inputs::Vecto
   return ConvolutionLayerState(sys, layer, shared_state, inputs)
 end
 
-function shutdown_etc(sys::System{CPUBackend}, state::ConvolutionLayerState)
-end
-function shutdown(sys::System, state::ConvolutionLayerState)
-  map(destroy, state.blobs)
-  map(destroy, state.blobs_diff)
-  destroy(state.filter)
-  destroy(state.∇filter)
-  destroy(state.bias)
-  destroy(state.∇bias)
-
-  shutdown_etc(sys, state)
-end
-
-
 function forward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input = inputs[i]
@@ -243,5 +229,18 @@ function backward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs:
       end
     end
   end
+end
+
+function shutdown_etc(sys::System{CPUBackend}, state::ConvolutionLayerState)
+end
+function shutdown(sys::System, state::ConvolutionLayerState)
+  map(destroy, state.blobs)
+  map(destroy, state.blobs_diff)
+  destroy(state.filter)
+  destroy(state.∇filter)
+  destroy(state.bias)
+  destroy(state.∇bias)
+
+  shutdown_etc(sys, state)
 end
 

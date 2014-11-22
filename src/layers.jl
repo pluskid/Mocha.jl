@@ -95,12 +95,24 @@ function setup(sys::System, layer::Layer, inputs::Vector{Blob}, diffs::Vector{Bl
 end
 
 #############################################################
-# Default procedures for layers that do not need them
+# Default procedures
 #############################################################
+function prepare_backward_default(sys::System, state::LayerState)
+  map(erase!, state.blobs_diff)
+end
+# re-define this if your layer needs different behavior
+# e.g. it does not have blobs_diff, or it does not support
+# backward
+function prepare_backward(sys::System, state::LayerState)
+  prepare_backward_default(sys, state)
+end
+
 function backward(sys::System, state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+  error("Not implemented, please define an empty function explicitly if not needed")
 end
 
 function shutdown(sys::System, state::LayerState)
+  error("Not implemented, please define an empty function explicitly if not needed")
 end
 
 #############################################################

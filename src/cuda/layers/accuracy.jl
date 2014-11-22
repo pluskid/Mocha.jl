@@ -4,10 +4,6 @@ function setup_etc(sys::System{CuDNNBackend}, layer::AccuracyLayer, inputs)
   return etc
 end
 
-function shutdown(sys::System{CuDNNBackend}, state::AccuracyLayerState)
-  destroy(state.etc)
-end
-
 function forward(sys::System{CuDNNBackend}, state::AccuracyLayerState, inputs::Vector{Blob})
   pred = inputs[1]
   label = inputs[2]
@@ -36,3 +32,8 @@ function forward(sys::System{CuDNNBackend}, state::AccuracyLayerState, inputs::V
   state.accuracy = (state.accuracy * state.n_accum + accuracy) / (N + state.n_accum)
   state.n_accum += N
 end
+
+function shutdown(sys::System{CuDNNBackend}, state::AccuracyLayerState)
+  destroy(state.etc)
+end
+

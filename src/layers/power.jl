@@ -30,11 +30,6 @@ function setup(sys::System, layer::PowerLayer, inputs::Vector{Blob}, diffs::Vect
   state = PowerLayerState(layer, blobs, blobs_diff)
 end
 
-function shutdown(sys::System, state::PowerLayerState)
-  map(destroy, state.blobs)
-  map(destroy, state.blobs_diff)
-end
-
 function forward(sys::System{CPUBackend}, state::PowerLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input = inputs[i]
@@ -110,3 +105,9 @@ function backward(sys::System{CPUBackend}, state::PowerLayerState,
     Vec.mul!(diff.data, state.blobs_diff[i].data)
   end
 end
+
+function shutdown(sys::System, state::PowerLayerState)
+  map(destroy, state.blobs)
+  map(destroy, state.blobs_diff)
+end
+

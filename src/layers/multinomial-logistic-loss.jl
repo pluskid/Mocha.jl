@@ -28,3 +28,12 @@ function forward(sys::System{CPUBackend}, state::MultinomialLogisticLossLayerSta
   state.loss = loss / (width*height*num)
 end
 
+function prepare_backward(sys::System, state::MultinomialLogisticLossLayerState)
+end
+
+function backward(sys::System, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+end
+
+function shutdown(sys::System, state::MultinomialLogisticLossLayerState)
+end
+

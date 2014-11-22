@@ -25,10 +25,6 @@ function setup(sys::System, layer::SquareLossLayer, inputs::Vector{Blob}, diffs:
   return state
 end
 
-function shutdown(sys::System, state::SquareLossLayerState)
-  destroy(state.pred_copy)
-end
-
 function forward(sys::System{CPUBackend}, state::SquareLossLayerState, inputs::Vector{Blob})
   pred  = inputs[1]
   label = inputs[2]
@@ -57,4 +53,13 @@ function backward(sys::System{CPUBackend}, state::SquareLossLayerState, inputs::
   end
 end
 
+function prepare_backward(sys::System, state::SquareLossLayerState)
+end
+
+function backward(sys::System, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+end
+
+function shutdown(sys::System, state::SquareLossLayerState)
+  destroy(state.pred_copy)
+end
 

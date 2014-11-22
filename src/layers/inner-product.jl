@@ -74,10 +74,6 @@ function setup(sys::System, layer::InnerProductLayer, shared_state, inputs::Vect
   state = InnerProductLayerState(sys, layer, shared_state, inputs)
   return state
 end
-function shutdown(sys::System, state::InnerProductLayerState)
-  map(destroy, state.blobs)
-  map(destroy, state.blobs_diff)
-end
 
 function forward(sys::System{CPUBackend}, state::InnerProductLayerState, inputs::Vector{Blob})
   M = size(state.W, 2)   # target dim
@@ -131,4 +127,7 @@ function backward(sys::System{CPUBackend}, state::InnerProductLayerState, inputs
   end
 end
 
-
+function shutdown(sys::System, state::InnerProductLayerState)
+  map(destroy, state.blobs)
+  map(destroy, state.blobs_diff)
+end

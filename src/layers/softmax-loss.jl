@@ -27,9 +27,7 @@ function setup(sys::System, layer::SoftmaxLossLayer, inputs::Vector{Blob}, diffs
   return state
 end
 
-function shutdown(sys::System, state::SoftmaxLossLayerState)
-  shutdown(sys, state.softmax)
-  shutdown(sys, state.logistic)
+function prepare_backward(sys::System, state::SoftmaxLossLayerState)
 end
 
 function backward(sys::System{CPUBackend}, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
@@ -51,3 +49,9 @@ function forward(sys::System, state::SoftmaxLossLayerState, inputs::Vector{Blob}
   forward(sys, state.logistic, Blob[state.softmax.blobs[1], inputs[2]])
   state.loss = state.logistic.loss
 end
+
+function shutdown(sys::System, state::SoftmaxLossLayerState)
+  shutdown(sys, state.softmax)
+  shutdown(sys, state.logistic)
+end
+

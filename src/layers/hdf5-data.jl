@@ -53,10 +53,6 @@ function setup(sys::System, layer::HDF5DataLayer, inputs::Vector{Blob}, diffs::V
   state = HDF5DataLayerState(sys, layer)
   return state
 end
-function shutdown(sys::System, state::HDF5DataLayerState)
-  map(destroy, state.blobs)
-  close(state.curr_hdf5_file)
-end
 
 function forward(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob})
   n_done = 0
@@ -94,4 +90,15 @@ function set_blob_data(data::Array, blob::CPUBlob, blob_idx::Int)
   n_fea = prod(size(blob)[1:3])
   idx_start = (blob_idx-1)*n_fea
   blob.data[idx_start+1:idx_start+length(data)] = data
+end
+
+function prepare_backward(sys::System, state::HDF5DataLayerState)
+end
+
+function backward(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+end
+
+function shutdown(sys::System, state::HDF5DataLayerState)
+  map(destroy, state.blobs)
+  close(state.curr_hdf5_file)
 end

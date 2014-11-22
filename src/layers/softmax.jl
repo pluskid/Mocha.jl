@@ -27,10 +27,6 @@ function setup(sys::System, layer::SoftmaxLayer, inputs::Vector{Blob}, diffs::Ve
   return state
 end
 
-function shutdown(sys::System{CPUBackend}, state::SoftmaxLayerState)
-  map(destroy, state.blobs)
-end
-
 function forward(sys::System{CPUBackend}, state::SoftmaxLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input  = inputs[i].data
@@ -59,5 +55,15 @@ function forward(sys::System{CPUBackend}, state::SoftmaxLayerState, inputs::Vect
       end
     end
   end
+end
+
+function prepare_backward(sys::System, state::SoftmaxLayerState)
+end
+
+function backward(sys::System, state::SoftmaxLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+end
+
+function shutdown(sys::System{CPUBackend}, state::SoftmaxLayerState)
+  map(destroy, state.blobs)
 end
 

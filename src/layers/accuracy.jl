@@ -48,3 +48,11 @@ function forward(sys::System{CPUBackend}, state::AccuracyLayerState, inputs::Vec
   state.n_accum += length(label)
 end
 
+function prepare_backward(sys::System, state::AccuracyLayerState)
+end
+
+function backward(sys::System, state::AccuracyLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+end
+
+function shutdown(sys::System{CPUBackend}, state::AccuracyLayerState)
+end

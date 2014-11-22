@@ -25,5 +25,3 @@ function backward(sys::System{CuDNNBackend}, state::SquareLossLayerState, inputs
     CuBLAS.axpy(sys.backend.cublas_ctx, n, convert(data_type, -1.0/num), label.ptr, 1, diff.ptr, 1)
   end
 end
-
-
