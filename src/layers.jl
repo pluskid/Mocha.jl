@@ -7,7 +7,7 @@ export LRNLayer, DropoutLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export AccuracyLayer
 
-export setup, forward, backward, shutdown
+export setup, forward, forward_and_reset_diff, backward, shutdown
 
 export reset_statistics, show_statistics
 
@@ -101,17 +101,12 @@ function shutdown(sys::System, state::LayerState)
   error("Not implemented, please define an empty function explicitly if not needed")
 end
 
-#############################################################
-# Default procedures
-#############################################################
-function prepare_backward_default(sys::System, state::LayerState)
-  map(erase!, state.blobs_diff)
+function forward(sys::System, state::LayerState, inputs::Vector{Blob})
+  error("Not implemented, should do forward computing")
 end
-# re-define this if your layer needs different behavior
-# e.g. it does not have blobs_diff, or it does not support
-# backward
-function prepare_backward(sys::System, state::LayerState)
-  prepare_backward_default(sys, state)
+function forward_and_reset_diff(sys::System, state::LayerState, inputs::Vector{Blob})
+  forward(sys, state, inputs)
+  map(erase!, state.blobs_diff)
 end
 
 function backward(sys::System, state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})

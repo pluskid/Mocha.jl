@@ -31,7 +31,8 @@ function shutdown(sys::System, state::SoftmaxLossLayerState)
   shutdown(sys, state.logistic)
 end
 
-function prepare_backward(sys::System, state::SoftmaxLossLayerState)
+function forward_and_reset_diff(sys::System, state::SoftmaxLossLayerState, inputs::Vector{Blob})
+  forward(sys, state, inputs)
 end
 
 function backward(sys::System{CPUBackend}, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})

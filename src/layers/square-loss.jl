@@ -39,6 +39,9 @@ function forward(sys::System{CPUBackend}, state::SquareLossLayerState, inputs::V
   BLAS.axpy!(n, convert(data_type, -1), label.data, 1, state.pred_copy.data, 1)
   state.loss = 0.5/get_num(pred)*BLAS.dot(state.pred_copy.data, state.pred_copy.data)
 end
+function forward_and_reset_diff(sys::System, state::SquareLossLayerState, inputs::Vector{Blob})
+  forward(sys, state, inputs)
+end
 
 function backward(sys::System{CPUBackend}, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   diff = diffs[1]
@@ -54,9 +57,6 @@ function backward(sys::System{CPUBackend}, state::SquareLossLayerState, inputs::
     BLAS.axpy!(n, convert(data_type, 1.0/num), pred.data, 1, diff.data, 1)
     BLAS.axpy!(n, convert(data_type, -1.0/num), label.data, 1, diff.data, 1)
   end
-end
-
-function prepare_backward(sys::System, state::SquareLossLayerState)
 end
 
 function backward(sys::System, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})

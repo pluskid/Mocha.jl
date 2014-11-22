@@ -85,14 +85,6 @@ function forward(sys::System, state::LRNLayerState, inputs::Vector{Blob})
   forward(sys, state.do_div, Blob[state.do_split.blobs[2],state.do_power.blobs[1]])
 end
 
-function prepare_backward(sys::System, state::LRNLayerState)
-  prepare_backward(sys, state.do_split)
-  prepare_backward(sys, state.do_square)
-  prepare_backward(sys, state.do_pool)
-  prepare_backward(sys, state.do_power)
-  prepare_backward(sys, state.do_div)
-end
-
 function backward(sys::System, state::LRNLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   if !isa(diffs[1], NullBlob)
     backward(sys, state.do_div,
