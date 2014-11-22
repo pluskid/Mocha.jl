@@ -21,6 +21,8 @@ type MochaKernels
 
   add_scal_float               :: CUDA.CuFunction
   add_scal_double              :: CUDA.CuFunction
+  mul_scal_float               :: CUDA.CuFunction
+  mul_scal_double              :: CUDA.CuFunction
   elem_add_float               :: CUDA.CuFunction
   elem_add_double              :: CUDA.CuFunction
   elem_mul_float               :: CUDA.CuFunction
@@ -78,8 +80,10 @@ type MochaKernels
     kernels.accuracy_forward_float = CUDA.CuFunction(mod, "accuracy_forward_float")
     kernels.accuracy_forward_double = CUDA.CuFunction(mod, "accuracy_forward_double")
 
-    kernels.add_scal_float  = CUDA.CuFunction(mod, "add_scal_float")
-    kernels.add_scal_double = CUDA.CuFunction(mod, "add_scal_double")
+    kernels.add_scal_float   = CUDA.CuFunction(mod, "add_scal_float")
+    kernels.add_scal_double  = CUDA.CuFunction(mod, "add_scal_double")
+    kernels.mul_scal_float   = CUDA.CuFunction(mod, "mul_scal_float")
+    kernels.mul_scal_double  = CUDA.CuFunction(mod, "mul_scal_double")
     kernels.elem_add_float   = CUDA.CuFunction(mod, "elem_add_float")
     kernels.elem_add_double  = CUDA.CuFunction(mod, "elem_add_double")
     kernels.elem_mul_float   = CUDA.CuFunction(mod, "elem_mul_float")

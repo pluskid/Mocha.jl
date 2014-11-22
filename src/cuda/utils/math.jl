@@ -36,6 +36,18 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
       CUDA.launch(kernel, cuda_dim..., (X,Y,spatial_dim,channels,num))
     end
   end
+
+  # define mul_scal!
+  @eval begin
+    function mul_scal!(sys::System{CuDNNBackend}, ::Type{$dtype}, X, Y,
+        spatial_dim::Int, channels::Int, num::Int)
+      X = convert(Ptr{Void}, X)
+      Y = convert($dtype, Y)
+      cuda_dim = cuda_geometry(spatial_dim, channels, num)
+      kernel = sys.backend.mocha.$(symbol("mul_scal_$ctype"))
+      CUDA.launch(kernel, cuda_dim..., (X,Y,spatial_dim,channels,num))
+    end
+  end
 end
 
 # define add!, sub!, mul!, div!, div2! for blobs
@@ -53,6 +65,12 @@ function add_scal!{T}(sys::System{CuDNNBackend}, X::CuTensorBlob{T}, Y)
   width, height, channels, num = size(X)
   sp_dim = width*height
   add_scal!(sys, T, X.ptr.p, Y, sp_dim, channels, num)
+end
+function mul_scal!{T}(sys::System{CuDNNBackend}, X::CuTensorBlob{T}, Y)
+  Y = convert(T, Y)
+  width, height, channels, num = size(X)
+  sp_dim = width*height
+  mul_scal!(sys, T, X.ptr.p, Y, sp_dim, channels, num)
 end
 
 for (postfix, dt1, dt2) in [(:fi, Float32, Int), (:di, Float64, Int),

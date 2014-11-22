@@ -11,6 +11,11 @@ __device__ void add_scal(T *array, T scal, int spatial_dim, int channels, int nu
   ELEMWISE_BOUNDS_AND_INDEX;
   array[idx] += scal;
 }
+template <typename T>
+__device__ void mul_scal(T *array, T scal, int spatial_dim, int channels, int num) {
+  ELEMWISE_BOUNDS_AND_INDEX;
+  array[idx] *= scal;
+}
 
 #define DEF_ELEMWISE_OP(NAME, OP) \
   template <typename T> \
@@ -58,6 +63,13 @@ __global__ void add_scal_float(float *X, float Y, int spatial_dim, int channels,
 }
 __global__ void add_scal_double(double *X, double Y, int spatial_dim, int channels, int num) {
   add_scal(X, Y, spatial_dim, channels, num);
+}
+
+__global__ void mul_scal_float(float *X, float Y, int spatial_dim, int channels, int num) {
+  mul_scal(X, Y, spatial_dim, channels, num);
+}
+__global__ void mul_scal_double(double *X, double Y, int spatial_dim, int channels, int num) {
+  mul_scal(X, Y, spatial_dim, channels, num);
 }
 
 __global__ void elem_pow_fi(float *X, int p, int spatial_dim, int channels, int num) {
