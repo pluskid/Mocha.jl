@@ -1,0 +1,38 @@
+#define L1_BOUNDS_AND_INDEX \
+  int idx = threadIdx.x + blockIdx.x * blockDim.x; \
+  if (idx >= len) \
+    return
+
+template <typename T>
+__device__ void l1_forward(T *data, int len, T coef, float *loss) {
+  L1_BOUNDS_AND_INDEX;
+  // atomicAdd could be slow, but regularizer forward is never called anyway
+  atomicAdd(loss, static_cast<float>(coef * abs(data[idx])));
+}
+
+template <typename T>
+__device__ void l1_backward(T *data, T *gradient, int len, T coef) {
+  L1_BOUNDS_AND_INDEX;
+  if (data[idx] > 0)
+    gradient[idx] += coef;
+  else if (data[idx] < 0)
+    gradient[idx] -= coef;
+}
+
+extern "C" {
+  __global__ void l1_forward_float(float *data, int len, float coef, float *loss) {
+    l1_forward(data, len, coef, loss);
+  }
+  __global__ void l1_forward_double(double *data, int len, double coef, float *loss) {
+    l1_forward(data, len, coef, loss);
+  }
+
+  __global__ void l1_backward_float(float *data, float *gradient, int len, float coef) {
+    l1_backward(data, gradient, len, coef);
+  }
+  __global__ void l1_backward_double(double *data, double *gradient, int len, double coef) {
+    l1_backward(data, gradient, len, coef);
+  }
+}
+
+// vim: ft=cuda

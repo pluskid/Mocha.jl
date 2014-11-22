@@ -1,12 +1,13 @@
 function test_l2_regularizer(sys::System, T, eps)
   println("-- Testing L2 regularizer on $(typeof(sys.backend)){$T}...")
 
+  coef = rand()
   param = rand(T, 2,3,4,5) - 0.5
   param_blob = make_blob(sys.backend, param)
-  regu = L2Regu(1)
+  regu = L2Regu(coef)
 
   loss = forward(sys, regu, 1.0, param_blob)
-  expected_loss = vecnorm(param)^2
+  expected_loss = coef * vecnorm(param)^2
   @test -eps < loss - expected_loss < eps
 
   grad_blob = make_zero_blob(sys.backend, T, size(param))
@@ -14,7 +15,7 @@ function test_l2_regularizer(sys::System, T, eps)
   grad = zeros(T, size(param))
   copy!(grad, grad_blob)
 
-  @test all(-eps .< grad - 2*param .< eps)
+  @test all(-eps .< grad - 2coef*param .< eps)
 end
 
 function test_l2_regularizer(sys::System)
