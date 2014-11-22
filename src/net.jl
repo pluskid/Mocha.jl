@@ -64,20 +64,16 @@ function reset_statistics(net::Net)
 end
 
 function forward_backward(net::Net, regu_coef :: FloatingPoint = 0.0)
-  obj_val = forward(net, regu_coef, true)
+  obj_val = forward(net, regu_coef)
   backward(net, regu_coef)
   return obj_val
 end
 
-function forward(net::Net, regu_coef :: FloatingPoint = 0.0, reset_diff = false)
+function forward(net::Net, regu_coef :: FloatingPoint = 0.0)
   obj_val = 0.0
 
   for i = 1:length(net.layers)
-    if reset_diff
-      forward_and_reset_diff(net.sys, net.states[i], net.blobs_forward[i])
-    else
-      forward(net.sys, net.states[i], net.blobs_forward[i])
-    end
+    forward(net.sys, net.states[i], net.blobs_forward[i])
 
     if :neuron ∈ names(net.layers[i]) && !isa(net.layers[i].neuron, Neurons.Identity)
       for blob in net.states[i].blobs
@@ -189,6 +185,7 @@ function topological_sort(layers :: Vector{Layer})
   #---- Build dependency graph
   graph = zeros(Int, n, n)
   outputs = Dict{Symbol, Int}()
+  output_taken = Dict{Symbol, Bool}()
 
   for i = 1:n
     if :tops ∈ names(layers[i])
@@ -197,6 +194,7 @@ function topological_sort(layers :: Vector{Layer})
           error("Duplicated output blob name: $(key)")
         end
         outputs[key] = i
+        output_taken[key] = false
       end
     end
   end
@@ -207,6 +205,14 @@ function topological_sort(layers :: Vector{Layer})
         if !haskey(outputs, key)
           error("Required input blob missing: $(key)")
         end
+        if output_taken[key]
+          @error(" Output blob $key is being used in multiple places as input blob")
+          @error(" Fix this if it is a bug. Or if sharing is intended, use the SplitLayer")
+          @error(" SplitLayer explicitly to allow the back-propagation operate properly.")
+          error("Illegal network topology")
+        end
+
+        output_taken[key] = true
         graph[i,outputs[key]] = 1
       end
     end
