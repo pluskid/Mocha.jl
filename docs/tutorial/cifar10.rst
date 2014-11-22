@@ -385,29 +385,36 @@ computing with less or more threads.
 CUDA with cuDNN
 ~~~~~~~~~~~~~~~
 
-It takes roughly 10 seconds to finish every 200 iterations on the
+It takes only 5~6 seconds to finish every 200 iterations on the
 ``CuDNNBackend``.
 
 .. code-block:: text
 
-   20-Nov 01:16:48:INFO:root:001400 :: TRAIN obj-val = 1.47859097
-   20-Nov 01:16:57:INFO:root:001600 :: TRAIN obj-val = 1.33097243
-   20-Nov 01:17:07:INFO:root:001800 :: TRAIN obj-val = 1.33654988
-   20-Nov 01:17:16:INFO:root:002000 :: TRAIN obj-val = 1.50953197
-   20-Nov 01:17:18:INFO:root:
-   20-Nov 01:17:18:INFO:root:## Performance on Validation Set
-   20-Nov 01:17:18:INFO:root:---------------------------------------------------------
-   20-Nov 01:17:18:INFO:root:  Accuracy (avg over 10000) = 50.2300%
-   20-Nov 01:17:18:INFO:root:---------------------------------------------------------
-   20-Nov 01:17:18:INFO:root:
-   20-Nov 01:17:27:INFO:root:002200 :: TRAIN obj-val = 1.29346514
-   20-Nov 01:17:37:INFO:root:002400 :: TRAIN obj-val = 1.32249010
-   20-Nov 01:17:46:INFO:root:002600 :: TRAIN obj-val = 1.27704692
-   20-Nov 01:17:56:INFO:root:002800 :: TRAIN obj-val = 1.25375235
-   20-Nov 01:18:05:INFO:root:003000 :: TRAIN obj-val = 1.38656604
-   20-Nov 01:18:07:INFO:root:
-   20-Nov 01:18:07:INFO:root:## Performance on Validation Set
-   20-Nov 01:18:07:INFO:root:---------------------------------------------------------
-   20-Nov 01:18:07:INFO:root:  Accuracy (avg over 10000) = 56.6100%
-   20-Nov 01:18:07:INFO:root:---------------------------------------------------------
+   22-Nov 15:04:47:INFO:root:048600 :: TRAIN obj-val = 0.53777266
+   22-Nov 15:04:52:INFO:root:048800 :: TRAIN obj-val = 0.60837102
+   22-Nov 15:04:58:INFO:root:049000 :: TRAIN obj-val = 0.79333639
+   22-Nov 15:04:59:INFO:root:
+   22-Nov 15:04:59:INFO:root:## Performance on Validation Set
+   22-Nov 15:04:59:INFO:root:---------------------------------------------------------
+   22-Nov 15:04:59:INFO:root:  Accuracy (avg over 10000) = 76.5900%
+   22-Nov 15:04:59:INFO:root:---------------------------------------------------------
+   22-Nov 15:04:59:INFO:root:
+   22-Nov 15:05:04:INFO:root:049200 :: TRAIN obj-val = 0.62640750
+   22-Nov 15:05:10:INFO:root:049400 :: TRAIN obj-val = 0.57287318
+   22-Nov 15:05:15:INFO:root:049600 :: TRAIN obj-val = 0.53166425
+   22-Nov 15:05:21:INFO:root:049800 :: TRAIN obj-val = 0.60679358
+   22-Nov 15:05:26:INFO:root:050000 :: TRAIN obj-val = 0.79003465
+   22-Nov 15:05:26:INFO:root:Saving snapshot to snapshot-050000.jld...
+   22-Nov 15:05:26:DEBUG:root:Saving parameters for layer conv1
+   22-Nov 15:05:26:DEBUG:root:Saving parameters for layer conv2
+   22-Nov 15:05:26:DEBUG:root:Saving parameters for layer conv3
+   22-Nov 15:05:26:DEBUG:root:Saving parameters for layer ip1
+   22-Nov 15:05:27:INFO:root:
+   22-Nov 15:05:27:INFO:root:## Performance on Validation Set
+   22-Nov 15:05:27:INFO:root:---------------------------------------------------------
+   22-Nov 15:05:27:INFO:root:  Accuracy (avg over 10000) = 76.5200%
+   22-Nov 15:05:27:INFO:root:---------------------------------------------------------
+   22-Nov 15:05:27:INFO:root:
+   22-Nov 15:05:33:INFO:root:050200 :: TRAIN obj-val = 0.61519235
+   22-Nov 15:05:38:INFO:root:050400 :: TRAIN obj-val = 0.57314044
 
