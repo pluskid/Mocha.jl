@@ -1,6 +1,70 @@
 Computation Layers
 ~~~~~~~~~~~~~~~~~~
 
+.. class:: ConvolutionLayer
+
+   Convolution in the spatial dimensions.
+
+   .. attribute:: kernel
+
+      Default (1,1), a 2-tuple specifying the width and height of the
+      convolution filters.
+
+   .. attribute:: stride
+
+      Default (1,1), a 2-tuple specifying the stride in the width and height
+      dimensions, respectively.
+
+   .. attribute:: pad
+
+      Default (0,0), a 2-tuple specifying the two-sided padding in the width and
+      height dimensions, respectively.
+
+   .. attribute:: n_filter
+
+      Default 1. Number of filters.
+
+   .. attribute:: n_group
+
+      Default 1. Number of groups. This number should divide both ``n_filter``
+      and the number of channels in the input blob. This parameter will divide
+      the input blob along the channel dimension into ``n_group`` groups. Each
+      group will operate independently. Each group is assigned with ``n_filter``
+      / ``n_group`` filters.
+
+   .. attribute:: neuron
+
+      Default ``Neurons.Identity()``, can be used to specify an activation
+      function for the convolution outputs.
+
+   .. attribute:: filter_init
+
+      Default ``XavierInitializer()``. The :doc:`initializer
+      </user-guide/initializer>` for the filters.
+
+   .. attribute:: bias_init
+
+      Default ``ConstantInitializer(0)``. The :doc:`initializer
+      </user-guide/initializer>` for the bias.
+
+   .. attribute:: filter_regu
+
+      Default ``L2Regu(1)``, the regularizer for the filters.
+
+   .. attribute:: bias_regu
+
+      Default ``NoRegu()``, the regularizer for the bias.
+
+   .. attribute:: filter_lr
+
+      Default 1.0. The local learning rate for the filters.
+
+   .. attribute:: bias_lr
+
+      Default 2.0. The local learning rate for the bias.
+
+
+
 .. class:: InnerProductLayer
 
    Densely connected linear layer. The output is computed as
