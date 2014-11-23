@@ -1,15 +1,12 @@
-@defstruct DropoutLayer CompLayer (
+@defstruct DropoutLayer InplaceLayer (
   name :: String = "dropout",
-  (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) > 0),
-  (tops :: Vector{Symbol} = Symbol[], length(tops) == length(bottoms)),
+  (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 1),
   (ratio :: FloatingPoint = 0.5, 0 < ratio < 1)
 )
 
 type DropoutLayerState{T} <: LayerState
   layer      :: DropoutLayer
-  blobs      :: Vector{Blob}
-  blobs_diff :: Vector{Blob}
-  rand_vals  :: Vector{Blob}
+  rand_vals  :: Blob
 
   # for convenience
   ratio      :: T   # layer.ratio
@@ -23,55 +20,40 @@ function setup_etc(sys::System{CPUBackend}, layer::DropoutLayer, inputs::Vector{
 end
 function setup(sys::System, layer::DropoutLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
-  blobs = Blob[make_blob(sys.backend, data_type, size(x)) for x in inputs]
-  blobs_diff = Array(Blob, length(inputs))
-  for i = 1:length(inputs)
-    if isa(diffs[i], NullBlob)
-      blobs_diff[i] = NullBlob()
-    else
-      blobs_diff[i] = make_blob(sys.backend, data_type, size(diffs[i]))
-    end
-  end
-  rand_vals = Blob[make_blob(sys.backend, data_type, size(x)) for x in inputs]
+  rand_vals = make_blob(sys.backend, data_type, size(inputs[1]))
 
   etc = setup_etc(sys, layer, inputs)
-  return DropoutLayerState(layer, blobs, blobs_diff, rand_vals,
+  return DropoutLayerState(layer, rand_vals,
       convert(data_type, layer.ratio), convert(data_type, 1.0/(1-layer.ratio)), etc)
 end
 function destroy_etc(sys::System{CPUBackend}, state::DropoutLayerState)
   # do nothing
 end
 function shutdown(sys::System, state::DropoutLayerState)
-  map(destroy, state.blobs)
-  map(destroy, state.blobs_diff)
-  map(destroy, state.rand_vals)
+  destroy(state.rand_vals)
   destroy_etc(sys, state)
 end
 
-function dropout_forward{T}(input::Array{T}, output::Array{T}, rand_vals::Array{T}, ratio::T, scale::T)
+function dropout_forward{T}(input::Array{T}, rand_vals::Array{T}, ratio::T, scale::T)
   len = length(input)
   @simd for i = 1:len
-    @inbounds output[i] = input[i] * (rand_vals[i] > ratio) * scale
+    @inbounds input[i] = input[i] * (rand_vals[i] > ratio) * scale
   end
 end
 function forward(sys::System{CPUBackend}, state::DropoutLayerState, inputs::Vector{Blob})
-  for i = 1:length(inputs)
-    rand!(state.rand_vals[i].data)
-    dropout_forward(inputs[i].data, state.blobs[i].data, state.rand_vals[i].data, state.ratio, state.scale)
-  end
+  rand!(state.rand_vals.data)
+  dropout_forward(inputs[1].data, state.rand_vals.data, state.ratio, state.scale)
 end
 
-function dropout_backward{T}(grad::Array{T}, top_diff::Array{T}, rand_vals::Array{T}, ratio::T, scale::T)
+function dropout_backward{T}(grad::Array{T}, rand_vals::Array{T}, ratio::T, scale::T)
   len = length(grad)
   @simd for i = 1:len
-    @inbounds grad[i] = top_diff[i] * (rand_vals[i] > ratio) * scale
+    @inbounds grad[i] = grad[i] * (rand_vals[i] > ratio) * scale
   end
 end
 function backward(sys::System{CPUBackend}, state::DropoutLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  for i = 1:length(diffs)
-    if !isa(diffs[i], NullBlob)
-      dropout_backward(diffs[i].data, state.blobs_diff[i].data, state.rand_vals[i].data, state.ratio, state.scale)
-    end
+  if !isa(diffs[1], NullBlob)
+    dropout_backward(diffs[1].data, state.rand_vals.data, state.ratio, state.scale)
   end
 end
 

@@ -87,6 +87,7 @@ abstract LossLayer <: Layer # Layer that defines loss function for learning
 abstract StatLayer <: Layer # Layer that provide statistics (e.g. Accuracy)
 abstract CompLayer <: Layer # Layer that do computation
 abstract TrainableLayer <: CompLayer # Layer that could be trained
+abstract InplaceLayer   <: CompLayer # Layer that does inplace computation
 
 #############################################################
 # Overload when there is no shared_state
