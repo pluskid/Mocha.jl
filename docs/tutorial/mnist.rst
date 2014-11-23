@@ -265,8 +265,6 @@ setup parameter sharing between the two networks. The two networks will look
 like this:
 
 .. image:: images/MNIST-network.*
-   :align: center
-   :width: 500px
 
 
 Now we are ready to add another coffee break to report the validation

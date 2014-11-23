@@ -35,8 +35,6 @@ stolen from `Wikipedia's page on Artificial Neural Networks
 <https://en.wikipedia.org/wiki/Artificial_neural_network>`_:
 
 .. image:: images/ANN.*
-   :align: center
-   :width: 300px
 
 When writing Mocha, I found this kind of illustrations a bit confusing, as it
 does not align well with the abstract concept of *layers* we just described. In
@@ -51,8 +49,6 @@ On the other hand, I think the following kind of illustration is clearer, for
 the purpose of abstracting *layers* and *architectures* separately:
 
 .. image:: images/NN-view.*
-   :align: center
-   :width: 400px
 
 Each layer is now represented as a *box* that has inputs (denoted by :math:`x^L`
 for the :math:`L`-th layer) and outputs (denoted by :math:`y^L`). Now the
@@ -112,18 +108,18 @@ Specifically, back-propagation is used during network training, when an
 optimization algorithm want to compute the gradient of each parameter with
 respect to an *objective function*. Typically, the objective function is some
 loss function that penalize incorrect predictions given the ground-truth labels.
-Let's call the objective function :math:`f`.
+Let's call the objective function :math:`\ell`.
 
-Now let's switch to the viewpoint of an inner product layer: it needs to
-compute the gradients of the weights parameters :math:`w` with respect to
-:math:`f`. Of course, since we restrict the layer from accessing the outside
-world, it does not know what :math:`f` is. But the gradients could be computed
-via chain rule
+Now let's switch to the viewpoint of an inner product layer: it needs to compute
+the gradients of the weights parameters :math:`w` with respect to :math:`\ell`.
+Of course, since we restrict the layer from accessing the outside world, it does
+not know what :math:`\ell` is. But the gradients could be computed via chain
+rule
 
 .. math::
 
-   \frac{\partial f}{\partial w_{ij}} = {\color{red}{\frac{\partial y_i}{\partial
-   w_{ij}}}}\times {\color{blue}{\frac{\partial f}{\partial y_i}}}
+   \frac{\partial \ell}{\partial w_{ij}} = {\color{red}{\frac{\partial y_i}{\partial
+   w_{ij}}}}\times {\color{blue}{\frac{\partial \ell}{\partial y_i}}}
 
 The red part could be computed **within** the layer, and the blue part is the
 so called "errors propagated from the upper layers". It comes from the reversed
@@ -134,8 +130,8 @@ layers", precisely speaking, this means computing
 
 .. math::
 
-   \frac{\partial f}{\partial x_i} = \sum_j {\color{red}{\frac{\partial
-   y_j}{\partial x_i}}}\times{\color{blue}{\frac{\partial f}{\partial y_j}}}
+   \frac{\partial \ell}{\partial x_i} = \sum_j {\color{red}{\frac{\partial
+   y_j}{\partial x_i}}}\times{\color{blue}{\frac{\partial \ell}{\partial y_j}}}
 
 Again, this is decomposed into a part that could be computed internally and
 a part that comes from the "top". Recall we said the :math:`L`-th layer's inputs
@@ -144,7 +140,7 @@ a part that comes from the "top". Recall we said the :math:`L`-th layer's inputs
 
 .. math::
 
-   \frac{\partial f}{\partial x^L_i} = \frac{\partial f}{\partial y^{L-1}_i}
+   \frac{\partial \ell}{\partial x^L_i} = \frac{\partial \ell}{\partial y^{L-1}_i}
 
 is exactly what the lower layer's "errors propagated from upper layers". By
 tracing the whole data path reversely, we now help each layers compute the

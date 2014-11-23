@@ -240,3 +240,13 @@ Computation Layers
 
       Blob names for output and input.
 
+.. class:: SoftmaxLayer
+
+   Compute softmax over the channel dimension. The inputs :math:`x_1,\ldots,x_C`
+   are mapped as
+
+   .. math::
+
+      \sigma(x_1,\ldots,x_C) = (\sigma_1,\ldots,\sigma_C) = \left(\frac{e^{x_1}}{\sum_j
+      e^{x_j}},\ldots,\frac{e^{x_C}}{\sum_je^{x_j}}\right)
+
