@@ -64,11 +64,12 @@ directly, which will automatically download the binary files, convert it to HDF5
 and prepare text index files that points to the HDF5 datasets.
 
 Notice in Caffe's data layer, a ``transform_param`` is specified with
-a ``mean_file``. Since we need to compute the data mean during data conversion,
-for simplicity, we also perform mean subtraction when converting data to
-HDF5 format. See `convert.jl`_ for details. Please refer to the
-:doc:`user's guide </user-guide/layers/data-layer>` for more details about HDF5
-data format that Mocha reads.
+a ``mean_file``. We could use Mocha's :doc:`data transformers
+</user-guide/data-transformer>` to do the same thing. But since we need to
+compute the data mean during data conversion, for simplicity, we also perform
+mean subtraction when converting data to HDF5 format. See `convert.jl`_ for
+details. Please refer to the :doc:`user's guide </user-guide/layers/data-layer>`
+for more details about HDF5 data format that Mocha reads.
 
 After converting the data, you should be ready to load the data in Mocha with
 :class:`HDF5DataLayer`. We define two layers for training data and test data
