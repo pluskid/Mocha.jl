@@ -2,26 +2,32 @@
   name :: String = "memory-data",
   (tops :: Vector{Symbol} = Symbol[:data,:label], length(tops) > 0),
   (batch_size :: Int = 0, batch_size > 0),
-  (data :: Vector{Array} = Array[], length(data) == length(tops))
+  (data :: Vector{Array} = Array[], length(data) == length(tops)),
+  transformers :: Vector = [],
 )
 
 type MemoryDataLayerState <: LayerState
   layer :: MemoryDataLayer
   blobs :: Vector{Blob}
   epoch :: Int
+  trans :: Vector{Vector{DataTransformerState}}
 
   curr_idx :: Int
 
   MemoryDataLayerState(sys::System, layer::MemoryDataLayer) = begin
     blobs = Array(Blob, length(layer.tops))
+    trans = Array(Vector{DataTransformerState}, length(layer.tops))
+    transformers = convert(Vector{(Symbol, DataTransformerType)}, layer.transformers)
     for i = 1:length(blobs)
       dims = tuple(size(layer.data[i])[1:3]..., layer.batch_size)
       idxs = map(x -> 1:x, dims)
 
       blobs[i] = make_blob(sys.backend, eltype(layer.data[i]), dims...)
+      trans[i] = [setup(sys, convert(DataTransformerType, t), blobs[i])
+          for (k,t) in filter(kt -> kt[1] == layer.tops[i], transformers)]
     end
 
-    new(layer, blobs, 0, 1)
+    new(layer, blobs, 0, trans, 1)
   end
 end
 
@@ -41,6 +47,7 @@ function setup(sys::System, layer::MemoryDataLayer, inputs::Vector{Blob}, diffs:
 end
 function shutdown(sys::System, state::MemoryDataLayerState)
   map(destroy, state.blobs)
+  map(ts -> map(t -> shutdown(sys, t), ts), state.trans)
 end
 
 function forward(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob})
@@ -64,6 +71,12 @@ function forward(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob})
 
     if state.curr_idx > size(state.layer.data[1], 4)
       state.epoch += 1
+    end
+  end
+
+  for i = 1:length(state.blobs)
+    for j = 1:length(state.trans[i])
+      forward(sys, state.trans[i][j], state.blobs[i])
     end
   end
 end

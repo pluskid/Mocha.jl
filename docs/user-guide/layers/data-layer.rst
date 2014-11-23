@@ -48,6 +48,15 @@ Data Layers
       blobs to feed to the top layers. The names also correspond to the datasets
       to load from the HDF5 files specified in the data source.
 
+   .. attribute:: transformers
+
+      Default ``[]``. List of data transformers. Each entry in the list should
+      be a tuple of ``(name, transformer)``, where ``name`` is  a symbol of the
+      corresponding output blob name, and ``transformer`` is a :doc:`data
+      transformer </user-guide/data-transformer>` that should be applied to the
+      blob with the given name. Multiple transformers could be given to the same
+      blob, and they will be applied in the order provided here.
+
 .. class:: MemoryDataLayer
 
    Wrap an in-memory Julia Array as data source. Useful for testing.
@@ -64,3 +73,7 @@ Data Layers
 
       List of Julia Arrays. The count should be equal to the number of ``tops``,
       where each Array acts as the data source for each blob.
+
+   .. attribute:: transformers
+
+      Default ``[]``. See ``transformers`` of :class:`HDF5DataLayer`.
