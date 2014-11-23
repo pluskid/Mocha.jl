@@ -21,9 +21,12 @@ called *Fillers*.
    An initializer based on [BengioGlorot2010]_, but does not use the fan-out
    value. It fills the parameter blob by randomly sampling uniform data from
    :math:`[-S,S]` where the scale :math:`S=\sqrt{3 / F_{\text{in}}}`. Here
-   :math:`F_{\text{in}}` is the fan-in: the number of input nodes. For a 4D
-   tensor parameter blob with the shape :math:`(M,N,P,Q)`, :math:`M` is
-   considered as the fan-in.
+   :math:`F_{\text{in}}` is the fan-in: the number of input nodes.
+
+   Heuristics are used to determine the fan-in: For a 4D tensor parameter blob
+   with the shape :math:`(W,H,C,N)`, if :math:`C=N=1`, then this is considered
+   as a parameter blob for an :class:`InnerProductLayer`, and fan-in = :math:`W`.
+   Otherwise, fan-in is :math:`W\times H\times C`.
 
    .. [BengioGlorot2010] Y. Bengio and X. Glorot, *Understanding the
       difficulty of training deep feedforward neural networks*, in Proceedings of
