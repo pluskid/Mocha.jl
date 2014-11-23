@@ -1,6 +1,6 @@
 using HDF5
 
-function test_hdf5_data_layer(sys::System, T)
+function test_hdf5_data_layer(sys::System, T, eps)
   println("-- Testing HDF5 Data Layer on $(typeof(sys.backend)){$T}...")
 
   ############################################################
@@ -8,7 +8,6 @@ function test_hdf5_data_layer(sys::System, T)
   ############################################################
   batch_size = 3
   data_dim = (1,1,2)
-  eps = 1e-15
 
   data_all = [rand(T, data_dim..., x) for x in [5 1 2]]
   h5fn_all = [string(tempname(), ".hdf5") for x in 1:length(data_all)]
@@ -30,13 +29,15 @@ function test_hdf5_data_layer(sys::System, T)
   # Setup
   ############################################################
 
-  # batch size is determined by
-  layer = HDF5DataLayer(source = source_fn, tops = [:data], batch_size=batch_size)
+  scale = rand()
+  layer = HDF5DataLayer(source = source_fn, tops = [:data], batch_size=batch_size,
+      transformers=[(:data, DataTransformers.Scale(scale))])
   state = setup(sys, layer, Blob[], Blob[])
   @test state.epoch == 0
 
   data = cat(4, data_all...)
   data = cat(4, data, data, data)
+  data = data * scale
 
   data_idx = map(x->1:x, data_dim)
   layer_data = Array(eltype(data), tuple(data_dim..., batch_size))
@@ -58,8 +59,8 @@ function test_hdf5_data_layer(sys::System, T)
 end
 
 function test_hdf5_data_layer(sys::System)
-  test_hdf5_data_layer(sys, Float32)
-  test_hdf5_data_layer(sys, Float64)
+  test_hdf5_data_layer(sys, Float32, 1e-5)
+  test_hdf5_data_layer(sys, Float64, 1e-10)
 end
 
 if test_cpu

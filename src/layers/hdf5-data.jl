@@ -4,13 +4,15 @@ using HDF5
   name :: String = "hdf5-data",
   (source :: String = "", source != ""),
   (batch_size :: Int = 0, batch_size > 0),
-  (tops :: Vector{Symbol} = Symbol[:data,:label], length(tops) > 0)
+  (tops :: Vector{Symbol} = Symbol[:data,:label], length(tops) > 0),
+  transformers :: Vector = [],
 )
 
 type HDF5DataLayerState <: LayerState
   layer :: HDF5DataLayer
   blobs :: Vector{Blob}
   epoch :: Int
+  trans :: Vector{Vector{DataTransformerState}}
 
   sources        :: Vector{String}
   dsets          :: Vector{String}
@@ -33,6 +35,8 @@ type HDF5DataLayerState <: LayerState
     state.curr_hdf5_file = h5open(sources[1], "r")
 
     state.blobs = Array(Blob, length(layer.tops))
+    state.trans = Array(Vector{DataTransformerState}, length(layer.tops))
+    transformers = convert(Vector{(Symbol, DataTransformerType)}, layer.transformers)
     for i = 1:length(state.blobs)
       dims = size(state.curr_hdf5_file[state.dsets[i]])
       @assert(length(dims)==4, "HDF5 dataset $(state.dsets[i]) is not 4D tensor")
@@ -41,6 +45,9 @@ type HDF5DataLayerState <: LayerState
 
       dset = state.curr_hdf5_file[state.dsets[i]]
       state.blobs[i] = make_blob(sys.backend, eltype(dset), dims)
+
+      state.trans[i] = [setup(sys, convert(DataTransformerType, t), state.blobs[i])
+          for (k,t) in filter(kt -> kt[1] == layer.tops[i], transformers)]
     end
     state.curr_index = 1
 
@@ -55,6 +62,7 @@ function setup(sys::System, layer::HDF5DataLayer, inputs::Vector{Blob}, diffs::V
 end
 function shutdown(sys::System, state::HDF5DataLayerState)
   map(destroy, state.blobs)
+  map(ts -> map(t -> shutdown(sys, t), ts), state.trans)
   close(state.curr_hdf5_file)
 end
 
@@ -86,6 +94,12 @@ function forward(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob})
     if state.curr_index > size(state.curr_hdf5_file[state.dsets[1]])[4] &&
         state.curr_source == length(state.sources)
       state.epoch += 1
+    end
+  end
+
+  for i = 1:length(state.blobs)
+    for j = 1:length(state.trans[i])
+      forward(sys, state.trans[i][j], state.blobs[i])
     end
   end
 end
