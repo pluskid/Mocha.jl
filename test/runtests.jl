@@ -54,6 +54,8 @@ include("data-transformers.jl")
 ############################################################
 # Layers
 ############################################################
+include("layers/inplace.jl")
+
 #-- Statistics Layers
 include("layers/accuracy.jl")
 
