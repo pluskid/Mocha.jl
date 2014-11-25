@@ -134,7 +134,7 @@ end
 ############################################################
 typealias CUdeviceptr Uint64
 
-immutable CuPtr
+type CuPtr
   p::CUdeviceptr
 
   CuPtr() = new(convert(CUdeviceptr, 0))

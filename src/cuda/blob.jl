@@ -3,7 +3,7 @@ using .CUDA
 export CuBlobDescriptor, CuPODBlobDescriptor, CuTensorBlobDescriptor, CuFilterBlobDescriptor
 export CuTensorBlob
 
-type CuTensorBlob{T<:FloatingPoint} <: Blob
+immutable CuTensorBlob{T<:FloatingPoint} <: Blob
   ptr   :: CuPtr
   shape :: NTuple{4, Int}
   len   :: Int
@@ -57,8 +57,8 @@ function make_shared_blob{T}(backend::CuDNNBackend, blob::CuTensorBlob{T}, dims.
   return CuTensorBlob{T}(blob.ptr, dims, length(blob))
 end
 function destroy(blob :: CuTensorBlob)
-  if blob.ptr != CuPtr()
+  if blob.ptr.p != 0
     CUDA.free(blob.ptr)
-    blob.ptr = CuPtr()
+    blob.ptr.p = 0
   end
 end
