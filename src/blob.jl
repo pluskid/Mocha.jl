@@ -4,7 +4,7 @@ export CPUBlob, NullBlob
 import Base: eltype, size, length, copy!, fill!
 export       eltype, size, length, copy!, fill!, erase!
 export get_num, get_chann, get_height, get_width
-export make_blob, make_zero_blob
+export make_blob, make_zero_blob, make_shared_blob
 
 ############################################################
 # A blob is an abstract concept that is suppose
