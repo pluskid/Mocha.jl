@@ -10,6 +10,15 @@ function add_scal!{T}(X::Array{T}, a)
   end
 end
 
+# X[i] *= a
+function mul_scal!{T}(X::Array{T}, a)
+  leng = length(X)
+  a = convert(eltype(X), a)
+  @simd for i = 1:leng
+    @inbounds X[i] *= a
+  end
+end
+
 # X[i] *= Y[i]
 function mul!{T}(X::Array{T}, Y::Array{T})
   leng = length(X)

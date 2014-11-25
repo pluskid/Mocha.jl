@@ -113,10 +113,14 @@ function make_zero_blob(backend::Backend, data_type::Type, dims...)
   return blob
 end
 
+function make_shared_blob(backend::Backend, blob::Blob, dims...)
+  error("Not implemented (should make a blob that share data)")
+end
+
 ############################################################
 # A Blob for CPU Computation
 ############################################################
-type CPUBlob{T <: FloatingPoint} <: Blob
+immutable CPUBlob{T <: FloatingPoint} <: Blob
   data :: Array{T, 4}
 end
 CPUBlob(t :: Type, dims :: NTuple{Int}) = CPUBlob(Array(t, blob_canonical_dims(dims...)))
@@ -124,6 +128,11 @@ CPUBlob(t :: Type, dims...) = CPUBlob(t, dims)
 
 function make_blob(backend::CPUBackend, data_type::Type, dims...)
   return CPUBlob(data_type, dims...)
+end
+function make_shared_blob{T}(backend::CPUBackend, blob::CPUBlob{T}, dims...)
+  dims = blob_canonical_dims(dims...)
+  @assert prod(dims) == length(blob)
+  return CPUBlob{T}(reshape(blob.data, dims))
 end
 function destroy(blob::CPUBlob)
   # do nothing... or is there anything that I could do?

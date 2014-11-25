@@ -41,7 +41,7 @@ function backward(sys::System{CPUBackend}, state::SoftmaxLossLayerState, inputs:
         reshape(1:height, (1, height, 1, 1)),
         int(inputs[2].data)+1, reshape(1:num, (1, 1, 1, num)))
     broadcast_setindex!(diff.data, broadcast_getindex(diff.data, index...)-1, index...)
-    diff.data /= width*height*num
+    Vec.mul_scal!(diff.data, 1/(width*height*num))
   end
 end
 
