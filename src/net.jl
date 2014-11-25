@@ -205,7 +205,7 @@ function topological_sort(layers :: Vector{Layer})
         if !haskey(outputs, key)
           error("Required input blob missing: $(key)")
         end
-        if !isa(layers[i], InplaceLayer) && output_taken[key]
+        if !isa(layers[i], InplaceLayer) && !isa(layers[i], UtilLayer) && output_taken[key]
           @error(" Output blob $key is being used in multiple places as input blob")
           @error(" Fix this if it is a bug. Or if sharing is intended, use the SplitLayer")
           @error(" SplitLayer explicitly to allow the back-propagation operate properly.")
@@ -213,7 +213,7 @@ function topological_sort(layers :: Vector{Layer})
         end
 
         graph[i,outputs[key]] = 1
-        if !isa(layers[i], InplaceLayer)
+        if !isa(layers[i], InplaceLayer) && !isa(layers[i], UtilLayer)
           output_taken[key] = true
         end
       end
