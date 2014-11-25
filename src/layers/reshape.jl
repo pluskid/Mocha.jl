@@ -1,4 +1,5 @@
-@defstruct ReshapeLayer UtilLayer (
+# Note ReshapeLayer is NOT a UtilLayer because it computes backward (via some upper layers)
+@defstruct ReshapeLayer CompLayer (
   name :: String = "reshape",
   (tops :: Vector{Symbol} = [], length(tops) > 0),
   (bottoms :: Vector{Symbol} = [], length(bottoms) == length(tops)),

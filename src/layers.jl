@@ -88,7 +88,7 @@ abstract StatLayer <: Layer # Layer that provide statistics (e.g. Accuracy)
 abstract CompLayer <: Layer # Layer that do computation
 abstract TrainableLayer <: CompLayer # Layer that could be trained
 abstract InplaceLayer   <: CompLayer # Layer that does inplace computation
-abstract UtilLayer      <: CompLayer # Layer that acts as utilities
+abstract UtilLayer      <: CompLayer # Layer that acts as utilities (no backward)
 
 #############################################################
 # Overload when there is no shared_state
@@ -131,11 +131,11 @@ include("layers/element-wise.jl")
 include("layers/channel-pooling.jl")
 include("layers/lrn.jl")
 include("layers/dropout.jl")
+include("layers/reshape.jl")
 
 #############################################################
 # Utility layers
 #############################################################
-include("layers/reshape.jl")
 include("layers/argmax.jl")
 include("layers/hdf5-output.jl")
 
