@@ -76,6 +76,7 @@ include("layers/channel-pooling.jl")
 include("layers/lrn.jl")
 include("layers/dropout.jl")
 include("layers/reshape.jl")
+include("layers/argmax.jl")
 
 #-- Loss Layers
 include("layers/square-loss.jl")

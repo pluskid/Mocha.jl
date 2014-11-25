@@ -342,4 +342,16 @@ Computation Layers
 
       Blob names for output and input.
 
+.. class:: ArgmaxLayer
+
+   Compute the arg-max along the channel dimension. This layer is only used in
+   the test network to produce predicted classes. It has no ability to do back
+   propagation.
+
+   .. attribute::
+      tops
+      bottoms
+
+      Blob names for output and input.
+
 
