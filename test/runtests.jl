@@ -24,7 +24,6 @@ end
 ############################################################
 # Utilities functions
 ############################################################
-include("layers/multinomial-logistic-loss.jl")
 include("utils/blas.jl")
 include("utils/shared-blob.jl")
 

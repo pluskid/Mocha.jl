@@ -65,8 +65,8 @@ function forward(sys::System{CPUBackend}, state::MultinomialLogisticLossLayerSta
   if isa(state.weights_blob, NullBlob)
     loss = sum(-log(max(broadcast_getindex(pred, idx_width, idx_height, idx_chann, idx_num), 1e-20)))
   else
-    loss = sum(-log(max(broadcast_getindex(pred, idx_width, idx_height, idx_chann, idx_num) .*
-        broadcast_getindex(state.weights_blob.data, idx_width, idx_height, idx_chann, reshape([1],1,1,1,1)), 1e-20)))
+    loss = sum(-log(max(broadcast_getindex(pred, idx_width, idx_height, idx_chann, idx_num), 1e-20)) .*
+        broadcast_getindex(state.weights_blob.data, idx_width, idx_height, idx_chann, reshape([1],1,1,1,1)))
   end
   state.loss = loss / (width*height*num)
 end

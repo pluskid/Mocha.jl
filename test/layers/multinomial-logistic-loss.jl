@@ -47,7 +47,7 @@ function test_multinomial_logistic_loss_layer(sys::System, class_weights, T, eps
           expected_loss += -log(prob[w, h, int(label[w, h, 1, n])+1, n])
         else
           idx = int(label[w,h,1,n])+1
-          expected_loss += -log(prob[w,h,idx,n] * weights[w,h,idx])
+          expected_loss += -log(prob[w,h,idx,n]) * weights[w,h,idx]
         end
       end
     end

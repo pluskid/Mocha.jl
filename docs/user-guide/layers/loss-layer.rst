@@ -3,10 +3,11 @@ Loss Layers
 
 .. class:: MultinomialLogisticLossLayer
 
-   The multinomial logistic loss is defined as :math:`\ell = -\log(x_g)`, where
+   The multinomial logistic loss is defined as :math:`\ell = -w_g\log(x_g)`, where
    :math:`x_1,\ldots,x_C` are probabilities for each of the :math:`C` classes
-   conditioned on the input data, and :math:`g` is the corresponding
-   ground-truth category.
+   conditioned on the input data, :math:`g` is the corresponding
+   ground-truth category, and :math:`w_g` is the *weight* for the :math:`g`-th
+   class (default 1, see bellow).
 
    The conditional probability blob should be of the shape :math:`(W,H,C,N)`,
    and the ground-truth blob should be of the shape :math:`(W,H,1,N)`. Typically
