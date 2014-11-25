@@ -20,7 +20,7 @@ end
 
 function test_l1_regularizer(sys::System)
   test_l1_regularizer(sys, Float32, 1e-3)
-  test_l1_regularizer(sys, Float64, 1e-5)
+  test_l1_regularizer(sys, Float64, 1e-4)
 end
 
 if test_cpu
@@ -29,5 +29,4 @@ end
 if test_cudnn
   test_l1_regularizer(sys_cudnn)
 end
-
 
