@@ -70,9 +70,11 @@ Loss Layers
 
    .. math::
 
-      \ell = -\log(\sigma_g)
+      \ell = -w_g \log(\sigma_g)
 
-   Here :math:`g` is the ground-truth label.
+   Here :math:`g` is the ground-truth label, and :math:`w_g` is the weight for
+   the :math:`g`-th category. See the document of :class:`MultinomialLogisticLossLayer` for more
+   details on what the weights mean and how to specify them.
 
    The shapes of inputs is the same as :class:`MultinomialLogisticLossLayer`:
    the multi-class predictions are assumed to be along the channel dimension.
@@ -83,8 +85,8 @@ Loss Layers
 
    .. math::
 
-      \frac{\partial \ell}{\partial x_i} = \frac{e^{x_i}}{\sum_j e^{x_j}}
-      - \delta_{ig} = \sigma_i - \delta_{ig}
+      \frac{\partial \ell}{\partial x_i} = w_g\left(\frac{e^{x_i}}{\sum_j e^{x_j}}
+      - \delta_{ig}\right) = w_g\left(\sigma_i - \delta_{ig}\right)
 
    Here :math:`\delta_{ig}` is 1 if :math:`i=g`, and 0 otherwise.
 
