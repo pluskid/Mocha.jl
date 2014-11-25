@@ -12,6 +12,7 @@
 #include "accuracy.impl"
 #include "channel_pooling.impl"
 #include "dropout.impl"
+#include "argmax.impl"
 
 #include "relu.impl"
 #include "sigmoid.impl"

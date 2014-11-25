@@ -18,6 +18,8 @@ type MochaKernels
   sigmoid_backward_double      :: CUDA.CuFunction
   accuracy_forward_float       :: CUDA.CuFunction
   accuracy_forward_double      :: CUDA.CuFunction
+  argmax_forward_float         :: CUDA.CuFunction
+  argmax_forward_double        :: CUDA.CuFunction
 
   add_scal_float               :: CUDA.CuFunction
   add_scal_double              :: CUDA.CuFunction
@@ -79,6 +81,8 @@ type MochaKernels
     kernels.sigmoid_backward_double = CUDA.CuFunction(mod, "sigmoid_backward_double")
     kernels.accuracy_forward_float = CUDA.CuFunction(mod, "accuracy_forward_float")
     kernels.accuracy_forward_double = CUDA.CuFunction(mod, "accuracy_forward_double")
+    kernels.argmax_forward_float = CUDA.CuFunction(mod, "argmax_forward_float")
+    kernels.argmax_forward_double = CUDA.CuFunction(mod, "argmax_forward_double")
 
     kernels.add_scal_float   = CUDA.CuFunction(mod, "add_scal_float")
     kernels.add_scal_double  = CUDA.CuFunction(mod, "add_scal_double")

@@ -15,6 +15,7 @@ include("layers/split.jl")
 include("layers/element-wise.jl")
 include("layers/channel-pooling.jl")
 include("layers/dropout.jl")
+include("layers/argmax.jl")
 
 #############################################################
 # Loss Layers
