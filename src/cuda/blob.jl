@@ -51,6 +51,11 @@ end
 function make_blob(backend::CuDNNBackend, data_type::Type, dims...)
   return cudnn_make_tensor_blob(data_type, dims...)
 end
+function make_shared_blob{T}(backend::CuDNNBackend, blob::CuTensorBlob{T}, dims...)
+  dims = blob_canonical_dims(dims...)
+  @assert prod(dims) == length(blob)
+  return CuTensorBlob{T}(blob.ptr, dims, length(blob))
+end
 function destroy(blob :: CuTensorBlob)
   if blob.ptr != CuPtr()
     CUDA.free(blob.ptr)
