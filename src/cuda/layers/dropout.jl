@@ -36,18 +36,18 @@ function forward(sys::System{CuDNNBackend}, state::DropoutLayerState, inputs::Ve
 end
 
 function backward(sys::System{CuDNNBackend}, state::DropoutLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-    if !isa(diffs[1], NullBlob)
-      len = length(inputs[1])
-      x_block = int(ceil(float64(len)/CUDA.THREADS_PER_BLOCK_X))
-      data_type = eltype(inputs[1])
-      if data_type == Float32
-        kernel = sys.backend.mocha.dropout_backward_float
-      elseif data_type == Float64
-        kernel = sys.backend.mocha.dropout_backward_double
-      end
-
-      CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X,
-          (state.etc, length(inputs[1]), diffs[1].ptr.p,
-          state.rand_vals.ptr.p, state.ratio, state.scale))
+  if !isa(diffs[1], NullBlob)
+    len = length(inputs[1])
+    x_block = int(ceil(float64(len)/CUDA.THREADS_PER_BLOCK_X))
+    data_type = eltype(inputs[1])
+    if data_type == Float32
+      kernel = sys.backend.mocha.dropout_backward_float
+    elseif data_type == Float64
+      kernel = sys.backend.mocha.dropout_backward_double
     end
+
+    CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X,
+        (state.etc, length(inputs[1]), diffs[1].ptr.p,
+        state.rand_vals.ptr.p, state.ratio, state.scale))
+  end
 end
