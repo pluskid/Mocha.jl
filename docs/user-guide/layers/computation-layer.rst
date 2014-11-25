@@ -314,3 +314,32 @@ Computation Layers
       \sigma(x_1,\ldots,x_C) = (\sigma_1,\ldots,\sigma_C) = \left(\frac{e^{x_1}}{\sum_j
       e^{x_j}},\ldots,\frac{e^{x_C}}{\sum_je^{x_j}}\right)
 
+.. class:: ReshapeLayer
+
+   Reshape a blob. Can be useful if, for example, you want to make the *flat*
+   output from an :class:`InnerProductLayer` *meaningful* by assigning each
+   dimension spatial information.
+
+   Internally there is no data copying going on. The total number of elements in
+   the blob tensor after reshaping should be the same as the original blob
+   tensor.
+
+   .. attribute:: width
+
+      Default 1. The new width after reshaping.
+
+   .. attribute:: height
+
+      Default 1. The new height after reshaping.
+
+   .. attribute:: channels
+
+      Default 1. The new channels after reshaping.
+
+   .. attribute::
+      tops
+      bottoms
+
+      Blob names for output and input.
+
+
