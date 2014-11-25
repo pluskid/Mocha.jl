@@ -19,6 +19,38 @@ Loss Layers
       name for the conditional probability input blob, and the second one
       specifies the name for the ground-truth input blob.
 
+   .. attribute:: weights
+
+      This could be used to specify weights for different classes. The following
+      values are allowed
+
+      * Empty array (default). This means each category should be equally
+        weighted.
+      * A 3D tensor of the shape (width, height, channels). Here the (w,h,c)
+        entry indicates the weights for category c at location (w,h).
+      * A 1D vector of length ``channels``. When both width and height are 1,
+        this is equivalent to the case above. Otherwise, the weight vector
+        across channels is repeated at every location (w,h).
+
+   .. attribute:: normalize
+
+      Indicating how weights should be normalized if given. The following values
+      are allowed
+
+      * ``:local`` (default): Normalize the weights locally at each location
+        (w,h), across the channels.
+      * ``:global``: Normalize the weights globally.
+      * ``:no``: Do not normalize the weights.
+
+      The weights normalization are done in a way that you get the same
+      objective function when specifying *equal weights* for each class as when
+      you do not specify any weights. In other words, the total sum of the
+      weights are scaled to be equal to weights ⨉ height ⨉ channels. If you
+      specify ``:no``, it is your responsibility to properly normalize the
+      weights.
+
+
+
 .. class:: SoftmaxLossLayer
 
    This is essentially a combination of :class:`MultinomialLogisticLossLayer`
