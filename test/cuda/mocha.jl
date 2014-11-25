@@ -29,8 +29,10 @@ function test_mocha_kernels(sys::System, data_type)
   else
     kernel = sys.backend.mocha.logistic_loss_forward_double
   end
+  weights = convert(Ptr{data_type}, 0)
+
   CUDA.launch(kernel, (x_block, y_block), (CUDA.THREADS_PER_BLOCK_X, 1),
-      (prob_blob.ptr.p, label_blob.ptr.p, n, spatial_dim, prob_dim, loss_blob.ptr.p))
+      (prob_blob.ptr.p, label_blob.ptr.p, weights, n, spatial_dim, prob_dim, loss_blob.ptr.p))
 
   loss = Float32[0]
   copy!(loss, loss_blob)

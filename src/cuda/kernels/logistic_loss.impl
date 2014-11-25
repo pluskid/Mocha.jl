@@ -6,9 +6,9 @@
 //
 // NOTE: the loss is a float pointer regardless of whether the input
 // is double or float. This is because currently CUDA atomicAdd only
-// support up to float. 
+// support up to float.
 template <typename T>
-__device__ void logistic_loss_forward(T *prob, T *label, int num, int spatial_dim, int prob_dim, float *loss) {
+__device__ void logistic_loss_forward(T *prob, T *label, T *weights, int num, int spatial_dim, int prob_dim, float *loss) {
   __shared__ T local_loss[THREADS_PER_BLOCK_X];
 
   int idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -19,7 +19,10 @@ __device__ void logistic_loss_forward(T *prob, T *label, int num, int spatial_di
   } else {
     int y = static_cast<int>(label[idx * spatial_dim + idx_sp]);
     T the_prob = prob[idx * (spatial_dim*prob_dim) + y*spatial_dim + idx_sp];
-    local_loss[threadIdx.x] = -log(max(the_prob, static_cast<T>(LOG_THRESHOLD)));
+    T log_prob = -log(max(the_prob, static_cast<T>(LOG_THRESHOLD)));
+    if (weights != NULL)
+      log_prob *= weights[y*spatial_dim + idx_sp];
+    local_loss[threadIdx.x] = log_prob;
   }
 
   __syncthreads();
@@ -33,11 +36,11 @@ __device__ void logistic_loss_forward(T *prob, T *label, int num, int spatial_di
 }
 
 extern "C" {
-  __global__ void logistic_loss_forward_float(float *prob, float *label, int num, int spatial_dim, int prob_dim, float *loss) {
-    logistic_loss_forward(prob, label, num, spatial_dim, prob_dim, loss);
+  __global__ void logistic_loss_forward_float(float *prob, float *label, float *weights, int num, int spatial_dim, int prob_dim, float *loss) {
+    logistic_loss_forward(prob, label, weights, num, spatial_dim, prob_dim, loss);
   }
-  __global__ void logistic_loss_forward_double(double *prob, double *label, int num, int spatial_dim, int prob_dim, float *loss) {
-    logistic_loss_forward(prob, label, num, spatial_dim, prob_dim, loss);
+  __global__ void logistic_loss_forward_double(double *prob, double *label, double *weights, int num, int spatial_dim, int prob_dim, float *loss) {
+    logistic_loss_forward(prob, label, weights, num, spatial_dim, prob_dim, loss);
   }
 }
 

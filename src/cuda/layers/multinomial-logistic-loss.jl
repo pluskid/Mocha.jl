@@ -20,8 +20,15 @@ function forward(sys::System{CuDNNBackend}, state::MultinomialLogisticLossLayerS
   else
     error("Unsupported data type $data_type")
   end
+
+  if isa(state.weights_blob, NullBlob)
+    weights = convert(Ptr{data_type}, 0)
+  else
+    weights = state.weights_blob.ptr.p
+  end
+
   CUDA.launch(kernel, (x_block, y_block), (CUDA.THREADS_PER_BLOCK_X, 1),
-      (pred.ptr.p, label.ptr.p, num, spatial_dim, prob_dim, loss_blob.ptr.p))
+      (pred.ptr.p, label.ptr.p, weights, num, spatial_dim, prob_dim, loss_blob.ptr.p))
 
   loss = Float32[0]
   copy!(loss, loss_blob)

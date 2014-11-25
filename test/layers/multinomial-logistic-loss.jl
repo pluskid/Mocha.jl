@@ -54,6 +54,8 @@ function test_multinomial_logistic_loss_layer(sys::System, class_weights, T, eps
   end
   expected_loss /= (width*height*num)
 
+  println("got $(state.loss)")
+  println("exp $(expected_loss)")
   @test -eps < state.loss - expected_loss < eps
 
   shutdown(sys, state)
