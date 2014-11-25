@@ -3,6 +3,7 @@ using HDF5
 @defstruct HDF5OutputLayer UtilLayer (
   name :: String = "hdf5-output",
   (bottoms :: Vector{Symbol} = [], length(bottoms) > 0),
+  (datasets :: Vector{Symbol} = [], length(datasets) == 0 || length(datasets) == length(bottoms)),
   (filename :: String = "", !isempty(filename)),
   force_overwrite :: Bool = false,
 )
@@ -23,13 +24,19 @@ function setup(sys::System, layer::HDF5OutputLayer, inputs::Vector{Blob}, diffs:
       @warn("HDF5OutputLayer: output file '$(layer.filename)' already exists, overwriting")
     end
   end
+  if length(layer.datasets) == 0
+    datasets = layer.bottoms
+  else
+    datasets = layer.datasets
+  end
+
   file = h5open(layer.filename, "w")
   buffer = Array(Array, length(inputs))
   dsets  = Array(Any, length(inputs))
   for i = 1:length(inputs)
     data_type = eltype(inputs[i])
     width, height, channels, batch_size = size(inputs[i])
-    dsets[i] = d_create(file, string(layer.bottoms[i]), datatype(data_type),
+    dsets[i] = d_create(file, string(datasets[i]), datatype(data_type),
         dataspace((width, height, channels, batch_size), max_dims=(width, height, channels, -1)),
         "chunk", (width, height, channels, batch_size))
     buffer[i] = Array(data_type, width, height, channels, batch_size)

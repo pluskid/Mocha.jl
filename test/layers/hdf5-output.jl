@@ -11,7 +11,7 @@ function test_hdf5_output_layer(sys::System, T, eps)
   input_blob = make_blob(sys.backend, input)
 
   output_fn = string(tempname(), ".hdf5")
-  layer = HDF5OutputLayer(bottoms=[:input], filename=output_fn)
+  layer = HDF5OutputLayer(bottoms=[:input], datasets=[:foobar], filename=output_fn)
   state = setup(sys, layer, Blob[input_blob], Blob[NullBlob()])
 
   # repeat 3 times
@@ -23,7 +23,7 @@ function test_hdf5_output_layer(sys::System, T, eps)
 
   expected_output = cat(4, input, input, input)
   got_output = h5open(output_fn, "r") do h5
-    read(h5, "input")
+    read(h5, "foobar")
   end
 
   @test size(expected_output) == size(got_output)
