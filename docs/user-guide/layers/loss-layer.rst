@@ -96,4 +96,12 @@ Loss Layers
       name for the conditional probability input blob, and the second one
       specifies the name for the ground-truth input blob.
 
+   .. attribute::
+      weights
+      normalize
+
+      Properties for the underlying :class:`MultinomialLogisticLossLayer`. See
+      document there for details.
+
+
 
