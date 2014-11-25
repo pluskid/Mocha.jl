@@ -1,4 +1,4 @@
-@defstruct ReshapeLayer CompLayer (
+@defstruct ReshapeLayer UtilLayer (
   name :: String = "reshape",
   (tops :: Vector{Symbol} = [], length(tops) > 0),
   (bottoms :: Vector{Symbol} = [], length(bottoms) == length(tops)),

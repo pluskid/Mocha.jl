@@ -7,7 +7,7 @@ function test_hdf5_data_layer(sys::System, T, eps)
   # Prepare Data for Testing
   ############################################################
   batch_size = 3
-  data_dim = (1,1,2)
+  data_dim = (7,8,2)
 
   data_all = [rand(T, data_dim..., x) for x in [5 1 2]]
   h5fn_all = [string(tempname(), ".hdf5") for x in 1:length(data_all)]

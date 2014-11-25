@@ -1,10 +1,10 @@
-export DataLayer, LossLayer, StatLayer, CompLayer, TrainableLayer
+export DataLayer, LossLayer, UtilLayer, StatLayer, CompLayer, TrainableLayer, InplaceLayer
 export LayerState
 
 export HDF5DataLayer, MemoryDataLayer
 export InnerProductLayer, ConvolutionLayer, PoolingLayer, SoftmaxLayer
 export PowerLayer, SplitLayer, ElementWiseLayer, ChannelPoolingLayer
-export LRNLayer, DropoutLayer, ReshapeLayer, ArgmaxLayer
+export LRNLayer, DropoutLayer, ReshapeLayer, ArgmaxLayer, HDF5OutputLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export AccuracyLayer
 
@@ -88,6 +88,7 @@ abstract StatLayer <: Layer # Layer that provide statistics (e.g. Accuracy)
 abstract CompLayer <: Layer # Layer that do computation
 abstract TrainableLayer <: CompLayer # Layer that could be trained
 abstract InplaceLayer   <: CompLayer # Layer that does inplace computation
+abstract UtilLayer      <: CompLayer # Layer that acts as utilities
 
 #############################################################
 # Overload when there is no shared_state
@@ -130,8 +131,13 @@ include("layers/element-wise.jl")
 include("layers/channel-pooling.jl")
 include("layers/lrn.jl")
 include("layers/dropout.jl")
+
+#############################################################
+# Utility layers
+#############################################################
 include("layers/reshape.jl")
 include("layers/argmax.jl")
+include("layers/hdf5-output.jl")
 
 #############################################################
 # Loss Layers
