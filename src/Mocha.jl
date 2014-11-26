@@ -2,6 +2,7 @@ module Mocha
 
 include("logging.jl")
 include("config.jl")
+include("compatibility.jl")
 
 if Config.use_native_extension
   include("native.jl")

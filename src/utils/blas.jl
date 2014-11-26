@@ -2,12 +2,13 @@ export RawBLAS
 
 module RawBLAS
 using Base.LinAlg # force built-in BLAS library initialization
+using ..Mocha.blasfunc
 
 for (gemm, elty) in ((:dgemm_, Float64), (:sgemm_, Float32))
   @eval begin
-    function gemm!(transA::Char, transB::Char, M::Int, N::Int, K::Int, alpha::$elty, 
+    function gemm!(transA::Char, transB::Char, M::Int, N::Int, K::Int, alpha::$elty,
         A, lda, B, ldb, beta::$elty, C, ldc)
-      ccall(($(string(gemm)), Base.libblas_name), Void,
+      ccall(($(blasfunc(gemm)), Base.libblas_name), Void,
           (Ptr{Uint8}, Ptr{Uint8}, Ptr{Base.LinAlg.BlasInt}, Ptr{Base.LinAlg.BlasInt},
           Ptr{Base.LinAlg.BlasInt}, Ptr{$elty}, Ptr{$elty}, Ptr{Base.LinAlg.BlasInt},
           Ptr{$elty}, Ptr{Base.LinAlg.BlasInt}, Ptr{$elty}, Ptr{$elty},
@@ -28,8 +29,8 @@ end
 for (gemv, elty) in ((:dgemv_, Float64), (:sgemv_, Float32))
   @eval begin
     function gemv!(trans::Char, M::Int, N::Int, alpha::$elty, A, lda, x, incx, beta::$elty, y, incy)
-      ccall(($(string(gemv)), Base.libblas_name), Void,
-          (Ptr{Uint8}, Ptr{Base.LinAlg.BlasInt}, Ptr{Base.LinAlg.BlasInt}, Ptr{$elty}, 
+      ccall(($(blasfunc(gemv)), Base.libblas_name), Void,
+          (Ptr{Uint8}, Ptr{Base.LinAlg.BlasInt}, Ptr{Base.LinAlg.BlasInt}, Ptr{$elty},
           Ptr{$elty}, Ptr{Base.LinAlg.BlasInt}, Ptr{$elty}, Ptr{Base.LinAlg.BlasInt},
           Ptr{$elty}, Ptr{$elty}, Ptr{Base.LinAlg.BlasInt}),
           &trans, &M, &N, &alpha, A, &lda, x, &incx, &beta, y, &incy)
