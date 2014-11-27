@@ -128,6 +128,30 @@ Computation Layers
 
       Blob names for output and input.
 
+.. class:: DropoutLayer
+
+   Dropout is typically used during training, and it has been demonstrated to be
+   effective as regularizers for large scale networks. Dropout operates by
+   randomly "turn off" some responses. Specifically, the forward computation is
+
+   .. math::
+
+      y = \begin{cases}\frac{x}{1-p} & u > p \\ 0 & u <= p\end{cases}
+
+   where :math:`u` is a random number uniformly distributed in [0,1], and
+   :math:`p` is the ``ratio`` hyper-parameter. Note the output is scaled by
+   :math:`1-p` such that :math:`\mathbb{E}[y] = x`.
+
+   .. attribute:: ratio
+
+      The probability :math:`p` of turning off a response. Or could also be
+      interpreted as the ratio of all the responses that are turned off.
+
+   .. attribute:: bottoms
+
+      The names of the input blobs dropout operates on. Note this is a *in-place
+      layer*, so there is no ``tops`` property. The output blobs will be the
+      same as the input blobs.
 
 .. class:: ElementWiseLayer
 

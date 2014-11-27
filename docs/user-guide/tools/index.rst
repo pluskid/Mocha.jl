@@ -5,4 +5,5 @@ Tools
    :maxdepth: 2
 
    import-caffe-model
+   image-classifier
 

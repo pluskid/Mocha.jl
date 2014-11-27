@@ -15,6 +15,8 @@ Loss Layers
   loss function will be used to train the net parameters in back propagation.
 Statistics Layers
   Take input from bottom layers and compute useful statistics like
-  classification accuracy. Statistics could be accumulated throughout multiple
-  iterations.
-
+  classification accuracy. Statistics are accumulated throughout multiple
+  iterations. ``reset_statistics`` could be used to explicitly reset the
+  statistics accumulation.
+Utility Layers
+  Other layers.

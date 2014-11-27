@@ -8,3 +8,6 @@ Layers
    data-layer
    computation-layer
    loss-layer
+   stat-layer
+   util-layer
+
