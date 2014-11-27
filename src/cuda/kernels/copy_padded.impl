@@ -11,24 +11,28 @@
     return; \
   int padded_width = width + pw + pw2; \
   int padded_height = height + ph + ph2; \
-  int idx = w + width*(h + n*height); \
+  int idx; \
+  if (mirror) \
+    idx = (width-1-w) + width*(h + n*height); \
+  else \
+    idx = w + width*(h + n*height); \
   int pad_idx = pw + w + padded_width*(ph+h + n*padded_height)
 
 // pw and pw2 are padd in width dimension for the head and tail side, same for ph and ph2
 template <typename T>
-__device__ void dense_to_padded(T *dst, T *src, int width, int height, int pw, int ph, int pw2, int ph2, int chann_num) {
+__device__ void dense_to_padded(T *dst, T *src, int width, int height, int pw, int ph, int pw2, int ph2, int chann_num, int mirror) {
   PADCOPY_BOUNDS_AND_INDEX;
   dst[pad_idx] = src[idx];
 }
 template <typename T>
-__device__ void padded_to_dense(T *dst, T *src, int width, int height, int pw, int ph, int pw2, int ph2, int chann_num) {
+__device__ void padded_to_dense(T *dst, T *src, int width, int height, int pw, int ph, int pw2, int ph2, int chann_num, int mirror) {
   PADCOPY_BOUNDS_AND_INDEX;
   dst[idx] = src[pad_idx];
 }
 
 #define DEF_PAD_COPY(name, dtype) \
-  __global__ void name ## _ ## dtype(dtype *dst, dtype *src, int width, int height, int pw, int ph, int pw2, int ph2, int chann_num) { \
-    name(dst, src, width, height, pw, ph, pw2, ph2, chann_num); \
+  __global__ void name ## _ ## dtype(dtype *dst, dtype *src, int width, int height, int pw, int ph, int pw2, int ph2, int chann_num, int mirror) { \
+    name(dst, src, width, height, pw, ph, pw2, ph2, chann_num, mirror); \
   }
 
 extern "C" {

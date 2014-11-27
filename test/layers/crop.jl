@@ -43,4 +43,3 @@ end
 if test_cudnn
   test_crop_layer(sys_cudnn)
 end
-

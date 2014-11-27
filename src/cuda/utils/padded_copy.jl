@@ -1,7 +1,7 @@
 export dense2padded!, padded2dense!
 
 function dense2padded!{T}(sys::System{CuDNNBackend}, dst::CuTensorBlob{T},
-    src::CuTensorBlob{T}, pad_head::NTuple{2,Int}, pad_tail::NTuple{2,Int})
+    src::CuTensorBlob{T}, pad_head::NTuple{2,Int}, pad_tail::NTuple{2,Int}, mirror::Bool)
 
     width, height, channels, num = size(src)
     chann_num = channels*num
@@ -17,13 +17,15 @@ function dense2padded!{T}(sys::System{CuDNNBackend}, dst::CuTensorBlob{T},
     else
       error("Unsupported data type $T for padded copy")
     end
+    println("dense2padded! mirror = $mirror")
+    mirror = convert(Int, mirror)
     CUDA.launch(kernel, (x_block,y_block,z_block),
         (CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z),
-        (dst.ptr.p,src.ptr.p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num))
+        (dst.ptr.p,src.ptr.p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num,mirror))
 end
 
 function padded2dense!{T}(sys::System{CuDNNBackend}, dst::CuTensorBlob{T},
-    src::CuTensorBlob{T}, pad_head::NTuple{2,Int}, pad_tail::NTuple{2,Int})
+    src::CuTensorBlob{T}, pad_head::NTuple{2,Int}, pad_tail::NTuple{2,Int}, mirror::Bool)
 
     width, height, channels, num = size(dst)
     chann_num = channels*num
@@ -39,16 +41,19 @@ function padded2dense!{T}(sys::System{CuDNNBackend}, dst::CuTensorBlob{T},
     else
       error("Unsupported data type $T for padded copy")
     end
+    println("padded2dense! mirror = $mirror")
+    mirror = convert(Int, mirror)
     CUDA.launch(kernel, (x_block,y_block,z_block),
         (CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z),
-        (dst.ptr.p,src.ptr.p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num))
+        (dst.ptr.p,src.ptr.p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num, mirror))
 end
 
 function dense2padded!{T}(sys::System{CuDNNBackend}, dst::CuTensorBlob{T},
-    src::CuTensorBlob{T}, pad::NTuple{2,Int})
-  dense2padded!(sys, dst, src, pad, pad)
+    src::CuTensorBlob{T}, pad::NTuple{2,Int}, mirror=false)
+  dense2padded!(sys, dst, src, pad, pad, mirror)
 end
 function padded2dense!{T}(sys::System{CuDNNBackend}, dst::CuTensorBlob{T},
-    src::CuTensorBlob{T}, pad::NTuple{2,Int})
-  padded2dense!(sys, dst, src, pad, pad)
+    src::CuTensorBlob{T}, pad::NTuple{2,Int}, mirror=false)
+  padded2dense!(sys, dst, src, pad, pad, mirror)
 end
+

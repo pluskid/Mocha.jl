@@ -12,7 +12,13 @@ function forward(sys::System{CuDNNBackend}, state::CropLayerState, inputs::Vecto
     end
     w_off2 = size(input,1) - crop_size[1] - w_off
     h_off2 = size(input,2) - crop_size[2] - h_off
-    padded2dense!(sys, output, input, (w_off, h_off), (w_off2, h_off2))
+
+    if state.layer.random_mirror && rand(Uint)%2 == 0
+      mirror = true;
+    else
+      mirror = false;
+    end
+    padded2dense!(sys, output, input, (w_off, h_off), (w_off2, h_off2), mirror)
   end
 end
 
