@@ -1,7 +1,7 @@
 export dense2padded!, padded2dense!
 
 function dense2padded!{T}(sys::System{CuDNNBackend}, dst::CuTensorBlob{T},
-    src::CuTensorBlob{T}, pad::NTuple{2,Int})
+    src::CuTensorBlob{T}, pad_head::NTuple{2,Int}, pad_tail::NTuple{2,Int})
 
     width, height, channels, num = size(src)
     chann_num = channels*num
@@ -19,11 +19,11 @@ function dense2padded!{T}(sys::System{CuDNNBackend}, dst::CuTensorBlob{T},
     end
     CUDA.launch(kernel, (x_block,y_block,z_block),
         (CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z),
-        (dst.ptr.p, src.ptr.p, width, height, pad[1], pad[2], chann_num))
+        (dst.ptr.p,src.ptr.p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num))
 end
 
 function padded2dense!{T}(sys::System{CuDNNBackend}, dst::CuTensorBlob{T},
-    src::CuTensorBlob{T}, pad::NTuple{2,Int})
+    src::CuTensorBlob{T}, pad_head::NTuple{2,Int}, pad_tail::NTuple{2,Int})
 
     width, height, channels, num = size(dst)
     chann_num = channels*num
@@ -41,5 +41,14 @@ function padded2dense!{T}(sys::System{CuDNNBackend}, dst::CuTensorBlob{T},
     end
     CUDA.launch(kernel, (x_block,y_block,z_block),
         (CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z),
-        (dst.ptr.p, src.ptr.p, width, height, pad[1], pad[2], chann_num))
+        (dst.ptr.p,src.ptr.p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num))
+end
+
+function dense2padded!{T}(sys::System{CuDNNBackend}, dst::CuTensorBlob{T},
+    src::CuTensorBlob{T}, pad::NTuple{2,Int})
+  dense2padded!(sys, dst, src, pad, pad)
+end
+function padded2dense!{T}(sys::System{CuDNNBackend}, dst::CuTensorBlob{T},
+    src::CuTensorBlob{T}, pad::NTuple{2,Int})
+  padded2dense!(sys, dst, src, pad, pad)
 end
