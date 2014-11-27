@@ -96,3 +96,26 @@ HDF5 file that Mocha could import is very simple
   layer is optional. It is OK to omit them on exporting if there is no bias. You
   will get a warning message when importing in Mocha. Mocha will use the
   associated initializer (by default initializing to 0) to initialize the bias.
+
+Export Caffe's Mean File
+------------------------
+
+Sometimes Caffe's model includes a *mean file*, which is the mean data point
+computed over all the training data. This information might be needed in :doc:`data
+preprocessing </user-guide/data-transformer>`. Of course we could compute the
+mean from training data manually. But if the training data is too large or is
+not easily obtainable, it might be easier to load Caffe's pre-computed mean file
+instead.
+
+In the ``tools`` directory of Mocha's source root, you can find
+``dump_mean_file.cpp``. Similar to exporting Caffe's model file, you can copy
+this file to Caffe's ``tools`` directory and compile. After that, you can export
+Caffe's mean file:
+
+.. code-block:: bash
+
+   build/tools/dump_mean_file \
+       data/ilsvrc12/imagenet_mean.binaryproto \
+       ilsvr12_mean.hdf5
+
+The exported HDF5 file could be loaded by :class:`DataTransformers.SubMean`.
