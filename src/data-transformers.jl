@@ -32,7 +32,11 @@ function setup(sys::System, transformer::DataTransformers.SubMean, input::Blob)
   if isa(transformer.mean_blob, NullBlob)
     h5open(transformer.mean_file, "r") do h5
       mean_data = read(h5, "mean")
-      mean_blob = make_blob(sys.backend, eltype(input), size(mean_data))
+      mean_dims = size(mean_data)
+      if length(mean_dims) == 3
+        mean_dims = [mean_dims..., 1]
+      end
+      mean_blob = make_blob(sys.backend, eltype(input), mean_dims...)
       copy!(mean_blob, convert(Array{eltype(input)}, mean_data))
     end
   else
@@ -73,9 +77,7 @@ function setup(sys::System, transformer::DataTransformers.Scale, input::Blob)
   return ScaleState(transformer, convert(eltype(input), transformer.scale))
 end
 function forward(sys::System{CPUBackend}, state::ScaleState, input::Blob)
-  @simd for i = 1:length(input.data)
-    @inbounds input.data[i] *= state.scale
-  end
+  BLAS.scal!(length(input.data), state.scale, input.data, 1)
 end
 function shutdown(sys::System, state::ScaleState)
 end

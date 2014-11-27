@@ -13,6 +13,9 @@ type Net{T <: Backend}
   blobs_forward  :: Vector{Vector{Blob}}
   blobs_backward :: Vector{Vector{Blob}}
   data_layers    :: Vector{Int}
+
+  output_blobs   :: Dict{Symbol, Blob}
+  diff_blobs     :: Dict{Symbol, Blob}
 end
 
 function get_epoch(net::Net)
@@ -138,7 +141,7 @@ Net(name::String, sys::System, layers :: Vector{Layer}) = begin
     # record if layers has any dependency
     if :bottoms ∈ names(layer)
       blob_fwd = Blob[output_blobs[x] for x in layer.bottoms]
-      blob_bwd = Blob[haskey(diff_blobs,x) ? diff_blobs[x] : NullBlob() for x in layer.bottoms]
+      blob_bwd = Blob[diff_blobs[x] for x in layer.bottoms]
     else
       blob_fwd = Blob[]
       blob_bwd = Blob[]
@@ -168,6 +171,10 @@ Net(name::String, sys::System, layers :: Vector{Layer}) = begin
         for j = 1:length(layer.tops)
           diff_blobs[layer.tops[j]] = states[i].blobs_diff[j]
         end
+      else
+        for j = 1:length(layer.tops)
+          diff_blobs[layer.tops[j]] = NullBlob()
+        end
       end
     end
 
@@ -175,7 +182,7 @@ Net(name::String, sys::System, layers :: Vector{Layer}) = begin
     blobs_backward[i] = blob_bwd
   end
 
-  return Net(name, sys, layers, states, blobs_forward, blobs_backward, data_layers)
+  return Net(name, sys, layers, states, blobs_forward, blobs_backward, data_layers, output_blobs, diff_blobs)
 end
 
 
