@@ -354,4 +354,25 @@ Computation Layers
 
       Blob names for output and input.
 
+.. class:: CropLayer
+
+   Do image cropping. This layer is primarily used only on top of data layer so
+   backpropagation is currently not implemented.
+
+   .. attribute:: crop_size
+
+      A (width, height) tuple of the size of the cropped image.
+
+   .. attribute:: random_crop
+
+      Default ``false``. When enabled, randomly place the cropping box instead
+      of putting at the center. This is useful to produce random perturbation of
+      the input images during training.
+
+   .. attribute::
+      tops
+      bottoms
+
+      Blob names for output and input.
+
 
