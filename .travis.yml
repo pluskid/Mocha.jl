@@ -28,5 +28,5 @@ before_install:
     fi
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 script:
-  - julia -e 'Pkg.init(); Pkg.clone(pwd()); Pkg.test("Mocha")'
+  - julia -e 'Pkg.init(); Pkg.clone(pwd()); Pkg.checkout("HDF5"); Pkg.test("Mocha")'
   - MOCHA_USE_NATIVE_EXT=true julia -e 'Pkg.build("Mocha"); Pkg.test("Mocha")'
