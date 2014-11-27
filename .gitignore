@@ -4,6 +4,9 @@ examples/mnist/snapshots
 examples/cifar10/data
 examples/cifar10/snapshots
 
+examples/ijulia/ilsvrc12/model
+*-checkpoint.ipynb
+
 docs/_build
 
 *.so

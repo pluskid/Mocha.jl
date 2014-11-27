@@ -70,8 +70,8 @@ function classify(classifier::ImageClassifier, images::Vector{Image})
   results = classify_batch(classifier, images, 1)
   idx = classifier.batch_size+1
   while idx <= length(images)
-    res_batch = classify_batch(classifier, images, idx)
-    results = [results, res_batch]
+    ret_batch = classify_batch(classifier, images, idx)
+    results = [results, ret_batch]
     idx += length(res_batch)
   end
 
@@ -133,10 +133,7 @@ function classify_batch(classifier::ImageClassifier, images::Vector{Image}, idx:
   idx_end = min(idx+classifier.batch_size-1, length(images))
   images = preprocess(classifier, images[idx:idx_end])
   for i = 1:length(images)
-    # we scale by 255 because it seems that Images.jl automatically map
-    # [0,256) to [0,1), but the mean_file we converted from Caffe assumes
-    # the data range is [0, 256)
-    classifier.data_layer.data[1][:,:,:,i] = 255*images[i]
+    classifier.data_layer.data[1][:,:,:,i] = images[i]
   end
 
   #-- run the network
@@ -144,22 +141,23 @@ function classify_batch(classifier::ImageClassifier, images::Vector{Image}, idx:
   copy!(classifier.pred, classifier.pred_blob)
   results = map(1:length(images)) do i
     pred = classifier.pred[:,:,:,i]
-    if !isempty(classifier.classes)
-      ret = Array(Any, size(pred,1), size(pred,2))
-      for w = 1:size(pred,1)
-        for h = 1:size(pred,2)
-          ret[w,h] = classifier.classes[indmax(pred[w,h,:])]
+    ret = Array(Any, size(pred,1), size(pred,2))
+    for w = 1:size(pred,1)
+      for h = 1:size(pred,2)
+        i_class = indmax(pred[w,h,:])
+        if !isempty(classifier.classes)
+          ret[w,h] = classifier.classes[i_class]
+        else
+          ret[w,h] = string(i_class-1) # 0-based class label
         end
       end
-    else
-      ret = pred
     end
 
     if size(pred,1) == 1 && size(pred,2) == 1
-      ret = reshape(ret, length(ret))
+      ret = ret[1]
+      pred = reshape(pred, size(pred,3), size(pred,4))
     end
-
-    ret
+    return (pred, ret)
   end
 
   return results
