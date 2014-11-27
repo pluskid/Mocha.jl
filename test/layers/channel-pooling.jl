@@ -87,7 +87,7 @@ function channel_pooling_backward(state, input::Array, diff::Array, payload::Any
       if isa(state.layer.pooling, Pooling.Max)
         region = sub(gradient,1:width,1:height,cstart:cend,n)
         maxidx = payload[:,:,pc,n]
-        region[maxidx] += diff[:,:,pc,n]
+        region[vec(maxidx)] += vec(diff[:,:,pc,n])
       elseif isa(state.layer.pooling, Pooling.Mean)
         for c = cstart:cend
           gradient[:,:,c,n] += diff[:,:,pc,n] / state.layer.kernel
