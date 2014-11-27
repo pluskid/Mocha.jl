@@ -1,6 +1,44 @@
 Computation Layers
 ~~~~~~~~~~~~~~~~~~
 
+.. class:: ArgmaxLayer
+
+   Compute the arg-max along the channel dimension. This layer is only used in
+   the test network to produce predicted classes. It has no ability to do back
+   propagation.
+
+   .. attribute::
+      tops
+      bottoms
+
+      Blob names for output and input.
+
+.. class:: ChannelPoolingLayer
+
+   1D pooling over the channel dimension.
+
+   .. attribute:: kernel
+
+      Default 1, pooling kernel size.
+
+   .. attribute:: stride
+
+      Default 1, stride for pooling.
+
+   .. attribute:: pad
+
+      Default (0,0), a 2-tuple specifying padding in the front and the end.
+
+   .. attribute:: pooling
+
+      Default ``Pooling.Max()``. Specify the pooling function to use.
+
+   .. attribute::
+      tops
+      bottoms
+
+      Blob names for output and input.
+
 .. class:: ConvolutionLayer
 
    Convolution in the spatial dimensions.
@@ -64,6 +102,51 @@ Computation Layers
       Default 2.0. The local learning rate for the bias.
 
 
+.. class:: CropLayer
+
+   Do image cropping. This layer is primarily used only on top of data layer so
+   backpropagation is currently not implemented.
+
+   .. attribute:: crop_size
+
+      A (width, height) tuple of the size of the cropped image.
+
+   .. attribute:: random_crop
+
+      Default ``false``. When enabled, randomly place the cropping box instead
+      of putting at the center. This is useful to produce random perturbation of
+      the input images during training.
+
+   .. attribute:: random_mirror
+
+      Default ``faulse``. When enabled, randomly (with probability 0.5) mirror
+      the input images (flip the width dimension).
+
+   .. attribute::
+      tops
+      bottoms
+
+      Blob names for output and input.
+
+
+.. class:: ElementWiseLayer
+
+   Element-wise layer implements basic element-wise operations on inputs.
+
+   .. attribute:: operation
+
+      Element-wise operation. Built-in operations are in module
+      ``ElementWiseFunctors``, including ``Add``, ``Subtract``, ``Multiply`` and
+      ``Divide``.
+
+   .. attribute:: tops
+
+      Output blob names, only one output blob is allowed.
+
+   .. attribute:: bottoms
+
+      Input blob names, count must match the number of inputs ``operation`` takes.
+
 
 .. class:: InnerProductLayer
 
@@ -111,36 +194,6 @@ Computation Layers
 
       Default ``Neurons.Identity()``, an optional :doc:`activation function
       </user-guide/neuron>` for the output of this layer.
-
-   .. attribute::
-      tops
-      bottoms
-
-      Blob names for output and input.
-
-.. class:: PoolingLayer
-
-   2D pooling over the 2 image dimensions (width and height).
-
-   .. attribute:: kernel
-
-      Default (1,1), a 2-tuple of integers specifying pooling kernel width and
-      height, respectively.
-
-   .. attribute:: stride
-
-      Default (1,1), a 2-tuple of integers specifying pooling stride in the
-      width and height dimensions respectively.
-
-   .. attribute:: pad
-
-      Default (0,0), a 2-tuple of integers specifying the padding in the width and
-      height dimensions respectively. Paddings are two-sided, so a pad of (1,0)
-      will pad one pixel in both the left and the right boundary of an image.
-
-   .. attribute:: pooling
-
-      Default ``Pooling.Max()``. Specify the pooling operation to use.
 
    .. attribute::
       tops
@@ -202,24 +255,36 @@ Computation Layers
       Names for output and input blobs. Only one input and one output blob are
       allowed.
 
+.. class:: PoolingLayer
 
-.. class:: ElementWiseLayer
+   2D pooling over the 2 image dimensions (width and height).
 
-   Element-wise layer implements basic element-wise operations on inputs.
+   .. attribute:: kernel
 
-   .. attribute:: operation
+      Default (1,1), a 2-tuple of integers specifying pooling kernel width and
+      height, respectively.
 
-      Element-wise operation. Built-in operations are in module
-      ``ElementWiseFunctors``, including ``Add``, ``Subtract``, ``Multiply`` and
-      ``Divide``.
+   .. attribute:: stride
 
-   .. attribute:: tops
+      Default (1,1), a 2-tuple of integers specifying pooling stride in the
+      width and height dimensions respectively.
 
-      Output blob names, only one output blob is allowed.
+   .. attribute:: pad
 
-   .. attribute:: bottoms
+      Default (0,0), a 2-tuple of integers specifying the padding in the width and
+      height dimensions respectively. Paddings are two-sided, so a pad of (1,0)
+      will pad one pixel in both the left and the right boundary of an image.
 
-      Input blob names, count must match the number of inputs ``operation`` takes.
+   .. attribute:: pooling
+
+      Default ``Pooling.Max()``. Specify the pooling operation to use.
+
+   .. attribute::
+      tops
+      bottoms
+
+      Blob names for output and input.
+
 
 .. class:: PowerLayer
 
@@ -259,61 +324,6 @@ Computation Layers
 
       Blob names for output and input.
 
-.. class:: SplitLayer
-
-   Split layer produces identical *copies* [1]_ of the input. The number of copies
-   is determined by the length of the ``tops`` property. During back propagation,
-   derivatives from all the output copies are added together and propagated down.
-
-   This layer is typically used as a helper to implement some more complicated
-   layers.
-
-   .. attribute:: bottoms
-
-      Input blob names, only one input blob is allowed.
-
-   .. attribute:: tops
-
-      Output blob names, should be more than one output blobs.
-
-   .. [1] All the data is shared, so there is no actually data copying.
-
-.. class:: ChannelPoolingLayer
-
-   1D pooling over the channel dimension.
-
-   .. attribute:: kernel
-
-      Default 1, pooling kernel size.
-
-   .. attribute:: stride
-
-      Default 1, stride for pooling.
-
-   .. attribute:: pad
-
-      Default (0,0), a 2-tuple specifying padding in the front and the end.
-
-   .. attribute:: pooling
-
-      Default ``Pooling.Max()``. Specify the pooling function to use.
-
-   .. attribute::
-      tops
-      bottoms
-
-      Blob names for output and input.
-
-.. class:: SoftmaxLayer
-
-   Compute softmax over the channel dimension. The inputs :math:`x_1,\ldots,x_C`
-   are mapped as
-
-   .. math::
-
-      \sigma(x_1,\ldots,x_C) = (\sigma_1,\ldots,\sigma_C) = \left(\frac{e^{x_1}}{\sum_j
-      e^{x_j}},\ldots,\frac{e^{x_C}}{\sum_je^{x_j}}\right)
-
 .. class:: ReshapeLayer
 
    Reshape a blob. Can be useful if, for example, you want to make the *flat*
@@ -342,42 +352,31 @@ Computation Layers
 
       Blob names for output and input.
 
-.. class:: ArgmaxLayer
+.. class:: SoftmaxLayer
 
-   Compute the arg-max along the channel dimension. This layer is only used in
-   the test network to produce predicted classes. It has no ability to do back
-   propagation.
+   Compute softmax over the channel dimension. The inputs :math:`x_1,\ldots,x_C`
+   are mapped as
 
-   .. attribute::
-      tops
-      bottoms
+   .. math::
 
-      Blob names for output and input.
+      \sigma(x_1,\ldots,x_C) = (\sigma_1,\ldots,\sigma_C) = \left(\frac{e^{x_1}}{\sum_j
+      e^{x_j}},\ldots,\frac{e^{x_C}}{\sum_je^{x_j}}\right)
 
-.. class:: CropLayer
+.. class:: SplitLayer
 
-   Do image cropping. This layer is primarily used only on top of data layer so
-   backpropagation is currently not implemented.
+   Split layer produces identical *copies* [1]_ of the input. The number of copies
+   is determined by the length of the ``tops`` property. During back propagation,
+   derivatives from all the output copies are added together and propagated down.
 
-   .. attribute:: crop_size
+   This layer is typically used as a helper to implement some more complicated
+   layers.
 
-      A (width, height) tuple of the size of the cropped image.
+   .. attribute:: bottoms
 
-   .. attribute:: random_crop
+      Input blob names, only one input blob is allowed.
 
-      Default ``false``. When enabled, randomly place the cropping box instead
-      of putting at the center. This is useful to produce random perturbation of
-      the input images during training.
+   .. attribute:: tops
 
-   .. attribute:: random_mirror
+      Output blob names, should be more than one output blobs.
 
-      Default ``faulse``. When enabled, randomly (with probability 0.5) mirror
-      the input images (flip the width dimension).
-
-   .. attribute::
-      tops
-      bottoms
-
-      Blob names for output and input.
-
-
+   .. [1] All the data is shared, so there is no actually data copying.
