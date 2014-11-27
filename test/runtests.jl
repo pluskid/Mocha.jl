@@ -80,6 +80,7 @@ include("layers/channel-pooling.jl")
 include("layers/lrn.jl")
 include("layers/dropout.jl")
 include("layers/reshape.jl")
+include("layers/crop.jl")
 
 #-- Loss Layers
 include("layers/square-loss.jl")

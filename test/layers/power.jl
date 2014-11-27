@@ -48,8 +48,8 @@ function test_power_layer(sys::System, T, eps)
 end
 
 function test_power_layer(sys::System)
-  test_power_layer(sys, Float32, 1e-3)
-  test_power_layer(sys, Float64, 1e-9)
+  test_power_layer(sys, Float32, 1e-2)
+  test_power_layer(sys, Float64, 1e-8)
 end
 
 if test_cpu

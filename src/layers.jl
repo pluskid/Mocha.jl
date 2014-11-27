@@ -5,6 +5,7 @@ export HDF5DataLayer, MemoryDataLayer
 export InnerProductLayer, ConvolutionLayer, PoolingLayer, SoftmaxLayer
 export PowerLayer, SplitLayer, ElementWiseLayer, ChannelPoolingLayer
 export LRNLayer, DropoutLayer, ReshapeLayer, ArgmaxLayer, HDF5OutputLayer
+export CropLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export AccuracyLayer
 
@@ -132,6 +133,7 @@ include("layers/channel-pooling.jl")
 include("layers/lrn.jl")
 include("layers/dropout.jl")
 include("layers/reshape.jl")
+include("layers/crop.jl")
 
 #############################################################
 # Utility layers
