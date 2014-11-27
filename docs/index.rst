@@ -10,10 +10,11 @@ Tutorials
 #########
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    tutorial/mnist
    tutorial/cifar10
+   tutorial/ijulia-imagenet
 
 ############
 User's Guide
