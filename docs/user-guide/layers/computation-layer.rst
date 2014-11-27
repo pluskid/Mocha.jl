@@ -369,6 +369,11 @@ Computation Layers
       of putting at the center. This is useful to produce random perturbation of
       the input images during training.
 
+   .. attribute:: random_mirror
+
+      Default ``faulse``. When enabled, randomly (with probability 0.5) mirror
+      the input images (flip the width dimension).
+
    .. attribute::
       tops
       bottoms
