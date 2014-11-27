@@ -20,6 +20,7 @@ if test_cudnn
   init(sys_cudnn)
 end
 
+include("layers/crop.jl")
 
 ############################################################
 # Utilities functions

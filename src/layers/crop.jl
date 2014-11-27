@@ -1,6 +1,7 @@
 @defstruct CropLayer CompLayer (
   name :: String = "crop",
   random_crop :: Bool = false,
+  random_mirror :: Bool = false,
   (crop_size :: NTuple{2, Int} = (0,0), crop_size[1] > 0 && crop_size[2] > 0),
   (bottoms :: Vector{Symbol} = [], length(bottoms) > 0),
   (tops :: Vector{Symbol} = [], length(tops) == length(bottoms))
@@ -46,6 +47,21 @@ function crop_blob{T}(input::Array{T}, output::Array{T}, crop_size::NTuple{2,Int
     end
   end
 end
+function mirror_crop_blob{T}(input::Array{T}, output::Array{T}, crop_size::NTuple{2,Int}, offsets::NTuple{2,Int})
+  crop_w = crop_size[1]; w_off = offsets[1]
+  crop_h = crop_size[2]; h_off = offsets[2]
+  num = size(input, 4); channels = size(input, 3)
+
+  for n = 1:num
+    for c = 1:channels
+      for h = 1:crop_h
+        @simd for w = 1:crop_w
+          @inbounds output[crop_w-w+1,h,c,n] = input[w+w_off,h+h_off,c,n]
+        end
+      end
+    end
+  end
+end
 
 function forward(sys::System{CPUBackend}, state::CropLayerState, inputs::Vector{Blob})
   crop_size = state.layer.crop_size
@@ -59,7 +75,11 @@ function forward(sys::System{CPUBackend}, state::CropLayerState, inputs::Vector{
       w_off = div(size(input,1)-crop_size[1], 2)
       h_off = div(size(input,2)-crop_size[2], 2)
     end
-    crop_blob(input, output, crop_size, (w_off, h_off))
+    if state.layer.random_mirror && rand(Uint)%2 == 0
+      mirror_crop_blob(input, output, crop_size, (w_off, h_off))
+    else
+      crop_blob(input, output, crop_size, (w_off, h_off))
+    end
   end
 end
 
