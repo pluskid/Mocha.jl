@@ -16,8 +16,9 @@ function enjoy(coffee::ValidationPerformance, ::CoffeeBreakTime.Morning, ::Net, 
     end
   end
 
-  show_statistics(coffee.validation_net, title="Performance on Validation Set")
+  result = show_statistics(coffee.validation_net, title="Performance on Validation Set")
   reset_statistics(coffee.validation_net)
+  return result
 end
 function destroy(coffee::ValidationPerformance, ::Net)
   # We don't destroy here as we didn't construct the network

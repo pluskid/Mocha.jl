@@ -44,6 +44,7 @@ function solve(sgd::SGD, net::Net)
 
     update_solver_state(solver_state, obj_val)
     check_coffee_breaks(CoffeeBreakTime.Evening(), sgd, solver_state, net)
+    update_solver_time(solver_state)
 
     if stop_condition_satisfied(sgd, solver_state, net)
       break
