@@ -11,7 +11,7 @@
 * Document
   * Developer's Guide
 
-## v0.0.3 2014.11.??
+## v0.0.3 2014.11.27
 
 * Interface
   * IJulia-notebook example
