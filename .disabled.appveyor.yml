@@ -1,3 +1,6 @@
+# Currently disabling appveyor as Julia and package installing procedures
+# seem to be very unstable and randomly failing. So the CI results are not
+# very informative.
 environment:
   matrix:
   - JULIAVERSION: "x86/0.3/julia-0.3.2-win32.exe"
