@@ -1,10 +1,10 @@
 # Mocha
 
 [![Build Status](https://travis-ci.org/pluskid/Mocha.jl.svg?branch=master)](https://travis-ci.org/pluskid/Mocha.jl)
-<!--[![Build status](https://ci.appveyor.com/api/projects/status/342vcj5lj2jyegsp?svg=true)](https://ci.appveyor.com/project/pluskid/mocha-jl)-->
 [![Documentation Status](https://readthedocs.org/projects/mochajl/badge/?version=latest)](http://mochajl.readthedocs.org/)
 [![Mocha](http://pkg.julialang.org/badges/Mocha_release.svg)](http://pkg.julialang.org/?pkg=Mocha&ver=release)
 [![Coverage Status](https://img.shields.io/coveralls/pluskid/Mocha.jl.svg)](https://coveralls.io/r/pluskid/Mocha.jl?branch=master)
+<!--[![Build status](https://ci.appveyor.com/api/projects/status/342vcj5lj2jyegsp?svg=true)](https://ci.appveyor.com/project/pluskid/mocha-jl)-->
 
 Mocha is a Deep Learning framework for [Julia](http://julialang.org/), inspired by the C++ Deep Learning framework [Caffe](http://caffe.berkeleyvision.org/). Mocha support multiple backends:
 
@@ -16,19 +16,19 @@ Mocha is a Deep Learning framework for [Julia](http://julialang.org/), inspired 
 
 To install the release version, simply run
 
-```
+```julia
 Pkg.add("Mocha")
 ```
 
 in Julia console. To install the latest development version, run the following command instead:
 
-```
+```julia
 Pkg.clone("https://github.com/pluskid/Mocha.jl.git")
 ```
 
 Then you can run the built-in unit tests with
 
-```
+```julia
 Pkg.test("Mocha")
 ```
 
