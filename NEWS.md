@@ -3,14 +3,28 @@
 ## TODO
 
 * Interface
-  * IJulia-notebook example
   * Network architecture visualization
 * Infrastructure
   * Other solvers?
+  * Distributed / Parallel training?
   * CUDA Stream?
 * Document
-  * Complete User's Guide
   * Developer's Guide
+
+## v0.0.3 2014.11.??
+
+* Interface
+  * IJulia-notebook example
+  * Image classifier wrapper
+* Network
+  * Data transformers for data layers
+  * Argmax, Crop, Reshape, HDF5 Output, Weighted Softmax-loss Layers
+* Infrastructure
+  * Unit tests are extended to cover all layers in both Float32 and Float64
+  * Compatibility with Julia v0.3.3 and v0.4 nightly build
+* Documentation
+  * Complete User's Guide
+  * Tutorial on image classification with pre-trained imagenet model
 
 ## v0.0.2 2014.11.20
 
