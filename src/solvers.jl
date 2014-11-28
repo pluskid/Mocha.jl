@@ -1,7 +1,7 @@
 export SolverParameters
 export SGD
 
-export LearningRatePolicy, LRPolicy, get_learning_rate
+export LearningRatePolicy, LRPolicy, get_learning_rate, MomentumPolicy, MomPolicy, get_momentum
 
 export add_coffee_break, solve
 
@@ -75,9 +75,43 @@ function get_learning_rate(policy::LRPolicy.Staged, state::SolverState)
   return get_learning_rate(policy.stages[policy.curr_stage][2], state)
 end
 
+
+############################################################
+# Momentum policy
+############################################################
+abstract MomentumPolicy
+module MomPolicy
+using ..Mocha.MomentumPolicy
+type Fixed <: MomentumPolicy
+  base_mom :: FloatingPoint
+end
+
+# min(base_mom * gamma ^ (floor(iter / stepsize)), max_mom)
+type Step <: MomentumPolicy
+  base_mom :: FloatingPoint
+  gamma    :: FloatingPoint
+  stepsize :: Int
+  max_mom  :: FloatingPoint
+end
+
+type Linear <: MomentumPolicy
+  base_mom :: FloatingPoint
+  gamma    :: FloatingPoint
+  stepsize :: Int
+  max_mom  :: FloatingPoint
+end
+
+end # module MomPolicy
+
+get_momentum(policy::MomPolicy.Fixed, state::SolverState) = policy.base_mom
+get_momentum(policy::MomPolicy.Step, state::SolverState) =
+    min(policy.base_mom * policy.gamma ^ (floor(state.iter / policy.stepsize)), policy.max_mom)
+get_momentum(policy::MomPolicy.Linear, state::SolverState) =
+    min(policy.base_mom + floor(state.iter / policy.stepsize) * policy.gamma, policy.max_mom)
+
 @defstruct SolverParameters Any (
   lr_policy :: LearningRatePolicy = LRPolicy.Fixed(0.01),
-  (momentum :: FloatingPoint = 0.9, 0 <= momentum < 1),
+  mom_policy  :: MomentumPolicy = MomPolicy.Fixed(0.),
   (max_iter :: Int = 0, max_iter > 0),
   (regu_coef :: FloatingPoint = 0.0005, regu_coef >= 0),
 )
