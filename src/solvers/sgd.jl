@@ -26,6 +26,7 @@ function solve(sgd::SGD, net::Net)
 
     obj_val = forward_backward(net, sgd.params.regu_coef)
     learning_rate = get_learning_rate(sgd.params.lr_policy, solver_state)
+    momentum = get_momentum(sgd.params.mom_policy, solver_state)
 
     # update parameters
     for i = 1:length(param_states)
@@ -36,7 +37,7 @@ function solve(sgd::SGD, net::Net)
         gradient = state.parameters[j].gradient
         data_type = eltype(hist_blob)
 
-        update_parameters(net, sgd, state.parameters[j].learning_rate * learning_rate,
+        update_parameters(net, sgd, state.parameters[j].learning_rate * learning_rate, momentum,
             state, state.parameters[j].blob, hist_blob, gradient, data_type)
       end
     end
@@ -53,9 +54,9 @@ function solve(sgd::SGD, net::Net)
   map(x -> map(destroy, x), param_history)
 end
 
-function update_parameters(net::Net{CPUBackend}, solver::SGD, learning_rate, state, param_blob, hist_blob, gradient, data_type)
+function update_parameters(net::Net{CPUBackend}, solver::SGD, learning_rate, momentum, state, param_blob, hist_blob, gradient, data_type)
   # hist_blob = momentum * hist_blob
-  BLAS.scal!(length(hist_blob), convert(data_type, solver.params.momentum), hist_blob.data, 1)
+  BLAS.scal!(length(hist_blob), convert(data_type, momentum), hist_blob.data, 1)
   # hist_blob = learning_rate * gradient + hist_blob
   BLAS.axpy!(length(hist_blob), convert(data_type, learning_rate), gradient.data, 1, hist_blob.data, 1)
 
