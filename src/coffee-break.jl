@@ -10,9 +10,12 @@ type Morning <: CoffeeBreakTimeType end
 type Evening <: CoffeeBreakTimeType end
 end # module CoffeeBreakTime
 
+# statistics returned by every coffee break
+typealias StatsDict Dict{String, Real}
+
 abstract Coffee
 function init(::Coffee, ::Net) end
-function enjoy(::Coffee, ::CoffeeBreakTimeType, ::Net, ::SolverState) end
+function enjoy(::Coffee, ::CoffeeBreakTimeType, ::Net, ::SolverState) return StatsDict() end
 function destroy(::Coffee, ::Net) end
 
 type CoffeeBreak
@@ -34,4 +37,5 @@ end
 
 include("coffee/training-summary.jl")
 include("coffee/validation-performance.jl")
+include("coffee/accumulator.jl")
 include("coffee/snapshot.jl")

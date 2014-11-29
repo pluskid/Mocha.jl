@@ -1,5 +1,6 @@
 @defstruct AccuracyLayer StatLayer (
   name :: String = "accuracy",
+  report_error :: Bool = false,
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 
@@ -29,6 +30,11 @@ end
 function show_statistics(state::AccuracyLayerState)
   accuracy = @sprintf("%.4f%%", state.accuracy*100)
   @info("  Accuracy (avg over $(state.n_accum)) = $accuracy")
+  res = Dict(["$(state.layer.name)-accuracy" => state.accuracy])
+  if state.layer.report_error
+    res["$(state.layer.name)-error"] = 1 - state.accuracy
+  end
+  return res
 end
 
 function forward(sys::System{CPUBackend}, state::AccuracyLayerState, inputs::Vector{Blob})

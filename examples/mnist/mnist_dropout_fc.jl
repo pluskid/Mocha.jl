@@ -1,0 +1,102 @@
+hdf5_fns = ["data/train.hdf5", "data/test.hdf5"]
+source_fns = ["data/train.txt", "data/test.txt"]
+for i = 1:length(hdf5_fns)
+  if !isfile(hdf5_fns[i])
+    println("Data not found, use get-mnist.sh to generate HDF5 data")
+    exit(1)
+  else
+    open(source_fns[i], "w") do s
+      println(s, hdf5_fns[i])
+    end
+  end
+end
+
+#ENV["MOCHA_USE_NATIVE_EXT"] = "true"
+#ENV["OMP_NUM_THREADS"] = 1
+#blas_set_num_threads(1)
+ENV["MOCHA_USE_CUDA"] = "true"
+
+using Mocha
+
+############################################################
+# This is an example script for training a fully connected 
+# network with dropout on mnist. 
+#
+# The network size is 784-1200-1200-10 with ReLU units 
+# in the hidden layers and a softmax output layer.
+# The parameters for training the network were chosen
+# to reproduce the results from the original dropout paper: 
+# http://arxiv.org/abs/1207.0580 
+# and the corresponding newer JMLR paper: 
+# http://jmlr.org/papers/volume15/srivastava14a/srivastava14a.pdf
+#
+# Our parameters slightly differ. This is mainly due to the
+# fact that in the original dropout paper the weights are scaled
+# by 0.5 after training whereas we scale them by 2 during training.
+#
+# The settings in this script should currently produce a model that 
+# gets 100 errors (or 99 % accuracy) on the test set
+# if you run it for the whole 2000 epochs (=600*2000 steps).
+# This is slightly better than, but well within the error 
+# bars of the JMLR paper. 
+############################################################
+
+
+# fix the random seed to make results reproducable
+srand(12345678)
+
+data_layer  = HDF5DataLayer(name="train-data", source=source_fns[1], batch_size=100)
+fc1_layer   = InnerProductLayer(name="fc1", output_dim=1200, neuron=Neurons.ReLU(), weight_init = GaussianInitializer(std=0.01), bottoms=[:data], tops=[:fc1])
+fc2_layer   = InnerProductLayer(name="fc2", output_dim=1200, neuron=Neurons.ReLU(), weight_init = GaussianInitializer(std=0.01), bottoms=[:fc1], tops=[:fc2])
+fc3_layer   = InnerProductLayer(name="out", output_dim=10, bottoms=[:fc2], weight_init = ConstantInitializer(0), tops=[:out])
+loss_layer  = SoftmaxLossLayer(name="loss", bottoms=[:out,:label])
+
+# setup dropout for the different layers
+drop_input  = DropoutLayer(name="drop_in", bottoms=[:data], ratio=0.2)
+drop_fc1 = DropoutLayer(name="drop_fc1", bottoms=[:fc1], ratio=0.5)
+drop_fc2  = DropoutLayer(name="drop_fc2", bottoms=[:fc2], ratio=0.5)
+
+sys = System(CuDNNBackend())
+#sys = System(CPUBackend())
+init(sys)
+
+common_layers = [fc1_layer, fc2_layer, fc3_layer]
+drop_layers = [drop_input, drop_fc1, drop_fc2]
+# put training net together, note that the correct ordering will automatically be established by the constructor
+net = Net("MNIST-train", sys, [data_layer, common_layers..., drop_layers..., loss_layer])
+
+# we let the learning rate decrease by 0.998 in each epoch (=600 batches of size 100)
+# and let the momentum increase linearly from 0.5 to 0.9 over 500 epochs 
+# which is equivalent to an increase step of 0.0008
+# training is done for 2000 epochs 
+params = SolverParameters(max_iter=600*2000, regu_coef=0.0, 
+                          mom_policy=MomPolicy.Linear(0.5, 0.0008, 600, 0.9), 
+                          lr_policy=LRPolicy.Step(0.1, 0.998, 600))
+solver = SGD(params)
+
+base_dir = "snapshots_dropout_fc"
+# save snapshots every 5000 iterations
+add_coffee_break(solver,
+                 Snapshot(base_dir, auto_load=true),
+                 every_n_iter=5000)
+                 
+# show performance on test data every 600 iterations (one epoch)
+# also log everything using the AccumulateStatistics module
+data_layer_test = HDF5DataLayer(name="test-data", source=source_fns[2], batch_size=100)
+acc_layer = AccuracyLayer(name="test-accuracy", bottoms=[:out, :label], report_error=true)
+test_net = Net("MNIST-test", sys, [data_layer_test, common_layers..., acc_layer])
+stats = AccumulateStatistics([ValidationPerformance(test_net), TrainingSummary()], 
+                             try_load = true, save = true, fname = "$(base_dir)/statistics.h5")
+add_coffee_break(solver, stats, every_n_iter=600)
+
+solve(solver, net)
+
+#Profile.init(int(1e8), 0.001)
+#@profile solve(solver, net)
+#open("profile.txt", "w") do out
+#  Profile.print(out)
+#end
+
+destroy(net)
+destroy(test_net)
+shutdown(sys)
