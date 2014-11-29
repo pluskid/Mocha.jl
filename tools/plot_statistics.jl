@@ -8,24 +8,41 @@ function read_stats(fname)
   return stats
 end
 
-function list_statistics(names)
-  println("Listing available statistics")
-  for (i, name) in enumerate(names)
-      println("  $i : $name : $i")
+function number_stats(fnames, names)
+  res = Dict()
+  n = 1
+  for (i, fname) in enumerate(fnames)
+    for (j, name) in enumerate(names[i])
+      res[n] = (i, fname, name)
+      n += 1
+    end
   end
-  println("Select statistics to plot using -i and specify the numbers 1-$(length(names)) seperated with ,")
+  return res
 end
 
-function create_safe_file(fname, to_tmp)
+function list_stats(numbered_names)
+  println("Listing available statistics")
+  for k in sort(collect(keys(numbered_names)))
+    (_, fname, name) = numbered_names[k]
+    println("  $k : $fname/$name")
+  end
+  println("Select statistics to plot using -i and specify the numbers 1-$(length(numbered_names)) seperated with ,")
+end
+
+function create_safe_files(fnames, to_tmp)
   # copy to temporary file if requested
   if to_tmp
-    stats_file = tempname()
-    cp(fname, stats_file)
-    return stats_file
+    stats_files = [tempname() for fname in fnames]
+    for (tmpfile,fname) in zip(stats_files, fnames)
+      cp(fname, tmpfile)
+    end
+    return stats_files
   else
-    return fname
+    return fnames
   end
 end
+
+get_unique_names(stats) = unique(vcat(map(collect, map(keys, values(stats)))...))
 
 s = ArgParseSettings()
 @add_arg_table s begin
@@ -39,35 +56,40 @@ s = ArgParseSettings()
   "--tmp", "-t"
     help = "copy the statistics file to a temporary location before plotting (useful when plotting during training)"
     action = :store_true
-  "statistics_filename"
-    help = "the filename of the statistics hdf5 file"
+  "statistics_filenames"
+    nargs = '*'
+    help = "the filenames of the statistics hdf5 files"
     required = true
 end
 
-# first parse arguments and read statistics file
+# first parse arguments and read statistics files
 parsed_args = parse_args(ARGS, s)
-stats_file = create_safe_file(parsed_args["statistics_filename"], parsed_args["tmp"])
-stats = read_stats(stats_file)
-# get all unique statistic names that were logged
-names = unique(map(collect, map(keys, values(stats))))[1]
+filenames = unique(parsed_args["statistics_filenames"])
+stats_files = create_safe_files(filenames, parsed_args["tmp"])
+all_stats = map(read_stats, stats_files)
+# get all unique statistic names that were logged in each files
+names = map(get_unique_names, all_stats)
+# and assign a number to each 
+numbered_names = number_stats(filenames, names)
 
 # process according to arguments
 using PyPlot
 if parsed_args["list"] || parsed_args["idx"] == ""
-  list_statistics(names)
+  list_stats(numbered_names)
 end
 
 if parsed_args["idx"] != ""
   selected_ind = map(int, split(parsed_args["idx"], ","))
-  if any([x < 0 || x > length(names) for x in selected_ind])
-    list_statistics(names)
-    error("Invalid index in your list : $selected_ind make sure the indices are between 1 and $(length(names))")
+  if any([x < 0 || x > length(numbered_names) for x in selected_ind])
+    list_stats(numbered_names)
+    error("Invalid index in your list : $selected_ind make sure the indices are between 1 and $(length(numbered_names))")
   end
 
-  selected = [names[i] for i in selected_ind]
-    
   figure()
-  for key in selected
+  for ind in selected_ind
+    (stats_num, fname, key) = numbered_names[ind]
+    stats = all_stats[stats_num] 
+
     N = length(stats)
     x = zeros(N)
     y = zeros(N)
@@ -75,7 +97,7 @@ if parsed_args["idx"] != ""
       x[i] = iter
       y[i] = stats[iter][key]
     end
-    plot(x, y, label=key)
+    plot(x, y, label="$(fname)/$(key)")
   end
   legend()
    
@@ -86,5 +108,7 @@ end
 
 # delete temporary file if it was created
 if parsed_args["tmp"]
-  rm(stats_file)
+  for f in stats_files
+    rm(f)
+  end
 end
