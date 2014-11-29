@@ -87,17 +87,18 @@ if parsed_args["idx"] != ""
 
   figure()
   for ind in selected_ind
-    (stats_num, fname, key) = numbered_names[ind]
+    # get the right stats file
+    (stats_num, fname, selected) = numbered_names[ind]
     stats = all_stats[stats_num] 
 
-    N = length(stats)
-    x = zeros(N)
-    y = zeros(N)
-    for (i, iter) in enumerate(sort(collect(keys(stats))))
-      x[i] = iter
-      y[i] = stats[iter][key]
-    end
-    plot(x, y, label="$(fname)/$(key)")
+    # do the actual plotting
+    # x will simply be the iteration number
+    #   which we will sort
+    x = sort(collect(keys(stats)))
+    # and y is the statistics corresponding to 
+    # the selected statistics you want to plot
+    y = [stats[i][selected] for i in x]
+    plot(x, y, label="$(fname)/$(selected)")
   end
   legend()
    
