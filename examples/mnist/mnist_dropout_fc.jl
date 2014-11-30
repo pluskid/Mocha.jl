@@ -46,9 +46,18 @@ using Mocha
 srand(12345678)
 
 data_layer  = HDF5DataLayer(name="train-data", source=source_fns[1], batch_size=100)
-fc1_layer   = InnerProductLayer(name="fc1", output_dim=1200, neuron=Neurons.ReLU(), weight_init = GaussianInitializer(std=0.01), bottoms=[:data], tops=[:fc1])
-fc2_layer   = InnerProductLayer(name="fc2", output_dim=1200, neuron=Neurons.ReLU(), weight_init = GaussianInitializer(std=0.01), bottoms=[:fc1], tops=[:fc2])
-fc3_layer   = InnerProductLayer(name="out", output_dim=10, bottoms=[:fc2], weight_init = ConstantInitializer(0), tops=[:out])
+fc1_layer   = InnerProductLayer(name="fc1", output_dim=1200, neuron=Neurons.ReLU(),
+                                weight_init = GaussianInitializer(std=0.01),
+                                #weight_cons = L2Cons(4.5),
+                                bottoms=[:data], tops=[:fc1])
+fc2_layer   = InnerProductLayer(name="fc2", output_dim=1200, neuron=Neurons.ReLU(),
+                                weight_init = GaussianInitializer(std=0.01),
+                                weight_cons = L2Cons(4.5),
+                                bottoms=[:fc1], tops=[:fc2])
+fc3_layer   = InnerProductLayer(name="out", output_dim=10, bottoms=[:fc2],
+                                weight_init = ConstantInitializer(0),
+                                weight_cons = L2Cons(4.5),
+                                tops=[:out])
 loss_layer  = SoftmaxLossLayer(name="loss", bottoms=[:out,:label])
 
 # setup dropout for the different layers
