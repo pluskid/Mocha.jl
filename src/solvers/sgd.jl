@@ -39,6 +39,11 @@ function solve(sgd::SGD, net::Net)
 
         update_parameters(net, sgd, state.parameters[j].learning_rate * learning_rate, momentum,
             state, state.parameters[j].blob, hist_blob, gradient, data_type)
+        # apply constraints after update
+        cons_every = state.parameters[j].constraint.every_n_iter
+        if cons_every > 0 && solver_state.iter % cons_every == 0
+          constrain!(net.sys, state.parameters[j].constraint, state.parameters[j].blob)
+        end
       end
     end
 

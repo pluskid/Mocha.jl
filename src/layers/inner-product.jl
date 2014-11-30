@@ -7,6 +7,8 @@
   bias_init :: Initializer = ConstantInitializer(0),
   weight_regu :: Regularizer = L2Regu(1),
   bias_regu :: Regularizer = NoRegu(),
+  weight_cons :: Constraint = NoCons(),
+  bias_cons :: Constraint = NoCons(),
   weight_lr :: FloatingPoint = 1.0,
   bias_lr :: FloatingPoint = 2.0,
   neuron :: ActivationFunction = Neurons.Identity()
@@ -63,8 +65,8 @@ type InnerProductLayerState <: LayerState
     state.bias_multiplier = make_blob(sys.backend, data_type, nums, 1, 1, 1)
     fill!(state.bias_multiplier, 1)
 
-    state.parameters = [Parameter("weight", state.W, state.∇W, layer.weight_init, layer.weight_regu, layer.weight_lr),
-                        Parameter("bias", state.b, state.∇b, layer.bias_init, layer.bias_regu, layer.bias_lr)]
+    state.parameters = [Parameter("weight", state.W, state.∇W, layer.weight_init, layer.weight_regu, layer.weight_cons, layer.weight_lr),
+                        Parameter("bias", state.b, state.∇b, layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)]
 
     return state
   end

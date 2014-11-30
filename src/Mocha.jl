@@ -38,10 +38,12 @@ end
 
 include("initializers.jl")
 include("regularizers.jl")
+include("constraints.jl")
 include("neurons.jl")
 
 if Config.use_cuda
   include("cuda/regularizers.jl")
+  include("cuda/constraints.jl")
   include("cuda/neurons.jl")
 end
 
