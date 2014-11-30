@@ -35,10 +35,13 @@ using Mocha
 # by 0.5 after training whereas we scale them by 2 during training.
 #
 # The settings in this script should currently produce a model that 
-# gets 100 errors (or 99 % accuracy) on the test set
+# gets 95 errors (or 99.05 % accuracy) on the test set
 # if you run it for the whole 2000 epochs (=600*2000 steps).
-# This is slightly better than, but well within the error 
-# bars of the JMLR paper. 
+# This is slightly better than the results of the JMLR paper. 
+# This difference is likely due to slight differences in the 
+# learning parameters. Also note that our hyperparameters
+# are not chosen using a validation set, as one would do
+# for a paper.
 ############################################################
 
 
@@ -46,6 +49,7 @@ using Mocha
 srand(12345678)
 
 data_layer  = HDF5DataLayer(name="train-data", source=source_fns[1], batch_size=100)
+# each fully connected layer uses a ReLU activation and a constraint on the L2 norm of the weights
 fc1_layer   = InnerProductLayer(name="fc1", output_dim=1200, neuron=Neurons.ReLU(),
                                 weight_init = GaussianInitializer(std=0.01),
                                 #weight_cons = L2Cons(4.5),
@@ -61,6 +65,8 @@ fc3_layer   = InnerProductLayer(name="out", output_dim=10, bottoms=[:fc2],
 loss_layer  = SoftmaxLossLayer(name="loss", bottoms=[:out,:label])
 
 # setup dropout for the different layers
+# we use 20% dropout on the inputs and 50% dropout in the hidden layers 
+# as these values were previously found to be good defaults
 drop_input  = DropoutLayer(name="drop_in", bottoms=[:data], ratio=0.2)
 drop_fc1 = DropoutLayer(name="drop_fc1", bottoms=[:fc1], ratio=0.5)
 drop_fc2  = DropoutLayer(name="drop_fc2", bottoms=[:fc2], ratio=0.5)
