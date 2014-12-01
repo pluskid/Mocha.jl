@@ -101,63 +101,53 @@ get_vector{T}(src::CuPtr, dest::Array{T}) = get_vector(src, 1, dest, 1)
 ############################################################
 # y = α y
 ############################################################
-function scal(handle::Handle, n::Int, alpha::Float32, x, incx::Int)
-  x = convert(Ptr{Void}, x)
-  alpha_box = Float32[alpha]
-  @cublascall(:cublasSscal_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint),
-              handle, n, alpha_box, x, incx)
-end
-function scal(handle::Handle, n::Int, alpha::Float64, x, incx::Int)
-  x = convert(Ptr{Void}, x)
-  alpha_box = Float64[alpha]
-  @cublascall(:cublasDscal_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint),
-              handle, n, alpha_box, x, incx)
-end
-function scal(handle::Handle, n::Int, alpha::Float32, x::CuPtr, incx::Int)
-  scal(handle, n, alpha, x.p, incx)
-end
-function scal(handle::Handle, n::Int, alpha::Float64, x::CuPtr, incx::Int)
-  scal(handle, n, alpha, x.p, incx)
+for (fname, elty) in ((:cublasSscal_v2, :Float32),
+                      (:cublasDscal_v2, :Float64))
+  @eval begin
+    function scal(handle::Handle, n::Int, alpha::$elty, x, incx::Int)
+      x = convert(Ptr{Void}, x)
+      alpha_box = $elty[alpha]
+      @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint),
+                  handle, n, alpha_box, x, incx)
+    end
+    function scal(handle::Handle, n::Int, alpha::$elty, x::CuPtr, incx::Int)
+      scal(handle, n, alpha, x.p, incx)
+    end
+  end
 end
 
 ############################################################
 # y = α x + y
 ############################################################
-function axpy(handle::Handle, n::Int, alpha::Float32, x, incx::Int, y, incy::Int)
-  x = convert(Ptr{Void}, x)
-  y = convert(Ptr{Void}, y)
-  alpha_box = Float32[alpha]
-  @cublascall(:cublasSaxpy_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint, Ptr{Void}, Cint),
-      handle, n, alpha_box, x, incx, y, incy)
-end
-function axpy(handle::Handle, n::Int, alpha::Float64, x, incx::Int, y, incy::Int)
-  x = convert(Ptr{Void}, x)
-  y = convert(Ptr{Void}, y)
-  alpha_box = Float64[alpha]
-  @cublascall(:cublasDaxpy_v2, (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint, Ptr{Void}, Cint),
-      handle, n, alpha_box, x, incx, y, incy)
-end
-function axpy(handle::Handle, n::Int, alpha::Float32, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
-  axpy(handle, n, alpha, x.p, incx, y.p, incy)
-end
-function axpy(handle::Handle, n::Int, alpha::Float64, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
-  axpy(handle, n, alpha, x.p, incx, y.p, incy)
+for (fname, elty) in ((:cublasSaxpy_v2, :Float32),
+                      (:cublasDaxpy_v2, :Float64))
+  @eval begin
+    function axpy(handle::Handle, n::Int, alpha::$elty, x, incx::Int, y, incy::Int)
+      x = convert(Ptr{Void}, x)
+      y = convert(Ptr{Void}, y)
+      alpha_box = $elty[alpha]
+      @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint, Ptr{Void}, Cint),
+                  handle, n, alpha_box, x, incx, y, incy)
+    end
+    function axpy(handle::Handle, n::Int, alpha::$elty, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+      axpy(handle, n, alpha, x.p, incx, y.p, incy)
+    end
+  end
 end
 
 ############################################################
 # vector dot product
 ############################################################
-function dot(handle::Handle, ::Type{Float32}, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
-  result = Float32[0]
-  @cublascall(:cublasSdot_v2, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
-      handle, n, x.p, incx, y.p, incy, result)
-  return result[1]
-end
-function dot(handle::Handle, ::Type{Float64}, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
-  result = Float64[0]
-  @cublascall(:cublasDdot_v2, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
-      handle, n, x.p, incx, y.p, incy, result)
-  return result[1]
+for (fname, elty) in ((:cublasSdot_v2, :Float32),
+                      (:cublasDdot_v2, :Float64))
+  @eval begin
+    function dot(handle::Handle, ::Type{$elty}, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+      result = $elty[0]
+      @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
+                  handle, n, x.p, incx, y.p, incy, result)
+      return result[1]
+    end
+  end
 end
 
 ############################################################
@@ -166,17 +156,16 @@ end
 # copy! functions in julia and also for blobs are copying
 # from y to x.
 ############################################################
-function copy(handle::Handle, ::Type{Float32}, n::Int, x, incx::Int, y, incy::Int)
-  x = convert(Ptr{Void}, x)
-  y = convert(Ptr{Void}, y)
-  @cublascall(:cublasScopy_v2, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
-      handle, n, x, incx, y, incy)
-end
-function copy(handle::Handle, ::Type{Float64}, n::Int, x, incx::Int, y, incy::Int)
-  x = convert(Ptr{Void}, x)
-  y = convert(Ptr{Void}, y)
-  @cublascall(:cublasDcopy_v2, (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
-      handle, n, x, incx, y, incy)
+for (fname, elty) in ((:cublasScopy_v2, :Float32),
+                      (:cublasDcopy_v2, :Float64))
+  @eval begin
+    function copy(handle::Handle, ::Type{$elty}, n::Int, x, incx::Int, y, incy::Int)
+      x = convert(Ptr{Void}, x)
+      y = convert(Ptr{Void}, y)
+      @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
+                  handle, n, x, incx, y, incy)
+    end
+  end
 end
 
 ############################################################
@@ -198,17 +187,16 @@ function gemm{T}(handle::Handle, trans_a::Int, trans_b::Int, m::Int, n::Int, k::
   gemm_impl(handle, trans_a, trans_b, m, n, k, alpha_box, A, lda, B, ldb, beta_box, C, ldc)
 end
 
-function gemm_impl(handle::Handle, trans_a::Int, trans_b::Int, m::Int, n::Int, k::Int,
-    alpha_box::Array{Float32}, A::CuPtr, lda::Int, B::CuPtr, ldb::Int, beta_box::Array{Float32}, C::CuPtr, ldc::Int)
-  @cublascall(:cublasSgemm_v2, (Handle, Cint,Cint, Cint,Cint,Cint, Ptr{Void},
-      Ptr{Void},Cint, Ptr{Void},Cint, Ptr{Void}, Ptr{Void},Cint),
-      handle, trans_a, trans_b, m, n, k, alpha_box, A.p, lda, B.p, ldb, beta_box, C.p, ldc)
-end
-function gemm_impl(handle::Handle, trans_a::Int, trans_b::Int, m::Int, n::Int, k::Int,
-    alpha_box::Array{Float64}, A::CuPtr, lda::Int, B::CuPtr, ldb::Int, beta_box::Array{Float64}, C::CuPtr, ldc::Int)
-  @cublascall(:cublasDgemm_v2, (Handle, Cint,Cint, Cint,Cint,Cint, Ptr{Void},
-      Ptr{Void},Cint, Ptr{Void},Cint, Ptr{Void}, Ptr{Void},Cint),
-      handle, trans_a, trans_b, m, n, k, alpha_box, A.p, lda, B.p, ldb, beta_box, C.p, ldc)
+for (fname, elty) in ((:cublasSgemm_v2, :Float32),
+                      (:cublasDgemm_v2, :Float64))
+  @eval begin
+    function gemm_impl(handle::Handle, trans_a::Int, trans_b::Int, m::Int, n::Int, k::Int,
+        alpha_box::Array{$elty}, A::CuPtr, lda::Int, B::CuPtr, ldb::Int, beta_box::Array{$elty}, C::CuPtr, ldc::Int)
+      @cublascall($(string(fname)), (Handle, Cint,Cint, Cint,Cint,Cint, Ptr{Void},
+                  Ptr{Void},Cint, Ptr{Void},Cint, Ptr{Void}, Ptr{Void},Cint),
+                  handle, trans_a, trans_b, m, n, k, alpha_box, A.p, lda, B.p, ldb, beta_box, C.p, ldc)
+    end
+  end
 end
 
 end # module
