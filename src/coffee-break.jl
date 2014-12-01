@@ -44,8 +44,6 @@ type CoffeeLounge
   last_epoch        :: Int
   curr_iter         :: Int
 
-  file :: JLD.JldFile
-
   CoffeeLounge(;filename="", save_every_n_iter=1, file_exists=:merge) = begin
     lounge = new(filename, save_every_n_iter, file_exists)
     lounge.statistics = Dict{String, StatisticsRecords}()
@@ -56,23 +54,24 @@ end
 
 function setup(lounge::CoffeeLounge, state::SolverState, net::Net)
   if !isempty(lounge.filename)
+    directory = dirname(lounge.filename)
+    if !isempty(directory) && !isdir(directory)
+      mkdir_p(directory)
+    end
+
     if isfile(lounge.filename)
       if lounge.file_exists == :overwrite
         @warn("Overwriting existing coffee lounge statistics in $(lounge.filename)")
-        lounge.file = jldopen(lounge.filename, "w")
       elseif lounge.file_exists == :merge
         @info("Merging existing coffee lounge statistics in $(lounge.filename)")
         lounge.statistics = jldopen(lounge.filename) do file
           read(file, "statistics")
         end
-        lounge.file = jldopen(lounge.filename, "w")
       elseif lounge.file_exists == :panic
         error("File already exists for coffee lounge statistics store: $(lounge.filename)")
       else
         error("Coffee lounge: unknown behavior on file exists: $(lounge.file_exists)")
       end
-    else
-      lounge.file = jldopen(lounge.filename, "w")
     end
   end
 
@@ -94,7 +93,9 @@ end
 
 function save_statistics(lounge::CoffeeLounge)
   if !isempty(lounge.filename) && lounge.stats_modified
-    lounge.file["statistics"] = lounge.statistics
+    jldopen(lounge.filename, "w") do file
+      write(file, "statistics", lounge.statistics)
+    end
     lounge.stats_modified = false
   end
 end
@@ -106,7 +107,6 @@ function shutdown(lounge::CoffeeLounge, net::Net)
 
   if !isempty(lounge.filename)
     save_statistics(lounge)
-    close(lounge.file)
   end
 end
 

@@ -49,7 +49,7 @@ end
 function dump_statistics(storage, net::Net; show=false)
   for i = 1:length(net.layers)
     if isa(net.layers[i], StatLayer)
-      dump_statistics(storage, net.states[i], show=show)
+      dump_statistics(storage, net.states[i], show)
     end
   end
 end

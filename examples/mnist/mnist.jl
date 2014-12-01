@@ -38,6 +38,8 @@ params = SolverParameters(max_iter=10000, regu_coef=0.0005, mom_policy=MomPolicy
     lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75))
 solver = SGD(params)
 
+setup_coffee_lounge(solver, save_into="snapshots/statistics.hdf5", every_n_iter=1000)
+
 # report training progress every 100 iterations
 add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
 

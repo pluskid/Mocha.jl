@@ -7,7 +7,7 @@ end
 function init(coffee::ValidationPerformance, ::Net)
   init(coffee.validation_net)
 end
-function enjoy(lounge::CoffeeLounge, coffee::ValidationPerformance, ::CoffeeBreakTime.Morning, ::Net, ::SolverState)
+function enjoy(lounge::CoffeeLounge, coffee::ValidationPerformance, ::CoffeeBreakTime.Morning, ::Net, state::SolverState)
   epoch = get_epoch(coffee.validation_net)
   while true
     forward(coffee.validation_net)
@@ -17,7 +17,7 @@ function enjoy(lounge::CoffeeLounge, coffee::ValidationPerformance, ::CoffeeBrea
   end
 
   @info("")
-  @info("## Performance on Validation Set")
+  @info("## Performance on Validation Set after $(state.iter) iterations")
   @info("---------------------------------------------------------")
   dump_statistics(lounge, coffee.validation_net, show=true)
   @info("---------------------------------------------------------")

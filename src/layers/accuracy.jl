@@ -27,6 +27,7 @@ function reset_statistics(state::AccuracyLayerState)
   state.n_accum = 0
   state.accuracy = 0.0
 end
+
 function dump_statistics(storage, state::AccuracyLayerState, show::Bool)
   update_statistics(storage, "$(state.layer.name)-accuracy", state.accuracy)
   if state.layer.report_error
