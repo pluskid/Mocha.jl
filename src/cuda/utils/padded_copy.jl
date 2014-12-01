@@ -17,7 +17,6 @@ function dense2padded!{T}(sys::System{CuDNNBackend}, dst::CuTensorBlob{T},
     else
       error("Unsupported data type $T for padded copy")
     end
-    println("dense2padded! mirror = $mirror")
     mirror = convert(Int, mirror)
     CUDA.launch(kernel, (x_block,y_block,z_block),
         (CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z),
@@ -41,7 +40,6 @@ function padded2dense!{T}(sys::System{CuDNNBackend}, dst::CuTensorBlob{T},
     else
       error("Unsupported data type $T for padded copy")
     end
-    println("padded2dense! mirror = $mirror")
     mirror = convert(Int, mirror)
     CUDA.launch(kernel, (x_block,y_block,z_block),
         (CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z),
