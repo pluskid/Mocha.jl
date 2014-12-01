@@ -119,24 +119,14 @@ get_momentum(policy::MomPolicy.Linear, state::SolverState) =
 ############################################################
 # Coffee break utilities
 ############################################################
+#-- This function is to be called by the end-user
+function setup_coffee_lounge(solver::Solver; save_into::String="", every_n_iter::Int=1, file_exists=:merge)
+  solver.coffee_lounge = CoffeeLounge(filename=save_into, save_every_n_iter=every_n_iter, file_exists=file_exists)
+end
+
 function add_coffee_break(solver::Solver, coffee::Coffee; every_n_iter::Int=0, every_n_epoch::Int=0)
   cb = CoffeeBreak(coffee, every_n_iter, every_n_epoch)
   push!(solver.coffee_breaks, cb)
-end
-function init_coffee_breaks(solver::Solver, net::Net)
-  for cb in solver.coffee_breaks
-    init(cb.coffee, net)
-  end
-end
-function check_coffee_breaks(t::CoffeeBreakTimeType, solver::Solver, state::SolverState, net::Net)
-  for cb in solver.coffee_breaks
-    check_coffee_break(cb, t, state, net)
-  end
-end
-function destroy_coffee_breaks(solver::Solver, net::Net)
-  for cb in solver.coffee_breaks
-    destroy(cb.coffee, net)
-  end
 end
 
 ############################################################

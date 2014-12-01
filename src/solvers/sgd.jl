@@ -17,12 +17,12 @@ function solve(sgd::SGD, net::Net)
   init(net)
 
   @debug("Initializing coffee breaks")
-  init_coffee_breaks(sgd, net)
   solver_state = SolverState(0, 0.0)
+  setup(sgd.lounge, solver_state, net)
 
   @debug("Entering solver loop")
   while true
-    check_coffee_breaks(CoffeeBreakTime.Morning(), sgd, solver_state, net)
+    check_coffee_breaks(solver.lounge, CoffeeBreakTime.Morning(), solver_state, net)
 
     obj_val = forward_backward(net, sgd.params.regu_coef)
     learning_rate = get_learning_rate(sgd.params.lr_policy, solver_state)
@@ -48,7 +48,7 @@ function solve(sgd::SGD, net::Net)
     end
 
     update_solver_state(solver_state, obj_val)
-    check_coffee_breaks(CoffeeBreakTime.Evening(), sgd, solver_state, net)
+    check_coffee_breaks(sgd.lounge, CoffeeBreakTime.Evening(), solver_state, net)
     update_solver_time(solver_state)
 
     if stop_condition_satisfied(sgd, solver_state, net)
@@ -56,7 +56,7 @@ function solve(sgd::SGD, net::Net)
     end
   end
 
-  destroy_coffee_breaks(sgd, net)
+  shutdown(solver.lounge)
   map(x -> map(destroy, x), param_history)
 end
 
