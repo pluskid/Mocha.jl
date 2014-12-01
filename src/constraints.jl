@@ -30,7 +30,7 @@ function apply_l2_cons!{T <: FloatingPoint}(sys::System{CPUBackend}, blob::CPUBl
                                             coef::FloatingPoint, ninputs::Integer, nunits::Integer)
   param = reshape(blob.data, (ninputs, nunits))
   # we constrain each column vector
-  @simd for i = 1:nunits
+  for i = 1:nunits
     # compute norm and scale using blas
     norm = vecnorm(param[:, i])
     if norm > coef
