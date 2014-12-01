@@ -39,6 +39,7 @@ DEF_DROPOUT_API(dropout_forward, float)
 DEF_DROPOUT_API(dropout_forward, double)
 DEF_DROPOUT_API(dropout_backward, float)
 DEF_DROPOUT_API(dropout_backward, double)
+
 } // extern "C"
 
 // vim: ft=cuda

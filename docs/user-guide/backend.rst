@@ -161,3 +161,12 @@ a ``CuDNNBackend``. The environment variable should be set **before** loading
 Mocha. It is designed to use conditional loading so that the pure CPU backend
 could still run on machines without any GPU device or CUDA library installed.
 
+Recompiling Kernels
+~~~~~~~~~~~~~~~~~~~
+
+When you upgrade Mocha to a higher version, the source code for some CUDA kernel
+implementations might be changed. Mocha will compile the timestamps for the
+compiled kernel and the source files. An error will raise if the compiled kernel
+file is found older than the kernel source files. Just follow the procedures
+above to compile the kernel again will solve this problem.
+

@@ -63,7 +63,22 @@ type MochaKernels
   l1_backward_double           :: CUDA.CuFunction
 
   MochaKernels() = begin
-    mod_path = joinpath(dirname(@__FILE__), "kernels", "kernels.ptx")
+    mod_dir = joinpath(dirname(@__FILE__), "kernels")
+    mod_path = joinpath(mod_dir, "kernels.ptx")
+
+    # check that our module is up-to-date
+    if !isfile(mod_path)
+      error("Mocha CUDA kernels not found, see the documents of BACKEND on how to compile the kernels")
+    else
+      mod_mtime = stat(mod_path).mtime
+      impl_files = glob(mod_dir, r".*.impl$")
+      for i = 1:length(impl_files)
+        if stat(joinpath(mod_dir, impl_files[i])).mtime > mod_mtime
+          error("Mocha CUDA kernels not up-to-date. Please re-compile (see documents of BACKEND)")
+        end
+      end
+    end
+
     mod = CUDA.CuModule(mod_path)
     kernels = new(mod)
 

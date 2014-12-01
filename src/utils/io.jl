@@ -23,7 +23,7 @@ function glob(path::String, pattern::Regex; sort_by :: Symbol = :none)
     return sort(list)
   elseif sort_by == :mtime
     return sort(list, by = fn -> begin
-      stat(fn).mtime
+      stat(joinpath(path, fn)).mtime
     end)
   else
     error("Unknown sort_by: $sort_by")

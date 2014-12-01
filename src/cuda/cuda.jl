@@ -107,7 +107,7 @@ immutable CuDevice
 end
 
 immutable CuContext
-    handle::Ptr{Void}
+  handle::Ptr{Void}
 end
 
 const CTX_SCHED_AUTO  = 0x00
