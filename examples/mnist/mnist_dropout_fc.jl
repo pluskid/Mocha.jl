@@ -35,13 +35,15 @@ using Mocha
 # by 0.5 after training whereas we scale them by 2 during training.
 #
 # The settings in this script should currently produce a model that 
-# gets 95 errors (or 99.05 % accuracy) on the test set
+# gets 94 errors (or 99.06 % accuracy) on the test set
 # if you run it for the whole 2000 epochs (=600*2000 steps).
 # This is slightly better than the results of the JMLR paper. 
 # This difference is likely due to slight differences in the 
 # learning parameters. Also note that our hyperparameters
 # are not chosen using a validation set, as one would do
-# for a paper.
+# for a paper. If your hardware and cuda versions differ
+# from the setup we used for intial testing your results might
+# also slightly vary due to floating point inaccuracies.
 ############################################################
 
 
