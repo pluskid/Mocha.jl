@@ -3,7 +3,7 @@ export SGD
 
 export LearningRatePolicy, LRPolicy, get_learning_rate, MomentumPolicy, MomPolicy, get_momentum
 
-export add_coffee_break, solve
+export setup_coffee_lounge, add_coffee_break, solve
 
 ############################################################
 # Learning rate policy
@@ -121,12 +121,13 @@ get_momentum(policy::MomPolicy.Linear, state::SolverState) =
 ############################################################
 #-- This function is to be called by the end-user
 function setup_coffee_lounge(solver::Solver; save_into::String="", every_n_iter::Int=1, file_exists=:merge)
-  solver.coffee_lounge = CoffeeLounge(filename=save_into, save_every_n_iter=every_n_iter, file_exists=file_exists)
+  solver.coffee_lounge.filename=save_into
+  solver.coffee_lounge.save_every_n_iter=every_n_iter
+  solver.coffee_lounge.file_exists=file_exists
 end
 
-function add_coffee_break(solver::Solver, coffee::Coffee; every_n_iter::Int=0, every_n_epoch::Int=0)
-  cb = CoffeeBreak(coffee, every_n_iter, every_n_epoch)
-  push!(solver.coffee_breaks, cb)
+function add_coffee_break(solver::Solver, coffee::Coffee; kw...)
+  add_coffee_break(solver.coffee_lounge, coffee; kw...)
 end
 
 ############################################################

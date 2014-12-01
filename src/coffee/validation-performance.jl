@@ -7,7 +7,7 @@ end
 function init(coffee::ValidationPerformance, ::Net)
   init(coffee.validation_net)
 end
-function enjoy(coffee::ValidationPerformance, ::CoffeeBreakTime.Morning, ::Net, ::SolverState)
+function enjoy(lounge::CoffeeLounge, coffee::ValidationPerformance, ::CoffeeBreakTime.Morning, ::Net, ::SolverState)
   epoch = get_epoch(coffee.validation_net)
   while true
     forward(coffee.validation_net)
@@ -16,9 +16,14 @@ function enjoy(coffee::ValidationPerformance, ::CoffeeBreakTime.Morning, ::Net, 
     end
   end
 
-  result = show_statistics(coffee.validation_net, title="Performance on Validation Set")
+  @info("")
+  @info("## Performance on Validation Set")
+  @info("---------------------------------------------------------")
+  dump_statistics(lounge, coffee.validation_net, show=true)
+  @info("---------------------------------------------------------")
+  @info("")
+
   reset_statistics(coffee.validation_net)
-  return result
 end
 function destroy(coffee::ValidationPerformance, ::Net)
   # We don't destroy here as we didn't construct the network

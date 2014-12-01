@@ -46,19 +46,12 @@ function destroy(net::Net)
   end
 end
 
-function show_statistics(net::Net; title="Network Statistics")
-  res = StatsDict()
-  @info("")
-  @info("## $title")
-  @info("---------------------------------------------------------")
+function dump_statistics(storage, net::Net; show=false)
   for i = 1:length(net.layers)
     if isa(net.layers[i], StatLayer)
-      merge!(res, show_statistics(net.states[i]))
+      dump_statistics(storage, net.states[i], show=show)
     end
   end
-  @info("---------------------------------------------------------")
-  @info("")
-  return res
 end
 function reset_statistics(net::Net)
   for i = 1:length(net.layers)

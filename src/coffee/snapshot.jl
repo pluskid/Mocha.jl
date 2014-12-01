@@ -7,7 +7,7 @@ type Snapshot <: Coffee
   auto_load :: Bool
   also_load_solver_state :: Bool
 
-  Snapshot(dir; auto_load=true, also_load_solver_state=true) = 
+  Snapshot(dir; auto_load=true, also_load_solver_state=true) =
       new(dir, auto_load, also_load_solver_state)
 end
 
@@ -22,7 +22,7 @@ end
 
 const SOLVER_STATE_KEY = "solver_state"
 
-function enjoy(coffee::Snapshot, ::CoffeeBreakTime.Morning, net::Net, state::SolverState)
+function enjoy(lounge::CoffeeLounge, coffee::Snapshot, ::CoffeeBreakTime.Morning, net::Net, state::SolverState)
   if state.iter == 0 && coffee.auto_load
     # try to auto load
     snapshots = glob(coffee.dir, r"^snapshot-[0-9]+\.jld$", sort_by=:mtime)
@@ -40,7 +40,7 @@ function enjoy(coffee::Snapshot, ::CoffeeBreakTime.Morning, net::Net, state::Sol
   end
 end
 
-function enjoy(coffee::Snapshot, ::CoffeeBreakTime.Evening, net::Net, state::SolverState)
+function enjoy(lounge::CoffeeLounge, coffee::Snapshot, ::CoffeeBreakTime.Evening, net::Net, state::SolverState)
   fn = @sprintf("snapshot-%06d.jld", state.iter)
   @info("Saving snapshot to $fn...")
   path = joinpath(coffee.dir, fn)

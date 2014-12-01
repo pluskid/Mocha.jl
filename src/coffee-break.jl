@@ -1,6 +1,8 @@
-export CoffeeBreak, check_coffee_break
+export CoffeeBreak
 export CoffeeBreakTime, CoffeeBreakTimeType
 export init, enjoy, destroy
+export CoffeeLounge, add_coffee_break, check_coffee_break, setup, update_statistics
+export save_statistics, shutdown
 
 abstract CoffeeBreakTimeType
 module CoffeeBreakTime
@@ -28,23 +30,25 @@ end
 ################################################################################
 using HDF5, JLD
 
-typealias StatisticsRecords Dict{Int, FloatingPoint}
+typealias StatisticsValue FloatingPoint
+typealias StatisticsRecords Dict{Int, StatisticsValue}
 type CoffeeLounge
-  filename :: String
+  filename          :: String
   save_every_n_iter :: Int
-  file_exists :: Symbol # :overwrite, :panic, :merge
+  file_exists       :: Symbol # :overwrite, :panic, :merge
 
-  statistics :: Dict{Symbol, StatisticsRecords}
-  coffee_breaks :: Vector{CoffeeBreak}
+  statistics        :: Dict{String, StatisticsRecords}
+  coffee_breaks     :: Vector{CoffeeBreak}
 
-  stats_modified :: Bool
-  last_epoch :: Int
+  stats_modified    :: Bool
+  last_epoch        :: Int
+  curr_iter         :: Int
 
   file :: JLD.JldFile
 
   CoffeeLounge(;filename="", save_every_n_iter=1, file_exists=:merge) = begin
     lounge = new(filename, save_every_n_iter, file_exists)
-    lounge.statistics = Dict{Symbol, StatisticsRecords}()
+    lounge.statistics = Dict{String, StatisticsRecords}()
     lounge.coffee_breaks = CoffeeBreak[]
     return lounge
   end
@@ -74,17 +78,16 @@ function setup(lounge::CoffeeLounge, state::SolverState, net::Net)
 
   lounge.stats_modified = false
   lounge.last_epoch = get_epoch(net)
+  lounge.curr_iter = state.iter
 
   for cb in lounge.coffee_breaks
     init(cb.coffee, net)
   end
 end
 
-function update_statistics(lounge::CoffeeLounge, key::Symbol, stats::(Int, Any)...)
+function update_statistics(lounge::CoffeeLounge, key::String, val::StatisticsValue)
   dict = get(lounge.statistics, key, StatisticsRecords())
-  for (k,v) in stats
-    dict[k] = v
-  end
+  dict[lounge.curr_iter] = val
   lounge.statistics[key] = dict
   lounge.stats_modified = true
 end
@@ -96,8 +99,8 @@ function save_statistics(lounge::CoffeeLounge)
   end
 end
 
-function shutdown(lounge::CoffeeLounge)
-  for cb in solver.coffee_breaks
+function shutdown(lounge::CoffeeLounge, net::Net)
+  for cb in lounge.coffee_breaks
     destroy(cb.coffee, net)
   end
 
@@ -107,8 +110,18 @@ function shutdown(lounge::CoffeeLounge)
   end
 end
 
+function add_coffee_break(lounge::CoffeeLounge, coffee::Coffee; every_n_iter::Int=0, every_n_epoch::Int=0)
+  cb = CoffeeBreak(coffee, every_n_iter, every_n_epoch)
+  push!(lounge.coffee_breaks, cb)
+end
+
 function check_coffee_break(lounge::CoffeeLounge, t::CoffeeBreakTimeType, state::SolverState, net::Net)
-  for cb in lounge.coffe_breaks
+  for cb in lounge.coffee_breaks
+    # we keep updating curr_iter as some of the coffee breaks
+    # (e.g. snapshot loading solver state) might change the
+    # current iteration of the solver state
+    lounge.curr_iter = state.iter
+
     if cb.every_n_iter > 0
       if state.iter % cb.every_n_iter == 0
         enjoy(lounge, cb.coffee, t, net, state)
@@ -123,7 +136,7 @@ function check_coffee_break(lounge::CoffeeLounge, t::CoffeeBreakTimeType, state:
     end
   end
 
-  if t == CoffeeBreakTime.Evening
+  if isa(t, CoffeeBreakTime.Evening)
     if state.iter % lounge.save_every_n_iter == 0
       save_statistics(lounge)
     end
@@ -134,5 +147,5 @@ end
 
 include("coffee/training-summary.jl")
 include("coffee/validation-performance.jl")
-include("coffee/accumulator.jl")
+#include("coffee/accumulator.jl")
 include("coffee/snapshot.jl")

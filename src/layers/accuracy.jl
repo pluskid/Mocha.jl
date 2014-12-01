@@ -27,14 +27,16 @@ function reset_statistics(state::AccuracyLayerState)
   state.n_accum = 0
   state.accuracy = 0.0
 end
-function show_statistics(state::AccuracyLayerState)
-  accuracy = @sprintf("%.4f%%", state.accuracy*100)
-  @info("  Accuracy (avg over $(state.n_accum)) = $accuracy")
-  res = Dict(["$(state.layer.name)-accuracy" => state.accuracy])
+function dump_statistics(storage, state::AccuracyLayerState, show::Bool)
+  update_statistics(storage, "$(state.layer.name)-accuracy", state.accuracy)
   if state.layer.report_error
-    res["$(state.layer.name)-error"] = 1 - state.accuracy
+    update_statistics(storage, "$(state.layer.name)-error", 1-state.accuracy)
   end
-  return res
+
+  if show
+    accuracy = @sprintf("%.4f%%", state.accuracy*100)
+    @info("  Accuracy (avg over $(state.n_accum)) = $accuracy")
+  end
 end
 
 function forward(sys::System{CPUBackend}, state::AccuracyLayerState, inputs::Vector{Blob})
