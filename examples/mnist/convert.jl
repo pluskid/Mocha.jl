@@ -2,6 +2,8 @@
 
 using HDF5
 
+srand(12345678)
+
 datasets = ["train" => ["train-labels-idx1-ubyte","train-images-idx3-ubyte"],
             "test" => ["t10k-labels-idx1-ubyte","t10k-images-idx3-ubyte"]]
 

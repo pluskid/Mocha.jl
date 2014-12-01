@@ -12,6 +12,8 @@
   bias_init :: Initializer = ConstantInitializer(0),
   filter_regu :: Regularizer = L2Regu(1),
   bias_regu :: Regularizer = NoRegu(),
+  filter_cons :: Constraint = NoCons(),
+  bias_cons :: Constraint = NoCons(),
   filter_lr :: FloatingPoint = 1.0,
   bias_lr :: FloatingPoint = 2.0,
 )
@@ -100,8 +102,8 @@ type ConvolutionLayerState <: LayerState
 
     etc = setup_etc(sys, layer, dtype, width, height, channels, batch_size, width_out, height_out, inputs)
 
-    parameters = [Parameter("filter", filter, ∇filter, layer.filter_init, layer.filter_regu, layer.filter_lr),
-                  Parameter("bias", bias, ∇bias, layer.bias_init, layer.bias_regu, layer.bias_lr)]
+    parameters = [Parameter("filter", filter, ∇filter, layer.filter_init, layer.filter_regu, layer.filter_cons, layer.filter_lr),
+                  Parameter("bias", bias, ∇bias, layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)]
 
     state = new(layer, blobs, blobs_diff, parameters)
     state.filter = filter

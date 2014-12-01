@@ -6,5 +6,6 @@ type Parameter
   gradient      :: Blob
   initializer   :: Initializer
   regularizer   :: Regularizer
+  constraint    :: Constraint
   learning_rate :: FloatingPoint # relative learning rate
 end

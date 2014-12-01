@@ -43,7 +43,7 @@ function backward(sys::System{CPUBackend}, regu :: L2Regu, global_regu::Floating
 end
 
 ############################################################
-# L2 regularization
+# L1 regularization
 ############################################################
 function forward(sys::System{CPUBackend}, regu :: L1Regu, global_regu::FloatingPoint, param :: Blob)
   return regu.coefficient * global_regu * sum(abs(param.data))
