@@ -147,5 +147,4 @@ end
 
 include("coffee/training-summary.jl")
 include("coffee/validation-performance.jl")
-#include("coffee/accumulator.jl")
 include("coffee/snapshot.jl")
