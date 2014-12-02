@@ -92,19 +92,21 @@ params = SolverParameters(max_iter=600*2000, regu_coef=0.0,
 solver = SGD(params)
 
 base_dir = "snapshots_dropout_fc"
+setup_coffee_lounge(solver, save_into="$base_dir/statistics.hdf5", every_n_iter=5000)
+
+# report training progress every 100 iterations
+add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
+
 # save snapshots every 5000 iterations
 add_coffee_break(solver,
                  Snapshot(base_dir, auto_load=true),
                  every_n_iter=5000)
                  
 # show performance on test data every 600 iterations (one epoch)
-# also log everything using the AccumulateStatistics module
 data_layer_test = HDF5DataLayer(name="test-data", source=source_fns[2], batch_size=100)
 acc_layer = AccuracyLayer(name="test-accuracy", bottoms=[:out, :label], report_error=true)
 test_net = Net("MNIST-test", sys, [data_layer_test, common_layers..., acc_layer])
-stats = AccumulateStatistics([ValidationPerformance(test_net), TrainingSummary()], 
-                             try_load = true, save = true, fname = "$(base_dir)/statistics.h5")
-add_coffee_break(solver, stats, every_n_iter=600)
+add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=600)
 
 solve(solver, net)
 
