@@ -20,8 +20,14 @@ function solve(sgd::SGD, net::Net)
   solver_state = SolverState(0, 0.0)
   setup(sgd.coffee_lounge, solver_state, net)
 
+  # coffee break for iteration 0, before everything starts
+  check_coffee_break(sgd.coffee_lounge, CoffeeBreakTime.Morning(), solver_state, net)
+  check_coffee_break(sgd.coffee_lounge, CoffeeBreakTime.Evening(), solver_state, net)
+
   @debug("Entering solver loop")
   while true
+    update_solver_time(solver_state)
+    # morning coffee break, before computing the n-th iteration
     check_coffee_break(sgd.coffee_lounge, CoffeeBreakTime.Morning(), solver_state, net)
 
     obj_val = forward_backward(net, sgd.params.regu_coef)
@@ -48,8 +54,9 @@ function solve(sgd::SGD, net::Net)
     end
 
     update_solver_state(solver_state, obj_val)
+
+    # evening coffee break, after computing the n-th iteration
     check_coffee_break(sgd.coffee_lounge, CoffeeBreakTime.Evening(), solver_state, net)
-    update_solver_time(solver_state)
 
     if stop_condition_satisfied(sgd, solver_state, net)
       break

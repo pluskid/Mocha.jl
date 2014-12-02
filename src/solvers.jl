@@ -140,6 +140,7 @@ function update_solver_time(state::SolverState)
   state.iter += 1
 end
 function stop_condition_satisfied(solver::Solver, state::SolverState, net::Net)
+  # state.iter counts how many iteration we have computed.
   if state.iter >= solver.params.max_iter
     return true
   end
