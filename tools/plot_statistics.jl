@@ -9,12 +9,10 @@ function read_stats(fname)
 end
 
 function number_stats(fnames, names)
-  res = Dict()
-  n = 1
+  res = Any[]
   for (i, fname) in enumerate(fnames)
-    for (j, name) in enumerate(names[i])
-      res[n] = (i, fname, name)
-      n += 1
+    for name in names[i]
+      push!(res, (i, fname, name))
     end
   end
   return res
@@ -22,8 +20,7 @@ end
 
 function list_stats(numbered_names)
   println("Listing available statistics")
-  for k in sort(collect(keys(numbered_names)))
-    (_, fname, name) = numbered_names[k]
+  for (k, (_, fname, name)) in enumerate(numbered_names)
     println("  $k : $fname/$name")
   end
   println("Select statistics to plot using -i and specify the numbers 1-$(length(numbered_names)) seperated with ,")
@@ -41,8 +38,6 @@ function create_safe_files(fnames, to_tmp)
     return fnames
   end
 end
-
-get_unique_names(stats) = unique(vcat(map(collect, map(keys, values(stats)))...))
 
 s = ArgParseSettings()
 @add_arg_table s begin
@@ -68,16 +63,16 @@ filenames = unique(parsed_args["statistics_filenames"])
 stats_files = create_safe_files(filenames, parsed_args["tmp"])
 all_stats = map(read_stats, stats_files)
 # get all unique statistic names that were logged in each files
-names = map(get_unique_names, all_stats)
-# and assign a number to each 
+names = map(keys, all_stats)
+# and assign a number to each
 numbered_names = number_stats(filenames, names)
 
 # process according to arguments
-using PyPlot
 if parsed_args["list"] || parsed_args["idx"] == ""
   list_stats(numbered_names)
 end
 
+using PyPlot
 if parsed_args["idx"] != ""
   selected_ind = map(int, split(parsed_args["idx"], ","))
   if any([x < 0 || x > length(numbered_names) for x in selected_ind])
@@ -89,19 +84,19 @@ if parsed_args["idx"] != ""
   for ind in selected_ind
     # get the right stats file
     (stats_num, fname, selected) = numbered_names[ind]
-    stats = all_stats[stats_num] 
+    stats = all_stats[stats_num][selected]
 
     # do the actual plotting
     # x will simply be the iteration number
     #   which we will sort
     x = sort(collect(keys(stats)))
-    # and y is the statistics corresponding to 
+    # and y is the statistics corresponding to
     # the selected statistics you want to plot
-    y = [stats[i][selected] for i in x]
+    y = [stats[i] for i in x]
     plot(x, y, label="$(fname)/$(selected)")
   end
   legend()
-   
+
   print("Hit <enter> to continue")
   readline()
   close()
