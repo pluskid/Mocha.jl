@@ -14,10 +14,13 @@ function solve(sgd::SGD, net::Net)
     param_history[i] = [make_zero_blob(net.sys.backend, eltype(x.blob),size(x.blob)...) for x in state.parameters]
   end
 
+  @info("Initializing network")
   init(net)
 
-  @debug("Initializing coffee breaks")
   solver_state = SolverState(0, 0.0)
+  solver_state = load_snapshot(net, solver_state, sgd.params.load_from)
+
+  @debug("Initializing coffee breaks")
   setup(sgd.coffee_lounge, solver_state, net)
 
   # coffee break for iteration 0, before everything starts

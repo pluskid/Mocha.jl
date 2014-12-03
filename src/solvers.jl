@@ -114,6 +114,7 @@ get_momentum(policy::MomPolicy.Linear, state::SolverState) =
   mom_policy  :: MomentumPolicy = MomPolicy.Fixed(0.),
   (max_iter :: Int = 0, max_iter > 0),
   (regu_coef :: FloatingPoint = 0.0005, regu_coef >= 0),
+  load_from :: String = ""
 )
 
 ############################################################
@@ -133,6 +134,51 @@ end
 ############################################################
 # General utilities that could be used by all solvers
 ############################################################
+function load_snapshot(net::Net, state::SolverState, path::String)
+  if isempty(path)
+    return state
+  end
+
+  if endswith(path, ".hdf5") || endswith(path, ".h5")
+    # load from HDF5 file, possibly exported from caffe, but training
+    # from the beginning (iteration 0) as the solver state is not saved
+    # in a HDF5 file
+    if isfile(path)
+      @info("Loading existing model from $path")
+      h5open(path) do file
+        load_network(file, net)
+      end
+    end
+    return state
+  else
+    if endswith(path, ".jld")
+      # load from some specific JLD sanpshot, the solver state is also
+      # recovered
+      filename = path
+    else
+      # automatically load from the latest snapshot in a directory
+      filename = ""
+      if isdir(path)
+        # load the latest snapshot from the directory
+        snapshots = glob(path, r"^snapshot-[0-9]+\.jld", sort_by=:mtime)
+        if length(snapshots) > 0
+          filename = snapshots[end]
+        end
+      end
+    end
+
+    if !isempty(filename) && isfile(filename)
+      @info("Loading existing model from $filename")
+      jldopen(filename) do file
+        load_network(file, net)
+        return read(file, SOLVER_STATE_KEY)
+      end
+    else
+      return state
+    end
+  end
+end
+
 function update_solver_state(state::SolverState, obj_val :: Float64)
   state.obj_val = obj_val
 end

@@ -44,9 +44,7 @@ setup_coffee_lounge(solver, save_into="snapshots/statistics.hdf5", every_n_iter=
 add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
 
 # save snapshots every 5000 iterations
-add_coffee_break(solver,
-    Snapshot("snapshots", auto_load=true),
-    every_n_iter=5000)
+add_coffee_break(solver, Snapshot("snapshots"), every_n_iter=5000)
 
 # show performance on test data every 1000 iterations
 data_layer_test = HDF5DataLayer(name="test-data", source=source_fns[2], batch_size=100)
