@@ -1,5 +1,6 @@
 function test_inplace_layer(sys::System, T, eps)
   println("-- Testing InplaceLayer on $(typeof(sys.backend)){$T}...")
+  reset(sys) # clear layer registry
 
   ratio = convert(T, 0.6)
   width, height, channels, batch_size = (3,4,5,6)
@@ -7,10 +8,10 @@ function test_inplace_layer(sys::System, T, eps)
 
   layer_data = MemoryDataLayer(tops=[:data], batch_size=batch_size,
       data = Array[input])
-  layer_ip1 = InnerProductLayer(tops=[:ip1], bottoms=[:data], output_dim=8)
+  layer_ip1 = InnerProductLayer(name="ip1", tops=[:ip1], bottoms=[:data], output_dim=8)
   layer_dropout1 = DropoutLayer(bottoms=[:ip1])
   layer_dropout2 = DropoutLayer(bottoms=[:ip1])
-  layer_ip2 = InnerProductLayer(tops=[:ip2], bottoms=[:ip1], output_dim=1)
+  layer_ip2 = InnerProductLayer(name="ip2", tops=[:ip2], bottoms=[:ip1], output_dim=1)
 
   # in random order but dropout1 is put before dropout2
   layers = [layer_ip2, layer_data, layer_ip1, layer_dropout1, layer_dropout2]

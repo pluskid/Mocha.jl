@@ -1,34 +1,18 @@
-function test_convolution_layer(sys::System, T, eps)
-  println("-- Testing Convolution on $(typeof(sys.backend)){$T}...")
+function test_convolution_layer(sys::System, n_group, filter_w, filter_h, pad_w, pad_h, T, eps)
+  println("-- Testing Convolution on $(typeof(sys.backend)){$T} filter=$((filter_w,filter_h))...")
   println("    > Setup")
   input_w = 16
   input_h = 10
   input_chann = 6
   input_num = 24
-  n_group = 2
-  filter_w = 3
-  filter_h = 4
-  pad_w = 2
-  pad_h = 2
   n_filter = 12
-
-  #input_w = 2
-  #input_h = 2
-  #input_chann = 2
-  #input_num = 1
-  #n_group = 2
-  #filter_w = 2
-  #filter_h = 2
-  #pad_w = 0
-  #pad_h = 0
-  #n_filter = 2
-  #eps = 1e-10
 
   input_dims = (input_w, input_h, input_chann, input_num)
   filter_dims = (filter_w, filter_h, int(input_chann/n_group), n_filter)
   bias_dims = (1, 1, n_filter, 1)
 
-  layer = ConvolutionLayer(; kernel=(filter_w, filter_h), stride=(1,2), pad=(pad_w,pad_h), n_filter=n_filter, n_group=n_group,
+  layer = ConvolutionLayer(name="conv", kernel=(filter_w, filter_h), stride=(1,2),
+      pad=(pad_w,pad_h), n_filter=n_filter, n_group=n_group,
       tops=[:conv], bottoms=[:data])
 
   input = rand(T, input_dims)
@@ -172,6 +156,11 @@ function convolution_backward(state, filter::Array, bias::Array, input::Array, t
   end
 
   return (∇filter, ∇bias, ∇input)
+end
+
+function test_convolution_layer(sys::System, T, eps)
+  test_convolution_layer(sys, 2, 3, 4, 2, 2, T, eps)
+  test_convolution_layer(sys, 1, 1, 1, 0, 0, T, eps)
 end
 
 function test_convolution_layer(sys::System)

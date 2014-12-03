@@ -51,7 +51,7 @@ type InnerProductLayerState <: LayerState
     if isa(shared_state, InnerProductLayerState)
       @assert size(shared_state.W) == (fea_size, out_dim, 1, 1)
       @assert eltype(shared_state.W) == data_type
-      @debug("Sharing weights and bias with an existing InnerProductLayer")
+      @debug("Sharing weights and bias with $(shared_state.layer.name)")
 
       state.W  = shared_state.W
       state.∇W = shared_state.∇W

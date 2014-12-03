@@ -86,7 +86,7 @@ type ConvolutionLayerState <: LayerState
     if isa(shared_state, ConvolutionLayerState)
       @assert size(shared_state.filter) == tuple(layer.kernel...,div(channels,layer.n_group),layer.n_filter)
       @assert eltype(shared_state.filter) == dtype
-      @debug("Sharing filters and bias with an existing ConvolutionLayer")
+      @debug("Sharing filters and bias with an $(shared_state.layer.name)")
 
       filter = shared_state.filter
       ∇filter = shared_state.∇filter

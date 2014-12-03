@@ -16,7 +16,7 @@ function test_inner_product_layer(sys::System, T, eps)
   ############################################################
   # Setup
   ############################################################
-  layer  = InnerProductLayer(; output_dim=target_dim, tops = [:result], bottoms=[:input])
+  layer  = InnerProductLayer(name="ip", output_dim=target_dim, tops = [:result], bottoms=[:input])
   input_blob = make_blob(sys.backend, T, orig_dim_all..., batch_size)
   diff_blob = make_blob(sys.backend, T, size(input_blob)...)
   copy!(input_blob, X)
