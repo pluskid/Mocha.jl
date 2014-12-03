@@ -60,6 +60,7 @@ include("data-transformers.jl")
 # Layers
 ############################################################
 include("layers/inplace.jl")
+include("layers/shared-parameters.jl")
 
 #-- Statistics Layers
 include("layers/accuracy.jl")

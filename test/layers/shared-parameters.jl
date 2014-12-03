@@ -1,0 +1,51 @@
+function test_shared_parameters_layers(sys::System, layer_type, T, eps)
+  println("-- Testing $layer_type layer with shared param on $(typeof(sys.backend)){$T}...")
+  reset(sys)
+
+  w,h,c,n = 2,3,4,5
+  input = rand(T, w,h,c,n)
+
+  layer_data = MemoryDataLayer(tops=[:data], batch_size=n, data=Array[input])
+  layer_split = SplitLayer(tops=[:data1,:data2], bottoms=[:data])
+
+  key="key"
+  if layer_type == "convolution"
+    l1 = ConvolutionLayer(name="conv1", param_key=key, tops=[:out1], bottoms=[:data1])
+    l2 = ConvolutionLayer(name="conv2", param_key=key, tops=[:out2], bottoms=[:data2])
+  elseif layer_type == "inner-product"
+    out_dim = 5
+    l1 = InnerProductLayer(name="ip1", output_dim=out_dim, param_key=key, tops=[:out1], bottoms=[:data1])
+    l2 = InnerProductLayer(name="ip2", output_dim=out_dim, param_key=key, tops=[:out2], bottoms=[:data2])
+  else
+    error("Unknown layer_type $layer_type")
+  end
+
+  layer_sub = ElementWiseLayer(operation=ElementWiseFunctors.Subtract(),bottoms=[:out1,:out2],tops=[:diff])
+
+  net = Net("test-shared-params", sys, [layer_data, layer_split, l1, l2, layer_sub])
+  init(net)
+  forward(net)
+
+  @test net.layers[end] == layer_sub
+  output = zeros(T, size(net.states[end].blobs[1]))
+  copy!(output, net.states[end].blobs[1])
+  @test all(abs(output) .< eps)
+
+  destroy(net)
+end
+
+function test_shared_parameters_layers(sys::System, T, eps)
+  test_shared_parameters_layers(sys, "convolution", T, eps)
+  test_shared_parameters_layers(sys, "inner-product", T, eps)
+end
+function test_shared_parameters_layers(sys::System)
+  test_shared_parameters_layers(sys, Float64, 1e-9)
+  test_shared_parameters_layers(sys, Float32, 1e-4)
+end
+
+if test_cpu
+  test_shared_parameters_layers(sys_cpu)
+end
+if test_cudnn
+  test_shared_parameters_layers(sys_cudnn)
+end
