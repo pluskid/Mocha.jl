@@ -10,12 +10,12 @@ function test_shared_parameters_layers(sys::System, layer_type, T, eps)
 
   key="key"
   if layer_type == "convolution"
-    l1 = ConvolutionLayer(name="conv1", param_key=key, tops=[:out1], bottoms=[:data1])
-    l2 = ConvolutionLayer(name="conv2", param_key=key, tops=[:out2], bottoms=[:data2])
+    l1 = ConvolutionLayer(name="conv1", param_key=key, neuron=Neurons.Sigmoid(), tops=[:out1], bottoms=[:data1])
+    l2 = ConvolutionLayer(name="conv2", param_key=key, neuron=Neurons.Sigmoid(), tops=[:out2], bottoms=[:data2])
   elseif layer_type == "inner-product"
     out_dim = 5
-    l1 = InnerProductLayer(name="ip1", output_dim=out_dim, param_key=key, tops=[:out1], bottoms=[:data1])
-    l2 = InnerProductLayer(name="ip2", output_dim=out_dim, param_key=key, tops=[:out2], bottoms=[:data2])
+    l1 = InnerProductLayer(name="ip1", output_dim=out_dim, neuron=Neurons.ReLU(), param_key=key, tops=[:out1], bottoms=[:data1])
+    l2 = InnerProductLayer(name="ip2", output_dim=out_dim, neuron=Neurons.ReLU(), param_key=key, tops=[:out2], bottoms=[:data2])
   else
     error("Unknown layer_type $layer_type")
   end
