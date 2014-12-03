@@ -1,5 +1,5 @@
 export SolverParameters
-export SGD
+export SGD, Nesterov
 
 export LearningRatePolicy, LRPolicy, get_learning_rate, MomentumPolicy, MomPolicy, get_momentum
 
@@ -192,7 +192,7 @@ end
 ############################################################
 abstract SolverInternelState
 
-function setup(solver::Solver, net::Net)
+function setup(solver::Solver, net::Net, state::SolverState)
   error("Not implemented, should return a SolverInternelState")
 end
 function update(solver::Solver, net::Net, i_state::SolverInternelState, state::SolverState)
@@ -206,10 +206,11 @@ end
 # General Solver Loop
 ############################################################
 function solve(solver::Solver, net::Net)
-  i_state = setup(solver, net)
-
   solver_state = SolverState()
   solver_state = load_snapshot(net, solver_state, solver.params.load_from)
+  solver_state.learning_rate = get_learning_rate(solver.params.lr_policy, solver_state)
+  solver_state.momentum = get_momentum(solver.params.mom_policy, solver_state)
+
   # we init network AFTER loading. If the parameters are loaded from file, the
   # initializers will be automatically set to NullInitializer
   init(net)
@@ -222,6 +223,8 @@ function solve(solver::Solver, net::Net)
 
   # coffee break for iteration 0, before everything starts
   check_coffee_break(solver.coffee_lounge, solver_state, net)
+
+  i_state = setup(solver, net, solver_state)
 
   @debug("Entering solver loop")
   trainable_layers = filter(i -> isa(net.layers[i], TrainableLayer), 1:length(net.layers))
@@ -260,3 +263,4 @@ end
 # Specific Solvers
 ############################################################
 include("solvers/sgd.jl")
+include("solvers/nesterov.jl")
