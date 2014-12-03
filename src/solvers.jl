@@ -224,6 +224,7 @@ function solve(solver::Solver, net::Net)
   check_coffee_break(solver.coffee_lounge, solver_state, net)
 
   @debug("Entering solver loop")
+  trainable_layers = filter(i -> isa(net.layers[i], TrainableLayer), 1:length(net.layers))
   while true
     solver_state.iter += 1
 
@@ -232,6 +233,16 @@ function solve(solver::Solver, net::Net)
     solver_state.momentum = get_momentum(solver.params.mom_policy, solver_state)
 
     update(solver, net, i_state, solver_state)
+
+    # apply weight constraints
+    for i in trainable_layers
+      for param in net.states[i].parameters
+        cons_every = param.constraint.every_n_iter
+        if cons_every > 0 && solver_state.iter % cons_every == 0
+          constrain!(net.sys, param.constraint, param.blob)
+        end
+      end
+    end
 
     solver_state.obj_val = forward(net, solver.params.regu_coef)
     check_coffee_break(solver.coffee_lounge, solver_state, net)

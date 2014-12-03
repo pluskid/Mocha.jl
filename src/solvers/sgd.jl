@@ -1,4 +1,4 @@
-type SGD <: Solver
+immutable SGD <: Solver
   params        :: SolverParameters
   coffee_lounge :: CoffeeLounge
 
@@ -11,7 +11,8 @@ type SGDInternalState <: SolverInternelState
 end
 
 function setup(sgd::SGD, net::Net)
-  param_states  = filter(x -> :parameters ∈ names(x), net.states)
+  param_states  = map(i -> net.states[i],
+      filter(i -> isa(net.layers[i], TrainableLayer), 1:length(net.layers)))
   param_history = Array(Vector{Blob}, length(param_states))
   for i = 1:length(param_states)
     state = param_states[i]
@@ -33,12 +34,6 @@ function update(sgd::SGD, net::Net, i_state::SolverInternelState, solver_state::
 
       update_parameters(net, sgd, state.parameters[j].learning_rate * solver_state.learning_rate,
           solver_state.momentum, state.parameters[j].blob, hist_blob, gradient, data_type)
-
-      # apply constraints after update
-      cons_every = state.parameters[j].constraint.every_n_iter
-      if cons_every > 0 && solver_state.iter % cons_every == 0
-        constrain!(net.sys, state.parameters[j].constraint, state.parameters[j].blob)
-      end
     end
   end
 end
