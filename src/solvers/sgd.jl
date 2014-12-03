@@ -14,11 +14,11 @@ function solve(sgd::SGD, net::Net)
     param_history[i] = [make_zero_blob(net.sys.backend, eltype(x.blob),size(x.blob)...) for x in state.parameters]
   end
 
-  @info("Initializing network")
-  init(net)
-
   solver_state = SolverState(0, 0.0)
   solver_state = load_snapshot(net, solver_state, sgd.params.load_from)
+  # we init network AFTER loading. If the parameters are loaded from file, the
+  # initializers will be automatically set to NullInitializer
+  init(net)
 
   @debug("Initializing coffee breaks")
   setup(sgd.coffee_lounge, solver_state, net)

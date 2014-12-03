@@ -34,17 +34,21 @@ init(sys)
 common_layers = [conv_layer, pool_layer, conv2_layer, pool2_layer, fc1_layer, fc2_layer]
 net = Net("MNIST-train", sys, [data_layer, common_layers..., loss_layer])
 
-params = SolverParameters(max_iter=10000, regu_coef=0.0005, mom_policy=MomPolicy.Fixed(0.9),
-    lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75))
+exp_dir = "snapshots"
+
+params = SolverParameters(max_iter=10000, regu_coef=0.0005, 
+    mom_policy=MomPolicy.Fixed(0.9),
+    lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75),
+    load_from=exp_dir)
 solver = SGD(params)
 
-setup_coffee_lounge(solver, save_into="snapshots/statistics.hdf5", every_n_iter=1000)
+setup_coffee_lounge(solver, save_into="$exp_dir/statistics.hdf5", every_n_iter=1000)
 
 # report training progress every 100 iterations
 add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
 
 # save snapshots every 5000 iterations
-add_coffee_break(solver, Snapshot("snapshots"), every_n_iter=5000)
+add_coffee_break(solver, Snapshot(exp_dir), every_n_iter=5000)
 
 # show performance on test data every 1000 iterations
 data_layer_test = HDF5DataLayer(name="test-data", source=source_fns[2], batch_size=100)

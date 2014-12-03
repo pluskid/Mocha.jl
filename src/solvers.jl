@@ -162,7 +162,7 @@ function load_snapshot(net::Net, state::SolverState, path::String)
         # load the latest snapshot from the directory
         snapshots = glob(path, r"^snapshot-[0-9]+\.jld", sort_by=:mtime)
         if length(snapshots) > 0
-          filename = snapshots[end]
+          filename = joinpath(path, snapshots[end])
         end
       end
     end
