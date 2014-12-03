@@ -13,10 +13,6 @@ function CuTensorBlob{T<:FloatingPoint}(dtype::Type{T}, w::Int, h::Int, c::Int, 
   ptr = CUDA.cualloc(dtype, len)
   return CuTensorBlob{T}(ptr, (w,h,c,n), len)
 end
-CuTensorBlob(dtype::Type; w::Int=1, h::Int=1, c::Int=1, n::Int=1) =
-    CuTensorBlob(dtype, w, h, c, n)
-CuTensorBlob(dtype::Type, dims::NTuple{4, Int}) =
-    CuTensorBlob(dtype, dims...)
 
 length(b::CuTensorBlob) = b.len
 size(b::CuTensorBlob) = b.shape
@@ -43,16 +39,14 @@ function erase!{T}(dst :: CuTensorBlob{T})
   @CUDA.cucall(:cuMemsetD8_v2, (Ptr{Void}, Cuchar, Csize_t), dst.ptr.p, 0, length(dst)*sizeof(T))
 end
 
-function cudnn_make_tensor_blob(dtype::Type, dims...)
-  dims = blob_canonical_dims(dims...)
+function cudnn_make_tensor_blob(dtype::Type, dims::NTuple{4,Int})
   return CuTensorBlob(dtype, dims...)
 end
 
-function make_blob(backend::CuDNNBackend, data_type::Type, dims...)
-  return cudnn_make_tensor_blob(data_type, dims...)
+function make_blob(backend::CuDNNBackend, data_type::Type, dims::NTuple{4,Int})
+  return cudnn_make_tensor_blob(data_type, dims)
 end
-function make_shared_blob{T}(backend::CuDNNBackend, blob::CuTensorBlob{T}, dims...)
-  dims = blob_canonical_dims(dims...)
+function make_shared_blob{T}(backend::CuDNNBackend, blob::CuTensorBlob{T}, dims::NTuple{4,Int})
   @assert prod(dims) == length(blob)
   return CuTensorBlob{T}(blob.ptr, dims, length(blob))
 end

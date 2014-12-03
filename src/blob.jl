@@ -65,25 +65,6 @@ function erase!(dst :: Blob)
   fill!(dst, 0)
 end
 
-# Get canonical 4D tensor dims
-# Note we store data in column-major order, thus
-# the data shape is width, height, channel, num
-function blob_canonical_dims(dims...)
-  if length(dims) == 1 && isa(dims[1], NTuple)
-    dims = dims[1]
-  end
-
-  if length(dims) > 4
-    error("Tensor dimension ($(length(dims))) twoo high, only 4D tensor supported")
-  end
-  if length(dims) < 4
-    # add singleton dimensions
-    dims = tuple(dims..., ones(Int, 4-length(dims))...)
-    error("In order to avoid potential bugs, now we require specifying the 4 dimensions explicitly")
-  end
-  return dims
-end
-
 ############################################################
 # A Dummy Blob type holding nothing
 ############################################################
@@ -99,22 +80,25 @@ end
 function make_blob()
   return NullBlob()
 end
-function make_blob(backend::Backend, data_type::Type, dims...)
-  error("Not implemented (should return a blob for corresponding backend)")
+function make_blob(backend::Backend, data_type::Type, dims::Int...)
+  make_blob(backend, data_type, dims)
 end
 function make_blob(backend::Backend, data::Array)
   blob = make_blob(backend, eltype(data), size(data))
   copy!(blob, data)
   return blob
 end
-function make_zero_blob(backend::Backend, data_type::Type, dims...)
-  blob = make_blob(backend, data_type, dims...)
+function make_zero_blob(backend::Backend, data_type::Type, dims::NTuple{4,Int})
+  blob = make_blob(backend, data_type, dims)
   erase!(blob)
   return blob
 end
+function make_zero_blob(backend::Backend, data_type::Type, dims::Int...)
+  make_zero_blob(backend, data_type, dims)
+end
 
-function make_shared_blob(backend::Backend, blob::Blob, dims...)
-  error("Not implemented (should make a blob that share data)")
+function make_shared_blob(backend::Backend, blob::Blob, dims::Int...)
+  make_shared_blob(backend, blob, dims)
 end
 
 ############################################################
@@ -123,14 +107,12 @@ end
 immutable CPUBlob{T <: FloatingPoint} <: Blob
   data :: Array{T, 4}
 end
-CPUBlob(t :: Type, dims :: NTuple{Int}) = CPUBlob(Array(t, blob_canonical_dims(dims...)))
-CPUBlob(t :: Type, dims...) = CPUBlob(t, dims)
+CPUBlob(t :: Type, dims::NTuple{4,Int}) = CPUBlob(Array(t, dims))
 
-function make_blob(backend::CPUBackend, data_type::Type, dims...)
-  return CPUBlob(data_type, dims...)
+function make_blob(backend::CPUBackend, data_type::Type, dims::NTuple{4,Int})
+  return CPUBlob(data_type, dims)
 end
-function make_shared_blob{T}(backend::CPUBackend, blob::CPUBlob{T}, dims...)
-  dims = blob_canonical_dims(dims...)
+function make_shared_blob{T}(backend::CPUBackend, blob::CPUBlob{T}, dims::NTuple{4,Int})
   @assert prod(dims) == length(blob)
   return CPUBlob{T}(reshape(blob.data, dims))
 end
