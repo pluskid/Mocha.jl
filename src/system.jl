@@ -3,7 +3,7 @@ export init, shutdown
 
 type System{T <: Backend}
   backend :: T
-  layer_registry :: Dict{Layer, LayerState}
+  layer_registry :: Dict{String, LayerState}
 end
 System{T<:Backend}(backend :: T) = System(backend, Dict{Layer, LayerState}())
 

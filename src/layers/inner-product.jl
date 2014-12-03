@@ -1,5 +1,6 @@
 @defstruct InnerProductLayer TrainableLayer (
-  name :: String = "inner-product",
+  (name :: String = "", !isempty(name)),
+  param_key :: String = "",
   (tops :: Vector{Symbol} = Symbol[], length(tops) >= 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(tops)),
   (output_dim :: Int = 0, output_dim > 0),

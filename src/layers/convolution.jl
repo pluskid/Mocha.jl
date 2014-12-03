@@ -1,5 +1,6 @@
 @defstruct ConvolutionLayer TrainableLayer (
-  name :: String = "convolution",
+  (name :: String = "", !isempty(name)),
+  param_key :: String = "",
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) > 0),
   (tops :: Vector{Symbol} = Symbol[], length(tops) == length(bottoms)),
   (kernel :: NTuple{2,Int} = (1,1), all([kernel...] .> 0)),

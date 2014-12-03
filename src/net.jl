@@ -142,8 +142,8 @@ Net(name::String, sys::System, layers :: Vector{Layer}) = begin
       blob_bwd = Blob[]
     end
 
-    if haskey(sys.layer_registry, layers[i])
-      shared_state = sys.layer_registry[layers[i]]
+    if isa(layers[i], TrainableLayer) && haskey(sys.layer_registry, param_key(layers[i]))
+      shared_state = sys.layer_registry[param_key(layers[i])]
       states[i] = setup(sys, layers[i], shared_state, blob_fwd, blob_bwd)
 
       # shared parameters, don't re-initialize
@@ -154,7 +154,7 @@ Net(name::String, sys::System, layers :: Vector{Layer}) = begin
       states[i] = setup(sys, layers[i], blob_fwd, blob_bwd)
       if isa(layers[i], TrainableLayer)
         # has parameters, save in registry
-        sys.layer_registry[layers[i]] = states[i]
+        sys.layer_registry[param_key(layers[i])] = states[i]
       end
     end
 

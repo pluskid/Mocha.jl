@@ -11,6 +11,7 @@ export AccuracyLayer
 
 export setup, forward, backward, shutdown
 
+export get_param_key
 export reset_statistics, show_statistics
 
 ############################################################
@@ -91,12 +92,11 @@ abstract TrainableLayer <: CompLayer # Layer that could be trained
 abstract InplaceLayer   <: CompLayer # Layer that does inplace computation
 abstract UtilLayer      <: CompLayer # Layer that acts as utilities (no backward)
 
-#############################################################
-# Overload when there is no shared_state
-#############################################################
 function setup(sys::System, layer::Layer, shared_state, inputs::Vector{Blob}, diffs::Vector{Blob})
   error("Not implemented, should setup layer state")
 end
+
+# Overload when there is no shared_state
 function setup(sys::System, layer::Layer, inputs::Vector{Blob}, diffs::Vector{Blob})
   setup(sys, layer, nothing, inputs, diffs)
 end
@@ -111,6 +111,11 @@ end
 
 function backward(sys::System, state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   error("Not implemented, please define an empty function explicitly if not needed")
+end
+
+function param_key(layer::TrainableLayer)
+  key = layer.param_key
+  return isempty(key) ? layer.name : key
 end
 
 #############################################################
