@@ -20,6 +20,9 @@ function solve(sgd::SGD, net::Net)
   # initializers will be automatically set to NullInitializer
   init(net)
 
+  # Initial forward iteration
+  solver_state.obj_val = forward(net, sgd.params.regu_coef)
+
   @debug("Initializing coffee breaks")
   setup(sgd.coffee_lounge, solver_state, net)
 
@@ -29,11 +32,11 @@ function solve(sgd::SGD, net::Net)
 
   @debug("Entering solver loop")
   while true
-    update_solver_time(solver_state)
+    solver_state.iter += 1
     # morning coffee break, before computing the n-th iteration
     check_coffee_break(sgd.coffee_lounge, CoffeeBreakTime.Morning(), solver_state, net)
 
-    obj_val = forward_backward(net, sgd.params.regu_coef)
+    backward(net, sgd.params.regu_coef)
     learning_rate = get_learning_rate(sgd.params.lr_policy, solver_state)
     momentum = get_momentum(sgd.params.mom_policy, solver_state)
 
@@ -56,7 +59,7 @@ function solve(sgd::SGD, net::Net)
       end
     end
 
-    update_solver_state(solver_state, obj_val)
+    solver_state.obj_val = forward(net, sgd.params.regu_coef)
 
     # evening coffee break, after computing the n-th iteration
     check_coffee_break(sgd.coffee_lounge, CoffeeBreakTime.Evening(), solver_state, net)

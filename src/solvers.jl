@@ -179,12 +179,6 @@ function load_snapshot(net::Net, state::SolverState, path::String)
   end
 end
 
-function update_solver_state(state::SolverState, obj_val :: Float64)
-  state.obj_val = obj_val
-end
-function update_solver_time(state::SolverState)
-  state.iter += 1
-end
 function stop_condition_satisfied(solver::Solver, state::SolverState, net::Net)
   # state.iter counts how many iteration we have computed.
   if state.iter >= solver.params.max_iter
