@@ -17,7 +17,7 @@ end
 
 const SOLVER_STATE_KEY = "solver_state"
 
-function enjoy(lounge::CoffeeLounge, coffee::Snapshot, ::CoffeeBreakTime.Evening, net::Net, state::SolverState)
+function enjoy(lounge::CoffeeLounge, coffee::Snapshot, net::Net, state::SolverState)
   fn = @sprintf("snapshot-%06d.jld", state.iter)
   @info("Saving snapshot to $fn...")
   path = joinpath(coffee.dir, fn)
