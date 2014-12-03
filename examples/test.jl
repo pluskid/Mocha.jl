@@ -1,6 +1,7 @@
 use_cudnn = false
 
 using Mocha
+srand(12345678)
 
 ############################################################
 # Prepare Random Data

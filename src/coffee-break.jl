@@ -1,22 +1,13 @@
 export CoffeeBreak
-export CoffeeBreakTime, CoffeeBreakTimeType
 export init, enjoy, destroy
 export CoffeeLounge, add_coffee_break, check_coffee_break, setup, update_statistics
 export save_statistics, shutdown
-
-abstract CoffeeBreakTimeType
-module CoffeeBreakTime
-using ..Mocha.CoffeeBreakTimeType
-type Morning <: CoffeeBreakTimeType end
-type Evening <: CoffeeBreakTimeType end
-end # module CoffeeBreakTime
-
 
 abstract Coffee
 function init(::Coffee, ::Net) end
 # The first parameter will be a CoffeeLounge, we put Any here because
 # Julia do not have forward declaration
-function enjoy(::Any, ::Coffee, ::CoffeeBreakTimeType, ::Net, ::SolverState) end
+function enjoy(::Any, ::Coffee, ::Net, ::SolverState) end
 function destroy(::Coffee, ::Net) end
 
 type CoffeeBreak
@@ -105,9 +96,7 @@ function shutdown(lounge::CoffeeLounge, net::Net)
     destroy(cb.coffee, net)
   end
 
-  if !isempty(lounge.filename)
-    save_statistics(lounge)
-  end
+  save_statistics(lounge)
 end
 
 function add_coffee_break(lounge::CoffeeLounge, coffee::Coffee; every_n_iter::Int=0, every_n_epoch::Int=0)
@@ -115,34 +104,27 @@ function add_coffee_break(lounge::CoffeeLounge, coffee::Coffee; every_n_iter::In
   push!(lounge.coffee_breaks, cb)
 end
 
-function check_coffee_break(lounge::CoffeeLounge, t::CoffeeBreakTimeType, state::SolverState, net::Net)
-  for cb in lounge.coffee_breaks
-    # we keep updating curr_iter as some of the coffee breaks
-    # (e.g. snapshot loading solver state) might change the
-    # current iteration of the solver state
-    lounge.curr_iter = state.iter
+function check_coffee_break(lounge::CoffeeLounge, state::SolverState, net::Net)
+  lounge.curr_iter = state.iter
 
+  for cb in lounge.coffee_breaks
     if cb.every_n_iter > 0
       if state.iter % cb.every_n_iter == 0
-        enjoy(lounge, cb.coffee, t, net, state)
+        enjoy(lounge, cb.coffee, net, state)
       end
-    end
-
-    if cb.every_n_epoch > 0
+    elseif cb.every_n_epoch > 0
       epoch = get_epoch(net)
       if epoch != lounge.last_epoch && epoch % cb.every_n_epoch == 0
-        enjoy(lounge, cb.coffee, t, net, state)
+        enjoy(lounge, cb.coffee, net, state)
       end
     end
   end
 
-  if isa(t, CoffeeBreakTime.Evening)
-    if state.iter % lounge.save_every_n_iter == 0
-      save_statistics(lounge)
-    end
-
-    lounge.last_epoch = get_epoch(net)
+  if state.iter % lounge.save_every_n_iter == 0
+    save_statistics(lounge)
   end
+
+  lounge.last_epoch = get_epoch(net)
 end
 
 include("coffee/training-summary.jl")

@@ -7,7 +7,7 @@ end
 function init(coffee::ValidationPerformance, ::Net)
   init(coffee.validation_net)
 end
-function enjoy(lounge::CoffeeLounge, coffee::ValidationPerformance, ::CoffeeBreakTime.Evening, ::Net, state::SolverState)
+function enjoy(lounge::CoffeeLounge, coffee::ValidationPerformance, ::Net, state::SolverState)
   epoch = get_epoch(coffee.validation_net)
   while true
     forward(coffee.validation_net)

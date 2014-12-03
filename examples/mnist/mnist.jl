@@ -1,24 +1,12 @@
-hdf5_fns = ["data/train.hdf5", "data/test.hdf5"]
-source_fns = ["data/train.txt", "data/test.txt"]
-for i = 1:length(hdf5_fns)
-  if !isfile(hdf5_fns[i])
-    println("Data not found, use get-mnist.sh to generate HDF5 data")
-    exit(1)
-  else
-    open(source_fns[i], "w") do s
-      println(s, hdf5_fns[i])
-    end
-  end
-end
-
 #ENV["MOCHA_USE_NATIVE_EXT"] = "true"
 #ENV["OMP_NUM_THREADS"] = 1
 #blas_set_num_threads(1)
 ENV["MOCHA_USE_CUDA"] = "true"
 
 using Mocha
+srand(12345678)
 
-data_layer  = HDF5DataLayer(name="train-data", source=source_fns[1], batch_size=64)
+data_layer  = HDF5DataLayer(name="train-data", source="data/train.txt", batch_size=64)
 conv_layer  = ConvolutionLayer(name="conv1", n_filter=20, kernel=(5,5), bottoms=[:data], tops=[:conv])
 pool_layer  = PoolingLayer(name="pool1", kernel=(2,2), stride=(2,2), bottoms=[:conv], tops=[:pool])
 conv2_layer = ConvolutionLayer(name="conv2", n_filter=50, kernel=(5,5), bottoms=[:pool], tops=[:conv2])
@@ -34,22 +22,24 @@ init(sys)
 common_layers = [conv_layer, pool_layer, conv2_layer, pool2_layer, fc1_layer, fc2_layer]
 net = Net("MNIST-train", sys, [data_layer, common_layers..., loss_layer])
 
-params = SolverParameters(max_iter=10000, regu_coef=0.0005, mom_policy=MomPolicy.Fixed(0.9),
-    lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75))
+exp_dir = "snapshots"
+
+params = SolverParameters(max_iter=10000, regu_coef=0.0005, 
+    mom_policy=MomPolicy.Fixed(0.9),
+    lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75),
+    load_from=exp_dir)
 solver = SGD(params)
 
-setup_coffee_lounge(solver, save_into="snapshots/statistics.hdf5", every_n_iter=1000)
+setup_coffee_lounge(solver, save_into="$exp_dir/statistics.hdf5", every_n_iter=1000)
 
 # report training progress every 100 iterations
 add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
 
 # save snapshots every 5000 iterations
-add_coffee_break(solver,
-    Snapshot("snapshots", auto_load=true),
-    every_n_iter=5000)
+add_coffee_break(solver, Snapshot(exp_dir), every_n_iter=5000)
 
 # show performance on test data every 1000 iterations
-data_layer_test = HDF5DataLayer(name="test-data", source=source_fns[2], batch_size=100)
+data_layer_test = HDF5DataLayer(name="test-data", source="data/test.txt", batch_size=100)
 acc_layer = AccuracyLayer(name="test-accuracy", bottoms=[:ip2, :label])
 test_net = Net("MNIST-test", sys, [data_layer_test, common_layers..., acc_layer])
 add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)

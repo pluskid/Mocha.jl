@@ -1,5 +1,5 @@
 export SolverParameters
-export SGD
+export SGD, Nesterov
 
 export LearningRatePolicy, LRPolicy, get_learning_rate, MomentumPolicy, MomPolicy, get_momentum
 
@@ -114,6 +114,7 @@ get_momentum(policy::MomPolicy.Linear, state::SolverState) =
   mom_policy  :: MomentumPolicy = MomPolicy.Fixed(0.),
   (max_iter :: Int = 0, max_iter > 0),
   (regu_coef :: FloatingPoint = 0.0005, regu_coef >= 0),
+  load_from :: String = ""
 )
 
 ############################################################
@@ -133,12 +134,51 @@ end
 ############################################################
 # General utilities that could be used by all solvers
 ############################################################
-function update_solver_state(state::SolverState, obj_val :: Float64)
-  state.obj_val = obj_val
+function load_snapshot(net::Net, state::SolverState, path::String)
+  if isempty(path)
+    return state
+  end
+
+  if endswith(path, ".hdf5") || endswith(path, ".h5")
+    # load from HDF5 file, possibly exported from caffe, but training
+    # from the beginning (iteration 0) as the solver state is not saved
+    # in a HDF5 file
+    if isfile(path)
+      @info("Loading existing model from $path")
+      h5open(path) do file
+        load_network(file, net)
+      end
+    end
+    return state
+  else
+    if endswith(path, ".jld")
+      # load from some specific JLD sanpshot, the solver state is also
+      # recovered
+      filename = path
+    else
+      # automatically load from the latest snapshot in a directory
+      filename = ""
+      if isdir(path)
+        # load the latest snapshot from the directory
+        snapshots = glob(path, r"^snapshot-[0-9]+\.jld", sort_by=:mtime)
+        if length(snapshots) > 0
+          filename = joinpath(path, snapshots[end])
+        end
+      end
+    end
+
+    if !isempty(filename) && isfile(filename)
+      @info("Loading existing model from $filename")
+      jldopen(filename) do file
+        load_network(file, net)
+        return read(file, SOLVER_STATE_KEY)
+      end
+    else
+      return state
+    end
+  end
 end
-function update_solver_time(state::SolverState)
-  state.iter += 1
-end
+
 function stop_condition_satisfied(solver::Solver, state::SolverState, net::Net)
   # state.iter counts how many iteration we have computed.
   if state.iter >= solver.params.max_iter
@@ -147,4 +187,80 @@ function stop_condition_satisfied(solver::Solver, state::SolverState, net::Net)
   return false
 end
 
+############################################################
+# Solver API
+############################################################
+abstract SolverInternelState
+
+function setup(solver::Solver, net::Net, state::SolverState)
+  error("Not implemented, should return a SolverInternelState")
+end
+function update(solver::Solver, net::Net, i_state::SolverInternelState, state::SolverState)
+  error("Not implemented, should do one iteration of update")
+end
+function shutdown(solver::Solver, i_state::SolverInternelState)
+  error("Not implemented, should shutdown the solver")
+end
+
+############################################################
+# General Solver Loop
+############################################################
+function solve(solver::Solver, net::Net)
+  solver_state = SolverState()
+  solver_state = load_snapshot(net, solver_state, solver.params.load_from)
+  solver_state.learning_rate = get_learning_rate(solver.params.lr_policy, solver_state)
+  solver_state.momentum = get_momentum(solver.params.mom_policy, solver_state)
+
+  # we init network AFTER loading. If the parameters are loaded from file, the
+  # initializers will be automatically set to NullInitializer
+  init(net)
+
+  # Initial forward iteration
+  solver_state.obj_val = forward(net, solver.params.regu_coef)
+
+  @debug("Initializing coffee breaks")
+  setup(solver.coffee_lounge, solver_state, net)
+
+  # coffee break for iteration 0, before everything starts
+  check_coffee_break(solver.coffee_lounge, solver_state, net)
+
+  i_state = setup(solver, net, solver_state)
+
+  @debug("Entering solver loop")
+  trainable_layers = filter(i -> isa(net.layers[i], TrainableLayer), 1:length(net.layers))
+  while true
+    solver_state.iter += 1
+
+    backward(net, solver.params.regu_coef)
+    solver_state.learning_rate = get_learning_rate(solver.params.lr_policy, solver_state)
+    solver_state.momentum = get_momentum(solver.params.mom_policy, solver_state)
+
+    update(solver, net, i_state, solver_state)
+
+    # apply weight constraints
+    for i in trainable_layers
+      for param in net.states[i].parameters
+        cons_every = param.constraint.every_n_iter
+        if cons_every > 0 && solver_state.iter % cons_every == 0
+          constrain!(net.sys, param.constraint, param.blob)
+        end
+      end
+    end
+
+    solver_state.obj_val = forward(net, solver.params.regu_coef)
+    check_coffee_break(solver.coffee_lounge, solver_state, net)
+
+    if stop_condition_satisfied(solver, solver_state, net)
+      break
+    end
+  end
+
+  shutdown(solver.coffee_lounge, net)
+  shutdown(solver, i_state)
+end
+
+############################################################
+# Specific Solvers
+############################################################
 include("solvers/sgd.jl")
+include("solvers/nesterov.jl")

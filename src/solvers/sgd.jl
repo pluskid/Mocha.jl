@@ -1,80 +1,59 @@
-type SGD <: Solver
+immutable SGD <: Solver
   params        :: SolverParameters
   coffee_lounge :: CoffeeLounge
 
   SGD(params::SolverParameters) = new(params, CoffeeLounge())
 end
 
-function solve(sgd::SGD, net::Net)
-  param_states = filter(x -> :parameters ∈ names(x), net.states)
+type SGDInternalState <: SolverInternelState
+  param_states  :: Vector{LayerState}
+  param_history :: Vector{Vector{Blob}}
+  last_momentum :: Float64
+end
 
+function setup(sgd::SGD, net::Net, solver_state::SolverState)
+  param_states  = map(i -> net.states[i],
+      filter(i -> isa(net.layers[i], TrainableLayer), 1:length(net.layers)))
   param_history = Array(Vector{Blob}, length(param_states))
   for i = 1:length(param_states)
     state = param_states[i]
     param_history[i] = [make_zero_blob(net.sys.backend, eltype(x.blob),size(x.blob)...) for x in state.parameters]
   end
 
-  init(net)
+  return SGDInternalState(param_states, param_history, solver_state.momentum)
+end
 
-  @debug("Initializing coffee breaks")
-  solver_state = SolverState(0, 0.0)
-  setup(sgd.coffee_lounge, solver_state, net)
+function update(sgd::SGD, net::Net, i_state::SGDInternalState, solver_state::SolverState)
+  for i = 1:length(i_state.param_states)
+    state   = i_state.param_states[i]
+    history = i_state.param_history[i]
+    for j = 1:length(state.parameters)
+      hist_blob = history[j]
+      gradient  = state.parameters[j].gradient
+      data_type = eltype(hist_blob)
 
-  # coffee break for iteration 0, before everything starts
-  check_coffee_break(sgd.coffee_lounge, CoffeeBreakTime.Morning(), solver_state, net)
-  check_coffee_break(sgd.coffee_lounge, CoffeeBreakTime.Evening(), solver_state, net)
-
-  @debug("Entering solver loop")
-  while true
-    update_solver_time(solver_state)
-    # morning coffee break, before computing the n-th iteration
-    check_coffee_break(sgd.coffee_lounge, CoffeeBreakTime.Morning(), solver_state, net)
-
-    obj_val = forward_backward(net, sgd.params.regu_coef)
-    learning_rate = get_learning_rate(sgd.params.lr_policy, solver_state)
-    momentum = get_momentum(sgd.params.mom_policy, solver_state)
-
-    # update parameters
-    for i = 1:length(param_states)
-      state = param_states[i]
-      history = param_history[i]
-      for j = 1:length(state.parameters)
-        hist_blob = history[j]
-        gradient = state.parameters[j].gradient
-        data_type = eltype(hist_blob)
-
-        update_parameters(net, sgd, state.parameters[j].learning_rate * learning_rate, momentum,
-            state, state.parameters[j].blob, hist_blob, gradient, data_type)
-        # apply constraints after update
-        cons_every = state.parameters[j].constraint.every_n_iter
-        if cons_every > 0 && solver_state.iter % cons_every == 0
-          constrain!(net.sys, state.parameters[j].constraint, state.parameters[j].blob)
-        end
-      end
-    end
-
-    update_solver_state(solver_state, obj_val)
-
-    # evening coffee break, after computing the n-th iteration
-    check_coffee_break(sgd.coffee_lounge, CoffeeBreakTime.Evening(), solver_state, net)
-
-    if stop_condition_satisfied(sgd, solver_state, net)
-      break
+      # to keep iteration <-> momentum correspondence consistent with the Nesterov solver,
+      # we use the momentum from the last iteration
+      update_parameters(net, sgd, state.parameters[j].learning_rate * solver_state.learning_rate,
+          i_state.last_momentum, state.parameters[j].blob, hist_blob, gradient, data_type)
     end
   end
 
-  shutdown(sgd.coffee_lounge, net)
-  map(x -> map(destroy, x), param_history)
+  i_state.last_momentum = solver_state.momentum
 end
 
-function update_parameters(net::Net{CPUBackend}, solver::SGD, learning_rate, momentum, state, param_blob, hist_blob, gradient, data_type)
+function shutdown(sgd::SGD, i_state::SGDInternalState)
+  map(x -> map(destroy, x), i_state.param_history)
+end
+
+function update_parameters(net::Net{CPUBackend}, solver::SGD, learning_rate, momentum, param_blob, hist_blob, gradient, data_type)
   # hist_blob = momentum * hist_blob
   BLAS.scal!(length(hist_blob), convert(data_type, momentum), hist_blob.data, 1)
-  # hist_blob = learning_rate * gradient + hist_blob
-  BLAS.axpy!(length(hist_blob), convert(data_type, learning_rate), gradient.data, 1, hist_blob.data, 1)
+  # hist_blob = -learning_rate * gradient + hist_blob
+  BLAS.axpy!(length(hist_blob), convert(data_type, -learning_rate), gradient.data, 1, hist_blob.data, 1)
 
   # update parameter
-  # param_blob += -hist_blob
-  BLAS.axpy!(length(hist_blob), convert(data_type, -1), hist_blob.data, 1, param_blob.data, 1)
+  # param_blob += hist_blob
+  BLAS.axpy!(length(hist_blob), convert(data_type, 1), hist_blob.data, 1, param_blob.data, 1)
 end
 
