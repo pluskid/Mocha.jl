@@ -1,7 +1,7 @@
 if haskey(ENV, "MOCHA_USE_CUDA")
-  const test_cudnn = true
+  const test_gpu = true
 else
-  const test_cudnn = false
+  const test_gpu = false
 end
 const test_cpu   = true
 
