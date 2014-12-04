@@ -57,6 +57,16 @@ Data Layers
       blob with the given name. Multiple transformers could be given to the same
       blob, and they will be applied in the order provided here.
 
+   .. attribute:: shuffle
+
+      Default ``false``. When enabled, the data is randomly shuffled. Data
+      shuffling is useful in training, but for testing, there is no need to do
+      shuffling. Shuffled access is a little bit slower, and it requires the
+      HDF5 dataset to be *mmappable*. For example, the dataset can neither be
+      chunked nor be compressed. Please refer to `the document of HDF5.jl
+      <https://github.com/timholy/HDF5.jl/blob/master/doc/hdf5.md#memory-mapping>`_
+      for more details.
+
 .. class:: MemoryDataLayer
 
    Wrap an in-memory Julia Array as data source. Useful for testing.
