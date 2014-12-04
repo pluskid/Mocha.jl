@@ -6,6 +6,9 @@ function init(backend::Backend)
 end
 function shutdown(backend::Backend)
 end
+function reset_registry(backend::Backend)
+  backend.layer_registry = Dict{String, LayerState}()
+end
 
 type CPUBackend{N} <: Backend
   layer_registry :: Dict{String, LayerState}
@@ -18,7 +21,7 @@ type CPUBackend{N} <: Backend
         error("$pid is not a valid process id")
       end
     end
-    new(Dict(String, LayerState), pids)
+    new(Dict{String, LayerState}(), pids)
   end
 end
 

@@ -1,15 +1,15 @@
-function test_element_wise_layer(sys::System, op::ElementWiseFunctorType, jl_op::Function, T, eps)
-  println("-- Testing ElementWiseLayer{$op} on $(typeof(sys.backend)){$T}...")
+function test_element_wise_layer(backend::Backend, op::ElementWiseFunctorType, jl_op::Function, T, eps)
+  println("-- Testing ElementWiseLayer{$op} on $(typeof(backend)){$T}...")
 
   NArg = get_num_args(op)
   inputs = [rand(T, 4,5,6,7) for i = 1:NArg]
-  input_blobs = Blob[make_blob(sys.backend, x) for x in inputs]
-  diff_blobs = Blob[make_blob(sys.backend, x) for x in inputs]
+  input_blobs = Blob[make_blob(backend, x) for x in inputs]
+  diff_blobs = Blob[make_blob(backend, x) for x in inputs]
 
   layer = ElementWiseLayer(bottoms=Array(Symbol, NArg), tops=[:result], operation=op)
-  state = setup(sys, layer, input_blobs, diff_blobs)
+  state = setup(backend, layer, input_blobs, diff_blobs)
 
-  forward(sys, state, input_blobs)
+  forward(backend, state, input_blobs)
   expected_res = jl_op(inputs...)
   got_res = similar(inputs[1])
   copy!(got_res, state.blobs[1])
@@ -18,7 +18,7 @@ function test_element_wise_layer(sys::System, op::ElementWiseFunctorType, jl_op:
   top_diff = rand(T, size(inputs[1]))
   copy!(state.blobs_diff[1], top_diff)
 
-  backward(sys, state, input_blobs, diff_blobs)
+  backward(backend, state, input_blobs, diff_blobs)
   got_grads = map(diff_blobs) do blob
     arr = zeros(T, size(blob))
     copy!(arr, blob)
@@ -43,27 +43,27 @@ function test_element_wise_layer(sys::System, op::ElementWiseFunctorType, jl_op:
     error("Unknown operation $jl_op")
   end
 
-  shutdown(sys, state)
+  shutdown(backend, state)
 end
 
-function test_element_wise_layer(sys::System, T, eps)
+function test_element_wise_layer(backend::Backend, T, eps)
   for (functor,jl_op) in ((ElementWiseFunctors.Add(), (+)),
                           (ElementWiseFunctors.Subtract(),(-)),
                           (ElementWiseFunctors.Multiply(), (.*)),
                           (ElementWiseFunctors.Divide(), (./)))
-    test_element_wise_layer(sys, functor, jl_op, T, eps)
+    test_element_wise_layer(backend, functor, jl_op, T, eps)
   end
 end
 
-function test_element_wise_layer(sys::System)
-  test_element_wise_layer(sys, Float32, 1e-1)
-  test_element_wise_layer(sys, Float64, 1e-5)
+function test_element_wise_layer(backend::Backend)
+  test_element_wise_layer(backend, Float32, 1e-1)
+  test_element_wise_layer(backend, Float64, 1e-5)
 end
 
 if test_cpu
-  test_element_wise_layer(sys_cpu)
+  test_element_wise_layer(backend_cpu)
 end
 if test_cudnn
-  test_element_wise_layer(sys_cudnn)
+  test_element_wise_layer(backend_cudnn)
 end
 

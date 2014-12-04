@@ -1,5 +1,5 @@
-function test_inner_product_layer(sys::System, T, eps)
-  println("-- Testing InnerProductLayer on $(typeof(sys.backend)){$T}...")
+function test_inner_product_layer(backend::Backend, T, eps)
+  println("-- Testing InnerProductLayer on $(typeof(backend)){$T}...")
 
   ############################################################
   # Prepare Data for Testing
@@ -17,14 +17,14 @@ function test_inner_product_layer(sys::System, T, eps)
   # Setup
   ############################################################
   layer  = InnerProductLayer(name="ip", output_dim=target_dim, tops = [:result], bottoms=[:input])
-  input_blob = make_blob(sys.backend, T, orig_dim_all..., batch_size)
-  diff_blob = make_blob(sys.backend, T, size(input_blob)...)
+  input_blob = make_blob(backend, T, orig_dim_all..., batch_size)
+  diff_blob = make_blob(backend, T, size(input_blob)...)
   copy!(input_blob, X)
   inputs = Blob[input_blob]
   diffs = Blob[diff_blob]
 
   println("    > Setup")
-  state  = setup(sys, layer, inputs, diffs)
+  state  = setup(backend, layer, inputs, diffs)
 
   @test length(state.W) == length(W)
   @test length(state.b) == length(b)
@@ -32,7 +32,7 @@ function test_inner_product_layer(sys::System, T, eps)
   copy!(state.b, b)
 
   println("    > Forward")
-  forward(sys, state, inputs)
+  forward(backend, state, inputs)
 
   X2 = reshape(X, orig_dim, batch_size)
   res = W' * X2 .+ b
@@ -45,7 +45,7 @@ function test_inner_product_layer(sys::System, T, eps)
   println("    > Backward")
   top_diff = rand(T, size(state.blobs_diff[1]))
   copy!(state.blobs_diff[1], top_diff)
-  backward(sys, state, inputs, diffs)
+  backward(backend, state, inputs, diffs)
 
   top_diff = reshape(top_diff, target_dim, batch_size)
   bias_grad = similar(b)
@@ -61,16 +61,16 @@ function test_inner_product_layer(sys::System, T, eps)
   copy!(back_grad, diffs[1])
   @test all(-eps .< vec(back_grad) - vec(W * top_diff) .< eps)
 
-  shutdown(sys, state)
+  shutdown(backend, state)
 end
-function test_inner_product_layer(sys::System)
-  test_inner_product_layer(sys, Float32, 1e-3)
-  test_inner_product_layer(sys, Float64, 1e-10)
+function test_inner_product_layer(backend::Backend)
+  test_inner_product_layer(backend, Float32, 1e-3)
+  test_inner_product_layer(backend, Float64, 1e-10)
 end
 
 if test_cpu
-  test_inner_product_layer(sys_cpu)
+  test_inner_product_layer(backend_cpu)
 end
 if test_cudnn
-  test_inner_product_layer(sys_cudnn)
+  test_inner_product_layer(backend_cudnn)
 end

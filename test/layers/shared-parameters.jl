@@ -1,6 +1,6 @@
-function test_shared_parameters_layers(sys::System, layer_type, T, eps)
-  println("-- Testing $layer_type layer with shared param on $(typeof(sys.backend)){$T}...")
-  reset(sys)
+function test_shared_parameters_layers(backend::Backend, layer_type, T, eps)
+  println("-- Testing $layer_type layer with shared param on $(typeof(backend)){$T}...")
+  reset_registry(backend)
 
   w,h,c,n = 2,3,4,5
   input = rand(T, w,h,c,n)
@@ -22,7 +22,7 @@ function test_shared_parameters_layers(sys::System, layer_type, T, eps)
 
   layer_sub = ElementWiseLayer(operation=ElementWiseFunctors.Subtract(),bottoms=[:out1,:out2],tops=[:diff])
 
-  net = Net("test-shared-params", sys, [layer_data, layer_split, l1, l2, layer_sub])
+  net = Net("test-shared-params", backend, [layer_data, layer_split, l1, l2, layer_sub])
   init(net)
   forward(net)
 
@@ -34,18 +34,18 @@ function test_shared_parameters_layers(sys::System, layer_type, T, eps)
   destroy(net)
 end
 
-function test_shared_parameters_layers(sys::System, T, eps)
-  test_shared_parameters_layers(sys, "convolution", T, eps)
-  test_shared_parameters_layers(sys, "inner-product", T, eps)
+function test_shared_parameters_layers(backend::Backend, T, eps)
+  test_shared_parameters_layers(backend, "convolution", T, eps)
+  test_shared_parameters_layers(backend, "inner-product", T, eps)
 end
-function test_shared_parameters_layers(sys::System)
-  test_shared_parameters_layers(sys, Float64, 1e-9)
-  test_shared_parameters_layers(sys, Float32, 1e-4)
+function test_shared_parameters_layers(backend::Backend)
+  test_shared_parameters_layers(backend, Float64, 1e-9)
+  test_shared_parameters_layers(backend, Float32, 1e-4)
 end
 
 if test_cpu
-  test_shared_parameters_layers(sys_cpu)
+  test_shared_parameters_layers(backend_cpu)
 end
 if test_cudnn
-  test_shared_parameters_layers(sys_cudnn)
+  test_shared_parameters_layers(backend_cudnn)
 end

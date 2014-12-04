@@ -1,6 +1,6 @@
-function test_inplace_layer(sys::System, T, eps)
-  println("-- Testing InplaceLayer on $(typeof(sys.backend)){$T}...")
-  reset(sys) # clear layer registry
+function test_inplace_layer(backend::Backend, T, eps)
+  println("-- Testing InplaceLayer on $(typeof(backend)){$T}...")
+  reset_registry(backend) # clear layer registry
 
   ratio = convert(T, 0.6)
   width, height, channels, batch_size = (3,4,5,6)
@@ -17,7 +17,7 @@ function test_inplace_layer(sys::System, T, eps)
   layers = [layer_ip2, layer_data, layer_ip1, layer_dropout1, layer_dropout2]
 
   println("    > Setup")
-  net = Net("test-inplace", sys, layers)
+  net = Net("test-inplace", backend, layers)
 
   # make sure toplogical sort is working properly
   @test net.layers[1] == layer_data
@@ -90,15 +90,15 @@ function test_inplace_layer(sys::System, T, eps)
 
   destroy(net)
 end
-function test_inplace_layer(sys::System)
-  test_inplace_layer(sys, Float64, 1e-10)
-  test_inplace_layer(sys, Float32, 1e-4)
+function test_inplace_layer(backend::Backend)
+  test_inplace_layer(backend, Float64, 1e-10)
+  test_inplace_layer(backend, Float32, 1e-4)
 end
 
 if test_cpu
-  test_inplace_layer(sys_cpu)
+  test_inplace_layer(backend_cpu)
 end
 if test_cudnn
-  test_inplace_layer(sys_cudnn)
+  test_inplace_layer(backend_cudnn)
 end
 

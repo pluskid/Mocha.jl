@@ -1,10 +1,10 @@
-function test_softmax_loss_layer(sys::System, use_weights::Bool, T, eps)
-  println("-- Testing SoftmaxLossLayer on $(typeof(sys.backend)){$T} $(use_weights ? "(with weights)" : "")...")
+function test_softmax_loss_layer(backend::Backend, use_weights::Bool, T, eps)
+  println("-- Testing SoftmaxLossLayer on $(typeof(backend)){$T} $(use_weights ? "(with weights)" : "")...")
 
   width, height, channels, num = (5, 6, 7, 8)
   input = rand(T, width, height, channels, num)
-  input_blob = make_blob(sys.backend, input)
-  diff_blob = make_blob(sys.backend, T, size(input))
+  input_blob = make_blob(backend, input)
+  diff_blob = make_blob(backend, T, size(input))
 
   if use_weights
     weights = rand(T, width, height, channels) + 0.1
@@ -15,15 +15,15 @@ function test_softmax_loss_layer(sys::System, use_weights::Bool, T, eps)
 
   label = abs(rand(Int, (width, height, 1, num))) % channels
   label = convert(Array{T}, label)
-  label_blob = make_blob(sys.backend, label)
+  label_blob = make_blob(backend, label)
 
   inputs = Blob[input_blob, label_blob]
 
   layer = SoftmaxLossLayer(bottoms=[:pred, :labels], weights=weights, normalize=:local)
-  state = setup(sys, layer, inputs, Blob[diff_blob])
+  state = setup(backend, layer, inputs, Blob[diff_blob])
 
   println("    > Forward")
-  forward(sys, state, inputs)
+  forward(backend, state, inputs)
 
   expected_loss = 0
   expected_grad = zeros(T, size(input))
@@ -53,26 +53,26 @@ function test_softmax_loss_layer(sys::System, use_weights::Bool, T, eps)
   @test -eps < state.loss - expected_loss < eps
 
   println("    > Backward")
-  backward(sys, state, inputs, Blob[diff_blob])
+  backward(backend, state, inputs, Blob[diff_blob])
   grad = zeros(T, size(input))
   copy!(grad, diff_blob)
 
   @test all(-eps .< grad - expected_grad .< eps)
 
-  shutdown(sys, state)
+  shutdown(backend, state)
 end
-function test_softmax_loss_layer(sys::System, T, eps)
-  test_softmax_loss_layer(sys, false, T, eps)
-  test_softmax_loss_layer(sys, true, T, eps)
+function test_softmax_loss_layer(backend::Backend, T, eps)
+  test_softmax_loss_layer(backend, false, T, eps)
+  test_softmax_loss_layer(backend, true, T, eps)
 end
-function test_softmax_loss_layer(sys::System)
-  test_softmax_loss_layer(sys, Float64, 1e-5)
-  test_softmax_loss_layer(sys, Float32, 1e-3)
+function test_softmax_loss_layer(backend::Backend)
+  test_softmax_loss_layer(backend, Float64, 1e-5)
+  test_softmax_loss_layer(backend, Float32, 1e-3)
 end
 
 if test_cpu
-  test_softmax_loss_layer(sys_cpu)
+  test_softmax_loss_layer(backend_cpu)
 end
 if test_cudnn
-  test_softmax_loss_layer(sys_cudnn)
+  test_softmax_loss_layer(backend_cudnn)
 end

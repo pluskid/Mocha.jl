@@ -1,7 +1,7 @@
 using HDF5
 
-function test_hdf5_data_layer(sys::System, T, eps)
-  println("-- Testing HDF5 Data Layer on $(typeof(sys.backend)){$T}...")
+function test_hdf5_data_layer(backend::Backend, T, eps)
+  println("-- Testing HDF5 Data Layer on $(typeof(backend)){$T}...")
 
   ############################################################
   # Prepare Data for Testing
@@ -32,7 +32,7 @@ function test_hdf5_data_layer(sys::System, T, eps)
   scale = rand()
   layer = HDF5DataLayer(source = source_fn, tops = [:data], batch_size=batch_size,
       transformers=[(:data, DataTransformers.Scale(scale))])
-  state = setup(sys, layer, Blob[], Blob[])
+  state = setup(backend, layer, Blob[], Blob[])
   @test state.epoch == 0
 
   data = cat(4, data_all...)
@@ -42,7 +42,7 @@ function test_hdf5_data_layer(sys::System, T, eps)
   data_idx = map(x->1:x, data_dim)
   layer_data = Array(eltype(data), tuple(data_dim..., batch_size))
   for i = 1:batch_size:size(data,4)-batch_size+1
-    forward(sys, state, Blob[])
+    forward(backend, state, Blob[])
     copy!(layer_data, state.blobs[1])
     @test all(-eps .< layer_data - data[data_idx..., i:i+batch_size-1] .< eps)
   end
@@ -51,15 +51,15 @@ function test_hdf5_data_layer(sys::System, T, eps)
   ############################################################
   # Clean up
   ############################################################
-  shutdown(sys, state)
+  shutdown(backend, state)
   rm(source_fn)
   for fn in h5fn_all
     rm(fn)
   end
 end
 
-function test_hdf5_data_layer_shuffle(sys::System, batch_size, n, T)
-  println("-- Testing HDF5 Data Layer (shuffle,n=$n,b=$batch_size) on $(typeof(sys.backend)){$T}...")
+function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
+  println("-- Testing HDF5 Data Layer (shuffle,n=$n,b=$batch_size) on $(typeof(backend)){$T}...")
 
   # To test random shuffling, we generate a dataset containing integer 1:n.
   # Then we run HDF5 layer n times forward, and collect all the output data.
@@ -78,12 +78,12 @@ function test_hdf5_data_layer_shuffle(sys::System, batch_size, n, T)
   end
 
   layer = HDF5DataLayer(source=source_fn, tops=[:data], batch_size=batch_size, shuffle=true)
-  state = setup(sys, layer, Blob[], Blob[])
+  state = setup(backend, layer, Blob[], Blob[])
 
   data_got_all = Int[]
   data_got = zeros(T, 1, 1, 1, batch_size)
   for i = 1:n
-    forward(sys, state, Blob[])
+    forward(backend, state, Blob[])
     copy!(data_got, state.blobs[1])
     append!(data_got_all, convert(Vector{Int}, data_got[:]))
   end
@@ -96,26 +96,26 @@ function test_hdf5_data_layer_shuffle(sys::System, batch_size, n, T)
     println("WARNING: data not shuffled, is today a lucky day or is there a bug?")
   end
 
-  shutdown(sys, state)
+  shutdown(backend, state)
   rm(source_fn)
   rm(h5fn)
 end
 
-function test_hdf5_data_layer_shuffle(sys::System, T)
-  test_hdf5_data_layer_shuffle(sys, 2, 3, T)
-  test_hdf5_data_layer_shuffle(sys, 3, 2, T)
+function test_hdf5_data_layer_shuffle(backend::Backend, T)
+  test_hdf5_data_layer_shuffle(backend, 2, 3, T)
+  test_hdf5_data_layer_shuffle(backend, 3, 2, T)
 end
 
-function test_hdf5_data_layer(sys::System)
-  test_hdf5_data_layer(sys, Float32, 1e-5)
-  test_hdf5_data_layer(sys, Float64, 1e-10)
-  test_hdf5_data_layer_shuffle(sys, Float32)
-  test_hdf5_data_layer_shuffle(sys, Float64)
+function test_hdf5_data_layer(backend::Backend)
+  test_hdf5_data_layer(backend, Float32, 1e-5)
+  test_hdf5_data_layer(backend, Float64, 1e-10)
+  test_hdf5_data_layer_shuffle(backend, Float32)
+  test_hdf5_data_layer_shuffle(backend, Float64)
 end
 
 if test_cpu
-  test_hdf5_data_layer(sys_cpu)
+  test_hdf5_data_layer(backend_cpu)
 end
 if test_cudnn
-  test_hdf5_data_layer(sys_cudnn)
+  test_hdf5_data_layer(backend_cudnn)
 end

@@ -1,5 +1,5 @@
-function test_memory_data_layer(sys::System, T, eps)
-  println("-- Testing Memory Data Layer on $(typeof(sys.backend)){$T}...")
+function test_memory_data_layer(backend::Backend, T, eps)
+  println("-- Testing Memory Data Layer on $(typeof(backend)){$T}...")
 
   ############################################################
   # Prepare Data for Testing
@@ -9,7 +9,7 @@ function test_memory_data_layer(sys::System, T, eps)
 
   data = rand(T, data_dim..., 9)
   mean_data = rand(T, data_dim..., 1)
-  mean_blob = make_blob(sys.backend, mean_data)
+  mean_blob = make_blob(backend, mean_data)
 
   ############################################################
   # Setup
@@ -18,39 +18,39 @@ function test_memory_data_layer(sys::System, T, eps)
   # batch size is determined by
   layer = MemoryDataLayer(data = Array[data], tops = [:data], batch_size=batch_size,
       transformers=[(:data, DataTransformers.SubMean(mean_blob=mean_blob))])
-  state = setup(sys, layer, Blob[], Blob[])
+  state = setup(backend, layer, Blob[], Blob[])
 
   data_idx = map(x->1:x, data_dim)
   layer_data = Array(eltype(data), tuple(data_dim..., batch_size))
 
   data_aug = cat(4, data, data)
   data_aug .-= mean_data
-  forward(sys, state, Blob[])
+  forward(backend, state, Blob[])
   copy!(layer_data, state.blobs[1])
   @test all(-eps .< layer_data - data_aug[data_idx..., 1:1+batch_size-1] .< eps)
   @test state.epoch == 0
 
-  forward(sys, state, Blob[])
+  forward(backend, state, Blob[])
   copy!(layer_data, state.blobs[1])
   @test all(-eps .< layer_data - data_aug[data_idx..., batch_size+1:2batch_size] .< eps)
   @test state.epoch == 1
 
-  forward(sys, state, Blob[])
+  forward(backend, state, Blob[])
   copy!(layer_data, state.blobs[1])
   @test all(-eps .< layer_data - data_aug[data_idx..., 2batch_size+1:3batch_size] .< eps)
   @test state.epoch == 2
 
-  shutdown(sys, state)
+  shutdown(backend, state)
 end
-function test_memory_data_layer(sys::System)
-  test_memory_data_layer(sys, Float32, 1e-5)
-  test_memory_data_layer(sys, Float64, 1e-10)
+function test_memory_data_layer(backend::Backend)
+  test_memory_data_layer(backend, Float32, 1e-5)
+  test_memory_data_layer(backend, Float64, 1e-10)
 end
 
 if test_cpu
-  test_memory_data_layer(sys_cpu)
+  test_memory_data_layer(backend_cpu)
 end
 if test_cudnn
-  test_memory_data_layer(sys_cudnn)
+  test_memory_data_layer(backend_cudnn)
 end
 
