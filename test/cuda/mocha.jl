@@ -1,4 +1,4 @@
-function test_mocha_kernels(sys::System, data_type)
+function test_mocha_kernels(backend::Backend, data_type)
   println("-- Testing Mocha CUDA kernels on $data_type")
 
   println("    > logistic loss forward")
@@ -9,13 +9,13 @@ function test_mocha_kernels(sys::System, data_type)
   label = abs(rand(Int, (w, h, 1, n))) % c
   label = convert(Array{data_type}, label)
 
-  prob_blob = make_blob(sys.backend, data_type, size(prob))
+  prob_blob = make_blob(backend, data_type, size(prob))
   copy!(prob_blob, prob)
-  label_blob = make_blob(sys.backend, data_type, size(label))
+  label_blob = make_blob(backend, data_type, size(label))
   copy!(label_blob, label)
 
   # This should always be float32
-  loss_blob = make_blob(sys.backend, Float32, 1, 1, 1, 1)
+  loss_blob = make_blob(backend, Float32, 1, 1, 1, 1)
   copy!(loss_blob, Float32[0])
 
   spatial_dim = h*w
@@ -25,9 +25,9 @@ function test_mocha_kernels(sys::System, data_type)
   y_block = spatial_dim
 
   if data_type == Float32
-    kernel = sys.backend.mocha.logistic_loss_forward_float
+    kernel = backend.mocha.logistic_loss_forward_float
   else
-    kernel = sys.backend.mocha.logistic_loss_forward_double
+    kernel = backend.mocha.logistic_loss_forward_double
   end
   weights = convert(Ptr{data_type}, 0)
 
@@ -59,9 +59,9 @@ function test_mocha_kernels(sys::System, data_type)
 end
 
 
-function test_mocha_kernels(sys::System)
-  test_mocha_kernels(sys, Float32)
-  test_mocha_kernels(sys, Float64)
+function test_mocha_kernels(backend::Backend)
+  test_mocha_kernels(backend, Float32)
+  test_mocha_kernels(backend, Float64)
 end
 
-test_mocha_kernels(sys_cudnn)
+test_mocha_kernels(backend_gpu)

@@ -148,14 +148,15 @@ function shutdown(mocha :: MochaKernels)
 end
 
 type GPUBackend <: AbstractGPUBackend
-  initialized:: Bool
-  cu_ctx     :: CUDA.CuContext
-  cublas_ctx :: CuBLAS.Handle
-  cudnn_ctx  :: CuDNN.Handle
+  layer_registry :: ParameterRegistry
+  initialized    :: Bool
+  cu_ctx         :: CUDA.CuContext
+  cublas_ctx     :: CuBLAS.Handle
+  cudnn_ctx      :: CuDNN.Handle
 
-  mocha      :: MochaKernels
+  mocha          :: MochaKernels
 
-  GPUBackend() = new(false) # everything will be initialized later
+  GPUBackend() = new(ParameterRegistry(), false) # everything will be initialized later
 end
 
 function init(backend::GPUBackend)

@@ -55,6 +55,6 @@ end
 if test_cpu
   test_accuracy_layer(backend_cpu)
 end
-if test_cudnn
+if test_gpu
   test_accuracy_layer(backend_gpu)
 end

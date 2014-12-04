@@ -32,7 +32,7 @@ end
 if test_cpu
   test_sigmoid_neuron(backend_cpu)
 end
-if test_cudnn
+if test_gpu
   test_sigmoid_neuron(backend_gpu)
 end
 

@@ -18,6 +18,6 @@ end
 if test_cpu
   test_shared_blob(backend_cpu)
 end
-if test_cudnn
+if test_gpu
   test_shared_blob(backend_gpu)
 end

@@ -50,7 +50,7 @@ end
 if test_cpu
   test_memory_data_layer(backend_cpu)
 end
-if test_cudnn
+if test_gpu
   test_memory_data_layer(backend_gpu)
 end
 

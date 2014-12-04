@@ -38,7 +38,7 @@ end
 if test_cpu
   test_data_transformer(backend_cpu)
 end
-if test_cudnn
+if test_gpu
   test_data_transformer(backend_gpu)
 end
 

@@ -26,7 +26,7 @@ end
 if test_cpu
   test_l2_regularizer(backend_cpu)
 end
-if test_cudnn
+if test_gpu
   test_l2_regularizer(backend_gpu)
 end
 

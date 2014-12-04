@@ -24,7 +24,7 @@ end
 include("utils/blas.jl")
 include("utils/shared-blob.jl")
 
-if test_cudnn
+if test_gpu
   include("cuda/padded-copy.jl")
   include("cuda/cuvec.jl")
   include("cuda/mocha.jl")
@@ -90,7 +90,7 @@ include("layers/square-loss.jl")
 include("layers/multinomial-logistic-loss.jl")
 include("layers/softmax-loss.jl")
 
-if test_cudnn
+if test_gpu
   shutdown(backend_gpu)
 end
 if test_cpu

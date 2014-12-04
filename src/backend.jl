@@ -2,16 +2,18 @@ export Backend, CPUBackend, AbstractCuDNNBackend
 export init, shutdown, reset_registry
 
 abstract Backend
+typealias ParameterRegistry Dict{String, LayerState}
+
 function init(backend::Backend)
 end
 function shutdown(backend::Backend)
 end
 function reset_registry(backend::Backend)
-  backend.layer_registry = Dict{String, LayerState}()
+  backend.layer_registry = ParameterRegistry()
 end
 
 type CPUBackend{N} <: Backend
-  layer_registry :: Dict{String, LayerState}
+  layer_registry :: ParameterRegistry
 
   pids :: NTuple{N, Int}
 
@@ -21,7 +23,7 @@ type CPUBackend{N} <: Backend
         error("$pid is not a valid process id")
       end
     end
-    new(Dict{String, LayerState}(), pids)
+    new(ParameterRegistry(), pids)
   end
 end
 

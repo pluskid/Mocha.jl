@@ -73,6 +73,6 @@ end
 if test_cpu
   test_crop_layer(backend_cpu)
 end
-if test_cudnn
+if test_gpu
   test_crop_layer(backend_gpu)
 end

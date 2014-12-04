@@ -116,6 +116,6 @@ end
 if test_cpu
   test_hdf5_data_layer(backend_cpu)
 end
-if test_cudnn
+if test_gpu
   test_hdf5_data_layer(backend_gpu)
 end
