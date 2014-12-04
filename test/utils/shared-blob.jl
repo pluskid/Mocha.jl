@@ -3,7 +3,7 @@ function test_shared_blob(sys::System, T, eps)
 
   data = rand(T, 2,4,5,6)
   blob = make_blob(sys.backend, data)
-  blob2 = make_shared_blob(sys.backend, blob, length(data),1,1,1)
+  blob2 = reshape_blob(sys.backend, blob, length(data),1,1,1)
   data2 = rand(T, size(blob2))
   copy!(blob2, data2)
   copy!(data, blob)

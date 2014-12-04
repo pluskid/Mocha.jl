@@ -46,7 +46,7 @@ end
 function make_blob(backend::CuDNNBackend, data_type::Type, dims::NTuple{4,Int})
   return cudnn_make_tensor_blob(data_type, dims)
 end
-function make_shared_blob{T}(backend::CuDNNBackend, blob::CuTensorBlob{T}, dims::NTuple{4,Int})
+function reshape_blob{T}(backend::CuDNNBackend, blob::CuTensorBlob{T}, dims::NTuple{4,Int})
   @assert prod(dims) == length(blob)
   return CuTensorBlob{T}(blob.ptr, dims, length(blob))
 end

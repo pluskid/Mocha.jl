@@ -16,13 +16,13 @@ end
 
 function setup(sys::System, layer::ReshapeLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   blobs = map(inputs) do blob
-    make_shared_blob(sys.backend, blob, layer.width, layer.height, layer.channels, get_num(blob))
+    reshape_blob(sys.backend, blob, layer.width, layer.height, layer.channels, get_num(blob))
   end
   blobs_diff = map(diffs) do blob
     if isa(blob, NullBlob)
       NullBlob()
     else
-      make_shared_blob(sys.backend, blob, layer.width, layer.height, layer.channels, get_num(blob))
+      reshape_blob(sys.backend, blob, layer.width, layer.height, layer.channels, get_num(blob))
     end
   end
 
