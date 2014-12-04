@@ -91,8 +91,8 @@ include("layers/multinomial-logistic-loss.jl")
 include("layers/softmax-loss.jl")
 
 if test_cudnn
-  shutdown(sys_cudnn)
+  shutdown(backend_cudnn)
 end
 if test_cpu
-  shutdown(sys_cpu)
+  shutdown(backend_cpu)
 end

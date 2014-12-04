@@ -17,7 +17,7 @@ function setup(sgd::SGD, net::Net, solver_state::SolverState)
   param_history = Array(Vector{Blob}, length(param_states))
   for i = 1:length(param_states)
     state = param_states[i]
-    param_history[i] = [make_zero_blob(net.sys.backend, eltype(x.blob),size(x.blob)...) for x in state.parameters]
+    param_history[i] = [make_zero_blob(net.backend, eltype(x.blob),size(x.blob)...) for x in state.parameters]
   end
 
   return SGDInternalState(param_states, param_history, solver_state.momentum)

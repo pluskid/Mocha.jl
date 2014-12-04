@@ -1,5 +1,5 @@
 export Backend, CPUBackend, AbstractCuDNNBackend
-export init, shutdown
+export init, shutdown, reset_registry
 
 abstract Backend
 function init(backend::Backend)

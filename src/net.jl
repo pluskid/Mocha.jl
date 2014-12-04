@@ -3,11 +3,11 @@ export init, destroy, forward, backward, forward_backward, get_epoch
 export show_statistics, reset_statistics
 
 type Net{T <: Backend}
-  name :: String
-  sys  :: System{T}
+  name           :: String
+  backend        :: T
 
   # all layers, sorted in topological order
-  layers :: Vector{Layer}
+  layers         :: Vector{Layer}
 
   states         :: Vector{LayerState}
   blobs_forward  :: Vector{Vector{Blob}}
@@ -42,7 +42,7 @@ end
 function destroy(net::Net)
   @debug("Destroying network $(net.name)")
   for state in net.states
-    shutdown(net.sys, state)
+    shutdown(net.backend, state)
   end
 end
 
@@ -71,11 +71,11 @@ function forward(net::Net, regu_coef :: FloatingPoint = 0.0)
   obj_val = 0.0
 
   for i = 1:length(net.layers)
-    forward(net.sys, net.states[i], net.blobs_forward[i])
+    forward(net.backend, net.states[i], net.blobs_forward[i])
 
     if :neuron ∈ names(net.layers[i]) && !isa(net.layers[i].neuron, Neurons.Identity)
       for blob in net.states[i].blobs
-        forward(net.sys, net.layers[i].neuron, blob)
+        forward(net.backend, net.layers[i].neuron, blob)
       end
     end
 
@@ -91,7 +91,7 @@ function forward(net::Net, regu_coef :: FloatingPoint = 0.0)
     # # handle regularization
     # if isa(net.layers[i], TrainableLayer)
     #   for param in net.states[i].parameters
-    #     obj_val += forward(net.sys, param.regularizer, regu_coef, param.blob)
+    #     obj_val += forward(net.backend, param.regularizer, regu_coef, param.blob)
     #   end
     # end
   end
@@ -104,22 +104,22 @@ function backward(net::Net, regu_coef :: FloatingPoint = 0.0)
     if :neuron ∈ names(net.layers[i]) && !isa(net.layers[i].neuron, Neurons.Identity)
       state = net.states[i]
       for j = 1:length(state.blobs)
-        backward(net.sys, net.layers[i].neuron, state.blobs[j], state.blobs_diff[j])
+        backward(net.backend, net.layers[i].neuron, state.blobs[j], state.blobs_diff[j])
       end
     end
-    backward(net.sys, net.states[i], net.blobs_forward[i], net.blobs_backward[i])
+    backward(net.backend, net.states[i], net.blobs_forward[i], net.blobs_backward[i])
 
     # handle regularization
     if isa(net.layers[i], TrainableLayer)
       for param in net.states[i].parameters
-        backward(net.sys, param.regularizer, regu_coef, param.blob, param.gradient)
+        backward(net.backend, param.regularizer, regu_coef, param.blob, param.gradient)
       end
     end
   end
 end
 
 
-Net(name::String, sys::System, layers :: Vector{Layer}) = begin
+Net(name::String, backend::Backend, layers :: Vector{Layer}) = begin
   layers = topological_sort(layers)
   data_layers = find(l -> isa(l, DataLayer), layers)
 
@@ -142,19 +142,19 @@ Net(name::String, sys::System, layers :: Vector{Layer}) = begin
       blob_bwd = Blob[]
     end
 
-    if isa(layers[i], TrainableLayer) && haskey(sys.layer_registry, param_key(layers[i]))
-      shared_state = sys.layer_registry[param_key(layers[i])]
-      states[i] = setup(sys, layers[i], shared_state, blob_fwd, blob_bwd)
+    if isa(layers[i], TrainableLayer) && haskey(backend.layer_registry, param_key(layers[i]))
+      shared_state = backend.layer_registry[param_key(layers[i])]
+      states[i] = setup(backend, layers[i], shared_state, blob_fwd, blob_bwd)
 
       # shared parameters, don't re-initialize
       for param in states[i].parameters
         param.initializer = NullInitializer()
       end
     else
-      states[i] = setup(sys, layers[i], blob_fwd, blob_bwd)
+      states[i] = setup(backend, layers[i], blob_fwd, blob_bwd)
       if isa(layers[i], TrainableLayer)
         # has parameters, save in registry
-        sys.layer_registry[param_key(layers[i])] = states[i]
+        backend.layer_registry[param_key(layers[i])] = states[i]
       end
     end
 
@@ -177,7 +177,7 @@ Net(name::String, sys::System, layers :: Vector{Layer}) = begin
     blobs_backward[i] = blob_bwd
   end
 
-  return Net(name, sys, layers, states, blobs_forward, blobs_backward, data_layers, output_blobs, diff_blobs)
+  return Net(name, backend, layers, states, blobs_forward, blobs_backward, data_layers, output_blobs, diff_blobs)
 end
 
 

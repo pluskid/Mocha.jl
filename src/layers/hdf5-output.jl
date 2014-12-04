@@ -62,6 +62,6 @@ end
 function backward(backend::Backend, state::HDF5OutputLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
 
-function shutdown(sys::System, state::HDF5OutputLayerState)
+function shutdown(backend::Backend, state::HDF5OutputLayerState)
   close(state.file)
 end
