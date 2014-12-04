@@ -8,6 +8,8 @@ function shutdown(backend::Backend)
 end
 
 type CPUBackend{N} <: Backend
+  layer_registry :: Dict{String, LayerState}
+
   pids :: NTuple{N, Int}
 
   CPUBackend(pids::NTuple{N,Int}) = begin
@@ -16,7 +18,7 @@ type CPUBackend{N} <: Backend
         error("$pid is not a valid process id")
       end
     end
-    new(pids)
+    new(Dict(String, LayerState), pids)
   end
 end
 

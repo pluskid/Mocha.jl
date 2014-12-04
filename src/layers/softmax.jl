@@ -14,23 +14,23 @@ type SoftmaxLayerState <: LayerState
   etc        :: Any
 end
 
-function setup_etc(sys::System{CPUBackend}, layer::SoftmaxLayer, data_type, inputs)
+function setup_etc(backend::CPUBackend, layer::SoftmaxLayer, data_type, inputs)
   nothing
 end
 
-function setup(sys::System, layer::SoftmaxLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::SoftmaxLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type  = eltype(inputs[1])
-  blobs      = Blob[make_blob(sys.backend, data_type, size(input)) for input in inputs]
-  etc        = setup_etc(sys, layer, data_type, inputs)
+  blobs      = Blob[make_blob(backend, data_type, size(input)) for input in inputs]
+  etc        = setup_etc(backend, layer, data_type, inputs)
 
   state = SoftmaxLayerState(layer, blobs, etc)
   return state
 end
-function shutdown(sys::System{CPUBackend}, state::SoftmaxLayerState)
+function shutdown(backend::CPUBackend, state::SoftmaxLayerState)
   map(destroy, state.blobs)
 end
 
-function forward(sys::System{CPUBackend}, state::SoftmaxLayerState, inputs::Vector{Blob})
+function forward(backend::CPUBackend, state::SoftmaxLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input  = inputs[i].data
     output = state.blobs[i].data
@@ -60,6 +60,6 @@ function forward(sys::System{CPUBackend}, state::SoftmaxLayerState, inputs::Vect
   end
 end
 
-function backward(sys::System, state::SoftmaxLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::Backend, state::SoftmaxLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
 

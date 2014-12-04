@@ -13,7 +13,7 @@ type SplitLayerState{N} <: LayerState
   blobs_diff :: Vector{Blob}
 end
 
-function setup(sys::System, layer::SplitLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::SplitLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   N = length(layer.tops)
 
   # directly re-use the input blob
@@ -24,24 +24,24 @@ function setup(sys::System, layer::SplitLayer, inputs::Vector{Blob}, diffs::Vect
     if isa(diffs[1], NullBlob)
       blobs_diff[i] = NullBlob()
     else
-      blobs_diff[i] = make_blob(sys.backend, eltype(inputs[1]), size(inputs[1]))
+      blobs_diff[i] = make_blob(backend, eltype(inputs[1]), size(inputs[1]))
     end
   end
 
   return SplitLayerState{N}(layer, blobs, blobs_diff)
 end
-function shutdown(sys::System, state::SplitLayerState)
+function shutdown(backend::Backend, state::SplitLayerState)
   # some blobs are shared, but never mind, blob destroy function has
   # a guard that does not cause problems on double destroying
   map(destroy, state.blobs)
   map(destroy, state.blobs_diff)
 end
 
-function forward(sys::System, state::SplitLayerState, inputs::Vector{Blob})
+function forward(backend::Backend, state::SplitLayerState, inputs::Vector{Blob})
   # do nothing
 end
 
-function backward{N}(sys::System{CPUBackend}, state::SplitLayerState{N}, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward{N}(backend::CPUBackend, state::SplitLayerState{N}, inputs::Vector{Blob}, diffs::Vector{Blob})
   if !isa(diffs[1], NullBlob)
     diff = diffs[1]
     len = length(diff)

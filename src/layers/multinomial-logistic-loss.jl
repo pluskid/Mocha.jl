@@ -15,7 +15,7 @@ type MultinomialLogisticLossLayerState{T} <: LayerState
   weights_blob :: Blob
 end
 
-function setup(sys::System, layer::MultinomialLogisticLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
   width, height, channels, num = size(inputs[1])
 
@@ -43,16 +43,16 @@ function setup(sys::System, layer::MultinomialLogisticLossLayer, inputs::Vector{
       @assert layer.normalize == :no
     end
 
-    weights_blob = make_blob(sys.backend, reshape(weights, width,height,channels,1))
+    weights_blob = make_blob(backend, reshape(weights, width,height,channels,1))
   end
 
   state = MultinomialLogisticLossLayerState(layer, convert(data_type, 0), weights_blob)
   return state
 end
-function shutdown(sys::System, state::MultinomialLogisticLossLayerState)
+function shutdown(backend::Backend, state::MultinomialLogisticLossLayerState)
 end
 
-function forward(sys::System{CPUBackend}, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob})
+function forward(backend::CPUBackend, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob})
   pred = inputs[1].data
   label = inputs[2].data
   width, height, channels, num = size(pred)
@@ -71,6 +71,6 @@ function forward(sys::System{CPUBackend}, state::MultinomialLogisticLossLayerSta
   state.loss = loss / (width*height*num)
 end
 
-function backward(sys::System, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::Backend, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
 

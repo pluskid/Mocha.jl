@@ -12,7 +12,7 @@ type CropLayerState <: LayerState
   blobs      :: Vector{Blob}
 end
 
-function setup(sys::System, layer::CropLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::CropLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   for i = 1:length(inputs)
     if layer.crop_size[1] > get_width(inputs[i]) || layer.crop_size[2] > get_height(inputs[i])
       error("crop_size $(layer.crop_size) too large for blob $(layer.bottoms[i])")
@@ -22,13 +22,13 @@ function setup(sys::System, layer::CropLayer, inputs::Vector{Blob}, diffs::Vecto
     end
   end
 
-  blobs = Blob[make_blob(sys.backend, eltype(x),
+  blobs = Blob[make_blob(backend, eltype(x),
       (layer.crop_size[1], layer.crop_size[2], get_chann(x), get_num(x))) for x in inputs]
 
   return CropLayerState(layer, blobs)
 end
 
-function shutdown(sys::System, state::CropLayerState)
+function shutdown(backend::Backend, state::CropLayerState)
   map(destroy, state.blobs)
 end
 
@@ -63,7 +63,7 @@ function mirror_crop_blob{T}(input::Array{T}, output::Array{T}, crop_size::NTupl
   end
 end
 
-function forward(sys::System{CPUBackend}, state::CropLayerState, inputs::Vector{Blob})
+function forward(backend::CPUBackend, state::CropLayerState, inputs::Vector{Blob})
   crop_size = state.layer.crop_size
   for i = 1:length(inputs)
     input = inputs[i].data
@@ -83,7 +83,7 @@ function forward(sys::System{CPUBackend}, state::CropLayerState, inputs::Vector{
   end
 end
 
-function backward(sys::System, state::CropLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::Backend, state::CropLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   # backward for a crop layer could be implemented, but since crop layer is typically used
   # directly on top of a data layer, which does not need back propagation, we don't implement
   # backward for CropLayer

@@ -10,14 +10,12 @@ using Base.Test
 
 if test_cpu
   backend_cpu = CPUBackend()
-  sys_cpu     = System(backend_cpu)
-  init(sys_cpu)
+  init(backend_cpu)
 end
 
 if test_cudnn
   backend_cudnn = CuDNNBackend()
-  sys_cudnn     = System(backend_cudnn)
-  init(sys_cudnn)
+  init(backend_cudnn)
 end
 
 ############################################################

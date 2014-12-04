@@ -17,7 +17,7 @@ type PoolingLayerState <: LayerState
   etc        :: Any
 end
 
-function setup_etc(sys::System{CPUBackend}, layer::PoolingLayer, inputs,
+function setup_etc(backend::CPUBackend, layer::PoolingLayer, inputs,
     pooled_width, pooled_height)
 
   if isa(layer.pooling, Pooling.Max)
@@ -33,7 +33,7 @@ function setup_etc(sys::System{CPUBackend}, layer::PoolingLayer, inputs,
   return etc
 end
 
-function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::PoolingLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   width    = get_width(inputs[1])
   height   = get_height(inputs[1])
 
@@ -54,30 +54,30 @@ function setup(sys::System, layer::PoolingLayer, inputs::Vector{Blob}, diffs::Ve
   blobs = Array(Blob, length(inputs))
   blobs_diff = Array(Blob, length(inputs))
   for i = 1:length(inputs)
-    blobs[i] = make_blob(sys.backend,dtype,
+    blobs[i] = make_blob(backend,dtype,
         (pooled_width,pooled_height,get_chann(inputs[i]),get_num(inputs[i])))
     if isa(diffs[i], NullBlob)
       blobs_diff[i] = NullBlob() # don't need back propagation unless bottom layer want
     else
-      blobs_diff[i] = make_blob(sys.backend,dtype,
+      blobs_diff[i] = make_blob(backend,dtype,
           (pooled_width,pooled_height,get_chann(inputs[i]),get_num(inputs[i])))
     end
   end
 
-  etc = setup_etc(sys, layer, inputs, pooled_width, pooled_height)
+  etc = setup_etc(backend, layer, inputs, pooled_width, pooled_height)
   state = PoolingLayerState(layer, blobs, blobs_diff, etc)
 end
-function shutdown(sys::System{CPUBackend}, state::PoolingLayerState)
+function shutdown(backend::CPUBackend, state::PoolingLayerState)
   map(destroy, state.blobs)
   map(destroy, state.blobs_diff)
 end
 
 
-function forward(sys::System{CPUBackend}, state::PoolingLayerState, inputs::Vector{Blob})
-  forward(sys, state.layer.pooling, state, inputs)
+function forward(backend::CPUBackend, state::PoolingLayerState, inputs::Vector{Blob})
+  forward(backend, state.layer.pooling, state, inputs)
 end
 
-function forward(sys::System{CPUBackend}, pool::StdPoolingFunction, state::PoolingLayerState, inputs::Vector{Blob})
+function forward(backend::CPUBackend, pool::StdPoolingFunction, state::PoolingLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input = inputs[i].data
     output = state.blobs[i].data
@@ -92,11 +92,11 @@ function forward(sys::System{CPUBackend}, pool::StdPoolingFunction, state::Pooli
   end
 end
 
-function backward(sys::System{CPUBackend}, state::PoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  backward(sys, state.layer.pooling, state, inputs, diffs)
+function backward(backend::CPUBackend, state::PoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+  backward(backend, state.layer.pooling, state, inputs, diffs)
 end
 
-function backward(sys::System{CPUBackend}, pool::StdPoolingFunction, state::PoolingLayerState,
+function backward(backend::CPUBackend, pool::StdPoolingFunction, state::PoolingLayerState,
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   for i = 1:length(inputs)

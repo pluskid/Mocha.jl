@@ -22,7 +22,7 @@ type HDF5DataLayerState <: LayerState
   curr_index     :: Int
   shuffle_idx    :: Vector{Int}
 
-  HDF5DataLayerState(sys::System, layer::HDF5DataLayer) = begin
+  HDF5DataLayerState(backend::Backend, layer::HDF5DataLayer) = begin
     state = new(layer)
 
     sources = open(layer.source, "r") do s
@@ -54,9 +54,9 @@ type HDF5DataLayerState <: LayerState
       dims = tuple(dims[1:3]..., layer.batch_size)
 
       dset = state.dsets[i]
-      state.blobs[i] = make_blob(sys.backend, eltype(dset), dims)
+      state.blobs[i] = make_blob(backend, eltype(dset), dims)
 
-      state.trans[i] = [setup(sys, convert(DataTransformerType, t), state.blobs[i])
+      state.trans[i] = [setup(backend, convert(DataTransformerType, t), state.blobs[i])
           for (k,t) in filter(kt -> kt[1] == layer.tops[i], transformers)]
     end
     state.curr_index = 1
@@ -65,18 +65,18 @@ type HDF5DataLayerState <: LayerState
   end
 end
 
-function setup(sys::System, layer::HDF5DataLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::HDF5DataLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   @assert length(inputs) == 0
-  state = HDF5DataLayerState(sys, layer)
+  state = HDF5DataLayerState(backend, layer)
   return state
 end
-function shutdown(sys::System, state::HDF5DataLayerState)
+function shutdown(backend::Backend, state::HDF5DataLayerState)
   map(destroy, state.blobs)
-  map(ts -> map(t -> shutdown(sys, t), ts), state.trans)
+  map(ts -> map(t -> shutdown(backend, t), ts), state.trans)
   close(state.curr_hdf5_file)
 end
 
-function forward(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob})
+function forward(backend::Backend, state::HDF5DataLayerState, inputs::Vector{Blob})
   n_done = 0
   while n_done < state.layer.batch_size
     n_remain = size(state.dsets[1],4) - state.curr_index + 1
@@ -120,7 +120,7 @@ function forward(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob})
 
   for i = 1:length(state.blobs)
     for j = 1:length(state.trans[i])
-      forward(sys, state.trans[i][j], state.blobs[i])
+      forward(backend, state.trans[i][j], state.blobs[i])
     end
   end
 end
@@ -131,6 +131,6 @@ function set_blob_data(data::Array, blob::CPUBlob, blob_idx::Int)
   blob.data[idx_start+1:idx_start+length(data)] = data
 end
 
-function backward(sys::System, state::HDF5DataLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::Backend, state::HDF5DataLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
 

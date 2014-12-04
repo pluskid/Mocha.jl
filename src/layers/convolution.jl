@@ -30,7 +30,7 @@ type CPUConvState
   img_buffer      :: Array
 end
 
-function setup_etc(sys::System{CPUBackend}, layer::ConvolutionLayer, dtype, width, height,
+function setup_etc(backend::CPUBackend, layer::ConvolutionLayer, dtype, width, height,
     channels, batch_size, width_out, height_out, inputs)
 
   if layer.kernel[1] == 1 && layer.kernel[2] == 1 &&
@@ -43,7 +43,7 @@ function setup_etc(sys::System{CPUBackend}, layer::ConvolutionLayer, dtype, widt
   M = height_out * width_out
   N = div(layer.n_filter, layer.n_group)
   K = div(channels * layer.kernel[1] * layer.kernel[2], layer.n_group)
-  bias_multiplier = make_blob(sys.backend, dtype, M, 1, 1, 1)
+  bias_multiplier = make_blob(backend, dtype, M, 1, 1, 1)
   fill!(bias_multiplier, convert(dtype,1))
   img_buffer = Array(dtype, width, height, channels)
   etc = CPUConvState(col_buffer, M, N, K, bias_multiplier, img_buffer)
@@ -62,7 +62,7 @@ type ConvolutionLayerState <: LayerState
   bias    :: Blob
   ∇bias   :: Blob
 
-  ConvolutionLayerState(sys::System, layer::ConvolutionLayer, shared_state, inputs::Vector{Blob}) = begin
+  ConvolutionLayerState(backend::Backend, layer::ConvolutionLayer, shared_state, inputs::Vector{Blob}) = begin
     channels = get_chann(inputs[1])
     @assert channels % layer.n_group == 0
     @assert layer.n_filter % layer.n_group == 0
@@ -79,8 +79,8 @@ type ConvolutionLayerState <: LayerState
     blobs_diff = Array(Blob, length(inputs))
 
     for i = 1:length(inputs)
-      blobs[i] = make_blob(sys.backend, dtype, width_out, height_out, layer.n_filter, batch_size)
-      blobs_diff[i] = make_blob(sys.backend, dtype, width_out, height_out, layer.n_filter, batch_size)
+      blobs[i] = make_blob(backend, dtype, width_out, height_out, layer.n_filter, batch_size)
+      blobs_diff[i] = make_blob(backend, dtype, width_out, height_out, layer.n_filter, batch_size)
     end
 
     if isa(shared_state, ConvolutionLayerState)
@@ -88,23 +88,23 @@ type ConvolutionLayerState <: LayerState
       @assert eltype(shared_state.filter) == dtype
       @debug("Sharing filters and bias with an $(shared_state.layer.name)")
 
-      parameters = [make_shared_parameter(sys.backend, param) for param in shared_state.parameters]
+      parameters = [make_shared_parameter(backend, param) for param in shared_state.parameters]
       filter = parameters[1].blob
       ∇filter = parameters[1].gradient
       bias = parameters[2].blob
       ∇bias = parameters[2].gradient
     else
-      filter = make_blob(sys.backend, dtype, layer.kernel[1], layer.kernel[2],
+      filter = make_blob(backend, dtype, layer.kernel[1], layer.kernel[2],
           div(channels,layer.n_group), layer.n_filter)
-      ∇filter = make_blob(sys.backend, dtype, layer.kernel[1], layer.kernel[2],
+      ∇filter = make_blob(backend, dtype, layer.kernel[1], layer.kernel[2],
           div(channels,layer.n_group), layer.n_filter)
-      bias = make_blob(sys.backend, dtype, layer.n_filter, 1, 1, 1)
-      ∇bias = make_blob(sys.backend, dtype, layer.n_filter, 1, 1, 1)
+      bias = make_blob(backend, dtype, layer.n_filter, 1, 1, 1)
+      ∇bias = make_blob(backend, dtype, layer.n_filter, 1, 1, 1)
       parameters = [Parameter("filter", filter, ∇filter, layer.filter_init, layer.filter_regu, layer.filter_cons, layer.filter_lr),
                     Parameter("bias", bias, ∇bias, layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)]
     end
 
-    etc = setup_etc(sys, layer, dtype, width, height, channels, batch_size, width_out, height_out, inputs)
+    etc = setup_etc(backend, layer, dtype, width, height, channels, batch_size, width_out, height_out, inputs)
 
     state = new(layer, blobs, blobs_diff, parameters)
     state.filter = filter
@@ -127,20 +127,20 @@ type ConvolutionLayerState <: LayerState
   etc        :: Any # whatever status a computation backend needs to maintain
 end
 
-function setup(sys::System, layer::ConvolutionLayer, shared_state, inputs::Vector{Blob}, diffs::Vector{Blob})
-  return ConvolutionLayerState(sys, layer, shared_state, inputs)
+function setup(backend::Backend, layer::ConvolutionLayer, shared_state, inputs::Vector{Blob}, diffs::Vector{Blob})
+  return ConvolutionLayerState(backend, layer, shared_state, inputs)
 end
-function shutdown_etc(sys::System{CPUBackend}, state::ConvolutionLayerState)
+function shutdown_etc(backend::CPUBackend, state::ConvolutionLayerState)
 end
-function shutdown(sys::System, state::ConvolutionLayerState)
+function shutdown(backend::Backend, state::ConvolutionLayerState)
   map(destroy, state.blobs)
   map(destroy, state.blobs_diff)
   map(destroy, state.parameters)
 
-  shutdown_etc(sys, state)
+  shutdown_etc(backend, state)
 end
 
-function forward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs::Vector{Blob})
+function forward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input = inputs[i]
     output = state.blobs[i]
@@ -176,7 +176,7 @@ function forward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs::
   end
 end
 
-function backward(sys::System{CPUBackend}, state::ConvolutionLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   erase!(state.∇filter)
   erase!(state.∇bias)
   for i = 1:length(inputs)

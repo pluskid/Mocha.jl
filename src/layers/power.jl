@@ -16,25 +16,25 @@ type PowerLayerState <: LayerState
   blobs_diff :: Vector{Blob}
 end
 
-function setup(sys::System, layer::PowerLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  blobs = Blob[make_blob(sys.backend, eltype(x), size(x)) for x in inputs]
+function setup(backend::Backend, layer::PowerLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+  blobs = Blob[make_blob(backend, eltype(x), size(x)) for x in inputs]
   blobs_diff = Array(Blob, length(inputs))
   for i = 1:length(inputs)
     # if the bottom layer does not need back propagate, I don't need, either
     if isa(diffs[i], NullBlob)
       blobs_diff[i] = NullBlob()
     else
-      blobs_diff[i] = make_blob(sys.backend, eltype(inputs[i]), size(inputs[i]))
+      blobs_diff[i] = make_blob(backend, eltype(inputs[i]), size(inputs[i]))
     end
   end
   state = PowerLayerState(layer, blobs, blobs_diff)
 end
-function shutdown(sys::System, state::PowerLayerState)
+function shutdown(backend::Backend, state::PowerLayerState)
   map(destroy, state.blobs)
   map(destroy, state.blobs_diff)
 end
 
-function forward(sys::System{CPUBackend}, state::PowerLayerState, inputs::Vector{Blob})
+function forward(backend::CPUBackend, state::PowerLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input = inputs[i]
     output = state.blobs[i]
@@ -63,7 +63,7 @@ function forward(sys::System{CPUBackend}, state::PowerLayerState, inputs::Vector
   end
 end
 
-function backward(sys::System{CPUBackend}, state::PowerLayerState,
+function backward(backend::CPUBackend, state::PowerLayerState,
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   data_type = eltype(inputs[1])

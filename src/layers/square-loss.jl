@@ -17,18 +17,18 @@ type SquareLossLayerState{T} <: LayerState
   pred_copy :: Blob
 end
 
-function setup(sys::System, layer::SquareLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::SquareLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
-  pred_copy = make_blob(sys.backend, data_type, size(inputs[1])...)
+  pred_copy = make_blob(backend, data_type, size(inputs[1])...)
 
   state = SquareLossLayerState(layer, convert(data_type, 0), pred_copy)
   return state
 end
-function shutdown(sys::System, state::SquareLossLayerState)
+function shutdown(backend::Backend, state::SquareLossLayerState)
   destroy(state.pred_copy)
 end
 
-function forward(sys::System{CPUBackend}, state::SquareLossLayerState, inputs::Vector{Blob})
+function forward(backend::CPUBackend, state::SquareLossLayerState, inputs::Vector{Blob})
   pred  = inputs[1]
   label = inputs[2]
 
@@ -40,7 +40,7 @@ function forward(sys::System{CPUBackend}, state::SquareLossLayerState, inputs::V
   state.loss = 0.5/get_num(pred)*BLAS.dot(state.pred_copy.data, state.pred_copy.data)
 end
 
-function backward(sys::System{CPUBackend}, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CPUBackend, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   diff = diffs[1]
   if isa(diff, CPUBlob)
     pred  = inputs[1]
@@ -56,6 +56,6 @@ function backward(sys::System{CPUBackend}, state::SquareLossLayerState, inputs::
   end
 end
 
-function backward(sys::System, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::Backend, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
 

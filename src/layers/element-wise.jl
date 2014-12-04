@@ -32,18 +32,18 @@ type ElementWiseLayerState{Op<:ElementWiseFunctorType} <: LayerState
   blobs_diff :: Vector{Blob}
 end
 
-function setup(sys::System, layer::ElementWiseLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::ElementWiseLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   @assert all(map(i -> size(inputs[i]) == size(inputs[1]), 2:length(inputs)))
-  blobs = Blob[make_blob(sys.backend, eltype(inputs[1]), size(inputs[1]))]
+  blobs = Blob[make_blob(backend, eltype(inputs[1]), size(inputs[1]))]
   if all(map(b -> isa(b, NullBlob), diffs))
     blobs_diff = Blob[NullBlob()]
   else
-    blobs_diff = Blob[make_blob(sys.backend, eltype(inputs[1]), size(inputs[1]))]
+    blobs_diff = Blob[make_blob(backend, eltype(inputs[1]), size(inputs[1]))]
   end
 
   return ElementWiseLayerState{typeof(layer.operation)}(layer, blobs, blobs_diff)
 end
-function shutdown(sys::System, state::ElementWiseLayerState)
+function shutdown(backend::Backend, state::ElementWiseLayerState)
   map(destroy, state.blobs)
   map(destroy, state.blobs_diff)
 end
@@ -62,7 +62,7 @@ for (functor, op) in ((ElementWiseFunctors.Add, (+)),
         @inbounds output[i] = $op(input1[i], input2[i])
       end
     end
-    function forward(sys::System{CPUBackend}, state::ElementWiseLayerState{$functor},
+    function forward(backend::CPUBackend, state::ElementWiseLayerState{$functor},
         inputs::Vector{Blob})
 
       input1 = inputs[1].data
@@ -73,7 +73,7 @@ for (functor, op) in ((ElementWiseFunctors.Add, (+)),
   end
 end
 
-function backward(sys::System, state::ElementWiseLayerState{ElementWiseFunctors.Add},
+function backward(backend::Backend, state::ElementWiseLayerState{ElementWiseFunctors.Add},
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   for i = 1:length(diffs)
@@ -82,7 +82,7 @@ function backward(sys::System, state::ElementWiseLayerState{ElementWiseFunctors.
     end
   end
 end
-function backward(sys::System{CPUBackend}, state::ElementWiseLayerState{ElementWiseFunctors.Subtract},
+function backward(backend::CPUBackend, state::ElementWiseLayerState{ElementWiseFunctors.Subtract},
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   if !isa(diffs[1], NullBlob)
@@ -93,7 +93,7 @@ function backward(sys::System{CPUBackend}, state::ElementWiseLayerState{ElementW
     BLAS.scal!(length(diffs[2]), convert(eltype(diffs[2]),-1), diffs[2].data, 1)
   end
 end
-function backward(sys::System{CPUBackend}, state::ElementWiseLayerState{ElementWiseFunctors.Multiply},
+function backward(backend::CPUBackend, state::ElementWiseLayerState{ElementWiseFunctors.Multiply},
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   for i = 1:length(diffs)
@@ -103,7 +103,7 @@ function backward(sys::System{CPUBackend}, state::ElementWiseLayerState{ElementW
     end
   end
 end
-function backward(sys::System{CPUBackend}, state::ElementWiseLayerState{ElementWiseFunctors.Divide},
+function backward(backend::CPUBackend, state::ElementWiseLayerState{ElementWiseFunctors.Divide},
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   if !isa(diffs[1], NullBlob)
