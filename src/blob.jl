@@ -77,9 +77,6 @@ end
 function destroy(blob::NullBlob)
   # do nothing
 end
-function make_blob()
-  return NullBlob()
-end
 function make_blob(backend::Backend, data_type::Type, dims::Int...)
   make_blob(backend, data_type, dims)
 end
@@ -112,6 +109,18 @@ CPUBlob(t :: Type, dims::NTuple{4,Int}) = CPUBlob(Array(t, dims))
 function make_blob(backend::CPUBackend, data_type::Type, dims::NTuple{4,Int})
   return CPUBlob(data_type, dims)
 end
+
+function make_shared_blob{N}(backend::CPUBackend{N}, data_type::Type, dims::NTuple{4,Int})
+  return CPUBlob(SharedArray(data_type, dims, pids=backend.pids))
+end
+function make_shared_blob(backend::CPUBackend{1}, data_type::Type, dims::NTuple{4,Int})
+  # single process, fall back to ordinary blob
+  make_blob(backend, data_type, dims)
+end
+function make_shared_blob(backend::CPUBackend, data_type::Type, dims::Int...)
+  make_shared_blob(backend, data_type, dims)
+end
+
 function reshape_blob{T}(backend::CPUBackend, blob::CPUBlob{T}, dims::NTuple{4,Int})
   @assert prod(dims) == length(blob)
   return CPUBlob{T}(reshape(blob.data, dims))

@@ -53,19 +53,20 @@ type InnerProductLayerState <: LayerState
       @assert eltype(shared_state.W) == data_type
       @debug("Sharing weights and bias with $(shared_state.layer.name)")
 
-      state.parameters = [make_shared_parameter(backend, param) for param in shared_state.parameters]
-      state.W  = state.parameters[1].blob
-      state.∇W = state.parameters[1].gradient
-      state.b  = state.parameters[2].blob
-      state.∇b = state.parameters[2].gradient
+      param_weight, param_bias = [share_parameter(backend, param) for param in shared_state.parameters]
     else
-      state.W  = make_blob(backend, data_type, fea_size, out_dim, 1, 1)
-      state.∇W = make_blob(backend, data_type, fea_size, out_dim, 1, 1)
-      state.b  = make_blob(backend, data_type, out_dim, 1, 1, 1)
-      state.∇b = make_blob(backend, data_type, out_dim, 1, 1, 1)
-      state.parameters = [Parameter("weight", state.W, state.∇W, layer.weight_init, layer.weight_regu, layer.weight_cons, layer.weight_lr),
-                          Parameter("bias", state.b, state.∇b, layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)]
+      param_weight = make_parameter(backend, "weight", data_type, (fea_size,out_dim,1,1),
+          layer.weight_init, layer.weight_regu, layer.weight_cons, layer.weight_lr)
+      param_bias   = make_parameter(backend, "bias", data_type, (out_dim, 1, 1, 1),
+          layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)
     end
+
+    state.W  = param_weight.blob
+    state.∇W = param_weight.gradient
+    state.b  = param_bias.blob
+    state.∇b = param_bias.gradient
+    state.parameters = [param_weight, param_bias]
+
     state.bias_multiplier = make_blob(backend, data_type, nums, 1, 1, 1)
     fill!(state.bias_multiplier, 1)
 

@@ -88,21 +88,19 @@ type ConvolutionLayerState <: LayerState
       @assert eltype(shared_state.filter) == dtype
       @debug("Sharing filters and bias with an $(shared_state.layer.name)")
 
-      parameters = [make_shared_parameter(backend, param) for param in shared_state.parameters]
-      filter = parameters[1].blob
-      ∇filter = parameters[1].gradient
-      bias = parameters[2].blob
-      ∇bias = parameters[2].gradient
+      param_filter, param_bias = [share_parameter(backend, param) for param in shared_state.parameters]
     else
-      filter = make_blob(backend, dtype, layer.kernel[1], layer.kernel[2],
-          div(channels,layer.n_group), layer.n_filter)
-      ∇filter = make_blob(backend, dtype, layer.kernel[1], layer.kernel[2],
-          div(channels,layer.n_group), layer.n_filter)
-      bias = make_blob(backend, dtype, layer.n_filter, 1, 1, 1)
-      ∇bias = make_blob(backend, dtype, layer.n_filter, 1, 1, 1)
-      parameters = [Parameter("filter", filter, ∇filter, layer.filter_init, layer.filter_regu, layer.filter_cons, layer.filter_lr),
-                    Parameter("bias", bias, ∇bias, layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)]
+      param_filter = make_parameter(backend,"filter",dtype,(layer.kernel[1],layer.kernel[2],div(channels,layer.n_group), layer.n_filter),
+          layer.filter_init, layer.filter_regu, layer.filter_cons, layer.filter_lr)
+      param_bias   = make_parameter(backend,"bias",dtype,(layer.n_filter,1,1,1),
+          layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)
     end
+
+    filter     = param_filter.blob
+    ∇filter    = param_filter.gradient
+    bias       = param_bias.blob
+    ∇bias      = param_bias.gradient
+    parameters = [param_filter, param_bias]
 
     etc = setup_etc(backend, layer, dtype, width, height, channels, batch_size, width_out, height_out, inputs)
 
