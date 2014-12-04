@@ -58,9 +58,59 @@ function test_hdf5_data_layer(sys::System, T, eps)
   end
 end
 
+function test_hdf5_data_layer_shuffle(sys::System, batch_size, n, T)
+  println("-- Testing HDF5 Data Layer (shuffle,n=$n,b=$batch_size) on $(typeof(sys.backend)){$T}...")
+
+  # To test random shuffling, we generate a dataset containing integer 1:n.
+  # Then we run HDF5 layer n times forward, and collect all the output data.
+  # For each integer i in 1:n, it should show up exactly b times, where b
+  # is the batch size.
+
+  data = reshape(convert(Array{T}, collect(1:n)), 1, 1, 1, n)
+  h5fn = string(tempname(), ".hdf5")
+  h5open(h5fn, "w") do file
+    file["data"] = data
+  end
+
+  source_fn = string(tempname(), ".txt")
+  open(source_fn, "w") do file
+    println(file, h5fn)
+  end
+
+  layer = HDF5DataLayer(source=source_fn, tops=[:data], batch_size=batch_size, shuffle=true)
+  state = setup(sys, layer, Blob[], Blob[])
+
+  data_got_all = Int[]
+  data_got = zeros(T, 1, 1, 1, batch_size)
+  for i = 1:n
+    forward(sys, state, Blob[])
+    copy!(data_got, state.blobs[1])
+    append!(data_got_all, convert(Vector{Int}, data_got[:]))
+  end
+
+  for i = 1:n
+    @test sum(data_got_all .== i) == batch_size
+  end
+
+  if data_got_all[1:n] == collect(1:n)
+    println("WARNING: data not shuffled, is today a lucky day or is there a bug?")
+  end
+
+  shutdown(sys, state)
+  rm(source_fn)
+  rm(h5fn)
+end
+
+function test_hdf5_data_layer_shuffle(sys::System, T)
+  test_hdf5_data_layer_shuffle(sys, 2, 3, T)
+  test_hdf5_data_layer_shuffle(sys, 3, 2, T)
+end
+
 function test_hdf5_data_layer(sys::System)
   test_hdf5_data_layer(sys, Float32, 1e-5)
   test_hdf5_data_layer(sys, Float64, 1e-10)
+  test_hdf5_data_layer_shuffle(sys, Float32)
+  test_hdf5_data_layer_shuffle(sys, Float64)
 end
 
 if test_cpu
