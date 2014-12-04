@@ -31,4 +31,4 @@ CPUBackend(pids::Vector{Int}) = CPUBackend{length(pids)}(tuple(pids...))
 # This is forward declaration to allow some code to compile
 # (especially testing codes) even if CUDA module is completely
 # disabled. See test/layers/pooling.jl for example.
-abstract AbstractCuDNNBackend <: Backend
+abstract AbstractGPUBackend <: Backend

@@ -13,9 +13,9 @@ if test_cpu
   init(backend_cpu)
 end
 
-if test_cudnn
-  backend_cudnn = CuDNNBackend()
-  init(backend_cudnn)
+if test_gpu
+  backend_gpu = GPUBackend()
+  init(backend_gpu)
 end
 
 ############################################################
@@ -91,7 +91,7 @@ include("layers/multinomial-logistic-loss.jl")
 include("layers/softmax-loss.jl")
 
 if test_cudnn
-  shutdown(backend_cudnn)
+  shutdown(backend_gpu)
 end
 if test_cpu
   shutdown(backend_cpu)

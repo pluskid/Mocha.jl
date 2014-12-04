@@ -19,5 +19,5 @@ if test_cpu
   test_shared_blob(backend_cpu)
 end
 if test_cudnn
-  test_shared_blob(backend_cudnn)
+  test_shared_blob(backend_gpu)
 end

@@ -43,6 +43,6 @@ if test_cpu
   test_l2_constraint(backend_cpu)
 end
 if test_cudnn
-  test_l2_constraint(backend_cudnn)
+  test_l2_constraint(backend_gpu)
 end
 

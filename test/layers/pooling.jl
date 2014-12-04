@@ -147,5 +147,5 @@ if test_cpu
   test_pooling_layer(backend_cpu)
 end
 if test_cudnn
-  test_pooling_layer(backend_cudnn)
+  test_pooling_layer(backend_gpu)
 end

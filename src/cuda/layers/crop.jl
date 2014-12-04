@@ -1,4 +1,4 @@
-function forward(sys::System{CuDNNBackend}, state::CropLayerState, inputs::Vector{Blob})
+function forward(backend::GPUBackend, state::CropLayerState, inputs::Vector{Blob})
   crop_size = state.layer.crop_size
   for i = 1:length(inputs)
     input = inputs[i]
@@ -18,7 +18,7 @@ function forward(sys::System{CuDNNBackend}, state::CropLayerState, inputs::Vecto
     else
       mirror = false;
     end
-    padded2dense!(sys, output, input, (w_off, h_off), (w_off2, h_off2), mirror)
+    padded2dense!(backend, output, input, (w_off, h_off), (w_off2, h_off2), mirror)
   end
 end
 

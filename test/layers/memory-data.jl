@@ -51,6 +51,6 @@ if test_cpu
   test_memory_data_layer(backend_cpu)
 end
 if test_cudnn
-  test_memory_data_layer(backend_cudnn)
+  test_memory_data_layer(backend_gpu)
 end
 

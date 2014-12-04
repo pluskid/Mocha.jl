@@ -42,6 +42,6 @@ if test_cpu
   test_hdf5_output_layer(backend_cpu)
 end
 if test_cudnn
-  test_hdf5_output_layer(backend_cudnn)
+  test_hdf5_output_layer(backend_gpu)
 end
 

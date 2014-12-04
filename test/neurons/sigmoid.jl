@@ -33,6 +33,6 @@ if test_cpu
   test_sigmoid_neuron(backend_cpu)
 end
 if test_cudnn
-  test_sigmoid_neuron(backend_cudnn)
+  test_sigmoid_neuron(backend_gpu)
 end
 

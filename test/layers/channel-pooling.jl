@@ -114,5 +114,5 @@ if test_cpu
   test_channel_pooling_layer(backend_cpu)
 end
 if test_cudnn
-  test_channel_pooling_layer(backend_cudnn)
+  test_channel_pooling_layer(backend_gpu)
 end

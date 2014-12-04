@@ -1,4 +1,4 @@
-function forward(sys::System{CuDNNBackend}, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob})
+function forward(backend::GPUBackend, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob})
   pred      = inputs[1]
   label     = inputs[2]
   data_type = eltype(pred)
@@ -11,12 +11,12 @@ function forward(sys::System{CuDNNBackend}, state::MultinomialLogisticLossLayerS
   x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X))
   y_block = spatial_dim
 
-  loss_blob = make_zero_blob(sys.backend, Float32, 1, 1, 1, 1)
+  loss_blob = make_zero_blob(backend, Float32, 1, 1, 1, 1)
 
   if data_type == Float32
-    kernel = sys.backend.mocha.logistic_loss_forward_float
+    kernel = backend.mocha.logistic_loss_forward_float
   elseif data_type == Float64
-    kernel = sys.backend.mocha.logistic_loss_forward_double
+    kernel = backend.mocha.logistic_loss_forward_double
   else
     error("Unsupported data type $data_type")
   end

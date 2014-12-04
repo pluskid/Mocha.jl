@@ -35,6 +35,6 @@ if test_cpu
   test_argmax_layer(backend_cpu)
 end
 if test_cudnn
-  test_argmax_layer(backend_cudnn)
+  test_argmax_layer(backend_gpu)
 end
 

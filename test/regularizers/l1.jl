@@ -27,6 +27,6 @@ if test_cpu
   test_l1_regularizer(backend_cpu)
 end
 if test_cudnn
-  test_l1_regularizer(backend_cudnn)
+  test_l1_regularizer(backend_gpu)
 end
 

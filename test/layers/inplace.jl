@@ -99,6 +99,6 @@ if test_cpu
   test_inplace_layer(backend_cpu)
 end
 if test_cudnn
-  test_inplace_layer(backend_cudnn)
+  test_inplace_layer(backend_gpu)
 end
 

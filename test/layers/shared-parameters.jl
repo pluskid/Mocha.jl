@@ -47,5 +47,5 @@ if test_cpu
   test_shared_parameters_layers(backend_cpu)
 end
 if test_cudnn
-  test_shared_parameters_layers(backend_cudnn)
+  test_shared_parameters_layers(backend_gpu)
 end

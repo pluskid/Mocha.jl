@@ -34,7 +34,7 @@ if test_cpu
   test_relu_neuron(backend_cpu)
 end
 if test_cudnn
-  test_relu_neuron(backend_cudnn)
+  test_relu_neuron(backend_gpu)
 end
 
 
