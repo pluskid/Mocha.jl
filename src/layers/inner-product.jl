@@ -53,21 +53,21 @@ type InnerProductLayerState <: LayerState
       @assert eltype(shared_state.W) == data_type
       @debug("Sharing weights and bias with $(shared_state.layer.name)")
 
-      state.W  = shared_state.W
-      state.∇W = shared_state.∇W
-      state.b  = shared_state.b
-      state.∇b = shared_state.∇b
+      state.parameters = [make_shared_parameter(sys.backend, param) for param in shared_state.parameters]
+      state.W  = state.parameters[1].blob
+      state.∇W = state.parameters[1].gradient
+      state.b  = state.parameters[2].blob
+      state.∇b = state.parameters[2].gradient
     else
       state.W  = make_blob(sys.backend, data_type, fea_size, out_dim, 1, 1)
       state.∇W = make_blob(sys.backend, data_type, fea_size, out_dim, 1, 1)
       state.b  = make_blob(sys.backend, data_type, out_dim, 1, 1, 1)
       state.∇b = make_blob(sys.backend, data_type, out_dim, 1, 1, 1)
+      state.parameters = [Parameter("weight", state.W, state.∇W, layer.weight_init, layer.weight_regu, layer.weight_cons, layer.weight_lr),
+                          Parameter("bias", state.b, state.∇b, layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)]
     end
     state.bias_multiplier = make_blob(sys.backend, data_type, nums, 1, 1, 1)
     fill!(state.bias_multiplier, 1)
-
-    state.parameters = [Parameter("weight", state.W, state.∇W, layer.weight_init, layer.weight_regu, layer.weight_cons, layer.weight_lr),
-                        Parameter("bias", state.b, state.∇b, layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)]
 
     return state
   end
@@ -80,6 +80,7 @@ end
 function shutdown(sys::System, state::InnerProductLayerState)
   map(destroy, state.blobs)
   map(destroy, state.blobs_diff)
+  map(destroy, state.parameters)
 end
 
 function forward(sys::System{CPUBackend}, state::InnerProductLayerState, inputs::Vector{Blob})

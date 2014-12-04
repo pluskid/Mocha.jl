@@ -88,10 +88,11 @@ type ConvolutionLayerState <: LayerState
       @assert eltype(shared_state.filter) == dtype
       @debug("Sharing filters and bias with an $(shared_state.layer.name)")
 
-      filter = shared_state.filter
-      ∇filter = shared_state.∇filter
-      bias = shared_state.bias
-      ∇bias = shared_state.bias
+      parameters = [make_shared_parameter(sys.backend, param) for param in shared_state.parameters]
+      filter = parameters[1].blob
+      ∇filter = parameters[1].gradient
+      bias = parameters[2].blob
+      ∇bias = parameters[2].gradient
     else
       filter = make_blob(sys.backend, dtype, layer.kernel[1], layer.kernel[2],
           div(channels,layer.n_group), layer.n_filter)
@@ -99,12 +100,11 @@ type ConvolutionLayerState <: LayerState
           div(channels,layer.n_group), layer.n_filter)
       bias = make_blob(sys.backend, dtype, layer.n_filter, 1, 1, 1)
       ∇bias = make_blob(sys.backend, dtype, layer.n_filter, 1, 1, 1)
+      parameters = [Parameter("filter", filter, ∇filter, layer.filter_init, layer.filter_regu, layer.filter_cons, layer.filter_lr),
+                    Parameter("bias", bias, ∇bias, layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)]
     end
 
     etc = setup_etc(sys, layer, dtype, width, height, channels, batch_size, width_out, height_out, inputs)
-
-    parameters = [Parameter("filter", filter, ∇filter, layer.filter_init, layer.filter_regu, layer.filter_cons, layer.filter_lr),
-                  Parameter("bias", bias, ∇bias, layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)]
 
     state = new(layer, blobs, blobs_diff, parameters)
     state.filter = filter
@@ -135,10 +135,7 @@ end
 function shutdown(sys::System, state::ConvolutionLayerState)
   map(destroy, state.blobs)
   map(destroy, state.blobs_diff)
-  destroy(state.filter)
-  destroy(state.∇filter)
-  destroy(state.bias)
-  destroy(state.∇bias)
+  map(destroy, state.parameters)
 
   shutdown_etc(sys, state)
 end
