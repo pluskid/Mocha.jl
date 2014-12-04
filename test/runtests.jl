@@ -22,7 +22,7 @@ end
 # Utilities functions
 ############################################################
 include("utils/blas.jl")
-include("utils/shared-blob.jl")
+include("utils/blob-reshape.jl")
 
 if test_gpu
   include("cuda/padded-copy.jl")
