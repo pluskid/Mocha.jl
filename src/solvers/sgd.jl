@@ -46,14 +46,14 @@ function shutdown(sgd::SGD, i_state::SGDInternalState)
   map(x -> map(destroy, x), i_state.param_history)
 end
 
-function update_parameters(net::Net{CPUBackend}, solver::SGD, learning_rate, momentum, param_blob, hist_blob, gradient, data_type)
+function update_parameters{N}(net::Net{CPUBackend{N}}, solver::SGD, learning_rate, momentum, param_blob, hist_blob, gradient, data_type)
   # hist_blob = momentum * hist_blob
-  BLAS.scal!(length(hist_blob), convert(data_type, momentum), hist_blob.data, 1)
+  BLAS.scal!(length(hist_blob), convert(data_type, momentum), sdata(hist_blob.data), 1)
   # hist_blob = -learning_rate * gradient + hist_blob
-  BLAS.axpy!(length(hist_blob), convert(data_type, -learning_rate), gradient.data, 1, hist_blob.data, 1)
+  BLAS.axpy!(length(hist_blob), convert(data_type, -learning_rate), sdata(gradient.data), 1, sdata(hist_blob.data), 1)
 
   # update parameter
   # param_blob += hist_blob
-  BLAS.axpy!(length(hist_blob), convert(data_type, 1), hist_blob.data, 1, param_blob.data, 1)
+  BLAS.axpy!(length(hist_blob), convert(data_type, 1), sdata(hist_blob.data), 1, sdata(param_blob.data), 1)
 end
 

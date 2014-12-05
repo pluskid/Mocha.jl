@@ -22,20 +22,24 @@ end
 type CPUBackend{N} <: Backend
   param_registry :: ParameterRegistry
 
-  pids :: NTuple{N, Int}
+  pids :: Vector{Int}
 
-  CPUBackend(pids::NTuple{N,Int}) = begin
+  CPUBackend(pids::Vector{Int}) = begin
     for pid in pids
       if !in(pid, procs())
         error("$pid is not a valid process id")
       end
     end
+    pids = copy(pids)
+    if !in(myid(), pids)
+      push!(pids, myid())
+    end
     new(ParameterRegistry(), pids)
   end
 end
 
-CPUBackend() = CPUBackend{1}((myid(),))
-CPUBackend(pids::Vector{Int}) = CPUBackend{length(pids)}(tuple(pids...))
+CPUBackend() = CPUBackend{1}([myid()])
+CPUBackend(pids::Vector{Int}) = CPUBackend{length(pids)}(pids)
 
 # This is forward declaration to allow some code to compile
 # (especially testing codes) even if CUDA module is completely

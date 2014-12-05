@@ -170,11 +170,11 @@ function forward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vect
       for g = 1:state.layer.n_group
         RawBLAS.gemm!('N', 'N', state.etc.M, state.etc.N, state.etc.K, convert(dtype, 1),
             col_buffer + col_offset * (g-1),
-            convert(Ptr{dtype}, state.filter.data) + weight_offset * (g-1),
+            convert(Ptr{dtype}, pointer(state.filter.data)) + weight_offset * (g-1),
             convert(dtype, 0), output_ptr + top_offset * (g-1))
       end
       RawBLAS.gemm!('N', 'N', state.etc.M, state.layer.n_filter, 1, convert(dtype, 1),
-          state.etc.bias_multiplier.data, state.bias.data, convert(dtype, 1), output_ptr)
+          state.etc.bias_multiplier.data, pointer(state.bias.data), convert(dtype, 1), output_ptr)
     end
   end
 end
@@ -199,7 +199,7 @@ function backward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vec
       #----------------------------------------------
       # bias gradient
       RawBLAS.gemv!('T', state.etc.M, state.layer.n_filter, convert(dtype, 1), top_diff_ptr,
-          state.etc.bias_multiplier.data, convert(dtype, 1), state.∇bias.data)
+          state.etc.bias_multiplier.data, convert(dtype, 1), pointer(state.∇bias.data))
 
       #----------------------------------------------
       # filter gradient
@@ -215,7 +215,7 @@ function backward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vec
         RawBLAS.gemm!('T', 'N', state.etc.K, state.etc.N, state.etc.M, convert(dtype, 1),
             col_buffer + col_offset * (g-1),
             top_diff_ptr + top_offset * (g-1), convert(dtype, 1),
-            convert(Ptr{dtype}, state.∇filter.data) + weight_offset * (g-1))
+            convert(Ptr{dtype}, pointer(state.∇filter.data)) + weight_offset * (g-1))
       end
     end
 

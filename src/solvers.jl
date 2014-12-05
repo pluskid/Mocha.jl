@@ -259,6 +259,98 @@ function solve(solver::Solver, net::Net)
   shutdown(solver, i_state)
 end
 
+export parsolve
+# This function will be merged back to the ordinary solve after we
+# implemented data parallelism for GPU
+function parsolve{N}(solver::Solver, net::Net{CPUBackend{N}})
+  solver_state = SolverState()
+  solver_state = load_snapshot(net, solver_state, solver.params.load_from)
+  solver_state.learning_rate = get_learning_rate(solver.params.lr_policy, solver_state)
+  solver_state.momentum = get_momentum(solver.params.mom_policy, solver_state)
+
+  # we init network AFTER loading. If the parameters are loaded from file, the
+  # initializers will be automatically set to NullInitializer
+  init(net)
+
+  # Initial forward iteration
+  solver_state.obj_val = forward(net, solver.params.regu_coef)
+
+  @debug("Initializing coffee breaks")
+  setup(solver.coffee_lounge, solver_state, net)
+
+  # coffee break for iteration 0, before everything starts
+  check_coffee_break(solver.coffee_lounge, solver_state, net)
+
+  i_state = setup(solver, net, solver_state)
+  trainable_layers = filter(i -> isa(net.layers[i], TrainableLayer), 1:length(net.layers))
+
+  # create net on each workers
+  pids = net.backend.pids
+  @sync begin
+    nets = map(pids) do pid
+      if pid == myid()
+        net
+      else
+        remotecall(pid, Net, "$(net.name)-copy-on-$pid", net.backend, net.layers)
+      end
+    end
+  end
+
+  @debug("Entering solver loop")
+  do_backward = (net_ref, regu_coef) -> backward(fetch(net_ref), regu_coef)
+  do_forward = (net_ref, regu_coef) -> forward(fetch(net_ref), regu_coef)
+
+  update_iter() = solver_state.iter += 1
+  update_param() = begin
+    solver_state.learning_rate = get_learning_rate(solver.params.lr_policy, solver_state)
+    solver_state.momentum = get_momentum(solver.params.mom_policy, solver_state)
+
+    # note we use net instead of my_net, b/c this update is done in main process
+    update(solver, net, i_state, solver_state)
+
+    # apply weight constraints
+    for i in trainable_layers
+      for param in net.states[i].parameters
+        cons_every = param.constraint.every_n_iter
+        if cons_every > 0 && solver_state.iter % cons_every == 0
+          constrain!(net.backend, param.constraint, param.blob)
+        end
+      end
+    end
+  end
+  update_objval(objval) = solver_state.obj_val = objval
+
+  check_cbs() = check_coffee_break(solver.coffee_lounge, solver_state, net)
+  check_stop_cond() = stop_condition_satisfied(solver, solver_state, net)
+
+  @sync begin
+    for i_proc = 1:length(pids)
+      my_pid = pids[i_proc]
+      my_net = nets[i_proc]
+
+      if my_pid == myid() && length(pids) > 1
+        continue
+      end
+
+      @async begin
+        while true
+          update_iter()
+          remotecall_wait(my_pid, () -> backward(fetch(my_net), solver.params.regu_coef))
+          update_param()
+          update_objval(remotecall_fetch(my_pid, () -> forward(fetch(my_net), solver.params.regu_coef)))
+          check_cbs()
+          if check_stop_cond()
+            break
+          end
+        end
+      end
+    end
+  end
+
+  shutdown(solver.coffee_lounge, net)
+  shutdown(solver, i_state)
+end
+
 ############################################################
 # Specific Solvers
 ############################################################

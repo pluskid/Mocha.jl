@@ -98,10 +98,10 @@ function forward(backend::CPUBackend, state::InnerProductLayerState, inputs::Vec
     input = inputs[i]
     output = state.blobs[i]
     # output = W^T * X
-    BLAS.gemm!('T', 'N', convert(dtype, 1), reshape(state.W.data, (K,M)),
+    BLAS.gemm!('T', 'N', convert(dtype, 1), reshape(sdata(state.W.data), (K,M)),
                 reshape(input.data, (K,N)), convert(dtype, 0), reshape(output.data, (M,N)))
     # output += bias
-    BLAS.gemm!('N', 'N', convert(dtype, 1), reshape(state.b.data, (M,1)),
+    BLAS.gemm!('N', 'N', convert(dtype, 1), reshape(sdata(state.b.data), (M,1)),
                 reshape(state.bias_multiplier.data, (1,N)), convert(dtype, 1), reshape(output.data, (M,N)))
   end
 end
@@ -122,19 +122,19 @@ function backward(backend::CPUBackend, state::InnerProductLayerState, inputs::Ve
     ∂f_∂o = state.blobs_diff[i]
     BLAS.gemm!('N', 'T', convert(data_type, 1), reshape(input.data, (source_dim, batch_size)),
                reshape(∂f_∂o.data, (target_dim, batch_size)), zero_and_then_one,
-               reshape(state.∇W.data, (source_dim, target_dim)))
+               reshape(sdata(state.∇W.data), (source_dim, target_dim)))
 
     # ∂f/∂b = sum(∂f/∂o, 2)
     BLAS.gemm!('N', 'N', convert(data_type, 1), reshape(∂f_∂o.data, (target_dim, batch_size)),
                reshape(state.bias_multiplier.data, (batch_size, 1)), zero_and_then_one,
-               reshape(state.∇b.data, (target_dim, 1)))
+               reshape(sdata(state.∇b.data), (target_dim, 1)))
 
     zero_and_then_one = convert(data_type, 1)
 
     # if back propagate down
     if isa(diffs[i], CPUBlob)
       # ∂f/∂x = W * [∂f/∂o]
-      BLAS.gemm!('N', 'N', convert(data_type, 1), reshape(state.W.data, (source_dim, target_dim)),
+      BLAS.gemm!('N', 'N', convert(data_type, 1), reshape(sdata(state.W.data), (source_dim, target_dim)),
                  reshape(∂f_∂o.data, (target_dim, batch_size)), convert(data_type, 0),
                  reshape(diffs[i].data, (source_dim, batch_size)))
     end
