@@ -46,6 +46,10 @@ end
 function make_blob(backend::GPUBackend, data_type::Type, dims::NTuple{4,Int})
   return cudnn_make_tensor_blob(data_type, dims)
 end
+function make_shared_blob(backend::GPUBackend, data_type::Type, dims::NTuple{4,Int})
+  # TODO: implement this when we have multi-GPU mechanism
+  return make_blob(backend, data_type, dims)
+end
 function reshape_blob{T}(backend::GPUBackend, blob::CuTensorBlob{T}, dims::NTuple{4,Int})
   @assert prod(dims) == length(blob)
   return CuTensorBlob{T}(blob.ptr, dims, length(blob))
