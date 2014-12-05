@@ -23,7 +23,6 @@ else
 end
 
 include("backend.jl")
-include("system.jl")
 include("blob.jl")
 
 if Config.use_cuda

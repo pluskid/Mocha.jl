@@ -1,5 +1,5 @@
-function test_channel_pooling_layer(sys::System, pooling::PoolingFunction, T, eps)
-  println("-- Testing ChannelPooling($(typeof(pooling))) on $(typeof(sys.backend)){$T}...")
+function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, T, eps)
+  println("-- Testing ChannelPooling($(typeof(pooling))) on $(typeof(backend)){$T}...")
   println("    > Setup")
 
   width, height, channels, num = (2, 3, 7, 1)
@@ -12,13 +12,13 @@ function test_channel_pooling_layer(sys::System, pooling::PoolingFunction, T, ep
 
   input_dim = (width, height, channels, num)
   input = rand(T, input_dim)
-  inputs = Blob[make_blob(sys.backend, input)]
-  diffs = Blob[make_blob(sys.backend, input)]
+  inputs = Blob[make_blob(backend, input)]
+  diffs = Blob[make_blob(backend, input)]
 
-  state = setup(sys, layer, inputs, diffs)
+  state = setup(backend, layer, inputs, diffs)
 
   println("    > Forward")
-  forward(sys, state, inputs)
+  forward(backend, state, inputs)
 
   expected_output, payload = channel_pooling_forward(state, input)
   got_output = similar(expected_output)
@@ -28,14 +28,14 @@ function test_channel_pooling_layer(sys::System, pooling::PoolingFunction, T, ep
   println("    > Backward")
   top_diff = rand(T, size(state.blobs[1]))
   copy!(state.blobs_diff[1], top_diff)
-  backward(sys, state, inputs, diffs)
+  backward(backend, state, inputs, diffs)
 
   expected_output = channel_pooling_backward(state, input, top_diff, payload)
   got_output = similar(expected_output)
   copy!(got_output, diffs[1])
   @test all(-eps .< expected_output - got_output .< eps)
 
-  shutdown(sys, state)
+  shutdown(backend, state)
 end
 
 function channel_pooling_forward(state, input::Array)
@@ -100,19 +100,19 @@ function channel_pooling_backward(state, input::Array, diff::Array, payload::Any
   return gradient
 end
 
-function test_channel_pooling_layer(sys::System, T, eps)
-  test_channel_pooling_layer(sys, Pooling.Max(), T, eps)
-  test_channel_pooling_layer(sys, Pooling.Mean(), T, eps)
+function test_channel_pooling_layer(backend::Backend, T, eps)
+  test_channel_pooling_layer(backend, Pooling.Max(), T, eps)
+  test_channel_pooling_layer(backend, Pooling.Mean(), T, eps)
 end
 
-function test_channel_pooling_layer(sys::System)
-  test_channel_pooling_layer(sys, Float32, 1e-4)
-  test_channel_pooling_layer(sys, Float64, 1e-8)
+function test_channel_pooling_layer(backend::Backend)
+  test_channel_pooling_layer(backend, Float32, 1e-4)
+  test_channel_pooling_layer(backend, Float64, 1e-8)
 end
 
 if test_cpu
-  test_channel_pooling_layer(sys_cpu)
+  test_channel_pooling_layer(backend_cpu)
 end
-if test_cudnn
-  test_channel_pooling_layer(sys_cudnn)
+if test_gpu
+  test_channel_pooling_layer(backend_gpu)
 end

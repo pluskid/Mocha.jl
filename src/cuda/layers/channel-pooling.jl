@@ -1,4 +1,4 @@
-function setup_etc(sys::System{CuDNNBackend}, layer::ChannelPoolingLayer, inputs, pooled_chann)
+function setup_etc(backend::GPUBackend, layer::ChannelPoolingLayer, inputs, pooled_chann)
   if isa(layer.pooling, Pooling.Max)
     masks = Array(CuPtr, length(inputs))
     for i = 1:length(inputs)
@@ -18,7 +18,7 @@ function setup_etc(sys::System{CuDNNBackend}, layer::ChannelPoolingLayer, inputs
   end
   return etc
 end
-function shutdown_etc(sys::System{CuDNNBackend}, state::ChannelPoolingLayerState)
+function shutdown_etc(backend::GPUBackend, state::ChannelPoolingLayerState)
   if isa(state.layer.pooling, Pooling.Max)
     map(CUDA.free, state.etc)
   elseif isa(state.layer.pooling, Pooling.Mean)
@@ -28,10 +28,10 @@ function shutdown_etc(sys::System{CuDNNBackend}, state::ChannelPoolingLayerState
   end
 end
 
-function forward(sys::System{CuDNNBackend}, state::ChannelPoolingLayerState, inputs::Vector{Blob})
-  forward(sys, state.layer.pooling, state, inputs)
+function forward(backend::GPUBackend, state::ChannelPoolingLayerState, inputs::Vector{Blob})
+  forward(backend, state.layer.pooling, state, inputs)
 end
-function forward(sys::System{CuDNNBackend}, pool::StdPoolingFunction,
+function forward(backend::GPUBackend, pool::StdPoolingFunction,
     state::ChannelPoolingLayerState, inputs::Vector{Blob})
 
   for i = 1:length(inputs)
@@ -39,29 +39,29 @@ function forward(sys::System{CuDNNBackend}, pool::StdPoolingFunction,
     output = state.blobs[i]
 
     if isa(pool, Pooling.Max)
-      cuda_max_channel_pooling_forward(sys, input, output, state.etc[i], state.layer)
+      cuda_max_channel_pooling_forward(backend, input, output, state.etc[i], state.layer)
     elseif isa(pool, Pooling.Mean)
-      cuda_mean_channel_pooling_forward(sys, input, output, state.etc[i], state.layer)
+      cuda_mean_channel_pooling_forward(backend, input, output, state.etc[i], state.layer)
     else
       error("Pooling for $pool not implemented yet")
     end
   end
 end
 
-function backward(sys::System{CuDNNBackend}, state::ChannelPoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  backward(sys, state.layer.pooling, state, inputs, diffs)
+function backward(backend::GPUBackend, state::ChannelPoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+  backward(backend, state.layer.pooling, state, inputs, diffs)
 end
 
-function backward(sys::System{CuDNNBackend}, pool::StdPoolingFunction, state::ChannelPoolingLayerState,
+function backward(backend::GPUBackend, pool::StdPoolingFunction, state::ChannelPoolingLayerState,
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   for i = 1:length(inputs)
     diff = diffs[i]
     if !isa(diff, NullBlob)
       if isa(pool, Pooling.Max)
-        cuda_max_channel_pooling_backward(sys, diff, state.blobs_diff[i], state.etc[i], state.layer)
+        cuda_max_channel_pooling_backward(backend, diff, state.blobs_diff[i], state.etc[i], state.layer)
       elseif isa(pool, Pooling.Mean)
-        cuda_mean_channel_pooling_backward(sys, diff, state.blobs_diff[i], state.layer)
+        cuda_mean_channel_pooling_backward(backend, diff, state.blobs_diff[i], state.layer)
       else
         error("Pooling for $pool not implemented yet")
       end
@@ -71,7 +71,7 @@ function backward(sys::System{CuDNNBackend}, pool::StdPoolingFunction, state::Ch
   end
 end
 
-function cuda_mean_channel_pooling_forward{T}(sys::System{CuDNNBackend}, input::CuTensorBlob{T},
+function cuda_mean_channel_pooling_forward{T}(backend::GPUBackend, input::CuTensorBlob{T},
     output::CuTensorBlob{T}, integral::CuPtr, layer)
 
   width, height, channels, num = size(input)
@@ -91,11 +91,11 @@ function cuda_mean_channel_pooling_forward{T}(sys::System{CuDNNBackend}, input::
     integral_ptr = convert(Ptr{T}, integral.p)
 
     # compute integral image
-    CuBLAS.copy(sys.backend.cublas_ctx, T, spatial_dim_T, input_ptr, 1, integral_ptr, 1)
+    CuBLAS.copy(backend.cublas_ctx, T, spatial_dim_T, input_ptr, 1, integral_ptr, 1)
     for c = 2:channels
-      CuBLAS.copy(sys.backend.cublas_ctx, T, spatial_dim_T, input_ptr + (c-1)*spatial_dim, 1,
+      CuBLAS.copy(backend.cublas_ctx, T, spatial_dim_T, input_ptr + (c-1)*spatial_dim, 1,
           integral_ptr + (c-1)*spatial_dim, 1)
-      CuBLAS.axpy(sys.backend.cublas_ctx, spatial_dim_T, one, integral_ptr + (c-2)*spatial_dim, 1,
+      CuBLAS.axpy(backend.cublas_ctx, spatial_dim_T, one, integral_ptr + (c-2)*spatial_dim, 1,
           integral_ptr + (c-1)*spatial_dim, 1)
     end
 
@@ -106,18 +106,18 @@ function cuda_mean_channel_pooling_forward{T}(sys::System{CuDNNBackend}, input::
 
       output_ptr_pc = output_ptr + (pc-1)*spatial_dim
 
-      CuBLAS.copy(sys.backend.cublas_ctx, T, spatial_dim_T, integral_ptr + (cend-1)*spatial_dim, 1,
+      CuBLAS.copy(backend.cublas_ctx, T, spatial_dim_T, integral_ptr + (cend-1)*spatial_dim, 1,
           output_ptr_pc, 1)
       if cstart > 1
-        CuBLAS.axpy(sys.backend.cublas_ctx, spatial_dim_T, neg_one,
+        CuBLAS.axpy(backend.cublas_ctx, spatial_dim_T, neg_one,
             integral_ptr + (cstart-2)*spatial_dim, 1, output_ptr_pc, 1)
       end
-      CuBLAS.scal(sys.backend.cublas_ctx, spatial_dim_T, scale, output_ptr_pc, 1)
+      CuBLAS.scal(backend.cublas_ctx, spatial_dim_T, scale, output_ptr_pc, 1)
     end
   end
 end
 
-function cuda_mean_channel_pooling_backward{T}(sys::System{CuDNNBackend}, input::CuTensorBlob{T},
+function cuda_mean_channel_pooling_backward{T}(backend::GPUBackend, input::CuTensorBlob{T},
     output::CuTensorBlob{T}, layer)
 
   width, height, channels, num = size(input)
@@ -142,7 +142,7 @@ function cuda_mean_channel_pooling_backward{T}(sys::System{CuDNNBackend}, input:
       output_ptr_pc = output_ptr + (pc-1)*spatial_dim
 
       for c = cstart:cend
-        CuBLAS.axpy(sys.backend.cublas_ctx, spatial_dim_T, scale, output_ptr_pc, 1,
+        CuBLAS.axpy(backend.cublas_ctx, spatial_dim_T, scale, output_ptr_pc, 1,
             input_ptr + (c-1)*spatial_dim, 1)
       end
     end
@@ -158,7 +158,7 @@ function cuda_geometry_max_chann_pool(sp_dim::Int, num::Int)
           (CUDA.THREADS_PER_BLOCK_X,1,CUDA.THREADS_PER_BLOCK_Z))
 
 end
-function cuda_max_channel_pooling_forward{T}(sys::System{CuDNNBackend}, input::CuTensorBlob{T},
+function cuda_max_channel_pooling_forward{T}(backend::GPUBackend, input::CuTensorBlob{T},
     output::CuTensorBlob{T}, mask::CuPtr, layer)
 
   width, height, channels, num = size(input)
@@ -167,9 +167,9 @@ function cuda_max_channel_pooling_forward{T}(sys::System{CuDNNBackend}, input::C
 
   cuda_dim = cuda_geometry_max_chann_pool(sp_dim, num);
   if T == Float32
-    kernel = sys.backend.mocha.max_channel_pooling_forward_float
+    kernel = backend.mocha.max_channel_pooling_forward_float
   elseif T == Float64
-    kernel = sys.backend.mocha.max_channel_pooling_forward_double
+    kernel = backend.mocha.max_channel_pooling_forward_double
   else
     error("Unsupported data type for channel pooling: $T")
   end
@@ -178,7 +178,7 @@ function cuda_max_channel_pooling_forward{T}(sys::System{CuDNNBackend}, input::C
       pooled_chann, layer.kernel, layer.stride, layer.pad[1]))
 end
 
-function cuda_max_channel_pooling_backward{T}(sys::System{CuDNNBackend}, input::CuTensorBlob{T},
+function cuda_max_channel_pooling_backward{T}(backend::GPUBackend, input::CuTensorBlob{T},
     output::CuTensorBlob{T}, mask::CuPtr, layer)
 
   width, height, channels, num = size(input)
@@ -187,9 +187,9 @@ function cuda_max_channel_pooling_backward{T}(sys::System{CuDNNBackend}, input::
 
   cuda_dim = cuda_geometry_max_chann_pool(sp_dim, num);
   if T == Float32
-    kernel = sys.backend.mocha.max_channel_pooling_backward_float
+    kernel = backend.mocha.max_channel_pooling_backward_float
   elseif T == Float64
-    kernel = sys.backend.mocha.max_channel_pooling_backward_double
+    kernel = backend.mocha.max_channel_pooling_backward_double
   else
     error("Unsupported data type for channel pooling: $T")
   end

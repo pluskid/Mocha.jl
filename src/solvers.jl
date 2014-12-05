@@ -242,7 +242,7 @@ function solve(solver::Solver, net::Net)
       for param in net.states[i].parameters
         cons_every = param.constraint.every_n_iter
         if cons_every > 0 && solver_state.iter % cons_every == 0
-          constrain!(net.sys, param.constraint, param.blob)
+          constrain!(net.backend, param.constraint, param.blob)
         end
       end
     end

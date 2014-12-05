@@ -8,12 +8,12 @@ export forward, backward
 # of ActivationFunction and should implement the following
 # methods.
 #
-# - forward(sys :: System, neuron :: MyActivationFunction, output :: Blob)
+# - forward(backend :: Backend, neuron :: MyActivationFunction, output :: Blob)
 #   Update the output blob by the activation function. Computation should be done in-place.
 #   Note we call is "output" because an activation function is applied to the "output" of
 #   a layer.
 #
-# - backward(sys :: System, neuron :: MyActivationFunction, output :: Blob, gradient :: Blob)
+# - backward(backend :: Backend, neuron :: MyActivationFunction, output :: Blob, gradient :: Blob)
 #   The gradient blob contains the gradient with respect to the output of the activation
 #   function, update (IN-PLACE) the gradient to be with respect to the output of the activation
 #   function.
@@ -43,22 +43,22 @@ end # module Neurons
 ############################################################
 # Identity
 ############################################################
-function forward(sys :: System, neuron :: Neurons.Identity, output :: Blob)
+function forward(backend :: Backend, neuron :: Neurons.Identity, output :: Blob)
   # do nothing
 end
-function backward(sys :: System, neuron :: Neurons.Identity, output :: Blob, gradient :: Blob)
+function backward(backend :: Backend, neuron :: Neurons.Identity, output :: Blob, gradient :: Blob)
   # do nothing
 end
 
 ############################################################
 # Rectified-Linear
 ############################################################
-function forward(sys :: System{CPUBackend}, neuron :: Neurons.ReLU, output :: Blob)
+function forward(backend :: CPUBackend, neuron :: Neurons.ReLU, output :: Blob)
   @simd for i = 1:length(output.data)
     @inbounds output.data[i] = max(0, output.data[i])
   end
 end
-function backward(sys :: System{CPUBackend}, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
+function backward(backend :: CPUBackend, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
   @simd for i = 1:length(output.data)
     @inbounds gradient.data[i] *= (output.data[i] > 0)
   end
@@ -67,13 +67,13 @@ end
 ############################################################
 # Sigmoid
 ############################################################
-function forward(sys :: System{CPUBackend}, neuron :: Neurons.Sigmoid, output :: Blob)
+function forward(backend :: CPUBackend, neuron :: Neurons.Sigmoid, output :: Blob)
   len = length(output)
   @simd for i = 1:len
     @inbounds output.data[i] = 1 / (1 + exp(-output.data[i]))
   end
 end
-function backward(sys :: System{CPUBackend}, neuron :: Neurons.Sigmoid, output :: Blob, gradient :: Blob)
+function backward(backend :: CPUBackend, neuron :: Neurons.Sigmoid, output :: Blob, gradient :: Blob)
   len = length(output)
   @simd for i = 1:len
     @inbounds gradient.data[i] *= output.data[i] * (1-output.data[i])

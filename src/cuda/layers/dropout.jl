@@ -1,8 +1,8 @@
-function setup_etc(sys::System{CuDNNBackend}, layer::DropoutLayer, inputs::Vector{Blob})
+function setup_etc(backend::GPUBackend, layer::DropoutLayer, inputs::Vector{Blob})
   cuda_rand_states = CuPtr
-  kernel = sys.backend.mocha.dropout_init
-  rnd_state_size_blob = make_blob(sys.backend, Float64, 1, 1, 1, 1)
-  CUDA.launch(sys.backend.mocha.dropout_alloc_size, 1, 1, (rnd_state_size_blob.ptr.p, ))
+  kernel = backend.mocha.dropout_init
+  rnd_state_size_blob = make_blob(backend, Float64, 1, 1, 1, 1)
+  CUDA.launch(backend.mocha.dropout_alloc_size, 1, 1, (rnd_state_size_blob.ptr.p, ))
   rnd_state_size = Float64[0]
   copy!(rnd_state_size, rnd_state_size_blob)
   destroy(rnd_state_size_blob)
@@ -16,18 +16,18 @@ function setup_etc(sys::System{CuDNNBackend}, layer::DropoutLayer, inputs::Vecto
   return cuda_rand_states
 end
 
-function destroy_etc(sys::System{CuDNNBackend}, state::DropoutLayerState)
+function destroy_etc(backend::GPUBackend, state::DropoutLayerState)
   CUDA.free(state.etc)
 end
 
-function forward(sys::System{CuDNNBackend}, state::DropoutLayerState, inputs::Vector{Blob})
+function forward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{Blob})
   len = length(inputs[1])
   x_block = int(ceil(float64(len)/CUDA.THREADS_PER_BLOCK_X))
   data_type = eltype(inputs[1])
   if data_type == Float32
-    kernel = sys.backend.mocha.dropout_forward_float
+    kernel = backend.mocha.dropout_forward_float
   elseif data_type == Float64
-    kernel = sys.backend.mocha.dropout_forward_double
+    kernel = backend.mocha.dropout_forward_double
   end
 
   CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X,
@@ -35,15 +35,15 @@ function forward(sys::System{CuDNNBackend}, state::DropoutLayerState, inputs::Ve
       state.rand_vals.ptr.p, state.ratio, state.scale))
 end
 
-function backward(sys::System{CuDNNBackend}, state::DropoutLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   if !isa(diffs[1], NullBlob)
     len = length(inputs[1])
     x_block = int(ceil(float64(len)/CUDA.THREADS_PER_BLOCK_X))
     data_type = eltype(inputs[1])
     if data_type == Float32
-      kernel = sys.backend.mocha.dropout_backward_float
+      kernel = backend.mocha.dropout_backward_float
     elseif data_type == Float64
-      kernel = sys.backend.mocha.dropout_backward_double
+      kernel = backend.mocha.dropout_backward_double
     end
 
     CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X,

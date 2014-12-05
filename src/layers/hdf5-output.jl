@@ -16,7 +16,7 @@ type HDF5OutputLayerState <: LayerState
   index  :: Int
 end
 
-function setup(sys::System, layer::HDF5OutputLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::HDF5OutputLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   if isfile(layer.filename)
     if !layer.force_overwrite
       error("HDF5OutputLayer: output file '$(layer.filename)' already exists")
@@ -45,7 +45,7 @@ function setup(sys::System, layer::HDF5OutputLayer, inputs::Vector{Blob}, diffs:
   return HDF5OutputLayerState(layer, file, buffer, dsets, 1)
 end
 
-function forward(sys::System, state::HDF5OutputLayerState, inputs::Vector{Blob})
+function forward(backend::Backend, state::HDF5OutputLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     copy!(state.buffer[i], inputs[i])
     width, height, channels, batch_size = size(state.buffer[i])
@@ -59,9 +59,9 @@ function forward(sys::System, state::HDF5OutputLayerState, inputs::Vector{Blob})
   state.index += 1
 end
 
-function backward(sys::System, state::HDF5OutputLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::Backend, state::HDF5OutputLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
 
-function shutdown(sys::System, state::HDF5OutputLayerState)
+function shutdown(backend::Backend, state::HDF5OutputLayerState)
   close(state.file)
 end

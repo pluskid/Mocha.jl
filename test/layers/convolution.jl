@@ -1,5 +1,5 @@
-function test_convolution_layer(sys::System, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, T, eps)
-  println("-- Testing Convolution on $(typeof(sys.backend)){$T} filter=$((filter_w,filter_h))...")
+function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, T, eps)
+  println("-- Testing Convolution on $(typeof(backend)){$T} filter=$((filter_w,filter_h))...")
   println("    > Setup")
   input_w = 16
   input_h = 10
@@ -16,13 +16,13 @@ function test_convolution_layer(sys::System, n_group, filter_w, filter_h, pad_w,
       tops=[:conv], bottoms=[:data])
 
   input = rand(T, input_dims)
-  inputs = Blob[make_blob(sys.backend, T, input_dims)]
+  inputs = Blob[make_blob(backend, T, input_dims)]
   copy!(inputs[1], input)
-  data_diffs = Blob[make_blob(sys.backend, T, size(input))]
+  data_diffs = Blob[make_blob(backend, T, size(input))]
 
-  state = setup(sys, layer, inputs, data_diffs)
+  state = setup(backend, layer, inputs, data_diffs)
 
-  #if isa(sys.backend, CuDNNBackend)
+  #if isa(backend, CuDNNBackend)
   #  # test that we are getting the correct output shape
   #  out_blob_dims = CuDNN.get_output_tensor4d_dim(state.etc.conv_desc[1], CuDNN.CUDNN_CONVOLUTION_FWD)
   #  @test out_blob_dims == (get_width(state.blobs[1]), get_height(state.blobs[1]), int(get_chann(state.blobs[1])/n_group), input_num)
@@ -34,7 +34,7 @@ function test_convolution_layer(sys::System, n_group, filter_w, filter_h, pad_w,
   bias = rand(T, bias_dims)
   copy!(state.bias, bias)
 
-  forward(sys, state, inputs)
+  forward(backend, state, inputs)
   expected_output = convolution_forward(state, filter, bias, input)
   @test size(expected_output) == size(state.blobs[1])
   got_output = similar(expected_output)
@@ -45,7 +45,7 @@ function test_convolution_layer(sys::System, n_group, filter_w, filter_h, pad_w,
   top_diff = rand(T, size(expected_output))
   copy!(state.blobs_diff[1], top_diff)
 
-  backward(sys, state, inputs, data_diffs)
+  backward(backend, state, inputs, data_diffs)
 
   gradients_expected = convolution_backward(state, filter, bias, input, top_diff)
   gradients_got = Array[similar(x) for x in gradients_expected]
@@ -59,7 +59,7 @@ function test_convolution_layer(sys::System, n_group, filter_w, filter_h, pad_w,
     @test all(-eps .< gradients_got[i] - gradients_expected[i] .< eps)
   end
 
-  shutdown(sys, state)
+  shutdown(backend, state)
 end
 
 # naive implementation of convolution forward, used to check the correctness
@@ -158,18 +158,18 @@ function convolution_backward(state, filter::Array, bias::Array, input::Array, t
   return (∇filter, ∇bias, ∇input)
 end
 
-function test_convolution_layer(sys::System, T, eps)
-  test_convolution_layer(sys, 2, 3, 4, 2, 2, 1, 2, T, eps)
-  test_convolution_layer(sys, 1, 1, 1, 0, 0, 1, 1, T, eps)
+function test_convolution_layer(backend::Backend, T, eps)
+  test_convolution_layer(backend, 2, 3, 4, 2, 2, 1, 2, T, eps)
+  test_convolution_layer(backend, 1, 1, 1, 0, 0, 1, 1, T, eps)
 end
 
-function test_convolution_layer(sys::System)
-  test_convolution_layer(sys, Float64, 1e-10)
-  test_convolution_layer(sys, Float32, 1e-2) # Float32 is sooo inaccurate?
+function test_convolution_layer(backend::Backend)
+  test_convolution_layer(backend, Float64, 1e-10)
+  test_convolution_layer(backend, Float32, 1e-2) # Float32 is sooo inaccurate?
 end
 if test_cpu
-  test_convolution_layer(sys_cpu)
+  test_convolution_layer(backend_cpu)
 end
-if test_cudnn
-  test_convolution_layer(sys_cudnn)
+if test_gpu
+  test_convolution_layer(backend_gpu)
 end

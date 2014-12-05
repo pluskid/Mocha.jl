@@ -9,19 +9,19 @@ type ArgmaxLayerState <: LayerState
   blobs :: Vector{Blob}
 end
 
-function setup(sys::System, layer::ArgmaxLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::ArgmaxLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   blobs = map(inputs) do input
     width, height, channels, num = size(input)
     data_type = eltype(input)
 
-    blob = make_blob(sys.backend, data_type, width, height, 1, num)
+    blob = make_blob(backend, data_type, width, height, 1, num)
     blob
   end
 
   return ArgmaxLayerState(layer, blobs)
 end
 
-function forward(sys::System{CPUBackend}, state::ArgmaxLayerState, inputs::Vector{Blob})
+function forward(backend::CPUBackend, state::ArgmaxLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input = inputs[i].data
     output = state.blobs[i].data
@@ -44,9 +44,9 @@ function forward(sys::System{CPUBackend}, state::ArgmaxLayerState, inputs::Vecto
   end
 end
 
-function backward(sys::System, state::ArgmaxLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::Backend, state::ArgmaxLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   # no backward for argmax layer
 end
 
-function shutdown(sys::System, state::ArgmaxLayerState)
+function shutdown(backend::Backend, state::ArgmaxLayerState)
 end

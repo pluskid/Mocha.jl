@@ -11,7 +11,7 @@ type CuDNNConvState
   bias_offset   :: Int
 end
 
-function setup_etc(sys::System{CuDNNBackend}, layer::ConvolutionLayer, dtype, width, height, channels,
+function setup_etc(backend::GPUBackend, layer::ConvolutionLayer, dtype, width, height, channels,
     batch_size, width_out, height_out, inputs)
 
   filter_desc = CuDNN.create_filter_descriptor(dtype, (layer.kernel[1], layer.kernel[2],
@@ -39,7 +39,7 @@ function setup_etc(sys::System{CuDNNBackend}, layer::ConvolutionLayer, dtype, wi
       bottom_offset, top_offset, weight_offset, bias_offset)
   return etc
 end
-function shutdown_etc(sys::System{CuDNNBackend}, state::ConvolutionLayerState)
+function shutdown_etc(backend::GPUBackend, state::ConvolutionLayerState)
   etc = state.etc
   CuDNN.destroy_filter_descriptor(etc.filter_desc)
   CuDNN.destroy_tensor4d_descriptor(etc.bias_desc)
@@ -48,7 +48,7 @@ function shutdown_etc(sys::System{CuDNNBackend}, state::ConvolutionLayerState)
   map(CuDNN.destroy_convolution_descriptor, etc.conv_desc)
 end
 
-function forward(sys::System{CuDNNBackend}, state::ConvolutionLayerState, inputs::Vector{Blob})
+function forward(backend::GPUBackend, state::ConvolutionLayerState, inputs::Vector{Blob})
   one = convert(eltype(inputs[1]), 1)
 
   for i = 1:length(inputs)
@@ -57,19 +57,19 @@ function forward(sys::System{CuDNNBackend}, state::ConvolutionLayerState, inputs
       output_ptr = CuPtr(state.blobs[i].ptr.p + state.etc.top_offset * (g-1))
       filter_ptr = CuPtr(state.filter.ptr.p + state.etc.weight_offset * (g-1))
 
-      CuDNN.convolution_forward(sys.backend.cudnn_ctx, state.etc.inputs_desc[i], input_ptr,
+      CuDNN.convolution_forward(backend.cudnn_ctx, state.etc.inputs_desc[i], input_ptr,
           state.etc.filter_desc, filter_ptr, state.etc.conv_desc[i],
           state.etc.outputs_desc[i], output_ptr, CuDNN.CUDNN_RESULT_NO_ACCUMULATE)
 
       # bias
-      CuDNN.add_tensor4d(sys.backend.cudnn_ctx, CuDNN.CUDNN_ADD_SAME_C, one,
+      CuDNN.add_tensor4d(backend.cudnn_ctx, CuDNN.CUDNN_ADD_SAME_C, one,
           state.etc.bias_desc, CuPtr(state.bias.ptr.p + state.etc.bias_offset * (g-1)),
           state.etc.outputs_desc[i], output_ptr)
     end
   end
 end
 
-function backward(sys::System{CuDNNBackend}, state::ConvolutionLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::GPUBackend, state::ConvolutionLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   erase!(state.∇filter)
   erase!(state.∇bias)
 
@@ -79,13 +79,13 @@ function backward(sys::System{CuDNNBackend}, state::ConvolutionLayerState, input
 
     for g = 1:state.layer.n_group
       # gradient w.r.t. bias
-      CuDNN.convolution_backward_bias(sys.backend.cudnn_ctx,
+      CuDNN.convolution_backward_bias(backend.cudnn_ctx,
           state.etc.outputs_desc[i], CuPtr(top_diff.ptr.p + state.etc.top_offset * (g-1)),
           state.etc.bias_desc, CuPtr(state.∇bias.ptr.p + state.etc.bias_offset * (g-1)),
           CuDNN.CUDNN_RESULT_ACCUMULATE)
 
       # gradient w.r.t. weights
-      CuDNN.convolution_backward_filter(sys.backend.cudnn_ctx,
+      CuDNN.convolution_backward_filter(backend.cudnn_ctx,
           state.etc.inputs_desc[i], CuPtr(bottom.ptr.p + state.etc.bottom_offset * (g-1)),
           state.etc.outputs_desc[i], CuPtr(top_diff.ptr.p + state.etc.top_offset * (g-1)),
           state.etc.conv_desc[i],
@@ -94,7 +94,7 @@ function backward(sys::System{CuDNNBackend}, state::ConvolutionLayerState, input
 
       # gradient w.r.t. bottom data
       if isa(diffs[i], CuTensorBlob)
-        CuDNN.convolution_backward_data(sys.backend.cudnn_ctx,
+        CuDNN.convolution_backward_data(backend.cudnn_ctx,
             state.etc.filter_desc, CuPtr(state.filter.ptr.p + state.etc.weight_offset * (g-1)),
             state.etc.outputs_desc[i], CuPtr(top_diff.ptr.p + state.etc.top_offset * (g-1)),
             state.etc.conv_desc[i],

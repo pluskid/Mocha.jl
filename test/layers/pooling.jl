@@ -1,5 +1,5 @@
-function test_pooling_layer(sys::System, pooling::PoolingFunction, has_padding::Bool, T, eps)
-  println("-- Testing Pooling($(typeof(pooling))) on $(typeof(sys.backend)){$T}...")
+function test_pooling_layer(backend::Backend, pooling::PoolingFunction, has_padding::Bool, T, eps)
+  println("-- Testing Pooling($(typeof(pooling))) on $(typeof(backend)){$T}...")
   println("    > Setup")
 
   if has_padding
@@ -23,14 +23,14 @@ function test_pooling_layer(sys::System, pooling::PoolingFunction, has_padding::
 
   input_dims = (input_w, input_h, input_chann, input_num)
   input = rand(T, input_dims)
-  inputs = Blob[make_blob(sys.backend, T, input_dims)]
-  diffs = Blob[make_blob(sys.backend, T, input_dims)]
+  inputs = Blob[make_blob(backend, T, input_dims)]
+  diffs = Blob[make_blob(backend, T, input_dims)]
   copy!(inputs[1], input)
 
-  state = setup(sys, layer, inputs, diffs)
+  state = setup(backend, layer, inputs, diffs)
 
   println("    > Forward")
-  forward(sys, state, inputs)
+  forward(backend, state, inputs)
 
   expected_output, payload = pooling_forward(state, input)
   got_output = similar(expected_output)
@@ -41,14 +41,14 @@ function test_pooling_layer(sys::System, pooling::PoolingFunction, has_padding::
   top_diff = rand(T, size(state.blobs[1]))
   copy!(state.blobs_diff[1], top_diff)
 
-  backward(sys, state, inputs, diffs)
+  backward(backend, state, inputs, diffs)
 
   expected_grad = pooling_backward(state, input, top_diff, payload)
   got_grad = similar(expected_grad)
   copy!(got_grad, diffs[1])
   @test all(-eps .< expected_grad - got_grad .< eps)
 
-  shutdown(sys, state)
+  shutdown(backend, state)
 end
 
 function pooling_forward(state, input::Array)
@@ -131,21 +131,21 @@ function pooling_backward(state, input::Array, diff::Array, payload::Any)
   return gradient
 end
 
-function test_pooling_layer(sys::System, T, eps)
-  test_pooling_layer(sys, Pooling.Max(), false, T, eps)
-  test_pooling_layer(sys, Pooling.Mean(), false, T, eps)
-  test_pooling_layer(sys, Pooling.Max(), true, T, eps)
-  test_pooling_layer(sys, Pooling.Mean(), true, T, eps)
+function test_pooling_layer(backend::Backend, T, eps)
+  test_pooling_layer(backend, Pooling.Max(), false, T, eps)
+  test_pooling_layer(backend, Pooling.Mean(), false, T, eps)
+  test_pooling_layer(backend, Pooling.Max(), true, T, eps)
+  test_pooling_layer(backend, Pooling.Mean(), true, T, eps)
 end
 
-function test_pooling_layer(sys::System)
-  test_pooling_layer(sys, Float64, 1e-10)
-  test_pooling_layer(sys, Float32, 1e-3)
+function test_pooling_layer(backend::Backend)
+  test_pooling_layer(backend, Float64, 1e-10)
+  test_pooling_layer(backend, Float32, 1e-3)
 end
 
 if test_cpu
-  test_pooling_layer(sys_cpu)
+  test_pooling_layer(backend_cpu)
 end
-if test_cudnn
-  test_pooling_layer(sys_cudnn)
+if test_gpu
+  test_pooling_layer(backend_gpu)
 end

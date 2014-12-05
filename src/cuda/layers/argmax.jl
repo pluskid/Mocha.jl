@@ -1,4 +1,4 @@
-function forward(sys::System{CuDNNBackend}, state::ArgmaxLayerState, inputs::Vector{Blob})
+function forward(backend::GPUBackend, state::ArgmaxLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input = inputs[i]
     output = state.blobs[i]
@@ -11,9 +11,9 @@ function forward(sys::System{CuDNNBackend}, state::ArgmaxLayerState, inputs::Vec
     y_block = int(ceil(float64(spatial_dim)/CUDA.THREADS_PER_BLOCK_Y));
 
     if data_type == Float32
-      kernel = sys.backend.mocha.argmax_forward_float
+      kernel = backend.mocha.argmax_forward_float
     elseif data_type == Float64
-      kernel = sys.backend.mocha.argmax_forward_double
+      kernel = backend.mocha.argmax_forward_double
     else
       error("Unsupported data type $data_type")
     end

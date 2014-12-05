@@ -14,7 +14,7 @@ type MemoryDataLayerState <: LayerState
 
   curr_idx :: Int
 
-  MemoryDataLayerState(sys::System, layer::MemoryDataLayer) = begin
+  MemoryDataLayerState(backend::Backend, layer::MemoryDataLayer) = begin
     blobs = Array(Blob, length(layer.tops))
     trans = Array(Vector{DataTransformerState}, length(layer.tops))
     transformers = convert(Vector{(Symbol, DataTransformerType)}, layer.transformers)
@@ -22,8 +22,8 @@ type MemoryDataLayerState <: LayerState
       dims = tuple(size(layer.data[i])[1:3]..., layer.batch_size)
       idxs = map(x -> 1:x, dims)
 
-      blobs[i] = make_blob(sys.backend, eltype(layer.data[i]), dims...)
-      trans[i] = [setup(sys, convert(DataTransformerType, t), blobs[i])
+      blobs[i] = make_blob(backend, eltype(layer.data[i]), dims...)
+      trans[i] = [setup(backend, convert(DataTransformerType, t), blobs[i])
           for (k,t) in filter(kt -> kt[1] == layer.tops[i], transformers)]
     end
 
@@ -31,7 +31,7 @@ type MemoryDataLayerState <: LayerState
   end
 end
 
-function setup(sys::System, layer::MemoryDataLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::MemoryDataLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   @assert length(inputs) == 0
   for i = 1:length(layer.data)
     dims = size(layer.data[i])
@@ -42,15 +42,15 @@ function setup(sys::System, layer::MemoryDataLayer, inputs::Vector{Blob}, diffs:
       layer.data[i] = reshape(layer.data[i], dims)
     end
   end
-  state = MemoryDataLayerState(sys, layer)
+  state = MemoryDataLayerState(backend, layer)
   return state
 end
-function shutdown(sys::System, state::MemoryDataLayerState)
+function shutdown(backend::Backend, state::MemoryDataLayerState)
   map(destroy, state.blobs)
-  map(ts -> map(t -> shutdown(sys, t), ts), state.trans)
+  map(ts -> map(t -> shutdown(backend, t), ts), state.trans)
 end
 
-function forward(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob})
+function forward(backend::Backend, state::MemoryDataLayerState, inputs::Vector{Blob})
   n_done = 0
   while n_done < state.layer.batch_size
     n_remain = size(state.layer.data[1], 4) - state.curr_idx + 1
@@ -76,11 +76,11 @@ function forward(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob})
 
   for i = 1:length(state.blobs)
     for j = 1:length(state.trans[i])
-      forward(sys, state.trans[i][j], state.blobs[i])
+      forward(backend, state.trans[i][j], state.blobs[i])
     end
   end
 end
 
-function backward(sys::System, state::MemoryDataLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::Backend, state::MemoryDataLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
 

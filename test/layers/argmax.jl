@@ -1,16 +1,16 @@
-function test_argmax_layer(sys::System, T, eps)
-  println("-- Testing ArgmaxLayer on $(typeof(sys.backend)){$T}...")
+function test_argmax_layer(backend::Backend, T, eps)
+  println("-- Testing ArgmaxLayer on $(typeof(backend)){$T}...")
 
   width, height, channels, num = (3,4,5,6)
   input = rand(T, width, height, channels, num)
-  input_blob = make_blob(sys.backend, input)
+  input_blob = make_blob(backend, input)
 
   println("    > Setup")
   layer = ArgmaxLayer(bottoms=[:input], tops=[:output])
-  state = setup(sys, layer, Blob[input_blob], Blob[NullBlob()])
+  state = setup(backend, layer, Blob[input_blob], Blob[NullBlob()])
 
   println("    > Forward")
-  forward(sys, state, Blob[input_blob])
+  forward(backend, state, Blob[input_blob])
   got_output = zeros(T, width, height, 1, num)
   expected_output = similar(got_output)
   for n = 1:num
@@ -24,17 +24,17 @@ function test_argmax_layer(sys::System, T, eps)
   copy!(got_output, state.blobs[1])
   @test all(abs(got_output - expected_output) .< eps)
 
-  shutdown(sys, state)
+  shutdown(backend, state)
 end
-function test_argmax_layer(sys::System)
-  test_argmax_layer(sys, Float64, 1e-10)
-  test_argmax_layer(sys, Float32, 1e-10)
+function test_argmax_layer(backend::Backend)
+  test_argmax_layer(backend, Float64, 1e-10)
+  test_argmax_layer(backend, Float32, 1e-10)
 end
 
 if test_cpu
-  test_argmax_layer(sys_cpu)
+  test_argmax_layer(backend_cpu)
 end
-if test_cudnn
-  test_argmax_layer(sys_cudnn)
+if test_gpu
+  test_argmax_layer(backend_gpu)
 end
 

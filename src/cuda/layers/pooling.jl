@@ -9,7 +9,7 @@ type CuDNNPoolingState
   padded_blobs_diff :: Vector{Blob}
 end
 
-function setup_etc(sys::System{CuDNNBackend}, layer::PoolingLayer, inputs,
+function setup_etc(backend::GPUBackend, layer::PoolingLayer, inputs,
     pooled_width, pooled_height)
 
   dtype = eltype(inputs[1])
@@ -45,9 +45,9 @@ function setup_etc(sys::System{CuDNNBackend}, layer::PoolingLayer, inputs,
     padded_blobs = Array(Blob, length(inputs))
     padded_blobs_diff = Array(Blob, length(inputs))
     for i = 1:length(inputs)
-      padded_blobs[i] = make_blob(sys.backend, dtype, padded_width, padded_height,
+      padded_blobs[i] = make_blob(backend, dtype, padded_width, padded_height,
           get_chann(inputs[i]), get_num(inputs[i]))
-      padded_blobs_diff[i] = make_blob(sys.backend, dtype, padded_width, padded_height,
+      padded_blobs_diff[i] = make_blob(backend, dtype, padded_width, padded_height,
           get_chann(inputs[i]), get_num(inputs[i]))
 
       inputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype,
@@ -61,7 +61,7 @@ function setup_etc(sys::System{CuDNNBackend}, layer::PoolingLayer, inputs,
   return etc
 end
 
-function shutdown(sys::System{CuDNNBackend}, state::PoolingLayerState)
+function shutdown(backend::GPUBackend, state::PoolingLayerState)
   map(destroy, state.blobs)
   map(destroy, state.blobs_diff)
   CuDNN.destroy_pooling_descriotpr(state.etc.pooling_desc)
@@ -71,7 +71,7 @@ function shutdown(sys::System{CuDNNBackend}, state::PoolingLayerState)
   map(destroy, state.etc.padded_blobs_diff)
 end
 
-function forward(sys::System{CuDNNBackend}, state::PoolingLayerState, inputs::Vector{Blob})
+function forward(backend::GPUBackend, state::PoolingLayerState, inputs::Vector{Blob})
   layer = state.layer
   if layer.pad[1] > 0 || layer.pad[2] > 0
     # TODO: remove this when CuDNN support pooling with padding
@@ -80,40 +80,40 @@ function forward(sys::System{CuDNNBackend}, state::PoolingLayerState, inputs::Ve
       padded_input = state.etc.padded_blobs[i]
       erase!(padded_input)
 
-      dense2padded!(sys, padded_input, input, layer.pad)
+      dense2padded!(backend, padded_input, input, layer.pad)
 
-      CuDNN.pooling_forward(sys.backend.cudnn_ctx, state.etc.pooling_desc,
+      CuDNN.pooling_forward(backend.cudnn_ctx, state.etc.pooling_desc,
           state.etc.inputs_desc[i], padded_input.ptr,
           state.etc.outputs_desc[i], state.blobs[i].ptr)
     end
   else
     for i = 1:length(inputs)
-      CuDNN.pooling_forward(sys.backend.cudnn_ctx, state.etc.pooling_desc,
+      CuDNN.pooling_forward(backend.cudnn_ctx, state.etc.pooling_desc,
           state.etc.inputs_desc[i], inputs[i].ptr,
           state.etc.outputs_desc[i], state.blobs[i].ptr)
     end
   end
 end
 
-function backward(sys::System{CuDNNBackend}, state::PoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::GPUBackend, state::PoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   layer = state.layer
   if layer.pad[1] > 0 || layer.pad[2] > 0
     # TODO: remove this when CuDNN support pooling with padding
     for i = 1:length(inputs)
       if isa(diffs[i], CuTensorBlob)
-        CuDNN.pooling_backward(sys.backend.cudnn_ctx, state.etc.pooling_desc,
+        CuDNN.pooling_backward(backend.cudnn_ctx, state.etc.pooling_desc,
             state.etc.outputs_desc[i], state.blobs[i].ptr,
             state.etc.outputs_desc[i], state.blobs_diff[i].ptr,
             state.etc.inputs_desc[i], state.etc.padded_blobs[i].ptr,
             state.etc.inputs_desc[i], state.etc.padded_blobs_diff[i].ptr)
 
-        padded2dense!(sys, diffs[i], state.etc.padded_blobs_diff[i], layer.pad)
+        padded2dense!(backend, diffs[i], state.etc.padded_blobs_diff[i], layer.pad)
       end
     end
   else
     for i = 1:length(inputs)
       if isa(diffs[i], CuTensorBlob)
-        CuDNN.pooling_backward(sys.backend.cudnn_ctx, state.etc.pooling_desc,
+        CuDNN.pooling_backward(backend.cudnn_ctx, state.etc.pooling_desc,
             state.etc.outputs_desc[i], state.blobs[i].ptr,
             state.etc.outputs_desc[i], state.blobs_diff[i].ptr,
             state.etc.inputs_desc[i], inputs[i].ptr,

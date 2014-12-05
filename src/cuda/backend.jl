@@ -1,4 +1,4 @@
-export CuDNNBackend
+export GPUBackend
 
 type MochaKernels
   mod :: CUDA.CuModule
@@ -147,18 +147,19 @@ function shutdown(mocha :: MochaKernels)
   CUDA.unload(mocha.mod)
 end
 
-type CuDNNBackend <: AbstractCuDNNBackend
-  initialized:: Bool
-  cu_ctx     :: CUDA.CuContext
-  cublas_ctx :: CuBLAS.Handle
-  cudnn_ctx  :: CuDNN.Handle
+type GPUBackend <: AbstractGPUBackend
+  param_registry :: ParameterRegistry
+  initialized    :: Bool
+  cu_ctx         :: CUDA.CuContext
+  cublas_ctx     :: CuBLAS.Handle
+  cudnn_ctx      :: CuDNN.Handle
 
-  mocha      :: MochaKernels
+  mocha          :: MochaKernels
 
-  CuDNNBackend() = new(false) # everything will be initialized later
+  GPUBackend() = new(ParameterRegistry(), false) # everything will be initialized later
 end
 
-function init(backend::CuDNNBackend)
+function init(backend::GPUBackend)
   @assert backend.initialized == false
 
   @info("Initializing CuDNN backend...")
@@ -172,7 +173,7 @@ function init(backend::CuDNNBackend)
   info("CuDNN backend initialized!")
 end
 
-function shutdown(backend::CuDNNBackend)
+function shutdown(backend::GPUBackend)
   @assert backend.initialized == true
 
   @info("Shutting down CuDNN backend...")

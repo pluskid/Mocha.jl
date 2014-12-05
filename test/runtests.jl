@@ -1,7 +1,7 @@
 if haskey(ENV, "MOCHA_USE_CUDA")
-  const test_cudnn = true
+  const test_gpu = true
 else
-  const test_cudnn = false
+  const test_gpu = false
 end
 const test_cpu   = true
 
@@ -10,23 +10,21 @@ using Base.Test
 
 if test_cpu
   backend_cpu = CPUBackend()
-  sys_cpu     = System(backend_cpu)
-  init(sys_cpu)
+  init(backend_cpu)
 end
 
-if test_cudnn
-  backend_cudnn = CuDNNBackend()
-  sys_cudnn     = System(backend_cudnn)
-  init(sys_cudnn)
+if test_gpu
+  backend_gpu = GPUBackend()
+  init(backend_gpu)
 end
 
 ############################################################
 # Utilities functions
 ############################################################
 include("utils/blas.jl")
-include("utils/shared-blob.jl")
+include("utils/blob-reshape.jl")
 
-if test_cudnn
+if test_gpu
   include("cuda/padded-copy.jl")
   include("cuda/cuvec.jl")
   include("cuda/mocha.jl")
@@ -92,9 +90,9 @@ include("layers/square-loss.jl")
 include("layers/multinomial-logistic-loss.jl")
 include("layers/softmax-loss.jl")
 
-if test_cudnn
-  shutdown(sys_cudnn)
+if test_gpu
+  shutdown(backend_gpu)
 end
 if test_cpu
-  shutdown(sys_cpu)
+  shutdown(backend_cpu)
 end

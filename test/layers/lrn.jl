@@ -1,18 +1,18 @@
-function test_lrn_layer(sys::System, mode::LRNModeType, T, eps)
-  println("-- Testing LRN($(typeof(mode))) on $(typeof(sys.backend)){$T}...")
+function test_lrn_layer(backend::Backend, mode::LRNModeType, T, eps)
+  println("-- Testing LRN($(typeof(mode))) on $(typeof(backend)){$T}...")
   println("    > Setup")
 
   input = rand(T, 7,8,9,10)
-  input_blobs = Blob[make_blob(sys.backend, input)]
-  diff_blobs = Blob[make_blob(sys.backend, input)]
+  input_blobs = Blob[make_blob(backend, input)]
+  diff_blobs = Blob[make_blob(backend, input)]
 
   layer = LRNLayer(tops=[:output],bottoms=[:input], mode=mode)
-  state = setup(sys, layer, input_blobs, diff_blobs)
+  state = setup(backend, layer, input_blobs, diff_blobs)
 
   @test size(state.blobs[1]) == size(input)
 
   println("    > Forward")
-  forward(sys, state, input_blobs)
+  forward(backend, state, input_blobs)
   expected_output = lrn_forward(input, state)
   got_output = similar(input)
   copy!(got_output, state.blobs[1])
@@ -22,13 +22,13 @@ function test_lrn_layer(sys::System, mode::LRNModeType, T, eps)
   #top_diff = float(int(100*rand(size(input))))/100
   top_diff = rand(T, size(input))
   copy!(state.blobs_diff[1], top_diff)
-  backward(sys, state, input_blobs, diff_blobs)
+  backward(backend, state, input_blobs, diff_blobs)
   got_grad = zeros(T, size(input))
   copy!(got_grad, diff_blobs[1])
   expected_grad = lrn_backward(input, top_diff, state)
   @test all(abs(got_grad - expected_grad) .< eps)
 
-  shutdown(sys, state)
+  shutdown(backend, state)
 end
 
 function lrn_forward_across_channel{T}(input::Array{T}, state)
@@ -158,19 +158,19 @@ function lrn_backward{T}(input::Array{T}, top_diff::Array{T}, state)
   end
 end
 
-function test_lrn_layer(sys::System, T, eps)
-  test_lrn_layer(sys, LRNMode.AcrossChannel(), T, eps)
-  test_lrn_layer(sys, LRNMode.WithinChannel(), T, eps)
+function test_lrn_layer(backend::Backend, T, eps)
+  test_lrn_layer(backend, LRNMode.AcrossChannel(), T, eps)
+  test_lrn_layer(backend, LRNMode.WithinChannel(), T, eps)
 end
 
-function test_lrn_layer(sys::System)
-  test_lrn_layer(sys, Float32, 1e-3)
-  test_lrn_layer(sys, Float64, 1e-9)
+function test_lrn_layer(backend::Backend)
+  test_lrn_layer(backend, Float32, 1e-3)
+  test_lrn_layer(backend, Float64, 1e-9)
 end
 
 if test_cpu
-  test_lrn_layer(sys_cpu)
+  test_lrn_layer(backend_cpu)
 end
-if test_cudnn
-  test_lrn_layer(sys_cudnn)
+if test_gpu
+  test_lrn_layer(backend_gpu)
 end

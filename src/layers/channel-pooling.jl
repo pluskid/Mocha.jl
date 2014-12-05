@@ -16,7 +16,7 @@ type ChannelPoolingLayerState <: LayerState
   etc        :: Any
 end
 
-function setup_etc(sys::System{CPUBackend}, layer::ChannelPoolingLayer, inputs, pooled_chann)
+function setup_etc(backend::CPUBackend, layer::ChannelPoolingLayer, inputs, pooled_chann)
   if isa(layer.pooling, Pooling.Max)
     masks = Array(Array, length(inputs))
     for i = 1:length(inputs)
@@ -37,7 +37,7 @@ function setup_etc(sys::System{CPUBackend}, layer::ChannelPoolingLayer, inputs, 
   return etc
 end
 
-function setup(sys::System, layer::ChannelPoolingLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::ChannelPoolingLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   width, height, channels, num = size(inputs[1])
   pooled_chann = int(ceil(float(channels + layer.pad[1]+layer.pad[2] - layer.kernel) / layer.stride)) + 1
 
@@ -50,29 +50,29 @@ function setup(sys::System, layer::ChannelPoolingLayer, inputs::Vector{Blob}, di
   blobs = Array(Blob, length(inputs))
   blobs_diff = Array(Blob, length(inputs))
   for i = 1:length(inputs)
-    blobs[i] = make_blob(sys.backend, data_type, (width,height,pooled_chann,num))
+    blobs[i] = make_blob(backend, data_type, (width,height,pooled_chann,num))
     if isa(diffs[i], NullBlob)
       blobs_diff[i] = NullBlob()
     else
-      blobs_diff[i] = make_blob(sys.backend, data_type, (width,height,pooled_chann,num))
+      blobs_diff[i] = make_blob(backend, data_type, (width,height,pooled_chann,num))
     end
   end
 
-  etc = setup_etc(sys, layer, inputs, pooled_chann)
+  etc = setup_etc(backend, layer, inputs, pooled_chann)
   state = ChannelPoolingLayerState(layer, blobs, blobs_diff, etc)
 end
-function shutdown_etc(sys::System{CPUBackend}, state::ChannelPoolingLayerState)
+function shutdown_etc(backend::CPUBackend, state::ChannelPoolingLayerState)
 end
-function shutdown(sys::System, state::ChannelPoolingLayerState)
+function shutdown(backend::Backend, state::ChannelPoolingLayerState)
   map(destroy, state.blobs)
   map(destroy, state.blobs_diff)
-  shutdown_etc(sys, state)
+  shutdown_etc(backend, state)
 end
 
-function forward(sys::System{CPUBackend}, state::ChannelPoolingLayerState, inputs::Vector{Blob})
-  forward(sys, state.layer.pooling, state, inputs)
+function forward(backend::CPUBackend, state::ChannelPoolingLayerState, inputs::Vector{Blob})
+  forward(backend, state.layer.pooling, state, inputs)
 end
-function forward(sys::System{CPUBackend}, pool::StdPoolingFunction,
+function forward(backend::CPUBackend, pool::StdPoolingFunction,
     state::ChannelPoolingLayerState, inputs::Vector{Blob})
 
   for i = 1:length(inputs)
@@ -89,11 +89,11 @@ function forward(sys::System{CPUBackend}, pool::StdPoolingFunction,
   end
 end
 
-function backward(sys::System{CPUBackend}, state::ChannelPoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  backward(sys, state.layer.pooling, state, inputs, diffs)
+function backward(backend::CPUBackend, state::ChannelPoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+  backward(backend, state.layer.pooling, state, inputs, diffs)
 end
 
-function backward(sys::System{CPUBackend}, pool::StdPoolingFunction, state::ChannelPoolingLayerState,
+function backward(backend::CPUBackend, pool::StdPoolingFunction, state::ChannelPoolingLayerState,
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   for i = 1:length(inputs)

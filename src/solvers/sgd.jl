@@ -17,7 +17,7 @@ function setup(sgd::SGD, net::Net, solver_state::SolverState)
   param_history = Array(Vector{Blob}, length(param_states))
   for i = 1:length(param_states)
     state = param_states[i]
-    param_history[i] = [make_zero_blob(net.sys.backend, eltype(x.blob),size(x.blob)...) for x in state.parameters]
+    param_history[i] = [make_zero_blob(net.backend, eltype(x.blob),size(x.blob)...) for x in state.parameters]
   end
 
   return SGDInternalState(param_states, param_history, solver_state.momentum)
@@ -46,14 +46,14 @@ function shutdown(sgd::SGD, i_state::SGDInternalState)
   map(x -> map(destroy, x), i_state.param_history)
 end
 
-function update_parameters(net::Net{CPUBackend}, solver::SGD, learning_rate, momentum, param_blob, hist_blob, gradient, data_type)
+function update_parameters{N}(net::Net{CPUBackend{N}}, solver::SGD, learning_rate, momentum, param_blob, hist_blob, gradient, data_type)
   # hist_blob = momentum * hist_blob
-  BLAS.scal!(length(hist_blob), convert(data_type, momentum), hist_blob.data, 1)
+  BLAS.scal!(length(hist_blob), convert(data_type, momentum), pointer(hist_blob.data), 1)
   # hist_blob = -learning_rate * gradient + hist_blob
-  BLAS.axpy!(length(hist_blob), convert(data_type, -learning_rate), gradient.data, 1, hist_blob.data, 1)
+  BLAS.axpy!(length(hist_blob), convert(data_type, -learning_rate), pointer(gradient.data), 1, pointer(hist_blob.data), 1)
 
   # update parameter
   # param_blob += hist_blob
-  BLAS.axpy!(length(hist_blob), convert(data_type, 1), hist_blob.data, 1, param_blob.data, 1)
+  BLAS.axpy!(length(hist_blob), convert(data_type, 1), pointer(hist_blob.data), 1, pointer(param_blob.data), 1)
 end
 

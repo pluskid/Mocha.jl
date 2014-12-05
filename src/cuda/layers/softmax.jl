@@ -3,7 +3,7 @@ type CuDNNSoftmaxState
   outputs_desc :: Vector{CuDNN.Tensor4dDescriptor}
 end
 
-function setup_etc(sys::System{CuDNNBackend}, layer::SoftmaxLayer, data_type, inputs)
+function setup_etc(backend::GPUBackend, layer::SoftmaxLayer, data_type, inputs)
   inputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
   outputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
   for i = 1:length(inputs)
@@ -13,15 +13,15 @@ function setup_etc(sys::System{CuDNNBackend}, layer::SoftmaxLayer, data_type, in
   etc = CuDNNSoftmaxState(inputs_desc, outputs_desc)
   return etc
 end
-function shutdown(sys::System{CuDNNBackend}, state::SoftmaxLayerState)
+function shutdown(backend::GPUBackend, state::SoftmaxLayerState)
   map(destroy, state.blobs)
   map(CuDNN.destroy_tensor4d_descriptor, state.etc.inputs_desc)
   map(CuDNN.destroy_tensor4d_descriptor, state.etc.outputs_desc)
 end
 
-function forward(sys::System{CuDNNBackend}, state::SoftmaxLayerState, inputs::Vector{Blob})
+function forward(backend::GPUBackend, state::SoftmaxLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
-    CuDNN.softmax_forward(sys.backend.cudnn_ctx, CuDNN.CUDNN_SOFTMAX_ACCURATE,
+    CuDNN.softmax_forward(backend.cudnn_ctx, CuDNN.CUDNN_SOFTMAX_ACCURATE,
         CuDNN.CUDNN_SOFTMAX_MODE_CHANNEL, state.etc.inputs_desc[i], inputs[i].ptr,
         state.etc.outputs_desc[i], state.blobs[i].ptr)
   end

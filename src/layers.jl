@@ -64,17 +64,17 @@ export reset_statistics, show_statistics
 #
 # Then the following functions need to be defined
 #
-# - setup(sys::System,layer::MyLayer,inputs::Vector{Blob})
+# - setup(backend::Backend,layer::MyLayer,inputs::Vector{Blob})
 #   This function construct the layer state object and do
 #   necessary initialization. The inputs are initialized
 #   with proper shape, but not necessarily with valid data
 #   values. The constructed layer state should be returned.
 #
-# - forward(sys::System,state::MyLayerState,inputs::Vector{Blob})
+# - forward(backend::Backend,state::MyLayerState,inputs::Vector{Blob})
 #   This function do the forward computation: inputs are
 #   forward computed output from bottom layers.
 #
-# - backward(sys::System,state::MyLayerState,inputs::Vector{Blob},diffs::Vector{Blob})
+# - backward(backend::Backend,state::MyLayerState,inputs::Vector{Blob},diffs::Vector{Blob})
 #   This function do the backward computation: inputs are
 #   the same as in forward, diffs contains blobs to hold
 #   gradient with respect to the bottom layer input. Some
@@ -92,24 +92,24 @@ abstract TrainableLayer <: CompLayer # Layer that could be trained
 abstract InplaceLayer   <: CompLayer # Layer that does inplace computation
 abstract UtilLayer      <: CompLayer # Layer that acts as utilities (no backward)
 
-function setup(sys::System, layer::Layer, shared_state, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::Layer, shared_parameters, inputs::Vector{Blob}, diffs::Vector{Blob})
   error("Not implemented, should setup layer state")
 end
 
-# Overload when there is no shared_state
-function setup(sys::System, layer::Layer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  setup(sys, layer, nothing, inputs, diffs)
+# Overload when there is no shared_parameters
+function setup(backend::Backend, layer::Layer, shared_parameters, inputs::Vector{Blob}, diffs::Vector{Blob})
+  setup(backend, layer, inputs, diffs)
 end
 
-function shutdown(sys::System, state::LayerState)
+function shutdown(backend::Backend, state::LayerState)
   error("Not implemented, please define an empty function explicitly if not needed")
 end
 
-function forward(sys::System, state::LayerState, inputs::Vector{Blob})
+function forward(backend::Backend, state::LayerState, inputs::Vector{Blob})
   error("Not implemented, should do forward computing")
 end
 
-function backward(sys::System, state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::Backend, state::LayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   error("Not implemented, please define an empty function explicitly if not needed")
 end
 

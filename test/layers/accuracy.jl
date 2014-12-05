@@ -1,22 +1,22 @@
-function test_accuracy_layer(sys::System, T)
-  println("-- Testing AccuracyLayer on $(typeof(sys.backend)){$T}...")
+function test_accuracy_layer(backend::Backend, T)
+  println("-- Testing AccuracyLayer on $(typeof(backend)){$T}...")
 
   eps = 1e-5
   width, height, channels, num = (5, 6, 7, 8)
   input = rand(T, width, height, channels, num)
-  input_blob = make_blob(sys.backend, input)
+  input_blob = make_blob(backend, input)
 
   label = abs(rand(Int, (width, height, 1, num))) % channels
   label = convert(Array{T}, label)
-  label_blob = make_blob(sys.backend, label)
+  label_blob = make_blob(backend, label)
 
   inputs = Blob[input_blob, label_blob]
 
   layer = AccuracyLayer(bottoms=[:pred, :labels])
-  state = setup(sys, layer, inputs, Blob[])
+  state = setup(backend, layer, inputs, Blob[])
 
   println("    > Forward")
-  forward(sys, state, inputs)
+  forward(backend, state, inputs)
 
   @test state.n_accum == width*height*num
 
@@ -35,26 +35,26 @@ function test_accuracy_layer(sys::System, T)
   @test abs(state.accuracy - expected_acc) < eps
 
   println("    > Forward Again")
-  forward(sys, state, inputs)
+  forward(backend, state, inputs)
   @test state.n_accum == 2*width*height*num
   @test abs(state.accuracy - expected_acc) < eps
 
   println("    > Forward Again and Again")
   reset_statistics(state)
-  forward(sys, state, inputs)
+  forward(backend, state, inputs)
   @test state.n_accum == width*height*num
   @test abs(state.accuracy - expected_acc) < eps
 
-  shutdown(sys, state)
+  shutdown(backend, state)
 end
-function test_accuracy_layer(sys::System)
-  test_accuracy_layer(sys, Float32)
-  test_accuracy_layer(sys, Float64)
+function test_accuracy_layer(backend::Backend)
+  test_accuracy_layer(backend, Float32)
+  test_accuracy_layer(backend, Float64)
 end
 
 if test_cpu
-  test_accuracy_layer(sys_cpu)
+  test_accuracy_layer(backend_cpu)
 end
-if test_cudnn
-  test_accuracy_layer(sys_cudnn)
+if test_gpu
+  test_accuracy_layer(backend_gpu)
 end

@@ -4,7 +4,7 @@ export CPUBlob, NullBlob
 import Base: eltype, size, length, copy!, fill!
 export       eltype, size, length, copy!, fill!, erase!
 export get_num, get_chann, get_height, get_width
-export make_blob, make_zero_blob, make_shared_blob
+export make_blob, make_zero_blob, reshape_blob
 
 ############################################################
 # A blob is an abstract concept that is suppose
@@ -77,9 +77,6 @@ end
 function destroy(blob::NullBlob)
   # do nothing
 end
-function make_blob()
-  return NullBlob()
-end
 function make_blob(backend::Backend, data_type::Type, dims::Int...)
   make_blob(backend, data_type, dims)
 end
@@ -97,22 +94,23 @@ function make_zero_blob(backend::Backend, data_type::Type, dims::Int...)
   make_zero_blob(backend, data_type, dims)
 end
 
-function make_shared_blob(backend::Backend, blob::Blob, dims::Int...)
-  make_shared_blob(backend, blob, dims)
+function reshape_blob(backend::Backend, blob::Blob, dims::Int...)
+  reshape_blob(backend, blob, dims)
 end
 
 ############################################################
 # A Blob for CPU Computation
 ############################################################
 immutable CPUBlob{T <: FloatingPoint} <: Blob
-  data :: Array{T, 4}
+  data :: AbstractArray{T, 4}
 end
 CPUBlob(t :: Type, dims::NTuple{4,Int}) = CPUBlob(Array(t, dims))
 
 function make_blob(backend::CPUBackend, data_type::Type, dims::NTuple{4,Int})
   return CPUBlob(data_type, dims)
 end
-function make_shared_blob{T}(backend::CPUBackend, blob::CPUBlob{T}, dims::NTuple{4,Int})
+
+function reshape_blob{T}(backend::CPUBackend, blob::CPUBlob{T}, dims::NTuple{4,Int})
   @assert prod(dims) == length(blob)
   return CPUBlob{T}(reshape(blob.data, dims))
 end

@@ -1,16 +1,16 @@
-function test_crop_layer(sys::System, do_mirror, T, eps)
-  println("-- Testing CropLayer on $(typeof(sys.backend)){$T} $(do_mirror ? "with mirror" : "")...")
+function test_crop_layer(backend::Backend, do_mirror, T, eps)
+  println("-- Testing CropLayer on $(typeof(backend)){$T} $(do_mirror ? "with mirror" : "")...")
 
   input = rand(T, 11, 12, 5, 6)
   crop_size = (7,5)
-  input_blob = make_blob(sys.backend, input)
+  input_blob = make_blob(backend, input)
 
   println("    > Setup")
   layer = CropLayer(bottoms=[:input], tops=[:output], crop_size=crop_size, random_mirror=do_mirror)
-  state = setup(sys, layer, Blob[input_blob], Blob[NullBlob()])
+  state = setup(backend, layer, Blob[input_blob], Blob[NullBlob()])
 
   println("    > Forward")
-  forward(sys, state, Blob[input_blob])
+  forward(backend, state, Blob[input_blob])
   got_output = zeros(T, size(state.blobs[1]))
   copy!(got_output, state.blobs[1])
 
@@ -25,21 +25,21 @@ function test_crop_layer(sys::System, do_mirror, T, eps)
     @test all(abs(got_output - expected_output) .< eps)
   end
 
-  shutdown(sys, state)
+  shutdown(backend, state)
 end
-function test_crop_layer_random(sys::System, do_mirror, T, eps)
-  println("-- Testing CropLayer{rnd} on $(typeof(sys.backend)){$T} $(do_mirror ? "with mirror" : "")...")
+function test_crop_layer_random(backend::Backend, do_mirror, T, eps)
+  println("-- Testing CropLayer{rnd} on $(typeof(backend)){$T} $(do_mirror ? "with mirror" : "")...")
   input = rand(T, 11, 12, 5, 6)
   crop_size = (9, 9)
-  input_blob = make_blob(sys.backend, input)
+  input_blob = make_blob(backend, input)
 
   println("    > Setup")
   layer = CropLayer(bottoms=[:input], tops=[:output], crop_size=crop_size,
       random_mirror=do_mirror, random_crop=true)
-  state = setup(sys, layer, Blob[input_blob], Blob[NullBlob()])
+  state = setup(backend, layer, Blob[input_blob], Blob[NullBlob()])
 
   println("    > Forward")
-  forward(sys, state, Blob[input_blob])
+  forward(backend, state, Blob[input_blob])
   got_output = zeros(T, size(state.blobs[1]))
   copy!(got_output, state.blobs[1])
 
@@ -55,24 +55,24 @@ function test_crop_layer_random(sys::System, do_mirror, T, eps)
   end
   @test matched
 
-  shutdown(sys, state)
+  shutdown(backend, state)
 end
 
-function test_crop_layer(sys::System, T, eps)
-  test_crop_layer(sys, false, T, eps)
-  test_crop_layer(sys, true, T, eps)
-  test_crop_layer_random(sys, false, T, eps)
-  test_crop_layer_random(sys, true, T, eps)
+function test_crop_layer(backend::Backend, T, eps)
+  test_crop_layer(backend, false, T, eps)
+  test_crop_layer(backend, true, T, eps)
+  test_crop_layer_random(backend, false, T, eps)
+  test_crop_layer_random(backend, true, T, eps)
 end
 
-function test_crop_layer(sys::System)
-  test_crop_layer(sys, Float64, 1e-10)
-  test_crop_layer(sys, Float32, 1e-4)
+function test_crop_layer(backend::Backend)
+  test_crop_layer(backend, Float64, 1e-10)
+  test_crop_layer(backend, Float32, 1e-4)
 end
 
 if test_cpu
-  test_crop_layer(sys_cpu)
+  test_crop_layer(backend_cpu)
 end
-if test_cudnn
-  test_crop_layer(sys_cudnn)
+if test_gpu
+  test_crop_layer(backend_gpu)
 end

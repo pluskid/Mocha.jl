@@ -1,21 +1,21 @@
-function test_split_layer(sys::System, T)
-  println("-- Testing SplitLayer on $(typeof(sys.backend)){$T}...")
+function test_split_layer(backend::Backend, T)
+  println("-- Testing SplitLayer on $(typeof(backend)){$T}...")
 
   eps = 1e-10
   input = rand(T, 3, 4, 5, 6)
-  input_blob = make_blob(sys.backend, input)
+  input_blob = make_blob(backend, input)
 
   println("    > Setup")
   layer = SplitLayer(tops=[:sp1, :sp2], bottoms=[:input])
-  state = setup(sys, layer, Blob[input_blob], Blob[NullBlob()])
+  state = setup(backend, layer, Blob[input_blob], Blob[NullBlob()])
   @test length(state.blobs_diff) == 2
   @test all(map(x -> isa(x, NullBlob), state.blobs_diff))
 
-  diff_blob = make_blob(sys.backend, T, size(input))
-  state = setup(sys, layer, Blob[input_blob], Blob[diff_blob])
+  diff_blob = make_blob(backend, T, size(input))
+  state = setup(backend, layer, Blob[input_blob], Blob[diff_blob])
 
   println("    > Forward")
-  forward(sys, state, Blob[input_blob])
+  forward(backend, state, Blob[input_blob])
   got_output = zeros(T, size(input))
   for i = 1:2
     copy!(got_output, state.blobs[i])
@@ -27,24 +27,24 @@ function test_split_layer(sys::System, T)
   for i = 1:2
     copy!(state.blobs_diff[i], top_diff[i])
   end
-  backward(sys, state, Blob[input_blob], Blob[diff_blob])
+  backward(backend, state, Blob[input_blob], Blob[diff_blob])
   expected_grad = top_diff[1] + top_diff[2]
   got_grad = zeros(T, size(expected_grad))
   copy!(got_grad, diff_blob)
   @test all(abs(got_grad - expected_grad) .< eps)
 
-  shutdown(sys, state)
+  shutdown(backend, state)
 end
-function test_split_layer(sys::System)
-  test_split_layer(sys, Float32)
-  test_split_layer(sys, Float64)
+function test_split_layer(backend::Backend)
+  test_split_layer(backend, Float32)
+  test_split_layer(backend, Float64)
 end
 
 if test_cpu
-  test_split_layer(sys_cpu)
+  test_split_layer(backend_cpu)
 end
-if test_cudnn
-  test_split_layer(sys_cudnn)
+if test_gpu
+  test_split_layer(backend_gpu)
 end
 
 
