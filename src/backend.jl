@@ -19,27 +19,11 @@ function registry_get(backend::Backend, key::String)
   return get(backend.param_registry, key, nothing)
 end
 
-type CPUBackend{N} <: Backend
+type CPUBackend <: Backend
   param_registry :: ParameterRegistry
 
-  pids :: Vector{Int}
-
-  CPUBackend(pids::Vector{Int}) = begin
-    for pid in pids
-      if !in(pid, procs())
-        error("$pid is not a valid process id")
-      end
-    end
-    pids = copy(pids)
-    if !in(myid(), pids)
-      push!(pids, myid())
-    end
-    new(ParameterRegistry(), pids)
-  end
+  CPUBackend() = new(ParameterRegistry())
 end
-
-CPUBackend() = CPUBackend{1}([myid()])
-CPUBackend(pids::Vector{Int}) = CPUBackend{length(pids)}(pids)
 
 # This is forward declaration to allow some code to compile
 # (especially testing codes) even if CUDA module is completely
