@@ -1,4 +1,4 @@
-use_cudnn = false
+use_cuda = false
 
 using Mocha
 srand(12345678)
@@ -20,18 +20,18 @@ Y = Y + 0.01*randn(size(Y))
 ############################################################
 # Define network
 ############################################################
-if use_cudnn
-  sys = System(CuDNNBackend())
+if use_cuda
+  backend = GPUBackend()
 else
-  sys = System(CPUBackend())
+  backend = CPUBackend()
 end
-init(sys)
+init(backend)
 
 data_layer = MemoryDataLayer(batch_size=500, data=Array[X,Y])
-weight_layer = InnerProductLayer(output_dim=P, tops=[:pred], bottoms=[:data])
+weight_layer = InnerProductLayer(name="ip",output_dim=P, tops=[:pred], bottoms=[:data])
 loss_layer = SquareLossLayer(bottoms=[:pred, :label])
 
-net = Net("TEST", sys, [loss_layer, weight_layer, data_layer])
+net = Net("TEST", backend, [loss_layer, weight_layer, data_layer])
 
 ############################################################
 # Solve
@@ -52,4 +52,4 @@ copy!(learned_b, net.states[2].b)
 #println("$(learned_b)")
 #println("$(B)")
 
-shutdown(sys)
+shutdown(backend)
