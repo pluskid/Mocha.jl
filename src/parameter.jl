@@ -19,8 +19,8 @@ Parameter(name,blob,gradient,initializer,regularizer,constraint,lr) =
 function make_parameter(backend::Backend, name::String, data_type::Type, dims::NTuple{4,Int},
     init::Initializer, regu::Regularizer, cons::Constraint, lr::FloatingPoint)
 
-  blob = make_shared_blob(backend, data_type, dims)
-  grad = make_shared_blob(backend, data_type, dims)
+  blob = make_blob(backend, data_type, dims)
+  grad = make_blob(backend, data_type, dims)
   owner = true
 
   Parameter(name, blob, grad, init, regu, cons, lr, owner)
@@ -29,7 +29,7 @@ end
 # make a shared parameter
 function share_parameter(backend::Backend, param::Parameter)
   blob  = param.blob
-  grad  = make_shared_blob(backend, eltype(blob), size(blob))
+  grad  = make_blob(backend, eltype(blob), size(blob))
   init  = NullInitializer()
   regu  = param.regularizer
   cons  = param.constraint
