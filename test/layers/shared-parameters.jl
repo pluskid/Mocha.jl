@@ -1,6 +1,6 @@
 function test_shared_parameters_layers(backend::Backend, layer_type, T, eps)
   println("-- Testing $layer_type layer with shared param on $(typeof(backend)){$T}...")
-  reset_registry(backend)
+  registry_reset(backend)
 
   w,h,c,n = 2,3,4,5
   input = rand(T, w,h,c,n)

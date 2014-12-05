@@ -142,20 +142,14 @@ Net(name::String, backend::Backend, layers :: Vector{Layer}) = begin
       blob_bwd = Blob[]
     end
 
-    if isa(layers[i], TrainableLayer) && haskey(backend.layer_registry, param_key(layers[i]))
-      shared_state = backend.layer_registry[param_key(layers[i])]
-      states[i] = setup(backend, layers[i], shared_state, blob_fwd, blob_bwd)
-
-      # shared parameters, don't re-initialize
-      for param in states[i].parameters
-        param.initializer = NullInitializer()
-      end
+    if isa(layers[i], TrainableLayer)
+      params = registry_get(backend, param_key(layers[i]))
     else
-      states[i] = setup(backend, layers[i], blob_fwd, blob_bwd)
-      if isa(layers[i], TrainableLayer)
-        # has parameters, save in registry
-        backend.layer_registry[param_key(layers[i])] = states[i]
-      end
+      params = nothing
+    end
+    states[i] = setup(backend, layers[i], params, blob_fwd, blob_bwd)
+    if isa(layers[i], TrainableLayer)
+      registry_put(backend, param_key(layers[i]), states[i].parameters)
     end
 
     if :tops ∈ names(layer)

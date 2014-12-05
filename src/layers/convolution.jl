@@ -62,7 +62,7 @@ type ConvolutionLayerState <: LayerState
   bias    :: Blob
   ∇bias   :: Blob
 
-  ConvolutionLayerState(backend::Backend, layer::ConvolutionLayer, shared_state, inputs::Vector{Blob}) = begin
+  ConvolutionLayerState(backend::Backend, layer::ConvolutionLayer, shared_params, inputs::Vector{Blob}) = begin
     channels = get_chann(inputs[1])
     @assert channels % layer.n_group == 0
     @assert layer.n_filter % layer.n_group == 0
@@ -83,12 +83,14 @@ type ConvolutionLayerState <: LayerState
       blobs_diff[i] = make_blob(backend, dtype, width_out, height_out, layer.n_filter, batch_size)
     end
 
-    if isa(shared_state, ConvolutionLayerState)
-      @assert size(shared_state.filter) == tuple(layer.kernel...,div(channels,layer.n_group),layer.n_filter)
-      @assert eltype(shared_state.filter) == dtype
-      @debug("Sharing filters and bias with an $(shared_state.layer.name)")
+    if shared_params != nothing
+      @assert length(shared_params) == 2
+      @assert shared_params[1].name == "filter" && shared_params[2].name == "bias"
+      @assert size(shared_params[1].blob) == tuple(layer.kernel...,div(channels,layer.n_group),layer.n_filter)
+      @assert eltype(shared_params[1].blob) == dtype
+      @debug("ConvolutionLayer: sharing filters and bias")
 
-      param_filter, param_bias = [share_parameter(backend, param) for param in shared_state.parameters]
+      param_filter, param_bias = [share_parameter(backend, param) for param in shared_params]
     else
       param_filter = make_parameter(backend,"filter",dtype,(layer.kernel[1],layer.kernel[2],div(channels,layer.n_group), layer.n_filter),
           layer.filter_init, layer.filter_regu, layer.filter_cons, layer.filter_lr)
@@ -127,6 +129,9 @@ end
 
 function setup(backend::Backend, layer::ConvolutionLayer, shared_state, inputs::Vector{Blob}, diffs::Vector{Blob})
   return ConvolutionLayerState(backend, layer, shared_state, inputs)
+end
+function setup(backend::Backend, layer::ConvolutionLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+  setup(backend, layer, nothing, inputs, diffs)
 end
 function shutdown_etc(backend::CPUBackend, state::ConvolutionLayerState)
 end

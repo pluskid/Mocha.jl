@@ -1,15 +1,22 @@
 export Backend, CPUBackend, AbstractCuDNNBackend
-export init, shutdown, reset_registry
+export init, shutdown, registry_reset, registry_put
 
 abstract Backend
-typealias ParameterRegistry Dict{String, LayerState}
+typealias ParameterRegistry Dict{String, Vector{AbstractParameter}}
 
 function init(backend::Backend)
 end
 function shutdown(backend::Backend)
 end
-function reset_registry(backend::Backend)
+function registry_reset(backend::Backend)
   backend.layer_registry = ParameterRegistry()
+end
+function registry_put(backend::Backend, key::String, params::Vector)
+  # convert Vector{Parameter} to Vector{AbstractParameter}
+  backend.layer_registry[key] = convert(Vector{AbstractParameter}, params)
+end
+function registry_get(backend::Backend, key::String)
+  return get(backend.layer_registry, key, nothing)
 end
 
 type CPUBackend{N} <: Backend

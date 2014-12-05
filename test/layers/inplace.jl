@@ -1,6 +1,6 @@
 function test_inplace_layer(backend::Backend, T, eps)
   println("-- Testing InplaceLayer on $(typeof(backend)){$T}...")
-  reset_registry(backend) # clear layer registry
+  registry_reset(backend) # clear layer registry
 
   ratio = convert(T, 0.6)
   width, height, channels, batch_size = (3,4,5,6)

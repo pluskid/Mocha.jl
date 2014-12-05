@@ -1,7 +1,7 @@
 export Parameter
 export make_parameter, share_parameter
 
-type Parameter
+type Parameter <: AbstractParameter
   name          :: String
   blob          :: Blob
   gradient      :: Blob

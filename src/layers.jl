@@ -92,13 +92,13 @@ abstract TrainableLayer <: CompLayer # Layer that could be trained
 abstract InplaceLayer   <: CompLayer # Layer that does inplace computation
 abstract UtilLayer      <: CompLayer # Layer that acts as utilities (no backward)
 
-function setup(backend::Backend, layer::Layer, shared_state, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::Layer, shared_parameters, inputs::Vector{Blob}, diffs::Vector{Blob})
   error("Not implemented, should setup layer state")
 end
 
-# Overload when there is no shared_state
-function setup(backend::Backend, layer::Layer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  setup(backend, layer, nothing, inputs, diffs)
+# Overload when there is no shared_parameters
+function setup(backend::Backend, layer::Layer, shared_parameters, inputs::Vector{Blob}, diffs::Vector{Blob})
+  setup(backend, layer, inputs, diffs)
 end
 
 function shutdown(backend::Backend, state::LayerState)

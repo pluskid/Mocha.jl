@@ -30,7 +30,7 @@ type InnerProductLayerState <: LayerState
   # a all-1 vector used in gemm to help bias calculation
   bias_multiplier :: Blob
 
-  InnerProductLayerState(backend::Backend, layer::InnerProductLayer, shared_state, inputs::Vector{Blob}) = begin
+  InnerProductLayerState(backend::Backend, layer::InnerProductLayer, shared_params, inputs::Vector{Blob}) = begin
     dims = size(inputs[1])
     nums = dims[4]
     fea_dim = dims[1:3]
@@ -48,12 +48,14 @@ type InnerProductLayerState <: LayerState
 
     state = new(layer, blobs, blobs_diff)
 
-    if isa(shared_state, InnerProductLayerState)
-      @assert size(shared_state.W) == (fea_size, out_dim, 1, 1)
-      @assert eltype(shared_state.W) == data_type
-      @debug("Sharing weights and bias with $(shared_state.layer.name)")
+    if shared_params != nothing
+      @assert length(shared_params) == 2
+      @assert shared_params[1].name == "weight" && shared_params[2].name == "bias"
+      @assert size(shared_params[1].blob) == (fea_size, out_dim, 1, 1)
+      @assert eltype(shared_params[1].blob) == data_type
+      @debug("InnerProductLayer: sharing weights and bias")
 
-      param_weight, param_bias = [share_parameter(backend, param) for param in shared_state.parameters]
+      param_weight, param_bias = [share_parameter(backend, param) for param in shared_params]
     else
       param_weight = make_parameter(backend, "weight", data_type, (fea_size,out_dim,1,1),
           layer.weight_init, layer.weight_regu, layer.weight_cons, layer.weight_lr)
@@ -77,6 +79,9 @@ end
 function setup(backend::Backend, layer::InnerProductLayer, shared_state, inputs::Vector{Blob}, diffs::Vector{Blob})
   state = InnerProductLayerState(backend, layer, shared_state, inputs)
   return state
+end
+function setup(backend::Backend, layer::InnerProductLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+  setup(backend, layer, nothing, inputs, diffs)
 end
 function shutdown(backend::Backend, state::InnerProductLayerState)
   map(destroy, state.blobs)

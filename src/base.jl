@@ -1,8 +1,10 @@
-export Layer, LayerState
+export Layer, LayerState, AbstractParameter
 
-abstract Layer      # define layer type, parameters
-abstract LayerState # hold layer state, filters
+abstract Layer
+abstract LayerState
 
+# forward declaration
+abstract AbstractParameter
 
 export Solver, SolverState
 
