@@ -9,18 +9,18 @@ end
 function shutdown(backend::Backend)
 end
 function registry_reset(backend::Backend)
-  backend.layer_registry = ParameterRegistry()
+  backend.param_registry = ParameterRegistry()
 end
 function registry_put(backend::Backend, key::String, params::Vector)
   # convert Vector{Parameter} to Vector{AbstractParameter}
-  backend.layer_registry[key] = convert(Vector{AbstractParameter}, params)
+  backend.param_registry[key] = convert(Vector{AbstractParameter}, params)
 end
 function registry_get(backend::Backend, key::String)
-  return get(backend.layer_registry, key, nothing)
+  return get(backend.param_registry, key, nothing)
 end
 
 type CPUBackend{N} <: Backend
-  layer_registry :: ParameterRegistry
+  param_registry :: ParameterRegistry
 
   pids :: NTuple{N, Int}
 

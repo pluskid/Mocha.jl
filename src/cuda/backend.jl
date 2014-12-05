@@ -148,7 +148,7 @@ function shutdown(mocha :: MochaKernels)
 end
 
 type GPUBackend <: AbstractGPUBackend
-  layer_registry :: ParameterRegistry
+  param_registry :: ParameterRegistry
   initialized    :: Bool
   cu_ctx         :: CUDA.CuContext
   cublas_ctx     :: CuBLAS.Handle
