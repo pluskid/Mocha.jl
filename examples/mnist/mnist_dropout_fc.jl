@@ -60,14 +60,13 @@ drop_input  = DropoutLayer(name="drop_in", bottoms=[:data], ratio=0.2)
 drop_fc1 = DropoutLayer(name="drop_fc1", bottoms=[:fc1], ratio=0.5)
 drop_fc2  = DropoutLayer(name="drop_fc2", bottoms=[:fc2], ratio=0.5)
 
-sys = System(CuDNNBackend())
-#sys = System(CPUBackend())
-init(sys)
+backend = GPUBackend()
+init(backend)
 
 common_layers = [fc1_layer, fc2_layer, fc3_layer]
 drop_layers = [drop_input, drop_fc1, drop_fc2]
 # put training net together, note that the correct ordering will automatically be established by the constructor
-net = Net("MNIST-train", sys, [data_layer, common_layers..., drop_layers..., loss_layer])
+net = Net("MNIST-train", backend, [data_layer, common_layers..., drop_layers..., loss_layer])
 
 # we let the learning rate decrease by 0.998 in each epoch (=600 batches of size 100)
 # and let the momentum increase linearly from 0.5 to 0.9 over 500 epochs 
@@ -92,7 +91,7 @@ add_coffee_break(solver,
 # show performance on test data every 600 iterations (one epoch)
 data_layer_test = HDF5DataLayer(name="test-data", source="data/test.txt", batch_size=100)
 acc_layer = AccuracyLayer(name="test-accuracy", bottoms=[:out, :label], report_error=true)
-test_net = Net("MNIST-test", sys, [data_layer_test, common_layers..., acc_layer])
+test_net = Net("MNIST-test", backend, [data_layer_test, common_layers..., acc_layer])
 add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=600)
 
 solve(solver, net)
@@ -105,4 +104,4 @@ solve(solver, net)
 
 destroy(net)
 destroy(test_net)
-shutdown(sys)
+shutdown(backend)

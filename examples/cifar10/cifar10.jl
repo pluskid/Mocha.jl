@@ -36,11 +36,10 @@ acc_layer   = AccuracyLayer(name="accuracy", bottoms=[:ip1, :label])
 common_layers = [conv1_layer, pool1_layer, norm1_layer, conv2_layer, pool2_layer, norm2_layer,
                  conv3_layer, pool3_layer, ip1_layer]
 
-sys = System(CuDNNBackend())
-#sys = System(CPUBackend())
-init(sys)
+backend = GPUBackend()
+init(backend)
 
-net = Net("CIFAR10-train", sys, [data_tr_layer, common_layers..., loss_layer])
+net = Net("CIFAR10-train", backend, [data_tr_layer, common_layers..., loss_layer])
 
 lr_policy = LRPolicy.Staged(
   (60000, LRPolicy.Fixed(0.001)),
@@ -60,23 +59,11 @@ add_coffee_break(solver,
     every_n_iter=5000)
 
 # show performance on test data every 1000 iterations
-test_net = Net("CIFAR10-test", sys, [data_tt_layer, common_layers..., acc_layer])
+test_net = Net("CIFAR10-test", backend, [data_tt_layer, common_layers..., acc_layer])
 add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
-
-#Profile.init(int(1e8), 0.001)
-#@profile solve(solver, net)
-#open("profile.txt", "w") do out
-#  Profile.print(out)
-#end
-
-#using HDF5
-#h5open("/home/chiyuan/download/caffe/cifar10.hdf5", "r") do h5
-#  load_network(h5, net)
-#end
 
 solve(solver, net)
 
-
 destroy(net)
 destroy(test_net)
-shutdown(sys)
+shutdown(backend)
