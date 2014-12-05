@@ -52,34 +52,38 @@ fc1   = InnerProductLayer(name="ip1",output_dim=500,neuron=Neurons.ReLU(),bottom
 fc2   = InnerProductLayer(name="ip2",output_dim=10,bottoms=[:ip1],tops=[:ip2])
 loss  = SoftmaxLossLayer(name="loss",bottoms=[:ip2,:label])
 
-sys = System(CuDNNBackend())
-init(sys)
+backend = GPUBackend()
+init(backend)
 
 common_layers = [conv, pool, conv2, pool2, fc1, fc2]
-net = Net("MNIST-train", sys, [data, common_layers..., loss])
+net = Net("MNIST-train", backend, [data, common_layers..., loss])
 
-params = SolverParameters(max_iter=10000, regu_coef=0.0005, momentum=0.9,
-    lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75))
+exp_dir = "snapshots"
+params = SolverParameters(max_iter=10000, regu_coef=0.0005,
+    mom_policy=MomPolicy.Fixed(0.9),
+    lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75),
+    load_from=exp_dir)
 solver = SGD(params)
+
+setup_coffee_lounge(solver, save_into="$exp_dir/statistics.hdf5", every_n_iter=1000)
 
 # report training progress every 100 iterations
 add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
 
 # save snapshots every 5000 iterations
-add_coffee_break(solver, Snapshot("snapshots", auto_load=true),
-    every_n_iter=5000)
+add_coffee_break(solver, Snapshot(exp_dir), every_n_iter=5000)
 
 # show performance on test data every 1000 iterations
 data_test = HDF5DataLayer(name="test-data",source="test-data-list.txt",batch_size=100)
 accuracy = AccuracyLayer(name="test-accuracy",bottoms=[:ip2, :label])
-test_net = Net("MNIST-test", sys, [data_test, common_layers..., accuracy])
+test_net = Net("MNIST-test", backend, [data_test, common_layers..., accuracy])
 add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
 
 solve(solver, net)
 
 destroy(net)
 destroy(test_net)
-shutdown(sys)
+shutdown(backend)
 ```
 
 ## Documentation

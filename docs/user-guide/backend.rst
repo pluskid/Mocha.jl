@@ -149,15 +149,15 @@ setting the environment variable ``MOCHA_USE_CUDA``. For example:
 
    using Mocha
 
-   sys = System(CuDNNBackend())
-   init(sys)
+   backend = GPUBackend()
+   init(backend)
 
    # ...
 
-   shutdown(sys)
+   shutdown(backend)
 
 Note instead of instantiate a ``CPUBackend``, you now construct
-a ``CuDNNBackend``. The environment variable should be set **before** loading
+a ``GPUBackend``. The environment variable should be set **before** loading
 Mocha. It is designed to use conditional loading so that the pure CPU backend
 could still run on machines without any GPU device or CUDA library installed.
 

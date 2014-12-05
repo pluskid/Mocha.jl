@@ -191,11 +191,10 @@ GPU devices are available. But it will be much slower (see also
    common_layers = [conv1_layer, pool1_layer, norm1_layer, conv2_layer, pool2_layer, norm2_layer,
                     conv3_layer, pool3_layer, ip1_layer]
 
-   sys = System(CuDNNBackend())
-   #sys = System(CPUBackend())
-   init(sys)
+   backend = GPUBackend()
+   init(backend)
 
-   net = Net("CIFAR10-train", sys, [data_tr_layer, common_layers..., loss_layer])
+   net = Net("CIFAR10-train", backend, [data_tr_layer, common_layers..., loss_layer])
 
 Configuring the Solver
 ----------------------
@@ -262,7 +261,7 @@ snapshots could equivalently be done in Mocha as *coffee breaks* for the solver:
        every_n_iter=5000)
 
    # show performance on test data every 1000 iterations
-   test_net = Net("CIFAR10-test", sys, [data_tt_layer, common_layers..., acc_layer])
+   test_net = Net("CIFAR10-test", backend, [data_tt_layer, common_layers..., acc_layer])
    add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
 
 .. [3] Looking at the Caffe's solver configuration, I happily realized that I am

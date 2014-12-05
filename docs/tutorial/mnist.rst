@@ -49,12 +49,14 @@ input for the network:
 
 .. code-block:: julia
 
-   data_layer = HDF5DataLayer(name="train-data", source="data/train.txt", batch_size=64)
+   data_layer  = HDF5DataLayer(name="train-data", source="data/train.txt",
+       batch_size=64, shuffle=true)
 
 Note the ``source`` is a simple text file what contains a list of real
 data files (in this case ``data/train.hdf5``). This behavior is the
 same as in Caffe, and could be useful when your dataset contains a lot
-of files. Note we also specified the batch size as 64.
+of files. The network process data in mini-batches, and we are using a batch
+size of 64 in this example. We also enable random shuffling of the data set.
 
 Next we define a convolution layer in a similar way:
 
@@ -156,20 +158,19 @@ example, we will go with the simple pure Julia CPU backend first:
 
 .. code-block:: julia
 
-   sys = System(CPUBackend())
-   init(sys)
+   backend = CPUBackend()
 
-The ``init`` function of a Mocha ``System`` will initialize the
-computation backend. With an initialized system, we could go ahead and
+The ``init`` function of a Mocha Backend will initialize the
+computation backend. With an initialized backend, we could go ahead and
 construct our network:
 
 .. code-block:: julia
 
    common_layers = [conv_layer, pool_layer, conv2_layer, pool2_layer,
        fc1_layer, fc2_layer]
-   net = Net("MNIST-train", sys, [data_layer, common_layers..., loss_layer])
+   net = Net("MNIST-train", backend, [data_layer, common_layers..., loss_layer])
 
-A network is built by passing the constructor an initialized system,
+A network is built by passing the constructor an initialized backend,
 and a list of layers. Note we use ``common_layers`` to collect a
 subset of the layers. We will explain this in a minute.
 
@@ -181,8 +182,12 @@ deep network.
 
 .. code-block:: julia
 
+   exp_dir = "snapshots"
+
    params = SolverParameters(max_iter=10000, regu_coef=0.0005,
-       momentum=0.9, lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75))
+       mom_policy=MomPolicy.Fixed(0.9),
+       lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75),
+       load_from=exp_dir)
    solver = SGD(params)
 
 The behavior of the solver is specified in the following parameters
@@ -196,8 +201,9 @@ The behavior of the solver is specified in the following parameters
   customized for each layer individually. The parameter here is just a
   global scaling factor for all the local regularization coefficients
   if any.
-``momentum``
-  The momentum used in SGD. See the `Caffe document
+``mom_policy``
+  This specify the policy of setting momentum during training. Here we are using
+  a policy that simply use a fixed momentum of 0.9 all the time. See the `Caffe document
   <http://caffe.berkeleyvision.org/tutorial/solver.html>`_ for *rules
   of thumb* for setting the learning rate and momentum.
 ``lr_policy``
@@ -205,6 +211,14 @@ The behavior of the solver is specified in the following parameters
   policy with gamma = 0.001 and power = 0.75. This policy will
   gradually shrink the learning rate, by setting it to base_lr * (1 +
   gamma * iter)\ :sup:`-power`.
+``load_from``
+  This could be a file of saved model or a directory. For the latter case, the
+  latest saved model snapshot will be loaded automatically before the solver
+  loop starts. We will see in a minute how to configure the solver to save
+  snapshots automatically during training.
+
+  This is useful to recover from crash; continue training with a larger
+  ``max_iter``; or do fine tuning on some pre-trained models.
 
 Coffee Breaks for the Solver
 ----------------------------
@@ -212,6 +226,15 @@ Coffee Breaks for the Solver
 Now our solver is ready to go. But in order to give him a healthy
 working plan, we decided to allow him some chances to have some coffee
 breaks.
+
+.. code-block:: julia
+
+   setup_coffee_lounge(solver, save_into="$exp_dir/statistics.hdf5", every_n_iter=1000)
+
+This setup the coffee lounge. It also specify a file to save the information we
+accumulated in coffee breaks. Depending on the coffee breaks, useful statistics
+like objective function values during training will be saved into that file, and
+could be loaded later for plotting or inspecting.
 
 .. code-block:: julia
 
@@ -227,16 +250,12 @@ network every 5,000 iterations.
 
 .. code-block:: julia
 
-   add_coffee_break(solver,
-       Snapshot("snapshots", auto_load=true), every_n_iter=5000)
+   add_coffee_break(solver, Snapshot(exp_dir), every_n_iter=5000)
 
-Here ``"snapshots"`` is the name of the directory you want to save snapshots to.
-By setting ``auto_load`` to true, Mocha will automatically search and resume
-from the last saved snapshots.
-
-If you additionally set ``also_load_solver_state`` to false, Mocha will load the
-saved network as initialization, but pretend to be training from scratch. This
-could be useful if you are fine tuning based on some pre-trained network.
+Note we are passing ``exp_dir`` to the constructor of the ``Snapshot`` coffee
+break. The snapshots will be saved into that directory. And according to our
+configuration of the solver above, the latest snapshots will
+be automatically loaded by the solver if you run this script again.
 
 In order to see whether we are really making progress or simply
 overfitting, we also wish to see the performance on a separate
@@ -255,14 +274,13 @@ us.
 
    data_layer_test = HDF5DataLayer(name="test-data", source="data/test.txt", batch_size=100)
    acc_layer = AccuracyLayer(name="test-accuracy", bottoms=[:ip2, :label])
-   test_net = Net("MNIST-test", sys, [data_layer_test, common_layers..., acc_layer])
+   test_net = Net("MNIST-test", backend, [data_layer_test, common_layers..., acc_layer])
 
-Note how we re-use the ``common_layers`` variable defined a moment
-ago to reuse the description of the network architecture. By passing
-**the same** layer object used to define the training net to the
-constructor of the validation net, Mocha will be able to automatically
-setup parameter sharing between the two networks. The two networks will look
-like this:
+Note how we re-use the ``common_layers`` variable defined a moment ago to reuse
+the description of the network architecture. By passing the same layer object
+used to define the training net to the constructor of the validation net, Mocha
+will be able to automatically setup parameter sharing between the two networks.
+The two networks will look like this:
 
 .. image:: images/MNIST-network.*
 
@@ -293,7 +311,7 @@ Without further due, we could finally start the training process:
 
    destroy(net)
    destroy(test_net)
-   shutdown(sys)
+   shutdown(backend)
 
 After training, we will shutdown the system to release all the allocated
 resources. Now you are ready run the script
