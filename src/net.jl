@@ -1,5 +1,5 @@
 export Net
-export init, destroy, forward, backward, forward_backward, get_epoch
+export init, destroy, forward, backward, forward_backward, get_epoch, check_bp_topology
 export show_statistics, reset_statistics
 
 type Net{T <: Backend}
@@ -180,7 +180,7 @@ function topological_sort(layers :: Vector{Layer})
   #---- Build dependency graph
   graph = zeros(Int, n, n)
   outputs = Dict{Symbol, Int}()
-  output_taken = Dict{Symbol, Bool}()
+  #output_taken = Dict{Symbol, Bool}()
 
   for i = 1:n
     if !is_sink(layers[i]) && !is_inplace(layers[i])
@@ -189,7 +189,7 @@ function topological_sort(layers :: Vector{Layer})
           throw(TopologyError("Duplicated output blob name: $(key)"))
         end
         outputs[key] = i
-        output_taken[key] = false
+        #output_taken[key] = false
       end
     end
   end
@@ -200,16 +200,16 @@ function topological_sort(layers :: Vector{Layer})
         if !haskey(outputs, key)
           throw(TopologyError("Required input blob missing: $(key)"))
         end
-        if can_do_bp(layers[i]) && !is_inplace(layers[i]) && output_taken[key]
-          throw(TopologyError("""Output blob $key is being used in multiple places as input blob.
-          Fix this if it is a bug. Or if sharing is intended, use the SplitLayer.
-          SplitLayer explicitly to allow the back-propagation operate properly."""))
-        end
+        #if can_do_bp(layers[i]) && !is_inplace(layers[i]) && output_taken[key]
+        #  throw(TopologyError("""Output blob $key is being used in multiple places as input blob.
+        #  Fix this if it is a bug. Or if sharing is intended, use the SplitLayer.
+        #  SplitLayer explicitly to allow the back-propagation operate properly."""))
+        #end
 
         graph[i,outputs[key]] = 1
-        if can_do_bp(layers[i])
-          output_taken[key] = true
-        end
+        #if can_do_bp(layers[i])
+        #  output_taken[key] = true
+        #end
       end
     end
   end
@@ -238,31 +238,91 @@ end
 
 # make sure the network topology is good for backward propagation
 function check_bp_topology(net::Net)
-  bp_ready = Dict{Symbol,Bool}()
+  bp_ready  = Dict{Symbol,Bool}() # whether blob is ready to do BP
+  bp_needed = Dict{Symbol,Bool}() # whether blob needs bp
+  occupied  = Dict{Symbol,Bool}() # whether blob is occupied by a upper layer bp path
   for layer = net.layers
     if !is_sink(layer) && !is_inplace(layer)
       for blob in layer.tops
-        bp_ready[blob] = false
+        bp_ready[blob]  = false
+        bp_needed[blob] = true
+        occupied[blob]  = false
       end
     end
   end
 
-  # travel top down
+  # travel bottom up
+  # build a dictionary indicating whether a blob needs back-propagation
+  for i = 1:length(net.layers)
+    layer = net.layers[i]
+    I_want_bp = can_do_bp(layer)
+    if I_want_bp
+      if !has_param(layer)
+        if !any(map(blob -> bp_needed[blob], layer.bottoms))
+          # I can do bp, but I do not need to b/c
+          #   1) I do not have parameters
+          #   2) None of the bottom blobs needs bp
+          I_want_bp = false
+        end
+      end
+    end
+
+    if !I_want_bp
+      if !is_sink(layer) && !is_inplace(layer)
+        for blob in layer.tops
+          bp_needed[blob] = false
+        end
+      end
+    end
+  end
+
+  # double check the dict we built
+  for i = 1:length(net.layers)
+    layer = net.layers[i]
+    if can_do_bp(layer) && !is_sink(layer)
+      for j = 1:length(layer.tops)
+        @assert isa(net.states[i].blobs_diff[j], NullBlob) == !bp_needed[layer.tops[j]]
+      end
+    end
+  end
+
+  # make sure no blob is consumed by two upper layers that will do bp simutaneously
+  for i = 1:length(net.layers)
+    layer = net.layers[i]
+    if can_do_bp(layer) && !is_inplace(layer)
+      for blob in layer.bottoms
+        if bp_needed[blob]
+          if occupied[blob]
+            throw(TopologyError("""Output blob $blob is being used in multiple places as input blob.
+            Fix this if it is a bug. Or if sharing is intended, use the SplitLayer.
+            SplitLayer explicitly to allow the back-propagation operate properly."""))
+          else
+            occupied[blob] = true
+          end
+        end
+      end
+    end
+  end
+
+  # travel top down to make sure that every blob that needs back-propagate is
+  # reached by one back-propagate path
   for i = length(net.layers):-1:1
     layer = net.layers[i]
 
     if can_do_bp(layer)
       if is_sink(layer)
         # ready to do bp by itself
-        for blob in layer.bottoms
-          bp_ready[blob] = true
+        if can_do_bp(layer)
+          for blob in layer.bottoms
+            bp_ready[blob] = true
+          end
         end
       else
         if !is_inplace(layer) # ignore inplace layers
           # normal layer, bp ready only if upper blobs bp ready
-          for j = 1:length(layer.tops)
-            if !bp_ready[layer.tops[j]] && !isa(net.states[i].blobs_diff[j], NullBlob)
-              throw(TopologyError("Blob $(layer.tops[j]) in layer $(layer.name) is not connected to a loss, cannot do back-propagation"))
+          for blob in layer.tops
+            if !bp_ready[blob] && bp_needed[blob]
+              throw(TopologyError("Blob $(blob) in layer $(layer.name) is not connected to a loss, cannot do back-propagation"))
             end
           end
           # now we are also bp ready
@@ -273,4 +333,7 @@ function check_bp_topology(net::Net)
       end
     end
   end
+
+  # when all the checks passed
+  return true
 end

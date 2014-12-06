@@ -1,3 +1,5 @@
+export TopologyError
+
 type TopologyError <: Exception
   desc :: String
 end
