@@ -1,9 +1,12 @@
-@defstruct MemoryDataLayer DataLayer (
+@defstruct MemoryDataLayer Layer (
   name :: String = "memory-data",
   (tops :: Vector{Symbol} = Symbol[:data,:label], length(tops) > 0),
   (batch_size :: Int = 0, batch_size > 0),
   (data :: Vector{Array} = Array[], length(data) == length(tops)),
   transformers :: Vector = [],
+)
+@characterize_layer(MemoryDataLayer,
+  is_source => true
 )
 
 type MemoryDataLayerState <: LayerState

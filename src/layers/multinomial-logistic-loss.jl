@@ -1,11 +1,15 @@
 ############################################################
 # Multinomial Logistic Loss
 ############################################################
-@defstruct MultinomialLogisticLossLayer LossLayer (
+@defstruct MultinomialLogisticLossLayer Layer (
   name :: String = "multinomial-logistic-loss",
   weights :: Array = [],
   (normalize:: Symbol = :local, in(normalize,[:local,:global,:no])),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
+)
+@characterize_layer(MultinomialLogisticLossLayer,
+  has_loss => true,
+  is_sink  => true,
 )
 
 type MultinomialLogisticLossLayerState{T} <: LayerState

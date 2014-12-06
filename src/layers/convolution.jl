@@ -1,4 +1,4 @@
-@defstruct ConvolutionLayer TrainableLayer (
+@defstruct ConvolutionLayer Layer (
   (name :: String = "", !isempty(name)),
   param_key :: String = "",
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) > 0),
@@ -17,6 +17,11 @@
   bias_cons :: Constraint = NoCons(),
   filter_lr :: FloatingPoint = 1.0,
   bias_lr :: FloatingPoint = 2.0,
+)
+@characterize_layer(ConvolutionLayer,
+  has_param  => true,
+  has_neuron => true,
+  can_do_bp  => true
 )
 
 type CPUConvState

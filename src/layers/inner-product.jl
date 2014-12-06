@@ -1,4 +1,4 @@
-@defstruct InnerProductLayer TrainableLayer (
+@defstruct InnerProductLayer Layer (
   (name :: String = "", !isempty(name)),
   param_key :: String = "",
   (tops :: Vector{Symbol} = Symbol[], length(tops) >= 1),
@@ -13,6 +13,11 @@
   weight_lr :: FloatingPoint = 1.0,
   bias_lr :: FloatingPoint = 2.0,
   neuron :: ActivationFunction = Neurons.Identity()
+)
+@characterize_layer(InnerProductLayer,
+  can_do_bp  => true,
+  has_param  => true,
+  has_neuron => true
 )
 
 type InnerProductLayerState <: LayerState

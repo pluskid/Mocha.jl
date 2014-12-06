@@ -10,7 +10,7 @@ end # module LRNMode
 ################################################################################
 # Local Response Normalization Layer
 ################################################################################
-@defstruct LRNLayer CompLayer (
+@defstruct LRNLayer Layer (
   name :: String = "lrn",
   (kernel :: Int = 5, kernel > 0),
   (scale :: Number = 1, isreal(scale)),
@@ -19,6 +19,9 @@ end # module LRNMode
   (tops :: Vector{Symbol} = Symbol[], length(tops) == 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 1),
   mode :: LRNModeType = LRNMode.AcrossChannel(),
+)
+@characterize_layer(LRNLayer,
+  can_do_bp => true
 )
 
 type LRNLayerState <: LayerState

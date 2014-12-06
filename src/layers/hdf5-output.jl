@@ -1,11 +1,14 @@
 using HDF5
 
-@defstruct HDF5OutputLayer UtilLayer (
+@defstruct HDF5OutputLayer Layer (
   name :: String = "hdf5-output",
   (bottoms :: Vector{Symbol} = [], length(bottoms) > 0),
   (datasets :: Vector{Symbol} = [], length(datasets) == 0 || length(datasets) == length(bottoms)),
   (filename :: String = "", !isempty(filename)),
   force_overwrite :: Bool = false,
+)
+@characterize_layer(HDF5OutputLayer,
+  is_sink => true
 )
 
 type HDF5OutputLayerState <: LayerState

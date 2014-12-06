@@ -1,4 +1,4 @@
-@defstruct ChannelPoolingLayer CompLayer (
+@defstruct ChannelPoolingLayer Layer (
   name :: String = "channel-pooling",
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) > 0),
   (tops :: Vector{Symbol} = Symbol[], length(tops) == length(bottoms)),
@@ -6,6 +6,9 @@
   (stride :: Int = 1, stride > 0),
   (pad :: NTuple{2, Int} = (0,0), all([pad...] .>= 0)),
   pooling :: PoolingFunction = Pooling.Max(),
+)
+@characterize_layer(ChannelPoolingLayer,
+  can_do_bp => true,
 )
 
 type ChannelPoolingLayerState <: LayerState

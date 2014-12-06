@@ -1,11 +1,16 @@
 ############################################################
 # Softmax Loss
 ############################################################
-@defstruct SoftmaxLossLayer LossLayer (
+@defstruct SoftmaxLossLayer Layer (
   name :: String = "softmax-loss",
   weights :: Array = [],
   normalize:: Symbol = :local,
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
+)
+@characterize_layer(SoftmaxLossLayer,
+  has_loss  => true,
+  can_do_bp => true,
+  is_sink   => true
 )
 
 type SoftmaxLossLayerState{T} <: LayerState

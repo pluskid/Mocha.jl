@@ -19,11 +19,14 @@ end # module ElementWiseFunctors
 ############################################################
 # Element-wise operation layer
 ############################################################
-@defstruct ElementWiseLayer CompLayer (
+@defstruct ElementWiseLayer Layer (
   name :: String = "element-wise",
   operation :: ElementWiseFunctorType = ElementWiseFunctors.Add(),
   (tops :: Vector{Symbol} = Symbol[], length(tops) == 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == get_num_args(operation)),
+)
+@characterize_layer(ElementWiseLayer,
+  can_do_bp => true
 )
 
 type ElementWiseLayerState{Op<:ElementWiseFunctorType} <: LayerState

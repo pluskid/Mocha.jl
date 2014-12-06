@@ -1,4 +1,4 @@
-@defstruct ArgmaxLayer UtilLayer (
+@defstruct ArgmaxLayer Layer (
   name :: String = "argmax",
   (tops :: Vector{Symbol} = Symbol[], length(tops) > 0),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(tops)),

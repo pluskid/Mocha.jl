@@ -1,4 +1,3 @@
-export DataLayer, LossLayer, UtilLayer, StatLayer, CompLayer, TrainableLayer, InplaceLayer
 export LayerState
 
 export HDF5DataLayer, MemoryDataLayer
@@ -84,13 +83,20 @@ export reset_statistics, show_statistics
 #   parameters if any.
 ############################################################
 
-abstract DataLayer <: Layer # Layer that provide data
-abstract LossLayer <: Layer # Layer that defines loss function for learning
-abstract StatLayer <: Layer # Layer that provide statistics (e.g. Accuracy)
-abstract CompLayer <: Layer # Layer that do computation
-abstract TrainableLayer <: CompLayer # Layer that could be trained
-abstract InplaceLayer   <: CompLayer # Layer that does inplace computation
-abstract UtilLayer      <: CompLayer # Layer that acts as utilities (no backward)
+
+############################################################
+# Default layer characterizations
+############################################################
+@characterize_layer(Layer,
+  is_source  => false, # data layer, takes no bottom blobs
+  is_sink    => false, # top layer, produces no top blobs (loss, accuracy, etc.)
+  has_param  => false, # contains trainable parameters
+  has_neuron => false, # has a neuron
+  can_do_bp  => false, # can do back-propagation
+  is_inplace => false, # do inplace computation, does not has own top blobs
+  has_loss   => false, # produce a loss
+  has_stats  => false, # produce statistics
+)
 
 function setup(backend::Backend, layer::Layer, shared_parameters, inputs::Vector{Blob}, diffs::Vector{Blob})
   error("Not implemented, should setup layer state")
@@ -113,7 +119,8 @@ function backward(backend::Backend, state::LayerState, inputs::Vector{Blob}, dif
   error("Not implemented, please define an empty function explicitly if not needed")
 end
 
-function param_key(layer::TrainableLayer)
+function param_key(layer::Layer)
+  @assert has_param(layer)
   key = layer.param_key
   return isempty(key) ? layer.name : key
 end

@@ -1,5 +1,5 @@
 #############################################################
-# A convenient macro to define a Composite Type, with 
+# A convenient macro to define a Composite Type, with
 # default values for fields and a constructor that accept
 # keyword parameters to initialize the fields. For example
 #
@@ -16,7 +16,7 @@
 # specifying a validation check on the field value.
 # In the example above, the default value for
 # field2 does not satisfy the assertion, this
-# could be used to force user to provide a 
+# could be used to force user to provide a
 # valid value when no meaningful default value
 # is available.
 #############################################################
@@ -69,3 +69,28 @@ macro defstruct(name, super_name, fields)
   end
 end
 
+#############################################################
+# A macro used to characterize a layer. Example
+#
+# @characterize_layer(HDF5DataLayer,
+#     is_source => true,
+#     is_sink => false,
+#     back_propagate => false,
+# )
+#############################################################
+macro characterize_layer(layer, properties...)
+  defs = Array(Expr, length(properties))
+  for (i,prop) in enumerate(properties)
+    if !(isa(prop, Expr) && prop.head == :(=>))
+      error("Property should be: property_name => value")
+    end
+
+    prop_name = prop.args[1]
+    prop_val  = prop.args[2]
+    defs[i] = quote
+      $(esc(prop_name))(::$layer) = $prop_val
+    end
+  end
+
+  Expr(:block, defs...)
+end

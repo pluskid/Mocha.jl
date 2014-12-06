@@ -1,4 +1,4 @@
-@defstruct PoolingLayer CompLayer (
+@defstruct PoolingLayer Layer (
   name :: String = "pooling",
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) > 0),
   (tops :: Vector{Symbol} = Symbol[], length(tops) == length(bottoms)),
@@ -7,6 +7,10 @@
   (pad :: NTuple{2, Int} = (0,0), all([pad...] .>= 0)),
   pooling :: PoolingFunction = Pooling.Max(),
   neuron :: ActivationFunction = Neurons.Identity(),
+)
+@characterize_layer(PoolingLayer,
+  can_do_bp  => true,
+  has_neuron => true
 )
 
 type PoolingLayerState <: LayerState

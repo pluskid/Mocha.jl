@@ -3,9 +3,14 @@
 #
 # L(\hat{y},y) = 1/2N \sum_{i=1}^N (\hat{y}_i - y_i)^2
 ############################################################
-@defstruct SquareLossLayer LossLayer (
+@defstruct SquareLossLayer Layer (
   name :: String = "square-loss",
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
+)
+@characterize_layer(SquareLossLayer,
+  has_loss  => true,
+  can_do_bp => true,
+  is_sink   => true,
 )
 
 type SquareLossLayerState{T} <: LayerState

@@ -1,11 +1,14 @@
 # Note ReshapeLayer is NOT a UtilLayer because it computes backward (via some upper layers)
-@defstruct ReshapeLayer CompLayer (
+@defstruct ReshapeLayer Layer (
   name :: String = "reshape",
   (tops :: Vector{Symbol} = [], length(tops) > 0),
   (bottoms :: Vector{Symbol} = [], length(bottoms) == length(tops)),
   (width :: Int = 1, width > 0),
   (height :: Int = 1, height > 0),
   (channels :: Int = 1, channels > 0)
+)
+@characterize_layer(ReshapeLayer,
+  can_do_bp => true, # back-propagate via upper layers
 )
 
 type ReshapeLayerState <: LayerState

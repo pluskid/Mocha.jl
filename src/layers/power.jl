@@ -1,13 +1,16 @@
 ############################################################
 # Power Layer
 ############################################################
-@defstruct PowerLayer CompLayer (
+@defstruct PowerLayer Layer (
   name :: String = "power",
   (power :: Number = 1, isreal(power)),
   (scale :: Number = 1, isreal(scale)),
   (shift :: Number = 0, isreal(shift)),
   tops :: Vector{Symbol} = Symbol[],
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(tops)),
+)
+@characterize_layer(PowerLayer,
+  can_do_bp => true
 )
 
 type PowerLayerState <: LayerState

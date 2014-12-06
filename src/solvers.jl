@@ -227,7 +227,7 @@ function solve(solver::Solver, net::Net)
   i_state = setup(solver, net, solver_state)
 
   @debug("Entering solver loop")
-  trainable_layers = filter(i -> isa(net.layers[i], TrainableLayer), 1:length(net.layers))
+  trainable_layers = filter(i -> has_param(net.layers[i]), 1:length(net.layers))
   while true
     solver_state.iter += 1
 

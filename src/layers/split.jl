@@ -1,10 +1,13 @@
 ############################################################
 # Split Layer
 ############################################################
-@defstruct SplitLayer CompLayer (
+@defstruct SplitLayer Layer (
   name :: String = "split",
   (tops :: Vector{Symbol} = Symbol[], length(tops) > 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 1),
+)
+@characterize_layer(SplitLayer,
+  can_do_bp => true
 )
 
 type SplitLayerState{N} <: LayerState

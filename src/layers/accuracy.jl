@@ -1,7 +1,11 @@
-@defstruct AccuracyLayer StatLayer (
+@defstruct AccuracyLayer Layer (
   name :: String = "accuracy",
   report_error :: Bool = false,
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
+)
+@characterize_layer(AccuracyLayer,
+  is_sink    => true,
+  has_stats  => true,
 )
 
 type AccuracyLayerState <: LayerState

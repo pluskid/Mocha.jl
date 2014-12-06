@@ -1,4 +1,4 @@
-@defstruct CropLayer CompLayer (
+@defstruct CropLayer Layer (
   name :: String = "crop",
   random_crop :: Bool = false,
   random_mirror :: Bool = false,

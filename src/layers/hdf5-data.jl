@@ -1,6 +1,6 @@
 using HDF5
 
-@defstruct HDF5DataLayer DataLayer (
+@defstruct HDF5DataLayer Layer (
   name :: String = "hdf5-data",
   (source :: String = "", source != ""),
   (batch_size :: Int = 0, batch_size > 0),
@@ -8,6 +8,10 @@ using HDF5
   shuffle :: Bool = false,
   transformers :: Vector = [],
 )
+@characterize_layer(HDF5DataLayer,
+  is_source => true
+)
+
 
 type HDF5DataLayerState <: LayerState
   layer :: HDF5DataLayer

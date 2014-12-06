@@ -29,7 +29,7 @@ function init(net::Net)
   @debug("Init network $(net.name)")
   for i = 1:length(net.layers)
     state = net.states[i]
-    if isa(net.layers[i], TrainableLayer)
+    if has_param(net.layers[i])
       for param in state.parameters
         if !isa(param.initializer, NullInitializer)
           @debug("Init parameter $(param.name) for layer $(net.layers[i].name)")
@@ -73,13 +73,13 @@ function forward(net::Net, regu_coef :: FloatingPoint = 0.0)
   for i = 1:length(net.layers)
     forward(net.backend, net.states[i], net.blobs_forward[i])
 
-    if :neuron ∈ names(net.layers[i]) && !isa(net.layers[i].neuron, Neurons.Identity)
+    if has_neuron(net.layers[i]) && !isa(net.layers[i].neuron, Neurons.Identity)
       for blob in net.states[i].blobs
         forward(net.backend, net.layers[i].neuron, blob)
       end
     end
 
-    if isa(net.layers[i], LossLayer)
+    if has_loss(net.layers[i])
       obj_val += net.states[i].loss
     end
 
@@ -89,7 +89,7 @@ function forward(net::Net, regu_coef :: FloatingPoint = 0.0)
     #-- just to save computational resources.
     #
     # # handle regularization
-    # if isa(net.layers[i], TrainableLayer)
+    # if has_param(net.layers[i])
     #   for param in net.states[i].parameters
     #     obj_val += forward(net.backend, param.regularizer, regu_coef, param.blob)
     #   end
@@ -101,7 +101,7 @@ end
 
 function backward(net::Net, regu_coef :: FloatingPoint = 0.0)
   for i = length(net.layers):-1:1
-    if :neuron ∈ names(net.layers[i]) && !isa(net.layers[i].neuron, Neurons.Identity)
+    if has_neuron(net.layers[i]) && !isa(net.layers[i].neuron, Neurons.Identity)
       state = net.states[i]
       for j = 1:length(state.blobs)
         backward(net.backend, net.layers[i].neuron, state.blobs[j], state.blobs_diff[j])
@@ -110,7 +110,7 @@ function backward(net::Net, regu_coef :: FloatingPoint = 0.0)
     backward(net.backend, net.states[i], net.blobs_forward[i], net.blobs_backward[i])
 
     # handle regularization
-    if isa(net.layers[i], TrainableLayer)
+    if has_param(net.layers[i])
       for param in net.states[i].parameters
         backward(net.backend, param.regularizer, regu_coef, param.blob, param.gradient)
       end
@@ -121,7 +121,7 @@ end
 
 Net(name::String, backend::Backend, layers :: Vector{Layer}) = begin
   layers = topological_sort(layers)
-  data_layers = find(l -> isa(l, DataLayer), layers)
+  data_layers = find(l -> is_source(l), layers)
 
   n = length(layers)
   states = Array(LayerState, n)
@@ -142,21 +142,21 @@ Net(name::String, backend::Backend, layers :: Vector{Layer}) = begin
       blob_bwd = Blob[]
     end
 
-    if isa(layers[i], TrainableLayer)
+    if has_param(layers[i])
       params = registry_get(backend, param_key(layers[i]))
     else
       params = nothing
     end
     states[i] = setup(backend, layers[i], params, blob_fwd, blob_bwd)
-    if isa(layers[i], TrainableLayer)
+    if has_param(layers[i])
       registry_put(backend, param_key(layers[i]), states[i].parameters)
     end
 
-    if :tops ∈ names(layer)
+    if !is_sink(layer) && !is_inplace(layer)
       for j = 1:length(layer.tops)
         output_blobs[layer.tops[j]] = states[i].blobs[j]
       end
-      if :blobs_diff ∈ names(states[i])
+      if can_do_bp(layer)
         for j = 1:length(layer.tops)
           diff_blobs[layer.tops[j]] = states[i].blobs_diff[j]
         end
@@ -184,7 +184,7 @@ function topological_sort(layers :: Vector{Layer})
   output_taken = Dict{Symbol, Bool}()
 
   for i = 1:n
-    if :tops ∈ names(layers[i])
+    if !is_sink(layers[i]) && !is_inplace(layers[i])
       for key in layers[i].tops
         if haskey(outputs, key)
           error("Duplicated output blob name: $(key)")
@@ -196,12 +196,12 @@ function topological_sort(layers :: Vector{Layer})
   end
 
   for i = 1:n
-    if :bottoms ∈ names(layers[i])
+    if !is_source(layers[i])
       for key in layers[i].bottoms
         if !haskey(outputs, key)
           error("Required input blob missing: $(key)")
         end
-        if !isa(layers[i], InplaceLayer) && !isa(layers[i], UtilLayer) && output_taken[key]
+        if can_do_bp(layers[i]) && !is_inplace(layers[i]) && output_taken[key]
           @error(" Output blob $key is being used in multiple places as input blob")
           @error(" Fix this if it is a bug. Or if sharing is intended, use the SplitLayer")
           @error(" SplitLayer explicitly to allow the back-propagation operate properly.")
@@ -209,7 +209,7 @@ function topological_sort(layers :: Vector{Layer})
         end
 
         graph[i,outputs[key]] = 1
-        if !isa(layers[i], InplaceLayer) && !isa(layers[i], UtilLayer)
+        if can_do_bp(layers[i])
           output_taken[key] = true
         end
       end
@@ -226,8 +226,8 @@ function topological_sort(layers :: Vector{Layer})
     end
 
     # inplace layers should always be put first
-    idx_inplace = filter(i -> isa(layers[i], InplaceLayer), idx)
-    idx_normal  = filter(i -> !isa(layers[i], InplaceLayer), idx)
+    idx_inplace = filter(i -> is_inplace(layers[i]), idx)
+    idx_normal  = filter(i -> !is_inplace(layers[i]), idx)
     idx = [idx_inplace, idx_normal]
 
     push!(index, idx...)
