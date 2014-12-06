@@ -146,3 +146,69 @@ is exactly what the lower layer's "errors propagated from upper layers". By
 tracing the whole data path reversely, we now help each layers compute the
 gradients of their own parameters internally. And this is called
 back-propagation.
+
+Mocha Network Topology Tips
+---------------------------
+
+Shared Parameters
+~~~~~~~~~~~~~~~~~
+
+If you want to construct *two* (or more) networks that shares parameters. For
+example, during training, you want to have a *validation net* that shares
+parameters with the *training net*, yet takes a different data layer as input
+data stream and compute the accuracy on the validation set. In this case, the
+simply using *the same* ``Layer`` object when constructing both networks will be
+enough. See :doc:`tutorial/mnist` for a concrete example.
+
+If you want to have **different** layers in **the same** network to share
+parameters, you can just use the same ``param_key`` property in the layers you
+want to share parameters. For example
+
+.. code-block:: julia
+
+   layer_ip1 = InnerProductLayer(name="ip1", param_key="shared_ip",
+       output_dim=512, bottoms=[:input1], tops=[:output1])
+   layer_ip2 = InnerProductLayer(name="ip2", param_key="shared_ip",
+       output_dim=512, bottoms=[:input2], tops=[:output2])
+
+Note to share parameters, the input and output shape should be exactly the same.
+If the two (or more) layers sharing parameters are of the same type (this is
+almost always true), an easier and more efficient way to do the same thing is
+simply to define one layer that takes multiple inputs and produce multiple
+outputs. For example, the snippet above is equivalent to
+
+.. code-block:: julia
+
+   layer_ip = InnerProductLayer(name="ip", output_dim=512,
+       bottoms=[:input1,:input2], tops=[:outpu1,:outpu2])
+
+Shared Blobs
+~~~~~~~~~~~~
+
+In the basic case, a data path connects each output blob to one input blob. In
+some cases, one output could be used in multiple places. For example, in a test
+net, the output of the top representation layer will be used to compute the
+predictions, and produce either loss or accuracy; meanwhile, one might want to
+use a :class:`HDF5OutputLayer` to store the representations as extracted
+features for future use. When the network is only doing *forward* operation,
+blob sharing is not a problem: multiple layers could be declared to take the
+same blob as input.
+
+When you want to do *backward* operation (i.e. back-propagation for training) on
+the network, things could get a little bit complicated: If back-propagation does
+not go through the blob, than sharing is OK. For example, the output blob of
+a :class:`HDF5DataLayer` does not need back-propagation. The output blob of
+a :class:`ReshapeLayer` sitting directly on top of a data layer does not need
+back-propagation, either.
+
+However, for a :class:`InnerProductLayer`, even sitting directly on top of
+a data layer, its output blobs do need back-propagation, because the inner
+product layer needs back-propagation to compute gradients with respect to its
+weights and bias parameters. A :class:`TopologyError` will be thrown when you
+try to do back-propagation on a network with this kind of Topology.
+
+In this case, a :class:`SplitLayer` could be used to explicitly "split" a blob
+into two (or more) "copies". The split layer could handle back-propagation
+correctly. Moreover, the forward operation of a split layer is implemented with
+data sharing instead of copying. Thus no extra cost is incurred when in forward
+pass.
