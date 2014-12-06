@@ -1,6 +1,6 @@
 function test_net_topology_duplicated_blob(backend::Backend)
   println("-- Testing network topology with duplicated blobs")
-  layer = MemoryDataLayer(tops=[:data, :data], batch_size=1, data=Array[rand(1,1,1,1),rand(1,1,1,1)])
+  layer = MemoryDataLayer(tops=[:data, :data], batch_size=1, data=Array[rand(1),rand(1)])
   @test_throws TopologyError Net("net", backend, Layer[layer])
 
   layer1 = MemoryDataLayer(tops=[:data], batch_size=1, data=Array[rand(1,1,1,1)])
