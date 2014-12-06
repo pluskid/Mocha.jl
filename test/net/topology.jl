@@ -12,6 +12,12 @@ function test_net_topology_missing_blob(backend::Backend)
   layer = ReshapeLayer(tops=[:output], bottoms=[:input])
   @test_throws TopologyError Net("net", backend, Layer[layer])
 end
+function test_net_topology_loop(backend::Backend)
+  println("-- Testing network topology with circular dependency")
+  layer1 = InnerProductLayer(name="ip1", tops=[:output], bottoms=[:input], output_dim=1)
+  layer2 = InnerProductLayer(name="ip2", tops=[:input], bottoms=[:output], output_dim=1)
+  @test_throws TopologyError Net("net", backend, Layer[layer1, layer2])
+end
 function test_net_topology_multiple_bp(backend::Backend)
   println("-- Testing network topology with multiple back-propagate path")
 
@@ -96,6 +102,7 @@ end
 function test_net_topology(backend::Backend)
   test_net_topology_duplicated_blob(backend)
   test_net_topology_missing_blob(backend)
+  test_net_topology_loop(backend)
   test_net_topology_multiple_bp(backend)
   test_net_topology_dangling_blob(backend)
 end
