@@ -206,6 +206,9 @@ end
 # General Solver Loop
 ############################################################
 function solve(solver::Solver, net::Net)
+  @debug("Checking network topology for back-propagation")
+  check_bp_topology(net)
+
   solver_state = SolverState()
   solver_state = load_snapshot(net, solver_state, solver.params.load_from)
   solver_state.learning_rate = get_learning_rate(solver.params.lr_policy, solver_state)

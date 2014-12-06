@@ -10,6 +10,7 @@ end
 
 include("macros.jl")
 include("base.jl")
+include("exception.jl")
 
 include("utils/blas.jl")
 include("utils/math.jl")

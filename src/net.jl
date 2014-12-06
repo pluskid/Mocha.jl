@@ -48,14 +48,14 @@ end
 
 function dump_statistics(storage, net::Net; show=false)
   for i = 1:length(net.layers)
-    if isa(net.layers[i], StatLayer)
+    if has_stats(net.layers[i])
       dump_statistics(storage, net.states[i], show)
     end
   end
 end
 function reset_statistics(net::Net)
   for i = 1:length(net.layers)
-    if isa(net.layers[i], StatLayer)
+    if has_stats(net.layers[i])
       reset_statistics(net.states[i])
     end
   end
@@ -174,7 +174,6 @@ Net(name::String, backend::Backend, layers :: Vector{Layer}) = begin
   return Net(name, backend, layers, states, blobs_forward, blobs_backward, data_layers, output_blobs, diff_blobs)
 end
 
-
 function topological_sort(layers :: Vector{Layer})
   n = length(layers)
 
@@ -187,7 +186,7 @@ function topological_sort(layers :: Vector{Layer})
     if !is_sink(layers[i]) && !is_inplace(layers[i])
       for key in layers[i].tops
         if haskey(outputs, key)
-          error("Duplicated output blob name: $(key)")
+          throw(TopologyError("Duplicated output blob name: $(key)"))
         end
         outputs[key] = i
         output_taken[key] = false
@@ -199,13 +198,12 @@ function topological_sort(layers :: Vector{Layer})
     if !is_source(layers[i])
       for key in layers[i].bottoms
         if !haskey(outputs, key)
-          error("Required input blob missing: $(key)")
+          throw(TopologyError("Required input blob missing: $(key)"))
         end
         if can_do_bp(layers[i]) && !is_inplace(layers[i]) && output_taken[key]
-          @error(" Output blob $key is being used in multiple places as input blob")
-          @error(" Fix this if it is a bug. Or if sharing is intended, use the SplitLayer")
-          @error(" SplitLayer explicitly to allow the back-propagation operate properly.")
-          error("Illegal network topology")
+          throw(TopologyError("""Output blob $key is being used in multiple places as input blob.
+          Fix this if it is a bug. Or if sharing is intended, use the SplitLayer.
+          SplitLayer explicitly to allow the back-propagation operate properly."""))
         end
 
         graph[i,outputs[key]] = 1
@@ -222,7 +220,7 @@ function topological_sort(layers :: Vector{Layer})
     # find layers that has no dependency
     idx = find(sum(graph,2) .== 0)
     if length(idx) == 0
-      error("Can't finish topological sort, cycle in layer dependency?")
+      throw(TopologyError("Can't finish topological sort, cycle in layer dependency?"))
     end
 
     # inplace layers should always be put first
@@ -236,4 +234,43 @@ function topological_sort(layers :: Vector{Layer})
   end
 
   return layers[index]
+end
+
+# make sure the network topology is good for backward propagation
+function check_bp_topology(net::Net)
+  bp_ready = Dict{Symbol,Bool}()
+  for layer = net.layers
+    if !is_sink(layer) && !is_inplace(layer)
+      for blob in layer.tops
+        bp_ready[blob] = false
+      end
+    end
+  end
+
+  # travel top down
+  for i = length(net.layers):-1:1
+    layer = net.layers[i]
+
+    if can_do_bp(layer)
+      if is_sink(layer)
+        # ready to do bp by itself
+        for blob in layer.bottoms
+          bp_ready[blob] = true
+        end
+      else
+        if !is_inplace(layer) # ignore inplace layers
+          # normal layer, bp ready only if upper blobs bp ready
+          for j = 1:length(layer.tops)
+            if !bp_ready[layer.tops[j]] && !isa(net.states[i].blobs_diff[j], NullBlob)
+              throw(TopologyError("Blob $(layer.tops[j]) in layer $(layer.name) is not connected to a loss, cannot do back-propagation"))
+            end
+          end
+          # now we are also bp ready
+          for blob in layer.bottoms
+            bp_ready[blob] = true
+          end
+        end
+      end
+    end
+  end
 end

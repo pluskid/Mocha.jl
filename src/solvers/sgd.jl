@@ -13,7 +13,7 @@ end
 
 function setup(sgd::SGD, net::Net, solver_state::SolverState)
   param_states  = map(i -> net.states[i],
-      filter(i -> isa(net.layers[i], TrainableLayer), 1:length(net.layers)))
+      filter(i -> has_param(net.layers[i]), 1:length(net.layers)))
   param_history = Array(Vector{Blob}, length(param_states))
   for i = 1:length(param_states)
     state = param_states[i]

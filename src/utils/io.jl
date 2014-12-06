@@ -39,7 +39,7 @@ const NETWORK_SAVE_NAME = "params_all"
 function save_network(file::JLD.JldFile, net)
   params_all = Dict{String, Vector{Array}}()
   for i = 1:length(net.layers)
-    if isa(net.layers[i], TrainableLayer)
+    if has_param(net.layers[i])
       key = net.layers[i].name
       if haskey(params_all, key)
         error("Duplicated names ($key) for multiple layers, cannot save parameters")
@@ -63,7 +63,7 @@ end
 function load_network(file::JLD.JldFile, net)
   params_all = read(file, NETWORK_SAVE_NAME)
   for i = 1:length(net.layers)
-    if isa(net.layers[i], TrainableLayer)
+    if has_param(net.layers[i])
       key = net.layers[i].name
       if !haskey(params_all, key)
         error("Cannot find saved parameters for layer $key")
@@ -89,7 +89,7 @@ end
 ############################################################
 function load_network(file::HDF5File, net, die_if_not_found=true)
   for i = 1:length(net.layers)
-    if isa(net.layers[i], TrainableLayer)
+    if has_param(net.layers[i])
       layer_name = net.layers[i].name
       @debug("Loading parameters from HDF5 for layer $layer_name")
       for j = 1:length(net.states[i].parameters)
