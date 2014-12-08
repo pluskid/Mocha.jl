@@ -11,7 +11,9 @@ Computation Layers
       tops
       bottoms
 
-      Blob names for output and input.
+      Blob names for output and input. This layer could take multiple input
+      blobs and produce the corresponding number of output blobs. The shape of
+      the input blobs do not need to be the same.
 
 .. class:: ChannelPoolingLayer
 
