@@ -35,7 +35,7 @@ function test_concat_layer(backend::Backend, dim, T, eps)
 end
 
 function test_concat_layer(backend::Backend, T, eps)
-  for dim = 1:4
+  for dim = 1:3
     test_concat_layer(backend, dim, T, eps)
   end
 end

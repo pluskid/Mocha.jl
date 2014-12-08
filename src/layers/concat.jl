@@ -1,6 +1,6 @@
 @defstruct ConcatLayer Layer (
   name :: String = "concat",
-  (dim :: Int = 3, 1 <= dim <= 4),
+  (dim :: Int = 3, 1 <= dim <= 3),
   (bottoms :: Vector{Symbol} = [], length(bottoms) >= 2),
   (tops :: Vector{Symbol} = [], length(tops) == 1)
 )
