@@ -242,7 +242,11 @@ Computation Layers
       tops
       bottoms
 
-      Blob names for output and input.
+      Blob names for output and input. This layer can take multiple input blobs
+      and produce the corresponding number of output blobs. The feature
+      dimensions (the product of the first 3 dimensions) of all input blobs
+      should be the same, but they could potentially have different batch sizes
+      (the 4th dimension).
 
 .. class:: LRNLayer
 
