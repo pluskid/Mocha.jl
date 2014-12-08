@@ -3,7 +3,7 @@ function setup_etc(backend::GPUBackend, layer::ChannelPoolingLayer, inputs, pool
     masks = Array(CuPtr, length(inputs))
     for i = 1:length(inputs)
       masks[i] = CUDA.cualloc(Csize_t, get_width(inputs[i]) * get_height(inputs[i]) *
-          pooled_chann * get_num(inputs[i]))
+          pooled_chann[i] * get_num(inputs[i]))
     end
     etc = masks
   elseif isa(layer.pooling, Pooling.Mean)

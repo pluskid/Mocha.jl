@@ -18,6 +18,16 @@ if test_gpu
   init(backend_gpu)
 end
 
+# run test in the whole directory, latest modified files
+# are run first, this makes waiting time shorter when writing
+# or modifying unit-tests
+function test_dir(dir)
+  map(reverse(Mocha.glob(dir, r".*\.jl$", sort_by=:mtime))) do file
+    include("$dir/$file")
+  end
+end
+test_dir("layers")
+
 ############################################################
 # Network
 ############################################################
@@ -62,39 +72,7 @@ include("data-transformers.jl")
 ############################################################
 # Layers
 ############################################################
-include("layers/inplace.jl")
-include("layers/shared-parameters.jl")
-
-#-- Statistics Layers
-include("layers/accuracy.jl")
-
-#-- Data layers
-include("layers/hdf5-data.jl")
-include("layers/memory-data.jl")
-
-#-- Utility Computation Layers
-include("layers/hdf5-output.jl")
-include("layers/argmax.jl")
-
-#-- Computation Layers
-include("layers/inner-product.jl")
-include("layers/convolution.jl")
-include("layers/pooling.jl")
-include("layers/softmax.jl")
-include("layers/power.jl")
-include("layers/split.jl")
-include("layers/element-wise.jl")
-include("layers/channel-pooling.jl")
-include("layers/lrn.jl")
-include("layers/dropout.jl")
-include("layers/reshape.jl")
-include("layers/crop.jl")
-include("layers/concat.jl")
-
-#-- Loss Layers
-include("layers/square-loss.jl")
-include("layers/multinomial-logistic-loss.jl")
-include("layers/softmax-loss.jl")
+test_dir("layers")
 
 if test_gpu
   shutdown(backend_gpu)
