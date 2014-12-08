@@ -39,6 +39,25 @@ Computation Layers
 
       Blob names for output and input.
 
+.. class:: ConcatLayer
+
+   Concating multiple blobs into one along the specified dimension. Except in
+   the concatenation dimension, the shape of the blobs being concatenated should
+   be the same.
+
+   .. attribute:: dim
+
+      Default 3 (channel). The dimension to concat. Should be an iteger within the
+      range 1 to 4.
+
+   .. attribute:: bottoms
+
+      Names of the blobs to be concatenated.
+
+   .. attribute:: tops
+
+      Name of the concatenated output blob.
+
 .. class:: ConvolutionLayer
 
    Convolution in the spatial dimensions.
