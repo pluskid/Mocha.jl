@@ -1,0 +1,40 @@
+/**
+ * Helper utilities to copy a 4D tensor into a larger 4D tensor 
+ * and back. Used in ConcatLayer.
+ */
+#define SHIFTCOPY_BOUNDS_AND_INDEX \
+  int cn = threadIdx.x + blockIdx.x * blockDim.x; \
+  int w  = threadIdx.y + blockIdx.y * blockDim.y; \
+  int h  = threadIdx.z + blockIdx.z * blockDim.z; \
+  if (cn >= channels*num || w >= width || h >= height) \
+    return; \
+  int c = cn % channels; \
+  int n = cn / channels; \
+  int idx = w + width*(h + height*(c + channels*n)); \
+  int idx_shift = w+w_shift + width2*(h+h_shift + height2*(c+c_shift + channels2*(n+n_shift)))
+
+// width2, height2 and channels2 are geometry for the bigger tensor that we are copying into.
+template <typename T>
+__device__ void copy_to_shifted(T *dst, T *src, int width, int height, int channels, int num, int w_shift, int h_shift, int c_shift, int n_shift, int width2, int height2, int channels2) {
+  SHIFTCOPY_BOUNDS_AND_INDEX;
+  dst[idx_shift] = src[idx];
+}
+template <typename T>
+__device__ void copy_from_shifted(T *dst, T *src, int width, int height, int channels, int num, int w_shift, int h_shift, int c_shift, int n_shift, int width2, int height2, int channels2) { 
+  SHIFTCOPY_BOUNDS_AND_INDEX;
+  dst[idx] = src[idx_shift];
+}
+
+#define DEF_SHIFT_COPY(name, dtype) \
+  __global__ void name ## _ ## dtype(dtype *dst, dtype *src, int width, int height, int channels, int num, int w_shift, int h_shift, int c_shift, int n_shift, int width2, int height2, int channels2) { \
+    name(dst, src, width, height, channels, num, w_shift, h_shift, c_shift, n_shift, width2, height2, channels2); \
+  }
+
+extern "C" {
+DEF_SHIFT_COPY(copy_to_shifted, float)
+DEF_SHIFT_COPY(copy_to_shifted, double)
+DEF_SHIFT_COPY(copy_from_shifted, float)
+DEF_SHIFT_COPY(copy_from_shifted, double)
+} // extern "C"
+
+// vim: ft=cuda

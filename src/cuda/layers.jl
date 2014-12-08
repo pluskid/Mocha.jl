@@ -17,6 +17,7 @@ include("layers/channel-pooling.jl")
 include("layers/dropout.jl")
 include("layers/argmax.jl")
 include("layers/crop.jl")
+include("layers/concat.jl")
 
 #############################################################
 # Loss Layers
