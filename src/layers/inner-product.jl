@@ -33,25 +33,33 @@ type InnerProductLayerState <: LayerState
   ∇b :: Blob
 
   # a all-1 vector used in gemm to help bias calculation
-  bias_multiplier :: Blob
+  bias_multipliers :: Vector{Blob}
 
   InnerProductLayerState(backend::Backend, layer::InnerProductLayer, shared_params, inputs::Vector{Blob}) = begin
     dims = size(inputs[1])
-    nums = dims[4]
     fea_dim = dims[1:3]
     fea_size = prod(fea_dim)
     out_dim = layer.output_dim
 
+    # make sure all blobs has the same feature dimension (batch_size could be different)
+    for i = 1:length(inputs)
+      @assert prod(size(inputs[i])[1:3]) == fea_size
+    end
+
     data_type = eltype(inputs[1])
     blobs = Array(Blob, length(inputs))
     blobs_diff = Array(Blob, length(inputs))
+    bias_multipliers = Array(Blob, length(inputs))
 
     for i = 1:length(inputs)
+      nums = size(inputs[i],4)
       blobs[i] = make_blob(backend, data_type, 1, 1, out_dim, nums)
       blobs_diff[i] = make_blob(backend, data_type, 1, 1, out_dim, nums)
+      bias_multipliers[i] = make_blob(backend, ones(data_type, nums, 1, 1, 1))
     end
 
     state = new(layer, blobs, blobs_diff)
+    state.bias_multipliers = bias_multipliers
 
     if shared_params != nothing
       @assert length(shared_params) == 2
@@ -74,9 +82,6 @@ type InnerProductLayerState <: LayerState
     state.∇b = param_bias.gradient
     state.parameters = [param_weight, param_bias]
 
-    state.bias_multiplier = make_blob(backend, data_type, nums, 1, 1, 1)
-    fill!(state.bias_multiplier, 1)
-
     return state
   end
 end
@@ -91,30 +96,30 @@ end
 function shutdown(backend::Backend, state::InnerProductLayerState)
   map(destroy, state.blobs)
   map(destroy, state.blobs_diff)
+  map(destroy, state.bias_multipliers)
   map(destroy, state.parameters)
 end
 
 function forward(backend::CPUBackend, state::InnerProductLayerState, inputs::Vector{Blob})
   M = size(state.W, 2)   # target dim
-  N = size(inputs[1], 4) # batch size
   K = size(state.W, 1)   # source dim
   dtype = eltype(state.W)
   for i = 1:length(inputs)
     input = inputs[i]
+    N = size(input, 4)   # batch size
     output = state.blobs[i]
     # output = W^T * X
     BLAS.gemm!('T', 'N', convert(dtype, 1), reshape(state.W.data, (K,M)),
                 reshape(input.data, (K,N)), convert(dtype, 0), reshape(output.data, (M,N)))
     # output += bias
     BLAS.gemm!('N', 'N', convert(dtype, 1), reshape(state.b.data, (M,1)),
-                reshape(state.bias_multiplier.data, (1,N)), convert(dtype, 1), reshape(output.data, (M,N)))
+                reshape(state.bias_multipliers[i].data, (1,N)), convert(dtype, 1), reshape(output.data, (M,N)))
   end
 end
 
 function backward(backend::CPUBackend, state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   target_dim = size(state.W, 2)
   source_dim = size(state.W, 1)
-  batch_size = size(inputs[1], 4)
   data_type  = eltype(state.W)
 
   # used in BLAS, at first it is zero, indicating overwriting the data
@@ -124,6 +129,7 @@ function backward(backend::CPUBackend, state::InnerProductLayerState, inputs::Ve
   for i = 1:length(inputs)
     # ∂f/∂W = input * [∂f/∂o]^T
     input = inputs[i]
+    batch_size = size(input, 4)
     ∂f_∂o = state.blobs_diff[i]
     BLAS.gemm!('N', 'T', convert(data_type, 1), reshape(input.data, (source_dim, batch_size)),
                reshape(∂f_∂o.data, (target_dim, batch_size)), zero_and_then_one,
@@ -131,7 +137,7 @@ function backward(backend::CPUBackend, state::InnerProductLayerState, inputs::Ve
 
     # ∂f/∂b = sum(∂f/∂o, 2)
     BLAS.gemm!('N', 'N', convert(data_type, 1), reshape(∂f_∂o.data, (target_dim, batch_size)),
-               reshape(state.bias_multiplier.data, (batch_size, 1)), zero_and_then_one,
+               reshape(state.bias_multipliers[i].data, (batch_size, 1)), zero_and_then_one,
                reshape(state.∇b.data, (target_dim, 1)))
 
     zero_and_then_one = convert(data_type, 1)
