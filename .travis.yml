@@ -28,7 +28,7 @@ before_install:
     fi
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 script:
-  - julia -e 'Pkg.init(); Pkg.clone(pwd()); Pkg.checkout("HDF5"); Pkg.test("Mocha", coverage=true)'
+  - julia -e 'Pkg.init(); Pkg.clone(pwd()); Pkg.test("Mocha", coverage=true)'
   - MOCHA_USE_NATIVE_EXT=true julia -e 'Pkg.build("Mocha"); Pkg.test("Mocha", coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("Mocha")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
