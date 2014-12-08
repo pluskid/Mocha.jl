@@ -11,7 +11,14 @@ function test_hdf5_output_layer(backend::Backend, T, eps)
   input_blob = make_blob(backend, input)
 
   output_fn = string(tempname(), ".hdf5")
+  open(output_fn, "w") do file
+    # create an empty file
+  end
   layer = HDF5OutputLayer(bottoms=[:input], datasets=[:foobar], filename=output_fn)
+  @test_throws ErrorException setup(backend, layer, Blob[input_blob], Blob[NullBlob()])
+
+  layer = HDF5OutputLayer(bottoms=[:input], datasets=[:foobar],
+      filename=output_fn, force_overwrite=true)
   state = setup(backend, layer, Blob[input_blob], Blob[NullBlob()])
 
   # repeat 3 times
