@@ -89,6 +89,7 @@ include("layers/lrn.jl")
 include("layers/dropout.jl")
 include("layers/reshape.jl")
 include("layers/crop.jl")
+include("layers/concat.jl")
 
 #-- Loss Layers
 include("layers/square-loss.jl")
