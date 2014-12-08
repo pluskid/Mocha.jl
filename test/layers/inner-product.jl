@@ -7,7 +7,7 @@ function test_inner_product_layer(backend::Backend, n_input, T, eps)
   # inner-product layer should be able to take blobs with
   # different num, but the input feature dimensions should
   # be the same
-  batch_size   = [abs(rand(Int)) % 50 for i = 1:n_input]
+  batch_size   = [abs(rand(Int)) % 50 + 1 for i = 1:n_input]
   orig_dim_all = (10, 20, 3)
   orig_dim     = prod(orig_dim_all)
   target_dim   = 30
