@@ -40,6 +40,7 @@
   * A new MNIST example using fully connected and dropout layers (@stokasto)
   * Reproducible MNIST results with fixed random seed (@stokasto)
   * Tweaked IJulia Notebook image classification example
+  * Document for solvers and coffee breaks
 
 ## v0.0.3 2014.11.27
 

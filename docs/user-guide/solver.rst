@@ -180,3 +180,30 @@ iterations. There is one extra keyword parameter for setup coffee lounge:
 The logs are stored as simple Julia dictionaries. See ``plot_statistics.jl`` in
 the ``tools`` directory for an example of how to retrieve and visualize the
 saved information.
+
+Built-in Coffee Breaks
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. class:: TrainingSummary
+
+   This is a coffee break in which the solver talks about the training summary.
+   Currently, only the training objective function value at the current
+   iteration is reported. Reporting for other solver status like the current
+   learning rate and momentum could be easily added.
+
+   The training summary at iteration 0 shows the results before training starts.
+
+.. class:: Snapshot
+
+   Automatically save solver and model snapshots to a given snapshot directory.
+   The snapshot saved at iteration 0 corresponds to the init model (randomly
+   initialized via `initializers </user-guide/initializer>`_ or loaded from
+   existing model file).
+
+.. class:: ValidationPerformance
+
+   Run an epoch over a validation set and report the performance (e.g.
+   multiclass classification accuracy). You will need to construct a validation
+   network that shares parameter with the training network and provide access to
+   the validation dataset. See `the MNIST tutorial </tutorial/mnist>`_ for
+   a concrete example.
