@@ -171,7 +171,6 @@ want to share parameters. For example
    layer_ip2 = InnerProductLayer(name="ip2", param_key="shared_ip",
        output_dim=512, bottoms=[:input2], tops=[:output2])
 
-Note to share parameters, the input and output shape should be exactly the same.
 If the two (or more) layers sharing parameters are of the same type (this is
 almost always true), an easier and more efficient way to do the same thing is
 simply to define one layer that takes multiple inputs and produce multiple
@@ -181,6 +180,11 @@ outputs. For example, the snippet above is equivalent to
 
    layer_ip = InnerProductLayer(name="ip", output_dim=512,
        bottoms=[:input1,:input2], tops=[:outpu1,:outpu2])
+
+Not all layers accept multiple input blobs. Some layers require all the
+input blobs to be the same shape, while others can handle input blobs of
+completely different shapes. Please refer to the ``bottoms`` and ``tops``
+properties of each layer for detailed behavior of each layer.
 
 Shared Blobs
 ~~~~~~~~~~~~
