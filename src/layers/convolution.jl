@@ -80,6 +80,15 @@ type ConvolutionLayerState <: LayerState
 
     dtype = eltype(inputs[1])
 
+    # Make sure all input blobs are of the same shape
+    for i = 1:length(inputs)
+      @assert width      == get_width(inputs[i])
+      @assert height     == get_height(inputs[i])
+      @assert channels   == get_chann(inputs[i])
+      @assert batch_size == get_num(inputs[i])
+      @assert dtype      == eltype(inputs[i])
+    end
+
     blobs = Array(Blob, length(inputs))
     blobs_diff = Array(Blob, length(inputs))
 

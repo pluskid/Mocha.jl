@@ -1,4 +1,4 @@
-function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, T, eps)
+function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, n_input, T, eps)
   println("-- Testing Convolution on $(typeof(backend)){$T} filter=$((filter_w,filter_h))...")
   println("    > Setup")
   input_w = 16
@@ -13,20 +13,14 @@ function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, p
 
   layer = ConvolutionLayer(name="conv", kernel=(filter_w, filter_h), stride=(stride_w, stride_h),
       pad=(pad_w,pad_h), n_filter=n_filter, n_group=n_group,
-      tops=[:conv], bottoms=[:data])
+      tops=Array(Symbol,n_input), bottoms=Array(Symbol,n_input))
 
-  input = rand(T, input_dims)
-  inputs = Blob[make_blob(backend, T, input_dims)]
-  copy!(inputs[1], input)
-  data_diffs = Blob[make_blob(backend, T, size(input))]
+  # convolution layer requires each input blob to be the same shape
+  input = [rand(T, input_dims) for i = 1:n_input]
+  inputs = Blob[make_blob(backend, x) for x in input]
+  data_diffs = Blob[make_blob(backend, x) for x in input]
 
   state = setup(backend, layer, inputs, data_diffs)
-
-  #if isa(backend, CuDNNBackend)
-  #  # test that we are getting the correct output shape
-  #  out_blob_dims = CuDNN.get_output_tensor4d_dim(state.etc.conv_desc[1], CuDNN.CUDNN_CONVOLUTION_FWD)
-  #  @test out_blob_dims == (get_width(state.blobs[1]), get_height(state.blobs[1]), int(get_chann(state.blobs[1])/n_group), input_num)
-  #end
 
   println("    > Forward")
   filter = rand(T, filter_dims)
@@ -35,29 +29,40 @@ function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, p
   copy!(state.bias, bias)
 
   forward(backend, state, inputs)
-  expected_output = convolution_forward(state, filter, bias, input)
-  @test size(expected_output) == size(state.blobs[1])
-  got_output = similar(expected_output)
-  copy!(got_output, state.blobs[1])
-  @test all(-eps .< expected_output - got_output .< eps)
+  for i = 1:n_input
+    expected_output = convolution_forward(state, filter, bias, input[i])
+    @test size(expected_output) == size(state.blobs[i])
+    got_output = similar(expected_output)
+    copy!(got_output, state.blobs[i])
+    @test all(-eps .< expected_output - got_output .< eps)
+  end
 
   println("    > Backward")
-  top_diff = rand(T, size(expected_output))
-  copy!(state.blobs_diff[1], top_diff)
+  top_diff = [rand(T, size(state.blobs[1])) for i = 1:n_input]
+  for i = 1:n_input
+    copy!(state.blobs_diff[i], top_diff[i])
+  end
 
   backward(backend, state, inputs, data_diffs)
 
-  gradients_expected = convolution_backward(state, filter, bias, input, top_diff)
-  gradients_got = Array[similar(x) for x in gradients_expected]
-  copy!(gradients_got[1], state.∇filter)
-  copy!(gradients_got[2], state.∇bias)
-  copy!(gradients_got[3], data_diffs[1])
+  grad_filter_exp = zeros(T, filter_dims)
+  grad_bias_exp = zeros(T, bias_dims)
+  for i = 1:n_input
+    gradients_expected = convolution_backward(state, filter, bias, input[i], top_diff[i])
+    gradients_got = similar(gradients_expected[3])
+    copy!(gradients_got, data_diffs[i])
 
-  for i = 1:length(gradients_expected)
-    # println(maximum(abs(gradients_got[i] - gradients_expected[i])))
-    # println(mean(abs(gradients_got[i] - gradients_expected[i])))
-    @test all(-eps .< gradients_got[i] - gradients_expected[i] .< eps)
+    @test all(-eps .< gradients_got - gradients_expected[3] .< eps)
+
+    grad_filter_exp += gradients_expected[1]
+    grad_bias_exp += gradients_expected[2]
   end
+  grad_filter_got = similar(grad_filter_exp)
+  grad_bias_got = similar(grad_bias_exp)
+  copy!(grad_filter_got, state.∇filter)
+  copy!(grad_bias_got, state.∇bias)
+  @test all(abs(grad_filter_exp - grad_filter_got) .< eps)
+  @test all(abs(grad_bias_exp - grad_bias_got) .< eps)
 
   shutdown(backend, state)
 end
@@ -158,14 +163,14 @@ function convolution_backward(state, filter::Array, bias::Array, input::Array, t
   return (∇filter, ∇bias, ∇input)
 end
 
-function test_convolution_layer(backend::Backend, T, eps)
-  test_convolution_layer(backend, 2, 3, 4, 2, 2, 1, 2, T, eps)
-  test_convolution_layer(backend, 1, 1, 1, 0, 0, 1, 1, T, eps)
+function test_convolution_layer(backend::Backend, n_input, T, eps)
+  test_convolution_layer(backend, 2, 3, 4, 2, 2, 1, 2, n_input, T, eps)
+  test_convolution_layer(backend, 1, 1, 1, 0, 0, 1, 1, n_input, T, eps)
 end
 
 function test_convolution_layer(backend::Backend)
-  test_convolution_layer(backend, Float64, 1e-10)
-  test_convolution_layer(backend, Float32, 1e-2) # Float32 is sooo inaccurate?
+  test_convolution_layer(backend, 3, Float64, 1e-10)
+  test_convolution_layer(backend, 3, Float32, 1e-2) # Float32 is sooo inaccurate?
 end
 if test_cpu
   test_convolution_layer(backend_cpu)

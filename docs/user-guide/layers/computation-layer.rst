@@ -12,7 +12,7 @@ Computation Layers
       bottoms
 
       Blob names for output and input. This layer could take multiple input
-      blobs and produce the corresponding number of output blobs. The shape of
+      blobs and produce the corresponding number of output blobs. The shapes of
       the input blobs do not need to be the same.
 
 .. class:: ChannelPoolingLayer
@@ -46,7 +46,7 @@ Computation Layers
 .. class:: ConcatLayer
 
    Concating multiple blobs into one along the specified dimension. Except in
-   the concatenation dimension, the shape of the blobs being concatenated should
+   the concatenation dimension, the shapes of the blobs being concatenated should
    be the same.
 
    .. attribute:: dim
@@ -124,6 +124,13 @@ Computation Layers
 
       Default 2.0. The local learning rate for the bias.
 
+   .. attribute::
+      tops
+      bottoms
+
+      Blob names for output and input. This layer can take multiple input blobs
+      and produce the corresponding number of output blobs. The shapes of the
+      input blobs **must be the same**.
 
 .. class:: CropLayer
 
@@ -150,7 +157,7 @@ Computation Layers
       bottoms
 
       Blob names for output and input. This layer can take multiple input blobs
-      and produce the corresponding number of output blobs. The shape of the
+      and produce the corresponding number of output blobs. The shapes of the
       input blobs do not need to be the same as long as they are valid (not
       smaller than the shape specified in ``crop_size``).
 
@@ -341,7 +348,7 @@ Computation Layers
       bottoms
 
       Blob names for output and input. This layer could take multiple input
-      blobs and produce the corresponding number of output blobs. The shape of
+      blobs and produce the corresponding number of output blobs. The shapes of
       the input blobs do not need to be the same.
 
 .. class:: PowerLayer
