@@ -35,6 +35,7 @@ include("net/topology.jl")
 ############################################################
 # Utilities functions
 ############################################################
+include("utils/glob.jl")
 include("utils/blas.jl")
 include("utils/blob-reshape.jl")
 
