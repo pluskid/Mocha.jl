@@ -32,7 +32,7 @@ function setup_etc(backend::GPUBackend, layer::PoolingLayer, inputs,
       inputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype,
           (width,height,get_chann(inputs[i]),get_num(inputs[i])))
       outputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype,
-          (pooled_width,pooled_height,get_chann(inputs[i]),get_num(inputs[i])))
+          (pooled_width[i],pooled_height[i],get_chann(inputs[i]),get_num(inputs[i])))
     end
     etc = CuDNNPoolingState(pooling_desc, inputs_desc, outputs_desc, Blob[], Blob[])
   else
@@ -53,7 +53,7 @@ function setup_etc(backend::GPUBackend, layer::PoolingLayer, inputs,
       inputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype,
           (padded_width,padded_height,get_chann(inputs[i]),get_num(inputs[i])))
       outputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype,
-          (pooled_width,pooled_height,get_chann(inputs[i]),get_num(inputs[i])))
+          (pooled_width[i],pooled_height[i],get_chann(inputs[i]),get_num(inputs[i])))
     end
     etc = CuDNNPoolingState(pooling_desc, inputs_desc, outputs_desc,
         padded_blobs, padded_blobs_diff)

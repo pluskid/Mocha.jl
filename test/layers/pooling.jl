@@ -1,4 +1,4 @@
-function test_pooling_layer(backend::Backend, pooling::PoolingFunction, has_padding::Bool, T, eps)
+function test_pooling_layer(backend::Backend, pooling::PoolingFunction, has_padding::Bool, n_input, T, eps)
   println("-- Testing Pooling($(typeof(pooling))) on $(typeof(backend)){$T}...")
   println("    > Setup")
 
@@ -18,43 +18,51 @@ function test_pooling_layer(backend::Backend, pooling::PoolingFunction, has_padd
   stride_w    = 1
   stride_h    = 2
 
-  layer = PoolingLayer(kernel=(kernel_w,kernel_h), stride=(stride_w,stride_h), pad=padding,
-      tops=[:output], bottoms=[:input], pooling=pooling)
+  dims = [abs(rand(Int,4)) % 5 + 12 for i = 1:n_input]
+  dims[1] = [input_w, input_h, input_chann, input_num]
 
-  input_dims = (input_w, input_h, input_chann, input_num)
-  input = rand(T, input_dims)
-  inputs = Blob[make_blob(backend, T, input_dims)]
-  diffs = Blob[make_blob(backend, T, input_dims)]
-  copy!(inputs[1], input)
+  layer = PoolingLayer(kernel=(kernel_w,kernel_h), stride=(stride_w,stride_h), pad=padding,
+      tops=Array(Symbol,n_input), bottoms=Array(Symbol,n_input), pooling=pooling)
+
+  input = [rand(T, dims[i]...) for i = 1:n_input]
+  inputs = Blob[make_blob(backend, x) for x in input]
+  diffs = Blob[make_blob(backend, x) for x in input]
 
   state = setup(backend, layer, inputs, diffs)
 
   println("    > Forward")
   forward(backend, state, inputs)
 
-  expected_output, payload = pooling_forward(state, input)
-  got_output = similar(expected_output)
-  copy!(got_output, state.blobs[1])
-  @test all(-eps .< expected_output - got_output .< eps)
+  payloads = Array(Any, n_input)
+  for i = 1:n_input
+    expected_output, payloads[i] = pooling_forward(state, i, input[i])
+    got_output = similar(expected_output)
+    copy!(got_output, state.blobs[i])
+    @test all(-eps .< expected_output - got_output .< eps)
+  end
 
   println("    > Backward")
-  top_diff = rand(T, size(state.blobs[1]))
-  copy!(state.blobs_diff[1], top_diff)
+  top_diff = [rand(T, size(state.blobs[i])) for i = 1:n_input]
+  for i = 1:n_input
+    copy!(state.blobs_diff[i], top_diff[i])
+  end
 
   backward(backend, state, inputs, diffs)
 
-  expected_grad = pooling_backward(state, input, top_diff, payload)
-  got_grad = similar(expected_grad)
-  copy!(got_grad, diffs[1])
-  @test all(-eps .< expected_grad - got_grad .< eps)
+  for i = 1:n_input
+    expected_grad = pooling_backward(state, i, input[i], top_diff[i], payloads[i])
+    got_grad = similar(expected_grad)
+    copy!(got_grad, diffs[i])
+    @test all(-eps .< expected_grad - got_grad .< eps)
+  end
 
   shutdown(backend, state)
 end
 
-function pooling_forward(state, input::Array)
+function pooling_forward(state, i, input::Array)
   width, height, channels, num = size(input)
-  pooled_width = get_width(state.blobs[1])
-  pooled_height = get_height(state.blobs[1])
+  pooled_width = get_width(state.blobs[i])
+  pooled_height = get_height(state.blobs[i])
   kernel_size = state.layer.kernel[1] * state.layer.kernel[2]
 
   output = zeros(eltype(input), pooled_width, pooled_height, channels, num)
@@ -95,10 +103,10 @@ function pooling_forward(state, input::Array)
   end
 end
 
-function pooling_backward(state, input::Array, diff::Array, payload::Any)
+function pooling_backward(state, i, input::Array, diff::Array, payload::Any)
   width, height, channels, num = size(input)
-  pooled_width = get_width(state.blobs[1])
-  pooled_height = get_height(state.blobs[1])
+  pooled_width = get_width(state.blobs[i])
+  pooled_height = get_height(state.blobs[i])
   kernel_size = state.layer.kernel[1] * state.layer.kernel[2]
 
   gradient = zeros(eltype(input), size(input))
@@ -131,16 +139,16 @@ function pooling_backward(state, input::Array, diff::Array, payload::Any)
   return gradient
 end
 
-function test_pooling_layer(backend::Backend, T, eps)
-  test_pooling_layer(backend, Pooling.Max(), false, T, eps)
-  test_pooling_layer(backend, Pooling.Mean(), false, T, eps)
-  test_pooling_layer(backend, Pooling.Max(), true, T, eps)
-  test_pooling_layer(backend, Pooling.Mean(), true, T, eps)
+function test_pooling_layer(backend::Backend, n_input, T, eps)
+  test_pooling_layer(backend, Pooling.Max(), false, n_input, T, eps)
+  test_pooling_layer(backend, Pooling.Mean(), false, n_input, T, eps)
+  test_pooling_layer(backend, Pooling.Max(), true, n_input, T, eps)
+  test_pooling_layer(backend, Pooling.Mean(), true, n_input, T, eps)
 end
 
 function test_pooling_layer(backend::Backend)
-  test_pooling_layer(backend, Float64, 1e-10)
-  test_pooling_layer(backend, Float32, 1e-3)
+  test_pooling_layer(backend, 3, Float64, 1e-10)
+  test_pooling_layer(backend, 3, Float32, 1e-3)
 end
 
 if test_cpu
