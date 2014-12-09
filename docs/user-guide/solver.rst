@@ -95,6 +95,25 @@ Learning Rate Policy
    Stages are specified by number of training iterations. See `the CIFAR-10
    tutorial </tutorial/cifar10>`_ for an example of staged learning rate policy.
 
+Momentum Policy
+~~~~~~~~~~~~~~~
+
+.. class:: MomPolicy.Fixed
+
+   Provide fixed momentum.
+
+.. class:: MomPolicy.Step
+
+   Provide momentum as min(base_mom * gamma :sup:`floor(iter / stepsize)`,
+   max_mom). Here *base_mom*, *gamma*, *stepsize* and *max_mom* are policy
+   parameters and *iter* is the training iteration.
+
+.. class:: MomPolicy.Linear
+
+   Provide momentum as min(base_mom + floor(iter / stepsize) * gamma, max_mom).
+   Here *base_mom*, *gamma*, *stepsize* and *max_mom* are policy parameters and
+   *iter* is the training iteration.
+
 Solver Algorithms
 -----------------
 
