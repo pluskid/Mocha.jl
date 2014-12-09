@@ -13,8 +13,6 @@ function setup_etc(backend::GPUBackend, layer::PoolingLayer, inputs,
     pooled_width, pooled_height)
 
   dtype = eltype(inputs[1])
-  width = get_width(inputs[1])
-  height = get_height(inputs[1])
 
   if isa(layer.pooling, Pooling.Max)
     pooling_mode = CuDNN.CUDNN_POOLING_MAX
@@ -30,7 +28,7 @@ function setup_etc(backend::GPUBackend, layer::PoolingLayer, inputs,
   if layer.pad[1] == 0 && layer.pad[2] == 0
     for i = 1:length(inputs)
       inputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype,
-          (width,height,get_chann(inputs[i]),get_num(inputs[i])))
+          (get_width(inputs[i]),get_height(inputs[i]),get_chann(inputs[i]),get_num(inputs[i])))
       outputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype,
           (pooled_width[i],pooled_height[i],get_chann(inputs[i]),get_num(inputs[i])))
     end
@@ -40,11 +38,11 @@ function setup_etc(backend::GPUBackend, layer::PoolingLayer, inputs,
     # of implementing our own pooling in GPU, it should be easier and computationally
     # more efficient to do explicit padding and call the CuDNN pooling. If in the
     # future CuDNN supports pooling with padding, this workaround could be removed.
-    padded_width = width + 2*layer.pad[1]
-    padded_height = height + 2*layer.pad[2]
     padded_blobs = Array(Blob, length(inputs))
     padded_blobs_diff = Array(Blob, length(inputs))
     for i = 1:length(inputs)
+      padded_width = get_width(inputs[i]) + 2*layer.pad[1]
+      padded_height = get_height(inputs[i]) + 2*layer.pad[2]
       padded_blobs[i] = make_blob(backend, dtype, padded_width, padded_height,
           get_chann(inputs[i]), get_num(inputs[i]))
       padded_blobs_diff[i] = make_blob(backend, dtype, padded_width, padded_height,
