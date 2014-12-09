@@ -5,11 +5,41 @@
 * Interface
   * Network architecture visualization
 * Infrastructure
-  * Other solvers?
-  * Distributed / Parallel training?
   * CUDA Stream?
 * Document
   * Developer's Guide
+
+## v0.0.4 ??
+
+* Network
+  * Parameter (l2-norm) constraints (@stokasto)
+  * Random shuffling for HDF5 data layer
+  * ConcatLayer
+* Infrastructure
+  * Momentum policy (@stokasto)
+  * Save training statistics to file and plot tools (@stokasto)
+  * Coffee breaks now have a coffee lounge
+  * Auto detect whether CUDA kernel needs update
+  * Stochastic Nesterov Accelerated Gradient Solver
+  * Solver refactoring:
+    * Behaviors for coffee breaks are simplified
+    * Solver state variables like iteration now has clearer semantics
+    * Support loading external pre-trained models for fine-tuning
+  * Support explicit weight-sharing layers
+  * Behaviors of layers taking multiple inputs made clear and unit-tested
+  * Refactoring:
+    * Removed the confusing `System` type
+    * `CuDNNBackend` renamed to `GPUBackend`
+    * Cleaned up `cuBLAS` API (@stokasto)
+  * Layers are now organized by characterization properties
+  * Robustness
+    * Various explicit topology verifiecations for `Net` and unit tests
+    * Increased unit test coverage for rare cases
+  * Updated dependency to HDF5.jl 0.4.7
+* Documentation
+  * A new MNIST example using fully connected and dropout layers (@stokasto)
+  * Reproducible MNIST results with fixed random seed (@stokasto)
+  * Tweaked IJulia Notebook image classification example
 
 ## v0.0.3 2014.11.27
 
