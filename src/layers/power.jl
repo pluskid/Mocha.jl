@@ -6,7 +6,7 @@
   (power :: Number = 1, isreal(power)),
   (scale :: Number = 1, isreal(scale)),
   (shift :: Number = 0, isreal(shift)),
-  tops :: Vector{Symbol} = Symbol[],
+  (tops :: Vector{Symbol} = Symbol[], length(tops) > 0),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(tops)),
 )
 @characterize_layer(PowerLayer,
