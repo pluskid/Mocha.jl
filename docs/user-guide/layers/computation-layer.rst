@@ -309,7 +309,7 @@ Computation Layers
       tops
       bottoms
 
-      Names for output and input blobs. Only one input and one output blob are
+      Names for output and input blobs. Only **one** input and **one** output blob are
       allowed.
 
 .. class:: PoolingLayer
