@@ -43,25 +43,6 @@ Computation Layers
       blobs and produce the corresponding number of output blobs. The shapes of
       the input blobs do not need to be the same.
 
-.. class:: ConcatLayer
-
-   Concating multiple blobs into one along the specified dimension. Except in
-   the concatenation dimension, the shapes of the blobs being concatenated should
-   be the same.
-
-   .. attribute:: dim
-
-      Default 3 (channel). The dimension to concat. Should be an iteger within the
-      range 1 to 4.
-
-   .. attribute:: bottoms
-
-      Names of the blobs to be concatenated.
-
-   .. attribute:: tops
-
-      Name of the concatenated output blob.
-
 .. class:: ConvolutionLayer
 
    Convolution in the spatial dimensions.
@@ -391,37 +372,6 @@ Computation Layers
       blobs and produce the corresponding number of output blobs. The shapes of
       the input blobs do not need to be the same.
 
-.. class:: ReshapeLayer
-
-   Reshape a blob. Can be useful if, for example, you want to make the *flat*
-   output from an :class:`InnerProductLayer` *meaningful* by assigning each
-   dimension spatial information.
-
-   Internally there is no data copying going on. The total number of elements in
-   the blob tensor after reshaping should be the same as the original blob
-   tensor.
-
-   .. attribute:: width
-
-      Default 1. The new width after reshaping.
-
-   .. attribute:: height
-
-      Default 1. The new height after reshaping.
-
-   .. attribute:: channels
-
-      Default 1. The new channels after reshaping.
-
-   .. attribute::
-      tops
-      bottoms
-
-      Blob names for output and input. This layer could take multiple input
-      blobs and produce the corresponding number of output blobs. The shapes of
-      the input blobs do not need to be the same. But the feature dimensions
-      (product of the first 3 dimensions) should be the same.
-
 .. class:: SoftmaxLayer
 
    Compute softmax over the channel dimension. The inputs :math:`x_1,\ldots,x_C`
@@ -445,21 +395,3 @@ Computation Layers
       blobs and produce the corresponding number of output blobs. The shapes of
       the input blobs do not need to be the same.
 
-.. class:: SplitLayer
-
-   Split layer produces identical *copies* [1]_ of the input. The number of copies
-   is determined by the length of the ``tops`` property. During back propagation,
-   derivatives from all the output copies are added together and propagated down.
-
-   This layer is typically used as a helper to implement some more complicated
-   layers.
-
-   .. attribute:: bottoms
-
-      Input blob names, only one input blob is allowed.
-
-   .. attribute:: tops
-
-      Output blob names, should be more than one output blobs.
-
-   .. [1] All the data is shared, so there is no actually data copying.
