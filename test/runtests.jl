@@ -26,7 +26,6 @@ function test_dir(dir)
     include("$dir/$file")
   end
 end
-test_dir("layers")
 
 ############################################################
 # Network
