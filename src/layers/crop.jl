@@ -14,12 +14,8 @@ end
 
 function setup(backend::Backend, layer::CropLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   for i = 1:length(inputs)
-    if layer.crop_size[1] > get_width(inputs[i]) || layer.crop_size[2] > get_height(inputs[i])
-      error("crop_size $(layer.crop_size) too large for blob $(layer.bottoms[i])")
-    end
-    if !isa(diffs[i], NullBlob)
-      error("Blob $(layers.bottoms[i]) is expecting backpropage, but backpropage for CropLayer is not implemented")
-    end
+    @assert layer.crop_size[1] <= get_width(inputs[i]) && layer.crop_size[2] <= get_height(inputs[i])
+    @assert isa(diffs[i], NullBlob) # Back-propagation for crop-layer is not implemented
   end
 
   blobs = Blob[make_blob(backend, eltype(x),

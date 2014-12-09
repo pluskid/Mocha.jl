@@ -149,7 +149,10 @@ Computation Layers
       tops
       bottoms
 
-      Blob names for output and input.
+      Blob names for output and input. This layer can take multiple input blobs
+      and produce the corresponding number of output blobs. The shape of the
+      input blobs do not need to be the same as long as they are valid (not
+      smaller than the shape specified in ``crop_size``).
 
 .. class:: DropoutLayer
 
