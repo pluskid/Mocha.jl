@@ -425,6 +425,19 @@ Computation Layers
       \sigma(x_1,\ldots,x_C) = (\sigma_1,\ldots,\sigma_C) = \left(\frac{e^{x_1}}{\sum_j
       e^{x_j}},\ldots,\frac{e^{x_C}}{\sum_je^{x_j}}\right)
 
+   Note currently back-propagation for softmax layer is not implemented. To
+   train a multi-class classification network with softmax probability output
+   and multiclass logistic loss, use the bundled :class:`SoftmaxLossLayer`
+   instead.
+
+   .. attribute::
+      tops
+      bottoms
+
+      Blob names for output and input. This layer could take multiple input
+      blobs and produce the corresponding number of output blobs. The shapes of
+      the input blobs do not need to be the same.
+
 .. class:: SplitLayer
 
    Split layer produces identical *copies* [1]_ of the input. The number of copies
