@@ -1,3 +1,13 @@
+############################################################
+# NOTE: dropout layer only takes one input blob. We
+# intentionally make this restriction because as an
+# in-place layer, if has to be put directly on top
+# of the layer that is producing the input blob for
+# drop-out layer. If drop-out layer depends on multiple
+# blobs coming from different layers, it might be
+# difficult or even impossible to decide a correct
+# layer layout.
+############################################################
 @defstruct DropoutLayer Layer (
   name :: String = "dropout",
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 1),

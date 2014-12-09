@@ -176,8 +176,11 @@ Computation Layers
    .. attribute:: bottoms
 
       The names of the input blobs dropout operates on. Note this is a *in-place
-      layer*, so there is no ``tops`` property. The output blobs will be the
-      same as the input blobs.
+      layer*, so
+
+      1. there is no ``tops`` property. The output blobs will be the same as the
+         input blobs.
+      2. It takes **only one** input blob.
 
 .. class:: ElementWiseLayer
 
