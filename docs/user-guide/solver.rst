@@ -65,6 +65,36 @@ General Solver Parameters
         `exported from external deep learning tools
         </user-guide/tools/import-caffe-model>`_.
 
+Learning Rate Policy
+~~~~~~~~~~~~~~~~~~~~
+
+.. class:: LRPolicy.Fixed
+
+   A fixed learning rate.
+
+.. class:: LRPolicy.Step
+
+   Provide learning rate as base_lr * gamma :sup:`floor(iter / stepsize)`. Here
+   *base_lr*, *gamma* and *stepsize* are parameters for the policy and *iter* is
+   the training iteration.
+
+.. class:: LRPolicy.Exp
+
+   Provide learning rate as base_lr * gamma :sup:`iter`. Here *base_lr* and
+   *gamma* are parameters for the policy and *iter* is the training iteration.
+
+.. class:: LRPolicy.Inv
+
+   Provide learning rate as base_lr * (1 + gamma * iter) :sup:`-power`. Here
+   *base_lr*, *gamma* and *power* are parameters for the policy and *iter* is
+   the training iteration.
+
+.. class:: LRPolicy.Staged
+
+   This policy provide different learning rate policy at different *stages*.
+   Stages are specified by number of training iterations. See `the CIFAR-10
+   tutorial </tutorial/cifar10>`_ for an example of staged learning rate policy.
+
 Solver Algorithms
 -----------------
 
