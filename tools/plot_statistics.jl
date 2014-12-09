@@ -53,7 +53,7 @@ s = ArgParseSettings()
     action = :store_true
   "statistics_filenames"
     nargs = '*'
-    help = "the filenames of the statistics hdf5 files"
+    help = "the filenames of the statistics JLD files"
     required = true
 end
 

@@ -6,26 +6,26 @@ ENV["MOCHA_USE_CUDA"] = "true"
 using Mocha
 
 ############################################################
-# This is an example script for training a fully connected 
-# network with dropout on mnist. 
+# This is an example script for training a fully connected
+# network with dropout on mnist.
 #
-# The network size is 784-1200-1200-10 with ReLU units 
+# The network size is 784-1200-1200-10 with ReLU units
 # in the hidden layers and a softmax output layer.
 # The parameters for training the network were chosen
-# to reproduce the results from the original dropout paper: 
-# http://arxiv.org/abs/1207.0580 
-# and the corresponding newer JMLR paper: 
+# to reproduce the results from the original dropout paper:
+# http://arxiv.org/abs/1207.0580
+# and the corresponding newer JMLR paper:
 # http://jmlr.org/papers/volume15/srivastava14a/srivastava14a.pdf
 #
 # Our parameters slightly differ. This is mainly due to the
 # fact that in the original dropout paper the weights are scaled
 # by 0.5 after training whereas we scale them by 2 during training.
 #
-# The settings in this script should currently produce a model that 
+# The settings in this script should currently produce a model that
 # gets 94 errors (or 99.06 % accuracy) on the test set
 # if you run it for the whole 2000 epochs (=600*2000 steps).
-# This is slightly better than the results of the JMLR paper. 
-# This difference is likely due to slight differences in the 
+# This is slightly better than the results of the JMLR paper.
+# This difference is likely due to slight differences in the
 # learning parameters. Also note that our hyperparameters
 # are not chosen using a validation set, as one would do
 # for a paper. If your hardware and cuda versions differ
@@ -54,7 +54,7 @@ fc3_layer   = InnerProductLayer(name="out", output_dim=10, bottoms=[:fc2],
 loss_layer  = SoftmaxLossLayer(name="loss", bottoms=[:out,:label])
 
 # setup dropout for the different layers
-# we use 20% dropout on the inputs and 50% dropout in the hidden layers 
+# we use 20% dropout on the inputs and 50% dropout in the hidden layers
 # as these values were previously found to be good defaults
 drop_input  = DropoutLayer(name="drop_in", bottoms=[:data], ratio=0.2)
 drop_fc1 = DropoutLayer(name="drop_fc1", bottoms=[:fc1], ratio=0.5)
@@ -69,16 +69,16 @@ drop_layers = [drop_input, drop_fc1, drop_fc2]
 net = Net("MNIST-train", backend, [data_layer, common_layers..., drop_layers..., loss_layer])
 
 # we let the learning rate decrease by 0.998 in each epoch (=600 batches of size 100)
-# and let the momentum increase linearly from 0.5 to 0.9 over 500 epochs 
+# and let the momentum increase linearly from 0.5 to 0.9 over 500 epochs
 # which is equivalent to an increase step of 0.0008
-# training is done for 2000 epochs 
-params = SolverParameters(max_iter=600*2000, regu_coef=0.0, 
-                          mom_policy=MomPolicy.Linear(0.5, 0.0008, 600, 0.9), 
+# training is done for 2000 epochs
+params = SolverParameters(max_iter=600*2000, regu_coef=0.0,
+                          mom_policy=MomPolicy.Linear(0.5, 0.0008, 600, 0.9),
                           lr_policy=LRPolicy.Step(0.1, 0.998, 600))
 solver = SGD(params)
 
 base_dir = "snapshots_dropout_fc"
-setup_coffee_lounge(solver, save_into="$base_dir/statistics.hdf5", every_n_iter=5000)
+setup_coffee_lounge(solver, save_into="$base_dir/statistics.jld", every_n_iter=5000)
 
 # report training progress every 100 iterations
 add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
@@ -87,7 +87,7 @@ add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
 add_coffee_break(solver,
                  Snapshot(base_dir, auto_load=true),
                  every_n_iter=5000)
-                 
+
 # show performance on test data every 600 iterations (one epoch)
 data_layer_test = HDF5DataLayer(name="test-data", source="data/test.txt", batch_size=100)
 acc_layer = AccuracyLayer(name="test-accuracy", bottoms=[:out, :label], report_error=true)

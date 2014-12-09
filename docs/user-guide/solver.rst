@@ -127,3 +127,56 @@ Solver Algorithms
 
 Solver Coffee Breaks
 --------------------
+
+Training is a very computationally intensive loop of iterations. Being afraid
+that the solver might silently go crazy under such heavy load, Mocha provides
+the solver opportunities to have a break periodically. During the breaks, the
+solver could have a change of mood by, for example, talking to the outside world
+about its "mental status". Here is a snippet taken from `the MNIST tutorial
+</tutorial/mnist>`_:
+
+.. code-block:: julia
+
+   # report training progress every 100 iterations
+   add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
+
+   # save snapshots every 5000 iterations
+   add_coffee_break(solver, Snapshot(exp_dir), every_n_iter=5000)
+
+We allow the solver to talk about its training progress every 100 iterations,
+and save the trained model to a snapshot every 5000 iterations. Alternatively,
+coffee breaks could also be specified by ``every_n_epoch``.
+
+Coffee Lounge
+~~~~~~~~~~~~~
+
+Coffee lounge is the place for solver to have coffee breaks. It provide
+a storage for a log of the coffee breaks. For example, when the solver talks
+about its training progress, the objective function value at each coffee break
+will be recorded. Those data could be retrieved for inspection or plotting
+later.
+
+The default coffee lounge keeps the storage in memory only. If you want to also
+save the recordings to the disk, you could setup the coffee lounge in the
+following way:
+
+.. code-block:: julia
+
+   setup_coffee_lounge(solver, save_into="$exp_dir/statistics.jld",
+       every_n_iter=1000)
+
+This means the recordings will be saved to the specified file every 1000
+iterations. There is one extra keyword parameter for setup coffee lounge:
+``file_exists``, which should specify a symbol from the following options
+
+``:merge``
+  The default. Try to merge with the existing log file. This is useful if, for
+  example, you are resuming from an interrupted training process.
+``:overwrite``
+  Erase the existing log file if any.
+``:panic``
+  Exit with error if found the log file already exists.
+
+The logs are stored as simple Julia dictionaries. See ``plot_statistics.jl`` in
+the ``tools`` directory for an example of how to retrieve and visualize the
+saved information.
