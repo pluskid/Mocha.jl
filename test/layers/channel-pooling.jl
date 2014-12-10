@@ -2,7 +2,7 @@ function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, 
   println("-- Testing ChannelPooling($(typeof(pooling))) on $(typeof(backend)){$T}...")
   println("    > Setup")
 
-  dims = [abs(rand(Int, 4)) % 7 + 1 for i = 1:n_input]
+  dims = [abs(rand(Int, 4)) % 7 + 7 for i = 1:n_input]
   pad = (2,2)
   kernel = 3
   stride = 2
@@ -112,7 +112,7 @@ function test_channel_pooling_layer(backend::Backend, n_input, T, eps)
 end
 
 function test_channel_pooling_layer(backend::Backend)
-  test_channel_pooling_layer(backend, 3, Float32, 1e-4)
+  test_channel_pooling_layer(backend, 1, Float32, 1e-4)
   test_channel_pooling_layer(backend, 3, Float64, 1e-8)
 end
 

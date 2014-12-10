@@ -30,8 +30,8 @@ function test_pooling_layer(backend::Backend, pooling::PoolingFunction, has_padd
     # padding when the pooling could run beyond the boundary), I use a workaround
     # in the unit test to make sure that the pooling always ends exactly at the boundary
     # in our unit tests.
-    dims[i][1] -= (dims[i][1] - kernel_w) % stride_w
-    dims[i][2] -= (dims[i][2] - kernel_h) % stride_h
+    dims[i][1] -= (dims[i][1] + 2*padding[1] - kernel_w) % stride_w
+    dims[i][2] -= (dims[i][2] + 2*padding[2] - kernel_h) % stride_h
   end
 
   layer = PoolingLayer(kernel=(kernel_w,kernel_h), stride=(stride_w,stride_h), pad=padding,

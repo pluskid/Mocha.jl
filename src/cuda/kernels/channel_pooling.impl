@@ -8,9 +8,10 @@
   if (s >= spatial_dim || n >= num) \
     return; \
   int fea_dim = spatial_dim * channels; \
+  int fea_dim_out = spatial_dim * pooled_chann; \
   input = input + fea_dim * n; \
-  output = output + fea_dim * n; \
-  mask = mask + fea_dim * n
+  output = output + fea_dim_out * n; \
+  mask = mask + fea_dim_out * n
 
 template <typename T>
 __device__ void max_channel_pooling_forward(const T *input, T *output, size_t *mask, 
