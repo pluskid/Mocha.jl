@@ -1,4 +1,4 @@
-export Backend, CPUBackend, AbstractCuDNNBackend
+export Backend, CPUBackend, AbstractGPUBackend
 export init, shutdown, registry_reset, registry_put
 
 abstract Backend

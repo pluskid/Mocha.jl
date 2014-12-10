@@ -20,18 +20,20 @@ function test_pooling_layer(backend::Backend, pooling::PoolingFunction, has_padd
 
   dims = [abs(rand(Int,4)) % 5 + 12 for i = 1:n_input]
   dims[1] = [input_w, input_h, input_chann, input_num]
-  for i = 1:n_input
-    # cuDNN pooling have different behavior on the boundary.
-    # For mean pooling, cuDNN restricts the pooling size when it runs beyond the boundary.
-    # Thus at the boundary, the mean values are larger than Mocha's default behavior,
-    # because in Mocha's CPU implementation, the mean will count zeros beyond the the
-    # boundary. I think this minor difference at the boundary is not super important.
-    # So instead of messing around the implementation of GPU pooling (e.g. add explicit
-    # padding when the pooling could run beyond the boundary), I use a workaround
-    # in the unit test to make sure that the pooling always ends exactly at the boundary
-    # in our unit tests.
-    dims[i][1] -= (dims[i][1] + 2*padding[1] - kernel_w) % stride_w
-    dims[i][2] -= (dims[i][2] + 2*padding[2] - kernel_h) % stride_h
+  if isa(backend, AbstractGPUBackend)
+    for i = 1:n_input
+      # cuDNN pooling have different behavior on the boundary.
+      # For mean pooling, cuDNN restricts the pooling size when it runs beyond the boundary.
+      # Thus at the boundary, the mean values are larger than Mocha's default behavior,
+      # because in Mocha's CPU implementation, the mean will count zeros beyond the the
+      # boundary. I think this minor difference at the boundary is not super important.
+      # So instead of messing around the implementation of GPU pooling (e.g. add explicit
+      # padding when the pooling could run beyond the boundary), I use a workaround
+      # in the unit test to make sure that the pooling always ends exactly at the boundary
+      # in our unit tests.
+      dims[i][1] -= (dims[i][1] + 2*padding[1] - kernel_w) % stride_w
+      dims[i][2] -= (dims[i][2] + 2*padding[2] - kernel_h) % stride_h
+    end
   end
 
   layer = PoolingLayer(kernel=(kernel_w,kernel_h), stride=(stride_w,stride_h), pad=padding,
