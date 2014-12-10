@@ -71,7 +71,7 @@ params = SolverParameters(max_iter=10000, regu_coef=0.0005,
     load_from=exp_dir)
 solver = SGD(params)
 
-setup_coffee_lounge(solver, save_into="$exp_dir/statistics.hdf5", every_n_iter=1000)
+setup_coffee_lounge(solver, save_into="$exp_dir/statistics.jld", every_n_iter=1000)
 
 # report training progress every 100 iterations
 add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
