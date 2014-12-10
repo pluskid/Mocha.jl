@@ -9,7 +9,7 @@
 * Document
   * Developer's Guide
 
-## v0.0.4 ??
+## v0.0.4 2014.12.09
 
 * Network
   * Parameter (l2-norm) constraints (@stokasto)
