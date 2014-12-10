@@ -112,8 +112,6 @@ function backward(backend::CPUBackend, pool::StdPoolingFunction, state::ChannelP
       else
         error("Pooling for $pool not implemented yet")
       end
-    else
-      continue # nothing to do if not propagating back
     end
   end
 end
