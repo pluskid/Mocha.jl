@@ -207,3 +207,25 @@ The life cycle of a layer is
 .. function:: shutdown(backend, layer_state)
 
    Release all the resources allocated in ``setup``.
+
+Layer Parameters
+----------------
+
+If a layer has train-able parameters, it should define a ``parameters`` field in
+the ``LayerState`` object, containing a list of :class:`Parameter` objects. It
+should also define the ``has_param`` characterization. The only computation that
+the layer needs to do, is to compute the gradients with respect to each
+parameter and write into the ``gradient`` field of each :class:`Parameter`
+object.
+
+Mocha will handle the updating of parameters during training automatically.
+Other parameter-related issues like initialization, regularization, norm
+constraints will also be handled automatically.
+
+Layer Activation Function
+-------------------------
+
+When it makes sense for a layer to have an activation function, it could add
+a ``neuron`` property to the ``Layer`` object and define the ``has_neuron``
+characterization. Everything else will be handled automatically.
+
