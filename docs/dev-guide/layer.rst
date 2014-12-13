@@ -104,7 +104,47 @@ defined subtype of ``Layer``. The default characterizations are given by
    )
 
 Characterizing a layer could be omitted if all the behaviors are consists with
-the default specifications.
+the default specifications. The characterizations should be self-descriptive by
+the name and comments above. Some characterizations come with extra
+requirements:
+
+``is_source``
+  The layer will be used as a source layer of a network. Thus it should take no
+  input blob and the ``Layer`` object should have no ``bottoms`` property.
+``is_sink``
+  The layer will be used as a sink layer of a network. Thus it should produce no
+  output blob, and the ``Layer`` object should have no ``tops`` property.
+``has_param``
+  The layer has trainable parameters. The ``LayerState`` object should have
+  a ``parameters`` field, containing a list of :class:`Parameter` objects.
+``has_neuron``
+  The ``Layer`` object should have a property called ``neuron`` of type
+  :class:`ActivationFunction`.
+``can_db_bp``
+  Should be true if the layer has the ability to do back propagation.
+``is_inplace``
+  A inplace ``Layer`` object should have no ``tops`` property because the
+  output blobs are the same as the input blobs.
+``has_loss``
+  The ``LayerState`` object should have a ``loss`` field.
+``has_stats``
+  The layer computes statistics (e.g. accuracy). The statistics should be
+  accumulated across multiple mini-batches, until the user explicit reset the
+  statistics. The following functions should be implemented for the layer
+
+  .. function:: dump_statistics(storage, layer_state, show)
+
+     ``storage`` is a data storage (typically a :class:`CoffeeLounge` object)
+     that is used to dump statistics into, via the function
+     ``update_statistics(storage, key, value)``.
+
+     ``show`` is a boolean value, when true, indicating that a summary of the
+     statistics should also be printed to stdout.
+
+  .. function:: reset_statistics(layer_state)
+
+     Reset the statistics.
+
 
 Layer Computation API
 ---------------------
