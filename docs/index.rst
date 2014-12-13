@@ -41,6 +41,7 @@ Developer's Guide
    :maxdepth: 2
 
    dev-guide/blob
+   dev-guide/layer
 
 Indices and tables
 ==================
