@@ -104,6 +104,8 @@ with more filters this time:
        bottoms=[:conv], tops=[:pool])
    conv2_layer = ConvolutionLayer(name="conv2", n_filter=50, kernel=(5,5),
        bottoms=[:pool], tops=[:conv2])
+   pool2_layer = PoolingLayer(name="pool2", kernel=(2,2), stride=(2,2),
+       bottoms=[:conv2], tops=[:pool2])
 
 Note the ``tops`` and ``bottoms`` define the computation or data
 dependency. After the convolution and pooling layers, we add two fully
