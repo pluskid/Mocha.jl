@@ -20,10 +20,12 @@ function shutdown(backend::GPUBackend, state::SoftmaxLayerState)
 end
 
 function forward(backend::GPUBackend, state::SoftmaxLayerState, inputs::Vector{Blob})
+  alpha = one(eltype(inputs[1]))
+  beta = zero(eltype(inputs[1]))
   for i = 1:length(inputs)
     CuDNN.softmax_forward(backend.cudnn_ctx, CuDNN.CUDNN_SOFTMAX_ACCURATE,
-        CuDNN.CUDNN_SOFTMAX_MODE_CHANNEL, state.etc.inputs_desc[i], inputs[i].ptr,
-        state.etc.outputs_desc[i], state.blobs[i].ptr)
+        CuDNN.CUDNN_SOFTMAX_MODE_CHANNEL, alpha, state.etc.inputs_desc[i], inputs[i].ptr,
+        beta, state.etc.outputs_desc[i], state.blobs[i].ptr)
   end
 end
 

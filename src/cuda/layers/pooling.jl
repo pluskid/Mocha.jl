@@ -71,6 +71,8 @@ end
 
 function forward(backend::GPUBackend, state::PoolingLayerState, inputs::Vector{Blob})
   layer = state.layer
+  alpha = one(eltype(inputs[1]))
+  beta = zero(eltype(inputs[1]))
   if layer.pad[1] > 0 || layer.pad[2] > 0
     # TODO: remove this when CuDNN support pooling with padding
     for i = 1:length(inputs)
@@ -80,14 +82,14 @@ function forward(backend::GPUBackend, state::PoolingLayerState, inputs::Vector{B
 
       dense2padded!(backend, padded_input, input, layer.pad)
 
-      CuDNN.pooling_forward(backend.cudnn_ctx, state.etc.pooling_desc,
-          state.etc.inputs_desc[i], padded_input.ptr,
+      CuDNN.pooling_forward(backend.cudnn_ctx, state.etc.pooling_desc, alpha,
+          state.etc.inputs_desc[i], padded_input.ptr, beta,
           state.etc.outputs_desc[i], state.blobs[i].ptr)
     end
   else
     for i = 1:length(inputs)
-      CuDNN.pooling_forward(backend.cudnn_ctx, state.etc.pooling_desc,
-          state.etc.inputs_desc[i], inputs[i].ptr,
+      CuDNN.pooling_forward(backend.cudnn_ctx, state.etc.pooling_desc, alpha,
+          state.etc.inputs_desc[i], inputs[i].ptr, beta,
           state.etc.outputs_desc[i], state.blobs[i].ptr)
     end
   end
@@ -95,15 +97,17 @@ end
 
 function backward(backend::GPUBackend, state::PoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   layer = state.layer
+  alpha = one(eltype(inputs[1]))
+  beta = zero(eltype(inputs[1]))
   if layer.pad[1] > 0 || layer.pad[2] > 0
     # TODO: remove this when CuDNN support pooling with padding
     for i = 1:length(inputs)
       if isa(diffs[i], CuTensorBlob)
-        CuDNN.pooling_backward(backend.cudnn_ctx, state.etc.pooling_desc,
+        CuDNN.pooling_backward(backend.cudnn_ctx, state.etc.pooling_desc, alpha,
             state.etc.outputs_desc[i], state.blobs[i].ptr,
             state.etc.outputs_desc[i], state.blobs_diff[i].ptr,
             state.etc.inputs_desc[i], state.etc.padded_blobs[i].ptr,
-            state.etc.inputs_desc[i], state.etc.padded_blobs_diff[i].ptr)
+            beta, state.etc.inputs_desc[i], state.etc.padded_blobs_diff[i].ptr)
 
         padded2dense!(backend, diffs[i], state.etc.padded_blobs_diff[i], layer.pad)
       end
@@ -111,11 +115,11 @@ function backward(backend::GPUBackend, state::PoolingLayerState, inputs::Vector{
   else
     for i = 1:length(inputs)
       if isa(diffs[i], CuTensorBlob)
-        CuDNN.pooling_backward(backend.cudnn_ctx, state.etc.pooling_desc,
+        CuDNN.pooling_backward(backend.cudnn_ctx, state.etc.pooling_desc, alpha,
             state.etc.outputs_desc[i], state.blobs[i].ptr,
             state.etc.outputs_desc[i], state.blobs_diff[i].ptr,
             state.etc.inputs_desc[i], inputs[i].ptr,
-            state.etc.inputs_desc[i], diffs[i].ptr)
+            beta, state.etc.inputs_desc[i], diffs[i].ptr)
       end
     end
   end
