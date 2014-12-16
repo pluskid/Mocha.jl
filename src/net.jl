@@ -120,6 +120,8 @@ end
 
 
 Net(name::String, backend::Backend, layers :: Vector{Layer}) = begin
+  @info("Constructing net $name on $backend...")
+  @info("Topological sorting $(length(layers)) layers...")
   layers = topological_sort(layers)
   data_layers = find(l -> is_source(l), layers)
 
@@ -131,6 +133,7 @@ Net(name::String, backend::Backend, layers :: Vector{Layer}) = begin
   output_blobs = Dict{Symbol,Blob}()
   diff_blobs = Dict{Symbol,Blob}()
 
+  @info("Setup layers...")
   for i = 1:n
     layer = layers[i]
     # record if layers has any dependency
@@ -171,6 +174,7 @@ Net(name::String, backend::Backend, layers :: Vector{Layer}) = begin
     blobs_backward[i] = blob_bwd
   end
 
+  @info("Network constructed!")
   return Net(name, backend, layers, states, blobs_forward, blobs_backward, data_layers, output_blobs, diff_blobs)
 end
 
