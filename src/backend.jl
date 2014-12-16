@@ -4,6 +4,10 @@ export init, shutdown, registry_reset, registry_put
 abstract Backend
 typealias ParameterRegistry Dict{String, Vector{AbstractParameter}}
 
+import Base.show
+export show
+show(io::IO, backend::Backend) = show(io, typeof(backend))
+
 function init(backend::Backend)
 end
 function shutdown(backend::Backend)

@@ -1,8 +1,8 @@
 export Blob
 export CPUBlob, NullBlob
 
-import Base: eltype, size, length, copy!, fill!
-export       eltype, size, length, copy!, fill!, erase!
+import Base: eltype, size, length, copy!, fill!, show
+export       eltype, size, length, copy!, fill!, erase!, show
 export get_num, get_chann, get_height, get_width
 export make_blob, make_zero_blob, reshape_blob
 
@@ -51,6 +51,10 @@ function get_width(blob :: Blob)
   size(blob, 1)
 end
 
+function show(io::IO, blob :: Blob)
+  w,h,c,n = size(blob)
+  print(io, "Blob($w x $h x $c x $n)")
+end
 
 function copy!(dst :: Array, src :: Blob)
   error("Not implemented (should copy content of src to dst)")
@@ -72,6 +76,9 @@ type NullBlob <: Blob
 end
 function fill!(dst :: NullBlob, val)
   # do nothing
+end
+function show(io::IO, blob::NullBlob)
+  print(io, "Blob()")
 end
 
 function destroy(blob::NullBlob)

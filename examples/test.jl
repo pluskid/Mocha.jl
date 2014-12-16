@@ -32,6 +32,7 @@ weight_layer = InnerProductLayer(name="ip",output_dim=P, tops=[:pred], bottoms=[
 loss_layer = SquareLossLayer(bottoms=[:pred, :label])
 
 net = Net("TEST", backend, [loss_layer, weight_layer, data_layer])
+println(net)
 
 ############################################################
 # Solve

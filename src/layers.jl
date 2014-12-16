@@ -126,6 +126,37 @@ function param_key(layer::Layer)
 end
 
 #############################################################
+# Display layers
+#############################################################
+import Base.show
+export show, show_layer
+
+function show(io::IO, layer::Layer)
+  print(io, "$(typeof(layer))($(layer.name))")
+end
+function show_layer_details(io::IO, state::LayerState)
+  # overload this function to add layer details
+end
+function show_layer(io::IO, state::LayerState, inputs::Vector{Blob})
+  println(io, "............................................................")
+  println(io, "... $(state.layer)")
+  show_layer_details(io, state)
+  if !is_source(state.layer)
+    println(io, "----- Input Blobs -----")
+    for i = 1:length(inputs)
+      println(io, "  > $(@sprintf("%8s", state.layer.bottoms[i])): $(inputs[i])")
+    end
+  end
+  if !is_sink(state.layer) && !is_inplace(state.layer)
+    println(io, "----- Output Blobs ----")
+    for i = 1:length(state.blobs)
+      println(io, "  > $(@sprintf("%8s", state.layer.tops[i])): $(state.blobs[i])")
+    end
+  end
+  println(io, "............................................................")
+end
+
+#############################################################
 # Data Layers
 #############################################################
 include("layers/hdf5-data.jl")

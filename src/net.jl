@@ -18,6 +18,21 @@ type Net{T <: Backend}
   diff_blobs     :: Dict{Symbol, Blob}
 end
 
+import Base.show
+export show
+function show(io::IO, net::Net)
+  println(io, "************************************************************")
+  println(io, "          NAME: $(net.name)")
+  println(io, "       BACKEND: $(net.backend)")
+  println(io, "  ARCHITECTURE: $(length(net.layers)) layers")
+  println(io)
+  for i = 1:length(net.layers)
+    show_layer(io, net.states[i], net.blobs_forward[i])
+    println(io)
+    println(io)
+  end
+end
+
 function get_epoch(net::Net)
   if length(net.data_layers) == 0
     error("No data layer in the net, cannot get epoch")
