@@ -70,23 +70,27 @@ end
 # as channels and num. With this convention, InnerProductLayer
 # could produce 2D tensors and those tensors could be naturally
 # processed by existing loss layers without much modifications.
-function get_whcn{T}(blob :: Blob{T,1})
-  (1,1,1,size(blob,1))
-end
-function get_whcn{T}(blob :: Blob{T,2})
-  c,n = size(blob)
-  (1,1,c,n)
-end
-function get_whcn{T}(blob :: Blob{T,3})
-  h,c,n = size(blob)
-  (1,h,c,n)
-end
-function get_whcn{T}(blob :: Blob{T,4})
-  size(blob)
-end
-function get_whcn{T,N}(blob :: Blob{T,N})
-  dims = size(blob)
-  (dims[1],dims[2],prod(dims[3:end-1]),dims[end])
+for obj_type in (Blob, AbstractArray)
+  @eval begin
+    function get_whcn{T}(blob :: $obj_type{T,1})
+      (1,1,1,size(blob,1))
+    end
+    function get_whcn{T}(blob :: $obj_type{T,2})
+      c,n = size(blob)
+      (1,1,c,n)
+    end
+    function get_whcn{T}(blob :: $obj_type{T,3})
+      h,c,n = size(blob)
+      (1,h,c,n)
+    end
+    function get_whcn{T}(blob :: $obj_type{T,4})
+      size(blob)
+    end
+    function get_whcn{T,N}(blob :: $obj_type{T,N})
+      dims = size(blob)
+      (dims[1],dims[2],prod(dims[3:end-1]),dims[end])
+    end
+  end
 end
 
 function show(io::IO, blob :: Blob)

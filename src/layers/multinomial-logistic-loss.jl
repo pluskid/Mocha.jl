@@ -21,7 +21,7 @@ end
 
 function setup(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
-  width, height, channels, num = size(inputs[1])
+  width, height, channels, num = get_whcn(inputs[1])
 
   # weights for each class
   if isempty(layer.weights)
@@ -59,12 +59,15 @@ end
 function forward(backend::CPUBackend, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob})
   pred = inputs[1].data
   label = inputs[2].data
-  width, height, channels, num = size(pred)
+  width, height, channels, num = get_whcn(pred)
 
   idx_width  = reshape(1:width, (width, 1, 1, 1))
   idx_height = reshape(1:height, (1, height, 1, 1))
   idx_chann  = int(label)+1
   idx_num    = reshape(1:num, (1, 1, 1, num))
+
+  pred = reshape(pred, (width,height,channels,num))
+  label = reshape(label, (width,height,1,num))
 
   if isa(state.weights_blob, NullBlob)
     loss = sum(-log(max(broadcast_getindex(pred, idx_width, idx_height, idx_chann, idx_num), 1e-20)))
