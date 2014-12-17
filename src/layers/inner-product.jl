@@ -36,14 +36,12 @@ type InnerProductLayerState <: LayerState
   bias_multipliers :: Vector{Blob}
 
   InnerProductLayerState(backend::Backend, layer::InnerProductLayer, shared_params, inputs::Vector{Blob}) = begin
-    dims = size(inputs[1])
-    fea_dim = dims[1:3]
-    fea_size = prod(fea_dim)
+    fea_size = get_fea_size(inputs[1])
     out_dim = layer.output_dim
 
     # make sure all blobs has the same feature dimension (batch_size could be different)
-    for i = 1:length(inputs)
-      @assert prod(size(inputs[i])[1:3]) == fea_size
+    for i = 2:length(inputs)
+      @assert get_fea_size(inputs[i]) == fea_size
     end
 
     data_type = eltype(inputs[1])
@@ -52,10 +50,10 @@ type InnerProductLayerState <: LayerState
     bias_multipliers = Array(Blob, length(inputs))
 
     for i = 1:length(inputs)
-      nums = size(inputs[i],4)
+      nums = get_num(inputs[i])
       blobs[i] = make_blob(backend, data_type, 1, 1, out_dim, nums)
       blobs_diff[i] = make_blob(backend, data_type, 1, 1, out_dim, nums)
-      bias_multipliers[i] = make_blob(backend, ones(data_type, nums, 1, 1, 1))
+      bias_multipliers[i] = make_blob(backend, ones(data_type, nums))
     end
 
     state = new(layer, blobs, blobs_diff)
@@ -106,7 +104,7 @@ function forward(backend::CPUBackend, state::InnerProductLayerState, inputs::Vec
   dtype = eltype(state.W)
   for i = 1:length(inputs)
     input = inputs[i]
-    N = size(input, 4)   # batch size
+    N = get_num(input)   # batch size
     output = state.blobs[i]
     # output = W^T * X
     BLAS.gemm!('T', 'N', convert(dtype, 1), reshape(state.W.data, (K,M)),
@@ -129,7 +127,7 @@ function backward(backend::CPUBackend, state::InnerProductLayerState, inputs::Ve
   for i = 1:length(inputs)
     # ∂f/∂W = input * [∂f/∂o]^T
     input = inputs[i]
-    batch_size = size(input, 4)
+    batch_size = get_num(input)
     ∂f_∂o = state.blobs_diff[i]
     BLAS.gemm!('N', 'T', convert(data_type, 1), reshape(input.data, (source_dim, batch_size)),
                reshape(∂f_∂o.data, (target_dim, batch_size)), zero_and_then_one,

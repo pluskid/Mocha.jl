@@ -65,16 +65,21 @@ function get_fea_size(blob :: Blob)
 end
 
 # Get pseudo 4D dimension
+# Note the behavior when the tensor dimension is less than 4.
+# For example, for 2D tensor, the two dimensions are considered
+# as channels and num. With this convention, InnerProductLayer
+# could produce 2D tensors and those tensors could be naturally
+# processed by existing loss layers without much modifications.
 function get_whcn{T}(blob :: Blob{T,1})
   (1,1,1,size(blob,1))
 end
 function get_whcn{T}(blob :: Blob{T,2})
-  w,n = size(blob)
-  (w,1,1,n)
+  c,n = size(blob)
+  (1,1,c,n)
 end
 function get_whcn{T}(blob :: Blob{T,3})
-  w,h,n = size(blob)
-  (w,h,1,n)
+  h,c,n = size(blob)
+  (1,h,c,n)
 end
 function get_whcn{T}(blob :: Blob{T,4})
   size(blob)
