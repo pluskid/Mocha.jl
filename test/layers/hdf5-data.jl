@@ -7,7 +7,9 @@ function test_hdf5_data_layer(backend::Backend, T, eps)
   # Prepare Data for Testing
   ############################################################
   batch_size = 3
-  data_dim = (7,8,2)
+  tensor_dim = abs(rand(Int)) % 6 + 1
+  data_dim = tuple((abs(rand(Int, tensor_dim)) % 8 + 1)...)
+  println("    > $data_dim")
 
   data_all = [rand(T, data_dim..., x) for x in [5 1 2]]
   h5fn_all = [string(tempname(), ".hdf5") for x in 1:length(data_all)]
@@ -35,13 +37,13 @@ function test_hdf5_data_layer(backend::Backend, T, eps)
   state = setup(backend, layer, Blob[], Blob[])
   @test state.epoch == 0
 
-  data = cat(4, data_all...)
-  data = cat(4, data, data, data)
+  data = cat(tensor_dim+1, data_all...)
+  data = cat(tensor_dim+1, data, data, data)
   data = data * scale
 
   data_idx = map(x->1:x, data_dim)
   layer_data = Array(eltype(data), tuple(data_dim..., batch_size))
-  for i = 1:batch_size:size(data,4)-batch_size+1
+  for i = 1:batch_size:size(data)[end]-batch_size+1
     forward(backend, state, Blob[])
     copy!(layer_data, state.blobs[1])
     @test all(-eps .< layer_data - data[data_idx..., i:i+batch_size-1] .< eps)
