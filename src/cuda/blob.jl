@@ -57,8 +57,3 @@ function destroy(blob :: CuTensorBlob)
   end
 end
 
-function to_cpu(gpu_blob)
-  cpu_arr = Array(eltype(gpu_blob), gpu_blob.len)
-  copy!(cpu_arr, gpu_blob)
-  cpu_arr
-end

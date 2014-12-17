@@ -3,7 +3,7 @@ export CPUBlob, NullBlob
 
 import Base: eltype, size, length, copy!, fill!, show
 export       eltype, size, length, copy!, fill!, erase!, show
-export get_num, get_chann, get_height, get_width
+export get_num, get_chann, get_height, get_width, to_array
 export make_blob, make_zero_blob, reshape_blob
 
 ############################################################
@@ -54,6 +54,12 @@ end
 function show(io::IO, blob :: Blob)
   w,h,c,n = size(blob)
   print(io, "Blob($w x $h x $c x $n)")
+end
+
+function to_array(blob::Blob)
+  array = Array(eltype(blob), size(blob))
+  copy!(array, blob)
+  array
 end
 
 function copy!(dst :: Array, src :: Blob)
