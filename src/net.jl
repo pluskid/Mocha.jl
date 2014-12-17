@@ -25,12 +25,10 @@ function show(io::IO, net::Net)
   println(io, "          NAME: $(net.name)")
   println(io, "       BACKEND: $(net.backend)")
   println(io, "  ARCHITECTURE: $(length(net.layers)) layers")
-  println(io)
   for i = 1:length(net.layers)
     show_layer(io, net.states[i], net.blobs_forward[i])
-    println(io)
-    println(io)
   end
+  println(io, "************************************************************")
 end
 
 function get_epoch(net::Net)

@@ -139,21 +139,27 @@ function show_layer_details(io::IO, state::LayerState)
 end
 function show_layer(io::IO, state::LayerState, inputs::Vector{Blob})
   println(io, "............................................................")
-  println(io, "... $(state.layer)")
+  layer_title = " *** $(state.layer)"
+  if isa(io, Base.TTY)
+    print_with_color(:blue, io, layer_title)
+  else
+    print(io, layer_title)
+  end
+  println(io)
+
   show_layer_details(io, state)
   if !is_source(state.layer)
-    println(io, "----- Input Blobs -----")
+    println(io, "    Inputs ----------------------------")
     for i = 1:length(inputs)
-      println(io, "  > $(@sprintf("%8s", state.layer.bottoms[i])): $(inputs[i])")
+      println(io, "     $(@sprintf("%6s", state.layer.bottoms[i])): $(inputs[i])")
     end
   end
   if !is_sink(state.layer) && !is_inplace(state.layer)
-    println(io, "----- Output Blobs ----")
+    println(io, "    Outputs ---------------------------")
     for i = 1:length(state.blobs)
-      println(io, "  > $(@sprintf("%8s", state.layer.tops[i])): $(state.blobs[i])")
+      println(io, "     $(@sprintf("%6s", state.layer.tops[i])): $(state.blobs[i])")
     end
   end
-  println(io, "............................................................")
 end
 
 #############################################################
