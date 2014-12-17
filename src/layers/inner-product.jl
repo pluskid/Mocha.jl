@@ -51,8 +51,8 @@ type InnerProductLayerState <: LayerState
 
     for i = 1:length(inputs)
       nums = get_num(inputs[i])
-      blobs[i] = make_blob(backend, data_type, 1, 1, out_dim, nums)
-      blobs_diff[i] = make_blob(backend, data_type, 1, 1, out_dim, nums)
+      blobs[i] = make_blob(backend, data_type, out_dim, nums)
+      blobs_diff[i] = make_blob(backend, data_type, out_dim, nums)
       bias_multipliers[i] = make_blob(backend, ones(data_type, nums))
     end
 
