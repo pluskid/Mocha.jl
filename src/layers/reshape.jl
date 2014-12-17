@@ -3,9 +3,7 @@
   name :: String = "reshape",
   (tops :: Vector{Symbol} = [], length(tops) > 0),
   (bottoms :: Vector{Symbol} = [], length(bottoms) == length(tops)),
-  (width :: Int = 1, width > 0),
-  (height :: Int = 1, height > 0),
-  (channels :: Int = 1, channels > 0)
+  (shape :: NTuple = (), eltype(shape) == Int && all(collect(shape) .> 0)),
 )
 @characterize_layer(ReshapeLayer,
   can_do_bp => true, # back-propagate via upper layers
@@ -19,13 +17,13 @@ end
 
 function setup(backend::Backend, layer::ReshapeLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   blobs = map(inputs) do blob
-    reshape_blob(backend, blob, layer.width, layer.height, layer.channels, get_num(blob))
+    reshape_blob(backend, blob, layer.shape..., get_num(blob))
   end
   blobs_diff = map(diffs) do blob
     if isa(blob, NullBlob)
       NullBlob()
     else
-      reshape_blob(backend, blob, layer.width, layer.height, layer.channels, get_num(blob))
+      reshape_blob(backend, blob, layer.shape..., get_num(blob))
     end
   end
 

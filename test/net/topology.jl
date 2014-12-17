@@ -4,12 +4,12 @@ function test_net_topology_duplicated_blob(backend::Backend)
   @test_throws TopologyError Net("net", backend, Layer[layer])
 
   layer1 = MemoryDataLayer(tops=[:data], batch_size=1, data=Array[rand(1,1,1,1)])
-  layer2 = ReshapeLayer(tops=[:data], bottoms=[:data])
+  layer2 = ReshapeLayer(tops=[:data], bottoms=[:data], shape=(1,1,1))
   @test_throws TopologyError Net("net", backend, Layer[layer1, layer2])
 end
 function test_net_topology_missing_blob(backend::Backend)
   println("-- Testing network topology with missing blobs")
-  layer = ReshapeLayer(tops=[:output], bottoms=[:input])
+  layer = ReshapeLayer(tops=[:output], bottoms=[:input], shape=(1,1,1))
   @test_throws TopologyError Net("net", backend, Layer[layer])
 end
 function test_net_topology_loop(backend::Backend)
@@ -27,7 +27,7 @@ function test_net_topology_multiple_bp(backend::Backend)
   # problem
   println("    > Good blob sharing")
   layer1 = MemoryDataLayer(tops=[:data], batch_size=1, data=Array[rand(1,1,1,1)])
-  layer_rs = ReshapeLayer(tops=[:data_rs], bottoms=[:data])
+  layer_rs = ReshapeLayer(tops=[:data_rs], bottoms=[:data], shape=(1,1,1))
   layer_ip1 = InnerProductLayer(tops=[:ip1], bottoms=[:data_rs], output_dim=1, name="ip1")
   layer_ip2 = InnerProductLayer(tops=[:ip2], bottoms=[:data_rs], output_dim=1, name="ip2")
   layer_loss = SquareLossLayer(bottoms=[:ip1,:ip2])

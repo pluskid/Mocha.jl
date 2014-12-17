@@ -10,7 +10,7 @@ function test_reshape_layer(backend::Backend, n_input, T, eps)
 
   println("    > Setup")
   layer = ReshapeLayer(bottoms=Array(Symbol,n_input), tops=Array(Symbol,n_input),
-      width=1, height=1, channels=prod(dims[1][1:3]))
+      shape=(1,1,prod(dims[1][1:end-1])))
   state = setup(backend, layer, input_blob, diff_blob)
 
   println("    > Forward")
