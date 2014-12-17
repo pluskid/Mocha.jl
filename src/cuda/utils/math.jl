@@ -54,7 +54,7 @@ end
 for name in [:add, :sub, :mul, :div, :div2]
   @eval begin
     function $(symbol("$(name)!")){T}(backend::GPUBackend, X::CuTensorBlob{T}, Y::CuTensorBlob{T})
-      width, height, channels, num = size(X)
+      width, height, channels, num = get_whcn(X)
       sp_dim = width*height
       $(symbol("$(name)!"))(backend, T, X.ptr.p, Y.ptr.p, sp_dim, channels, num)
     end
@@ -62,13 +62,13 @@ for name in [:add, :sub, :mul, :div, :div2]
 end
 function add_scal!{T}(backend::GPUBackend, X::CuTensorBlob{T}, Y)
   Y = convert(T, Y)
-  width, height, channels, num = size(X)
+  width, height, channels, num = get_whcn(X)
   sp_dim = width*height
   add_scal!(backend, T, X.ptr.p, Y, sp_dim, channels, num)
 end
 function mul_scal!{T}(backend::GPUBackend, X::CuTensorBlob{T}, Y)
   Y = convert(T, Y)
-  width, height, channels, num = size(X)
+  width, height, channels, num = get_whcn(X)
   sp_dim = width*height
   mul_scal!(backend, T, X.ptr.p, Y, sp_dim, channels, num)
 end
