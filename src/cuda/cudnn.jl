@@ -266,11 +266,6 @@ function get_output_tensor4d_dim(desc::ConvolutionDescriptor, path::Int)
   return (w[1], h[1], c[1], n[1])
 end
 
-# accumulate the result of the operation into output buffer (or overwrite) ?
-const CUDNN_RESULT_ACCUMULATE      = 0 # Evaluate O += I * F
-const CUDNN_RESULT_NO_ACCUMULATE   = 1 # Evaluate O = I * F
-
-#
 const CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM = 0
 const CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMPT_GEMM = 1
 const CUDNN_CONVOLUTION_FWD_ALGO_GEMM = 2
@@ -325,14 +320,6 @@ function convolution_forward{T<:FloatingPoint}(handle::Handle, alpha::T, src_des
              filter_desc, filter.p, conv,
              algo, workspace.p, workspace_size, beta_ptr,
              dest_desc, dest.p)
-end
-
-function colvolution_backward_bias(handle::Handle, src_desc::Tensor4dDescriptor, src::CuPtr,
-    dest_desc::Tensor4dDescriptor, dest::CuPtr, mode::Int)
-  @assert CUDNN_RESULT_ACCUMULATE <= mode <= CUDNN_RESULT_NO_ACCUMULATE
-  @cudnncall(:cudnnConvolutionBackwardBias, (Handle, Tensor4dDescriptor, Ptr{Void},
-                                             Tensor4dDescriptor, Ptr{Void}, Cint),
-             handle, src_desc, src.p, dest_desc, dest.p, mode)
 end
 
 function convolution_backward_bias{T<:FloatingPoint}(handle::Handle, alpha::T, src_desc::Tensor4dDescriptor, src::CuPtr,
