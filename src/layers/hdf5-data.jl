@@ -53,9 +53,8 @@ type HDF5DataLayerState <: LayerState
     transformers = convert(Vector{(Symbol, DataTransformerType)}, layer.transformers)
     for i = 1:length(state.blobs)
       dims = size(state.dsets[i])
-      @assert(length(dims)==4, "HDF5 dataset $(state.dsets[i]) is not 4D tensor")
 
-      dims = tuple(dims[1:3]..., layer.batch_size)
+      dims = tuple(dims[1:end-1]..., layer.batch_size)
 
       dset = state.dsets[i]
       state.blobs[i] = make_blob(backend, eltype(dset), dims)
@@ -83,7 +82,7 @@ end
 function forward(backend::Backend, state::HDF5DataLayerState, inputs::Vector{Blob})
   n_done = 0
   while n_done < state.layer.batch_size
-    n_remain = size(state.dsets[1],4) - state.curr_index + 1
+    n_remain = size(state.dsets[1])[end] - state.curr_index + 1
     if n_remain == 0
       close(state.curr_hdf5_file)
       state.curr_source = state.curr_source % length(state.sources) + 1
@@ -92,17 +91,17 @@ function forward(backend::Backend, state::HDF5DataLayerState, inputs::Vector{Blo
 
       if state.layer.shuffle
         state.dsets = map(readmmap, state.dsets)
-        state.shuffle_idx = randperm(size(state.dsets[1],4))
+        state.shuffle_idx = randperm(size(state.dsets[1])[end])
       end
 
       state.curr_index = 1
-      n_remain = size(state.dsets[1], 4)
+      n_remain = size(state.dsets[1])[end]
     end
 
     n1 = min(state.layer.batch_size-n_done, n_remain)
     if n1 > 0
       for i = 1:length(state.blobs)
-        idx = map(x -> 1:x, size(state.blobs[i])[1:3])
+        idx = map(x -> 1:x, size(state.blobs[i])[1:end-1])
         dset = state.dsets[i]
         if state.layer.shuffle
           the_data = dset[idx..., state.shuffle_idx[state.curr_index:state.curr_index+n1-1]]
@@ -116,7 +115,7 @@ function forward(backend::Backend, state::HDF5DataLayerState, inputs::Vector{Blo
     n_done += n1
 
     # update epoch
-    if state.curr_index > size(state.dsets[1],4) &&
+    if state.curr_index > size(state.dsets[1])[end] &&
         state.curr_source == length(state.sources)
       state.epoch += 1
     end
@@ -130,7 +129,7 @@ function forward(backend::Backend, state::HDF5DataLayerState, inputs::Vector{Blo
 end
 
 function set_blob_data(data::Array, blob::CPUBlob, blob_idx::Int)
-  n_fea = prod(size(blob)[1:3])
+  n_fea = get_fea_size(blob)
   idx_start = (blob_idx-1)*n_fea
   blob.data[idx_start+1:idx_start+length(data)] = data
 end

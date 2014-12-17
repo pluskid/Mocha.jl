@@ -102,8 +102,8 @@ function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
 end
 
 function test_hdf5_data_layer_shuffle(backend::Backend, T)
-  test_hdf5_data_layer_shuffle(backend, 2, 3, T)
-  test_hdf5_data_layer_shuffle(backend, 3, 2, T)
+  test_hdf5_data_layer_shuffle(backend, 2, 6, T)
+  test_hdf5_data_layer_shuffle(backend, 6, 2, T)
 end
 
 function test_hdf5_data_layer(backend::Backend)
