@@ -309,10 +309,10 @@ function get_convolution_forward_workspace_size(handle::Handle, src_desc::Tensor
 end
 
 
-function convolution_forward{T<:FloatingPoint}(handle::Handle, src_desc::Tensor4dDescriptor, src::CuPtr,
+function convolution_forward{T<:FloatingPoint}(handle::Handle, alpha::T, src_desc::Tensor4dDescriptor, src::CuPtr,
     filter_desc::FilterDescriptor, filter::CuPtr, conv::ConvolutionDescriptor,
     dest_desc::Tensor4dDescriptor, dest::CuPtr, workspace::CuPtr, workspace_size, algo::Int,
-                             alpha::T, beta::T)
+                             beta::T)
   #no workspace needed since we will use CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM
   alpha_ptr = T[alpha]
   beta_ptr = T[beta]

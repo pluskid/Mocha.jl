@@ -80,10 +80,10 @@ function forward(backend::GPUBackend, state::ConvolutionLayerState, inputs::Vect
       input_ptr = CuPtr(inputs[i].ptr.p + state.etc.bottom_offset * (g-1))
       output_ptr = CuPtr(state.blobs[i].ptr.p + state.etc.top_offset * (g-1))
       filter_ptr = CuPtr(state.filter.ptr.p + state.etc.weight_offset * (g-1))
-      CuDNN.convolution_forward(backend.cudnn_ctx, state.etc.inputs_desc[i], input_ptr,
+      CuDNN.convolution_forward(backend.cudnn_ctx, alpha, state.etc.inputs_desc[i], input_ptr,
           state.etc.filter_desc, filter_ptr, state.etc.conv_desc[i],
           state.etc.outputs_desc[i], output_ptr, workspace_ptr, workspace_size, fwd_algorithm,
-                                alpha, beta_dont_accumulate)
+          beta_dont_accumulate)
 
       # bias
       CuDNN.add_tensor4d(backend.cudnn_ctx, CuDNN.CUDNN_ADD_SAME_C, alpha,
