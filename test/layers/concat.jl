@@ -19,8 +19,7 @@ function test_concat_layer(backend::Backend, dim, T, eps)
   forward(backend, state, input_blobs)
 
   expected_output = cat(dim, inputs...)
-  got_output = similar(expected_output)
-  copy!(got_output, state.blobs[1])
+  got_output = to_array(state.blobs[1])
   @test all(abs(expected_output-got_output) .< eps)
 
   println("    > Backward")

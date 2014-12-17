@@ -22,8 +22,7 @@ function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, 
   payloads = Array(Any, n_input)
   for i = 1:n_input
     expected_output, payloads[i] = channel_pooling_forward(state, i, input[i])
-    got_output = similar(expected_output)
-    copy!(got_output, state.blobs[i])
+    got_output = to_array(state.blobs[i])
     @test all(-eps .< expected_output-got_output .< eps)
   end
 
@@ -36,8 +35,7 @@ function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, 
 
   for i = 1:n_input
     expected_output = channel_pooling_backward(state, i, input[i], top_diff[i], payloads[i])
-    got_output = similar(expected_output)
-    copy!(got_output, diffs[i])
+    got_output = to_array(diffs[i])
     @test all(-eps .< expected_output - got_output .< eps)
   end
 
