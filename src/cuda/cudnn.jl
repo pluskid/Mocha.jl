@@ -276,6 +276,39 @@ const CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMPT_GEMM = 1
 const CUDNN_CONVOLUTION_FWD_ALGO_GEMM = 2
 const CUDNN_CONVOLUTION_FWD_ALGO_DIRECT = 3
 
+const CUDNN_CONVOLUTION_FWD_NO_WORKSPACE = 0
+const CUDNN_CONVOLUTION_FWD_PREFER_FASTEST = 1
+const CUDNN_CONVOLUTION_FWD_SPECIFY_WORKSPACE_LIMIT = 2
+
+function get_convolution_forward_algorithm(handle::Handle, src_desc::Tensor4dDescriptor,
+    filter_desc::FilterDescriptor, conv_desc::ConvolutionDescriptor, dest_desc::Tensor4dDescriptor,
+    preference::Int, mem_limit_bytes::Int)
+
+  @assert CUDNN_CONVOLUTION_FWD_NO_WORKSPACE <= preference <= CUDNN_CONVOLUTION_FWD_SPECIFY_WORKSPACE_LIMIT
+  algor = Int[0]
+  @cudnncall(:cudnnGetConvolutionForwardAlgorithm, (Handle, Tensor4dDescriptor, FilterDescriptor,
+                                                    ConvolutionDescriptor, Tensor4dDescriptor, Int,
+                                                    Csize_t, Ptr{Int}),
+      handle, src_desc, filter_desc, conv_desc, dest_desc, preference, mem_limit_bytes, algor)
+  algor = algor[1]
+  @assert CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM <= algor <= CUDNN_CONVOLUTION_FWD_ALGO_DIRECT
+  return algor
+end
+
+function get_convolution_forward_workspace_size(handle::Handle, src_desc::Tensor4dDescriptor,
+    filter_desc::FilterDescriptor, conv_desc::ConvolutionDescriptor, dest_desc::Tensor4dDescriptor,
+    algor::Int)
+
+  @assert CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM <= algor <= CUDNN_CONVOLUTION_FWD_ALGO_DIRECT
+  ws_size = Csize_t[0]
+  @cudnncall(:cudnnGetConvolutionForwardWorkspaceSize, (Handle, Tensor4dDescriptor, FilterDescriptor,
+                                                    ConvolutionDescriptor, Tensor4dDescriptor, Int, Ptr{Csize_t}),
+      handle, src_desc, filter_desc, conv_desc, dest_desc, algor, ws_size)
+  ws_size = ws_size[1]
+  return ws_size
+end
+
+
 function convolution_forward{T<:FloatingPoint}(handle::Handle, src_desc::Tensor4dDescriptor, src::CuPtr,
     filter_desc::FilterDescriptor, filter::CuPtr, conv::ConvolutionDescriptor,
     dest_desc::Tensor4dDescriptor, dest::CuPtr, workspace::CuPtr, workspace_size, algo::Int,
