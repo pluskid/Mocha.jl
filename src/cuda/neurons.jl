@@ -1,5 +1,5 @@
 function cuda_geometry(:: ActivationFunction, output :: Blob)
-  width, height, channels, num = size(output)
+  width, height, channels, num = get_whcn(output)
   spatial_dim = width*height
 
   x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X));
