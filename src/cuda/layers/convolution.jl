@@ -5,7 +5,8 @@ type CuDNNConvState
   filter_desc   :: CuDNN.FilterDescriptor
   bias_desc     :: CuDNN.Tensor4dDescriptor
 
-  workspace     :: CuTensorBlob
+  fwd_algorithm :: Int
+  workspace     :: CUDA.CuPtr
   workspace_size:: Int
 
   bottom_offset :: Int
@@ -32,10 +33,17 @@ function setup_etc(backend::GPUBackend, layer::ConvolutionLayer, dtype, width, h
     conv_desc[i] = CuDNN.create_convolution_descriptor(inputs_desc[i], filter_desc, layer.pad,
         layer.stride, (1,1), CuDNN.CUDNN_CROSS_CORRELATION)
   end
-  workspace_size = width*height*channels*sizeof(dtype)*2 #CuDNN.get_convolution_forward_workspace_size(inputs_desc[1], filterDesc, conv_desc[1], outputs_desc[1],
-                                           #                     CuDNN.CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMPT_GEMM)
 
-  workspace = CuTensorBlob(dtype, workspace_size*32, 1, 1, 1)
+  # NOTE: in ConvolutionLayer, we require the shape for all inputs to be the same
+  fwd_algorithm = CuDNN.get_convolution_forward_algorithm(backend.cudnn_ctx, inputs_desc[1], filter_desc, conv_desc[1], outputs_desc[1],
+      CuDNN.CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0)
+  workspace_size = CuDNN.get_convolution_forward_workspace_size(backend.cudnn_ctx, inputs_desc[1], filter_desc, conv_desc[1], outputs_desc[1],
+      fwd_algorithm)
+  if workspace_size == 0
+    workspace = CUDA.CuPtr()
+  else
+    workspace = CUDA.cualloc(Uint8, workspace_size) # workspace_size is in bytes
+  end
 
   bottom_offset = div(channels,layer.n_group) * height * width * sizeof(dtype)
   top_offset = div(layer.n_filter,layer.n_group) * height_out * width_out * sizeof(dtype)
@@ -43,7 +51,7 @@ function setup_etc(backend::GPUBackend, layer::ConvolutionLayer, dtype, width, h
   bias_offset = div(layer.n_filter,layer.n_group) * sizeof(dtype)
 
   etc = CuDNNConvState(inputs_desc, outputs_desc, conv_desc, filter_desc, bias_desc,
-                       workspace, workspace_size,
+      fwd_algorithm, workspace, workspace_size,
       bottom_offset, top_offset, weight_offset, bias_offset)
   return etc
 end
@@ -60,7 +68,8 @@ function forward(backend::GPUBackend, state::ConvolutionLayerState, inputs::Vect
   alpha = one(eltype(inputs[1]))
   beta_accumulate = one(eltype(inputs[1]))
   beta_dont_accumulate = zero(eltype(inputs[1]))
-  workspace_ptr = CuPtr(state.etc.workspace.ptr.p)
+  fwd_algorithm = state.etc.fwd_algorithm
+  workspace_ptr = state.etc.workspace
   workspace_size = state.etc.workspace_size
 
   for i = 1:length(inputs)
@@ -70,7 +79,7 @@ function forward(backend::GPUBackend, state::ConvolutionLayerState, inputs::Vect
       filter_ptr = CuPtr(state.filter.ptr.p + state.etc.weight_offset * (g-1))
       CuDNN.convolution_forward(backend.cudnn_ctx, state.etc.inputs_desc[i], input_ptr,
           state.etc.filter_desc, filter_ptr, state.etc.conv_desc[i],
-          state.etc.outputs_desc[i], output_ptr, workspace_ptr, workspace_size, CuDNN.CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMPT_GEMM,
+          state.etc.outputs_desc[i], output_ptr, workspace_ptr, workspace_size, fwd_algorithm,
                                 alpha, beta_dont_accumulate)
 
       # bias
