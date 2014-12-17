@@ -1,8 +1,13 @@
 function test_softmax_loss_layer(backend::Backend, use_weights::Bool, T, eps)
   println("-- Testing SoftmaxLossLayer on $(typeof(backend)){$T} $(use_weights ? "(with weights)" : "")...")
 
-  width, height, channels, num = (5, 6, 7, 8)
-  input = rand(T, width, height, channels, num)
+  tensor_dim = abs(rand(Int)) % 4 + 2
+  dims = tuple((abs(rand(Int,tensor_dim)) % 6 + 6)...)
+  println("    > $dims")
+
+  input = rand(T, dims)
+  width, height, channels, num = get_whcn(input)
+
   input_blob = make_blob(backend, input)
   diff_blob = make_blob(backend, T, size(input))
 
@@ -27,19 +32,21 @@ function test_softmax_loss_layer(backend::Backend, use_weights::Bool, T, eps)
 
   expected_loss = 0
   expected_grad = zeros(T, size(input))
+  canonical_input = reshape(input, (width,height,channels,num))
+  canonical_grad = reshape(expected_grad, (width,height,channels,num))
   for w = 1:width
     for h = 1:height
       for n = 1:num
-        pred = exp(input[w, h, :, n])
+        pred = exp(canonical_input[w, h, :, n])
         pred /= sum(pred)
         if isempty(weights)
-          expected_grad[w, h, :, n] = pred
-          expected_grad[w, h, int(label[w,h,1,n])+1, n] -= 1
+          canonical_grad[w, h, :, n] = pred
+          canonical_grad[w, h, int(label[w,h,1,n])+1, n] -= 1
           expected_loss += -log(pred[int(label[w,h,1,n])+1])
         else
           y = int(label[w,h,1,n])+1
-          expected_grad[w, h, :, n] = pred .* weights[w, h, y]
-          expected_grad[w, h, y, n] -= weights[w,h,y]
+          canonical_grad[w, h, :, n] = pred .* weights[w,h,y]
+          canonical_grad[w, h, y, n] -= weights[w,h,y]
           expected_loss += -log(pred[y]) * weights[w,h,y]
         end
       end
@@ -48,8 +55,6 @@ function test_softmax_loss_layer(backend::Backend, use_weights::Bool, T, eps)
   expected_loss /= (width*height*num)
   expected_grad /= (width*height*num)
 
-  #println("loss = $(state.loss)")
-  #println("expected_loss = $expected_loss")
   @test -eps < state.loss - expected_loss < eps
 
   println("    > Backward")
