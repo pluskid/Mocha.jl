@@ -391,7 +391,7 @@ function create_pooling_descriptor()
   @cudnncall(:cudnnCreatePoolingDescriptor, (Ptr{PoolingDescriptor},), desc)
   return desc[1]
 end
-function set_pooling_descriptor(desc::PoolingDescriptor, mode::Int, dims::NTuple{2, Int}, stride::NTuple{2, Int}, padding::NTuple{2, Int}=(0,0))
+function set_pooling_descriptor(desc::PoolingDescriptor, mode::Int, dims::NTuple{2, Int}, stride::NTuple{2, Int}, padding::NTuple{2, Int})
   @assert CUDNN_POOLING_MAX <= mode <= CUDNN_POOLING_AVERAGE
   w,h = dims
   pad_w, pad_h = padding
@@ -400,9 +400,9 @@ function set_pooling_descriptor(desc::PoolingDescriptor, mode::Int, dims::NTuple
              desc, mode, h,w, pad_w, pad_h, stride_h, stride_w)
 end
 
-function create_pooling_descriptor(mode::Int, dims::NTuple{2,Int}, stride::NTuple{2,Int})
+function create_pooling_descriptor(mode::Int, dims::NTuple{2,Int}, stride::NTuple{2,Int}, padding::NTuple{2,Int})
   desc = create_pooling_descriptor()
-  set_pooling_descriptor(desc, mode, dims, stride)
+  set_pooling_descriptor(desc, mode, dims, stride, padding)
   return desc
 end
 
