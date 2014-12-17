@@ -16,7 +16,7 @@ end
 Parameter(name,blob,gradient,initializer,regularizer,constraint,lr) =
     Parameter(name, blob, gradient, initializer, regularizer, constraint, lr, true)
 
-function make_parameter(backend::Backend, name::String, data_type::Type, dims::NTuple{4,Int},
+function make_parameter{N}(backend::Backend, name::String, data_type::Type, dims::NTuple{N,Int},
     init::Initializer, regu::Regularizer, cons::Constraint, lr::FloatingPoint)
 
   blob = make_blob(backend, data_type, dims)

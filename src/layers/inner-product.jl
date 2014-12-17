@@ -62,15 +62,16 @@ type InnerProductLayerState <: LayerState
     if shared_params != nothing
       @assert length(shared_params) == 2
       @assert shared_params[1].name == "weight" && shared_params[2].name == "bias"
-      @assert size(shared_params[1].blob) == (fea_size, out_dim, 1, 1)
+      @assert size(shared_params[1].blob) == (fea_size, out_dim)
       @assert eltype(shared_params[1].blob) == data_type
+      @assert size(shared_params[2].blob) == (out_dim,)
       @debug("InnerProductLayer: sharing weights and bias")
 
       param_weight, param_bias = [share_parameter(backend, param) for param in shared_params]
     else
-      param_weight = make_parameter(backend, "weight", data_type, (fea_size,out_dim,1,1),
+      param_weight = make_parameter(backend, "weight", data_type, (fea_size,out_dim),
           layer.weight_init, layer.weight_regu, layer.weight_cons, layer.weight_lr)
-      param_bias   = make_parameter(backend, "bias", data_type, (out_dim, 1, 1, 1),
+      param_bias   = make_parameter(backend, "bias", data_type, (out_dim,),
           layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)
     end
 
