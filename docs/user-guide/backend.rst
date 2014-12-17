@@ -127,8 +127,12 @@ free.
 
 .. note::
 
-   cuDNN requires CUDA 6.5 to run, and currently cuDNN is available to Linux
-   and Windows only.
+   * cuDNN requires CUDA 6.5 to run.
+   * Mocha v0.0.1 ~ v0.0.4 use cuDNN 6.5 R1, which is only available on Linux
+     and Windows.
+   * Mocha v0.0.5 and higher uses cuDNN 6.5 R2, which is also
+     available on Mac OS X.
+   * cuDNN 6.5 R2 is **not** backward compatible with cuDNN 6.5 R1.
 
 Before using the CUDA backend, Mocha kernels needs to be compiled. The kernels
 are located in ``src/cuda/kernels``. Please use ``Pkg.dir("Mocha")`` to find out

@@ -6,8 +6,18 @@
   * Network architecture visualization
 * Infrastructure
   * CUDA Stream?
+  * 4D tensor -> ND tensor?
 * Document
   * Developer's Guide
+
+## v0.0.5 ???
+
+* Infrastructure
+  * **{Breaking Changes}** cuDNN 6.5 R2 (Release Candidate) (@JobJob)
+    * cuDNN 6.5 R2 is **NOT** backward compatible with 6.5 R1
+    * Forward convolution speed up
+    * Pooling with padding is supported
+    * Mac OS X is supported
 
 ## v0.0.4 2014.12.09
 
