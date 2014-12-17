@@ -97,7 +97,7 @@ const CUDNN_TENSOR_NHWC = 1    # feature maps interleaved ( cStride = 1 )
 
 function create_tensor4d_descriptor()
   desc = Tensor4dDescriptor[0]
-	  @cudnncall(:cudnnCreateTensorDescriptor, (Tensor4dDescriptor,), desc)
+  @cudnncall(:cudnnCreateTensorDescriptor, (Tensor4dDescriptor,), desc)
   return desc[1]
 end
 
