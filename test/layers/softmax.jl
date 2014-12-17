@@ -1,7 +1,10 @@
 function test_softmax_layer(backend::Backend, n_input, T, eps)
   println("-- Testing SoftmaxLayer on $(typeof(backend)){$T}...")
 
-  dims = [abs(rand(Int,4)) % 6 + 6 for i = 1:n_input]
+  tensor_dim = abs(rand(Int)) % 4 + 2
+  println("    > $tensor_dim-dimensional tensor")
+
+  dims = [abs(rand(Int,tensor_dim)) % 6 + 6 for i = 1:n_input]
   input = [rand(T, dims[i]...) for i = 1:n_input]
   input_blob = Blob[make_blob(backend, x) for x in input]
   diff_blob = Blob[NullBlob() for i = 1:n_input]
@@ -12,13 +15,14 @@ function test_softmax_layer(backend::Backend, n_input, T, eps)
   forward(backend, state, input_blob)
 
   for i = 1:n_input
-    output = similar(input[i])
-    width, height, channels, num = dims[i]
+    width, height, channels, num = get_whcn(input[i])
+    canonical_input = reshape(input[i], (width, height, channels, num))
+    output = similar(canonical_input)
 
     for w = 1:width
       for h = 1:height
         for n = 1:num
-          preds = input[i][w, h, :, n]
+          preds = canonical_input[w, h, :, n]
           preds -= maximum(preds)
           preds = exp(preds)
           preds /= sum(preds)
@@ -30,7 +34,7 @@ function test_softmax_layer(backend::Backend, n_input, T, eps)
     got_output = zeros(T, size(output))
     copy!(got_output, state.blobs[i])
 
-    @test all(-eps .< output - got_output .< eps)
+    @test all(-eps .< output[:] - got_output[:] .< eps)
   end
 
   shutdown(backend, state)
