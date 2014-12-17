@@ -1,6 +1,6 @@
 function forward(backend::GPUBackend, state::SubMeanState, input::Blob)
-  width, height, channels, num = size(input)
-  fea_dim = width*height*channels
+  fea_dim = get_fea_size(input)
+  num     = get_num(input)
   CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_N, fea_dim, num, 1, convert(eltype(input), -1),
       state.mean_blob.ptr, fea_dim, state.multiplier.ptr, 1, convert(eltype(input), 1),
       input.ptr, fea_dim)

@@ -104,13 +104,13 @@ function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
 end
 
 function test_hdf5_data_layer_shuffle(backend::Backend, T)
-  test_hdf5_data_layer_shuffle(backend, 2, 6, T)
-  test_hdf5_data_layer_shuffle(backend, 6, 2, T)
+  test_hdf5_data_layer_shuffle(backend, 4, 6, T)
+  test_hdf5_data_layer_shuffle(backend, 6, 4, T)
 end
 
 function test_hdf5_data_layer(backend::Backend)
-  test_hdf5_data_layer(backend, Float32, 1e-5)
-  test_hdf5_data_layer(backend, Float64, 1e-10)
+  test_hdf5_data_layer(backend, Float32, 1e-3)
+  test_hdf5_data_layer(backend, Float64, 1e-7)
   test_hdf5_data_layer_shuffle(backend, Float32)
   test_hdf5_data_layer_shuffle(backend, Float64)
 end
