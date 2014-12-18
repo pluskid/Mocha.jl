@@ -1,5 +1,5 @@
 function setup_etc(backend::GPUBackend, layer::AccuracyLayer, inputs)
-  width, height, channels, num = size(inputs[1])
+  width, height, channels, num = get_whcn(inputs[1])
   etc = make_blob(backend, eltype(inputs[1]), (width,height,1,num))
   return etc
 end
@@ -11,7 +11,7 @@ function forward(backend::GPUBackend, state::AccuracyLayerState, inputs::Vector{
   pred = inputs[1]
   label = inputs[2]
 
-  width, height, channels, num = size(pred)
+  width, height, channels, num = get_whcn(pred)
   spatial_dim = width*height
   data_type = eltype(pred)
 

@@ -54,7 +54,7 @@ function test_power_layer(backend::Backend, n_input, T, eps)
 end
 
 function test_power_layer(backend::Backend)
-  test_power_layer(backend, 3, Float32, 5e-2)
+  test_power_layer(backend, 3, Float32, 8e-2)
   test_power_layer(backend, 3, Float64, 1e-8)
 end
 

@@ -1,10 +1,15 @@
 function test_accuracy_layer(backend::Backend, T)
   println("-- Testing AccuracyLayer on $(typeof(backend)){$T}...")
 
+  tensor_dim = abs(rand(Int)) % 4 + 2
+  dims = tuple((abs(rand(Int,tensor_dim)) % 6 + 6)...)
+  println("    > $dims")
+
   eps = 1e-5
-  width, height, channels, num = (5, 6, 7, 8)
-  input = rand(T, width, height, channels, num)
+  input = rand(T, dims)
   input_blob = make_blob(backend, input)
+
+  width, height, channels, num = get_whcn(input)
 
   label = abs(rand(Int, (width, height, 1, num))) % channels
   label = convert(Array{T}, label)
@@ -20,11 +25,12 @@ function test_accuracy_layer(backend::Backend, T)
 
   @test state.n_accum == width*height*num
 
+  canonical_input = reshape(input, (width,height,channels,num))
   expected_acc = 0.0
   for n = 1:num
     for w = 1:width
       for h = 1:height
-        pred = input[w, h, :, n]
+        pred = canonical_input[w, h, :, n]
         if indmax(pred) == convert(Int, label[w,h,1,n])+1
           expected_acc += 1
         end
