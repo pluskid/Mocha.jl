@@ -40,8 +40,8 @@ function test_square_loss_layer(backend::Backend, T, eps)
 end
 
 function test_square_loss_layer(backend::Backend)
-  test_square_loss_layer(backend, Float32, 1e-3)
-  test_square_loss_layer(backend, Float64, 1e-10)
+  test_square_loss_layer(backend, Float32, 1e-2)
+  test_square_loss_layer(backend, Float64, 1e-8)
 end
 
 if test_cpu

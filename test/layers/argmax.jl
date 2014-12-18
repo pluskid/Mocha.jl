@@ -1,7 +1,10 @@
 function test_argmax_layer(backend::Backend, n_input, T, eps)
   println("-- Testing ArgmaxLayer on $(typeof(backend)){$T}...")
 
-  dims = [abs(rand(Int, 4)) % 6 + 1 for i = 1:n_input]
+  tensor_dim = abs(rand(Int)) % 4 + 2
+  println("    > $tensor_dim-dimensional tensor")
+
+  dims = [abs(rand(Int, tensor_dim)) % 6 + 1 for i = 1:n_input]
   input = [rand(T, dims[i]...) for i = 1:n_input]
   input_blob = Blob[make_blob(backend, x) for x in input]
   diff_blob = Blob[NullBlob() for i = 1:n_input]
@@ -13,13 +16,14 @@ function test_argmax_layer(backend::Backend, n_input, T, eps)
   println("    > Forward")
   forward(backend, state, input_blob)
   for i = 1:n_input
-    width,height,channels,num = dims[i]
+    width,height,channels,num = get_whcn(input[i])
     got_output = zeros(T, width, height, 1, num)
+    canonical_input = reshape(input[i], (width,height,channels,num))
     expected_output = similar(got_output)
     for n = 1:num
       for w = 1:width
         for h = 1:height
-          expected_output[w,h,1,n] = indmax(input[i][w,h,:,n])-1
+          expected_output[w,h,1,n] = indmax(canonical_input[w,h,:,n])-1
         end
       end
     end
