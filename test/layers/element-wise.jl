@@ -1,8 +1,12 @@
 function test_element_wise_layer(backend::Backend, op::ElementWiseFunctorType, jl_op::Function, T, eps)
   println("-- Testing ElementWiseLayer{$op} on $(typeof(backend)){$T}...")
 
+  tensor_dim = abs(rand(Int)) % 6 + 1
+  dims = tuple((abs(rand(Int, tensor_dim)) % 8 + 1)...)
+  println("    > $dims")
+
   NArg = get_num_args(op)
-  inputs = [rand(T, 4,5,6,7) for i = 1:NArg]
+  inputs = [rand(T, dims) for i = 1:NArg]
   input_blobs = Blob[make_blob(backend, x) for x in inputs]
   diff_blobs = Blob[make_blob(backend, x) for x in inputs]
 
