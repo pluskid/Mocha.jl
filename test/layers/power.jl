@@ -1,7 +1,8 @@
 function test_power_layer(backend::Backend, scale, shift, power, n_input, T, eps)
-  println("    > scale=$scale, shift=$shift, power=$power")
+  tensor_dim = abs(rand(Int)) % 6 + 1
+  println("    > scale=$scale, shift=$shift, power=$power, tensor_dim=$tensor_dim")
 
-  dims = [abs(rand(Int, 4)) % 5 + 5 for i = 1:n_input]
+  dims = [abs(rand(Int, tensor_dim)) % 5 + 5 for i = 1:n_input]
   input = [rand(T, dims[i]...) for i = 1:n_input]
   input_blob = Blob[make_blob(backend, x) for x in input]
   grad_blob = Blob[make_blob(backend, x) for x in input]
