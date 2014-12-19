@@ -21,19 +21,17 @@ type ChannelPoolingLayerState <: LayerState
   etc        :: Any
 end
 
-function setup_etc(backend::CPUBackend, layer::ChannelPoolingLayer, inputs, pooled_chann)
+function setup_etc(backend::CPUBackend, layer::ChannelPoolingLayer, inputs, blobs)
   if isa(layer.pooling, Pooling.Max)
     masks = Array(Array, length(inputs))
     for i = 1:length(inputs)
-      masks[i] = Array(Csize_t, get_width(inputs[i]), get_height(inputs[i]),
-          pooled_chann[i], get_num(inputs[i]))
+      masks[i] = Array(Csize_t, size(blobs[i]))
     end
     etc = masks
   elseif isa(layer.pooling, Pooling.Mean)
     integrals = Array(Array, length(inputs))
     for i = 1:length(inputs)
-      integrals[i] = Array(eltype(inputs[i]), get_width(inputs[i]), get_height(inputs[i]),
-          get_chann(inputs[i]))
+      integrals[i] = Array(eltype(inputs[i]), size(inputs[i])[1:end-1])
     end
     etc = integrals
   else
@@ -43,11 +41,6 @@ function setup_etc(backend::CPUBackend, layer::ChannelPoolingLayer, inputs, pool
 end
 
 function setup(backend::Backend, layer::ChannelPoolingLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  for i = 1:length(inputs)
-    # currently we only handle 4D-tensor
-    @assert ndims(inputs[i]) == 4
-  end
-
   pooled_chann_all = Array(Int, length(inputs))
   blobs = Array(Blob, length(inputs))
   blobs_diff = Array(Blob, length(inputs))
@@ -55,28 +48,36 @@ function setup(backend::Backend, layer::ChannelPoolingLayer, inputs::Vector{Blob
 
   for i = 1:length(inputs)
     dim_total = ndims(inputs[i])
-    dim = layer.dim < 0 ? layer.dim + dim_total+1 : layer.dim
-    op_dims[i] = dim
+    op_dim = layer.dim < 0 ? layer.dim + dim_total+1 : layer.dim
+    @assert 1 <= op_dim <= dim_total
+    @assert op_dim != dim_total
 
-    width, height, channels, num = size(inputs[i])
-    pooled_chann = int(ceil(float(channels + layer.pad[1]+layer.pad[2] - layer.kernel) / layer.stride)) + 1
+    op_dims[i] = op_dim
+
+    dims = [size(inputs[i])...]
+    pool_dim = dims[op_dim]
+    pooled_dim = int(ceil(float(pool_dim + layer.pad[1]+layer.pad[2] - layer.kernel) / layer.stride)) + 1
 
     # make sure the last pooling is not purely pooling padded area
-    if ((pooled_chann-1)*layer.stride >= channels + layer.pad[1])
-      pooled_chann -= 1
+    if ((pooled_dim-1)*layer.stride >= pool_dim + layer.pad[1])
+      pooled_dim -= 1
     end
-    pooled_chann_all[i] = pooled_chann
+    pooled_chann_all[i] = pooled_dim
+
+    output_dims = copy(dims)
+    output_dims[op_dim] = pooled_dim
+    output_dims = tuple(output_dims...)
 
     data_type = eltype(inputs[i])
-    blobs[i] = make_blob(backend, data_type, (width,height,pooled_chann_all[i],num))
+    blobs[i] = make_blob(backend, data_type, output_dims)
     if isa(diffs[i], NullBlob)
       blobs_diff[i] = NullBlob()
     else
-      blobs_diff[i] = make_blob(backend, data_type, (width,height,pooled_chann_all[i],num))
+      blobs_diff[i] = make_blob(backend, data_type, output_dims)
     end
   end
 
-  etc = setup_etc(backend, layer, inputs, pooled_chann_all)
+  etc = setup_etc(backend, layer, inputs, blobs)
   state = ChannelPoolingLayerState(layer, blobs, blobs_diff, op_dims, etc)
 end
 function shutdown_etc(backend::CPUBackend, state::ChannelPoolingLayerState)

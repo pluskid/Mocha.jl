@@ -1,15 +1,16 @@
 function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, tensor_dim::Int, n_input, T, eps)
   println("-- Testing ChannelPooling($(typeof(pooling))) on $(typeof(backend)){$T}...")
-  println("    > Setup")
 
   dims = [abs(rand(Int, tensor_dim)) % 7 + 7 for i = 1:n_input]
-  op_dim = 3
+  op_dim = max(abs(rand(Int)) % tensor_dim, 1)
   pad = (2,2)
   kernel = 3
   stride = 2
 
+  println("    > Setup (pool along dimension $op_dim for $tensor_dim-D tensors)")
+
   layer = ChannelPoolingLayer(kernel=kernel, stride=stride, pad=pad, pooling=pooling,
-      tops=Array(Symbol,n_input), bottoms=Array(Symbol,n_input))
+      tops=Array(Symbol,n_input), bottoms=Array(Symbol,n_input), dim=op_dim)
 
   input = [rand(T, dim...) for dim in dims]
   inputs = Blob[make_blob(backend, x) for x in input]
@@ -118,7 +119,7 @@ function channel_pooling_backward(state, i, input::Array, diff::Array, payload::
 end
 
 function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, n_input, T, eps)
-  for i = 4:4
+  for i = 2:6
     test_channel_pooling_layer(backend, pooling, i, n_input, T, eps)
   end
 end
