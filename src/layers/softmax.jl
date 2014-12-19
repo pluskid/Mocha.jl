@@ -16,15 +16,13 @@ type SoftmaxLayerState <: LayerState
   etc   :: Any
 end
 
-function setup_etc(backend::CPUBackend, layer::SoftmaxLayer, data_type, inputs)
+function setup_etc(backend::CPUBackend, layer::SoftmaxLayer, dims::Vector{Int}, data_type, inputs)
   nothing
 end
 
 function setup(backend::Backend, layer::SoftmaxLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type  = eltype(inputs[1])
   blobs      = Blob[make_blob(backend, data_type, size(input)) for input in inputs]
-  etc        = setup_etc(backend, layer, data_type, inputs)
-
   dims = map(inputs) do input
     total_dim = ndims(input)
     dim = layer.dim < 0 ? layer.dim + total_dim + 1 : layer.dim
@@ -32,6 +30,8 @@ function setup(backend::Backend, layer::SoftmaxLayer, inputs::Vector{Blob}, diff
     @assert dim != total_dim # should not operate on the mini-batch dimension
     dim
   end
+
+  etc = setup_etc(backend, layer, dims, data_type, inputs)
 
   state = SoftmaxLayerState(layer, blobs, dims, etc)
   return state
