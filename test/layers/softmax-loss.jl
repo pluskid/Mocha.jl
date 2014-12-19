@@ -12,7 +12,7 @@ function test_softmax_loss_layer(backend::Backend, tensor_dim, use_weights::Bool
   dims_label = tuple(dims_label...)
   println("    > $dims (operate on dimension $op_dim)")
 
-  input = rand(T, dims)
+  input = rand(T, dims) + 0.01
 
   input_blob = make_blob(backend, input)
   diff_blob = make_blob(backend, T, size(input))

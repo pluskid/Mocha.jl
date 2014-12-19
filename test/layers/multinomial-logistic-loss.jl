@@ -13,7 +13,7 @@ function test_multinomial_logistic_loss_layer(backend::Backend, tensor_dim, clas
   dims = tuple(dims...)
   channels = dims[op_dim]
 
-  prob = abs(rand(T, dims))
+  prob = abs(rand(T, dims)) + 0.01
 
   label = abs(rand(Int, dims_label)) % channels
   label = convert(Array{T}, label)
