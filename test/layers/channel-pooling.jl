@@ -1,8 +1,9 @@
-function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, n_input, T, eps)
+function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, tensor_dim::Int, n_input, T, eps)
   println("-- Testing ChannelPooling($(typeof(pooling))) on $(typeof(backend)){$T}...")
   println("    > Setup")
 
-  dims = [abs(rand(Int, 4)) % 7 + 7 for i = 1:n_input]
+  dims = [abs(rand(Int, tensor_dim)) % 7 + 7 for i = 1:n_input]
+  op_dim = 3
   pad = (2,2)
   kernel = 3
   stride = 2
@@ -21,7 +22,7 @@ function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, 
 
   payloads = Array(Any, n_input)
   for i = 1:n_input
-    expected_output, payloads[i] = channel_pooling_forward(state, i, input[i])
+    expected_output, payloads[i] = channel_pooling_forward(state, i, input[i], op_dim)
     got_output = to_array(state.blobs[i])
     @test all(-eps .< expected_output-got_output .< eps)
   end
@@ -34,7 +35,7 @@ function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, 
   backward(backend, state, inputs, diffs)
 
   for i = 1:n_input
-    expected_output = channel_pooling_backward(state, i, input[i], top_diff[i], payloads[i])
+    expected_output = channel_pooling_backward(state, i, input[i], top_diff[i], payloads[i], op_dim)
     got_output = to_array(diffs[i])
     @test all(-eps .< expected_output - got_output .< eps)
   end
@@ -42,28 +43,34 @@ function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, 
   shutdown(backend, state)
 end
 
-function channel_pooling_forward(state, i, input::Array)
-  width, height, channels, num = size(input)
-  pooled_chann = get_chann(state.blobs[i])
+function channel_pooling_forward(state, i, input::Array, op_dim)
+  dim_pre, dim_pool, dim_post = split_dims(input, op_dim)
+  dim_pooled = size(state.blobs[i], op_dim)
 
-  output = zeros(eltype(input), width, height, pooled_chann, num)
+  output = zeros(eltype(input), size(state.blobs[i]))
   if isa(state.layer.pooling, Pooling.Max)
     mask = similar(output, Int)
   end
 
-  for n = 1:num
-    for pc = 1:pooled_chann
+  canonical_input = reshape(input, dim_pre, dim_pool, dim_post)
+  canonical_output = reshape(output, dim_pre, dim_pooled, dim_post)
+  if isa(state.layer.pooling, Pooling.Max)
+    canonical_mask = reshape(mask, dim_pre, dim_pooled, dim_post)
+  end
+
+  for n = 1:dim_post
+    for pc = 1:dim_pooled
       cstart = (pc-1)*state.layer.stride - state.layer.pad[1] + 1
-      cend = min(cstart + state.layer.kernel - 1, channels)
+      cend = min(cstart + state.layer.kernel - 1, size(input, op_dim))
       cstart = max(1, cstart)
 
-      region = input[:,:,cstart:cend, n]
+      region = canonical_input[:,cstart:cend,n]
       if isa(state.layer.pooling, Pooling.Max)
-        maxval, maxidx = findmax(region, 3)
-        output[:,:,pc,n] = maxval
-        mask[:,:,pc,n] = maxidx
+        maxval, maxidx = findmax(region, 2)
+        canonical_output[:,pc,n] = maxval
+        canonical_mask[:,pc,n] = maxidx
       elseif isa(state.layer.pooling, Pooling.Mean)
-        output[:,:,pc,n] = sum(region, 3) / state.layer.kernel
+        canonical_output[:,pc,n] = sum(region, 2) / state.layer.kernel
       else
         error("Unknown pooling $(state.layer.pooling)")
       end
@@ -77,24 +84,30 @@ function channel_pooling_forward(state, i, input::Array)
   end
 end
 
-function channel_pooling_backward(state, i, input::Array, diff::Array, payload::Any)
-  width, height, channels, num = size(input)
-  pooled_chann = get_chann(state.blobs[i])
+function channel_pooling_backward(state, i, input::Array, diff::Array, payload::Any, op_dim)
+  dim_pre, dim_pool, dim_post = split_dims(input, op_dim)
+  dim_pooled = size(state.blobs[i], op_dim)
 
-  gradient = zeros(eltype(input), width, height, channels, num)
-  for n = 1:num
-    for pc = 1:pooled_chann
+  gradient = zeros(eltype(input), size(input))
+  canonical_input = reshape(input, dim_pre, dim_pool, dim_post)
+  canonical_gradient = reshape(gradient, dim_pre, dim_pool, dim_post)
+  canonical_diff = reshape(diff, dim_pre, dim_pooled, dim_post)
+  if isa(state.layer.pooling, Pooling.Max)
+    canonical_mask = reshape(payload, dim_pre, dim_pooled, dim_post)
+  end
+  for n = 1:dim_post
+    for pc = 1:dim_pooled
       cstart = (pc-1)*state.layer.stride - state.layer.pad[1] + 1
-      cend = min(cstart + state.layer.kernel - 1, channels)
+      cend = min(cstart + state.layer.kernel - 1, size(input, op_dim))
       cstart = max(1, cstart)
 
       if isa(state.layer.pooling, Pooling.Max)
-        region = sub(gradient,1:width,1:height,cstart:cend,n)
-        maxidx = payload[:,:,pc,n]
-        region[vec(maxidx)] += vec(diff[:,:,pc,n])
+        region = sub(canonical_gradient,1:dim_pre,cstart:cend,n)
+        maxidx = canonical_mask[:,pc,n]
+        region[vec(maxidx)] += vec(canonical_diff[:,pc,n])
       elseif isa(state.layer.pooling, Pooling.Mean)
         for c = cstart:cend
-          gradient[:,:,c,n] += diff[:,:,pc,n] / state.layer.kernel
+          canonical_gradient[:,c,n] += canonical_diff[:,pc,n] / state.layer.kernel
         end
       else
         error("Unknown pooling $(state.layer.pooling)")
@@ -104,6 +117,11 @@ function channel_pooling_backward(state, i, input::Array, diff::Array, payload::
   return gradient
 end
 
+function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, n_input, T, eps)
+  for i = 4:4
+    test_channel_pooling_layer(backend, pooling, i, n_input, T, eps)
+  end
+end
 function test_channel_pooling_layer(backend::Backend, n_input, T, eps)
   test_channel_pooling_layer(backend, Pooling.Max(), n_input, T, eps)
   test_channel_pooling_layer(backend, Pooling.Mean(), n_input, T, eps)
