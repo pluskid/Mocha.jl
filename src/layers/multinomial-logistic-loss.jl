@@ -4,6 +4,7 @@
 @defstruct MultinomialLogisticLossLayer Layer (
   name :: String = "multinomial-logistic-loss",
   weights :: Array = [],
+  (dim :: Int = -2, dim != 0),
   (normalize:: Symbol = :local, in(normalize,[:local,:global,:no])),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
@@ -16,12 +17,21 @@ type MultinomialLogisticLossLayerState{T} <: LayerState
   layer :: MultinomialLogisticLossLayer
   loss  :: T
 
+  op_dim       :: Int
   weights_blob :: Blob
 end
 
 function setup(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
-  width, height, channels, num = get_whcn(inputs[1])
+  tensor_dim = ndims(inputs[1])
+  dims = size(inputs[1])
+
+  op_dim = layer.dim
+  if op_dim < 0
+    op_dim += tensor_dim + 1
+  end
+  @assert 1 <= op_dim <= tensor_dim
+  @assert op_dim != tensor_dim # the last dimension is the mini-batch dimension
 
   # weights for each class
   if isempty(layer.weights)
@@ -29,28 +39,30 @@ function setup(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Ve
   else
     weights = layer.weights
     if ndims(weights) == 1
-      if length(weights) != channels
+      if length(weights) != dims[op_dim]
         error("Invalid weights: size should be equal to number of classes")
       end
-      weights = repeat(reshape(weights,1,1,channels), inner=[width,height,1])
+      new_shape = ones(Int, tensor_dim-1); new_shape[op_dim] = dims[op_dim]
+      rep_shape = [dims[1:end-1]...]; rep_shape[op_dim] = 1
+      weights = repeat(reshape(weights, new_shape...), inner=rep_shape)
     end
-    if ndims(weights) != 3 || size(weights) != (width,height,channels)
-      error("Invalid weights: should be either a 3-tensor of (width,height,channels) or a vector of (channels)")
+    if ndims(weights) != tensor_dim-1 || size(weights) != dims[1:end-1]
+      error("Invalid weights: should be either a ND-tensor of one data point or a vector of (classes)")
     end
     weights = convert(Array{data_type}, weights)
 
     if layer.normalize == :local
-      weights = weights .* (channels ./ sum(weights, 3))
+      weights = weights .* (dims[op_dim] ./ sum(weights, op_dim))
     elseif layer.normalize == :global
-      weights = weights * (width*height*channels / sum(weights))
+      weights = weights * (prod(size(weights)) / sum(weights))
     else
       @assert layer.normalize == :no
     end
 
-    weights_blob = make_blob(backend, reshape(weights, width,height,channels,1))
+    weights_blob = make_blob(backend, weights)
   end
 
-  state = MultinomialLogisticLossLayerState(layer, convert(data_type, 0), weights_blob)
+  state = MultinomialLogisticLossLayerState(layer, convert(data_type, 0), op_dim, weights_blob)
   return state
 end
 function shutdown(backend::Backend, state::MultinomialLogisticLossLayerState)
@@ -59,23 +71,44 @@ end
 function forward(backend::CPUBackend, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob})
   pred = inputs[1].data
   label = inputs[2].data
-  width, height, channels, num = get_whcn(pred)
 
-  idx_width  = reshape(1:width, (width, 1, 1, 1))
-  idx_height = reshape(1:height, (1, height, 1, 1))
-  idx_chann  = int(label)+1
-  idx_num    = reshape(1:num, (1, 1, 1, num))
+  dims = size(pred)
 
-  pred = reshape(pred, (width,height,channels,num))
-  label = reshape(label, (width,height,1,num))
+  idx_all = map(1:length(dims)) do i
+    if i == state.op_dim
+      int(label) + 1
+    else
+      dim = dims[i]
+      reshape(1:dim, [j == i? dim : 1 for j = 1:length(dims)]...)
+    end
+  end
 
   if isa(state.weights_blob, NullBlob)
-    loss = sum(-log(max(broadcast_getindex(pred, idx_width, idx_height, idx_chann, idx_num), 1e-20)))
+    loss = sum(-log(max(broadcast_getindex(pred, idx_all...), 1e-20)))
   else
-    loss = sum(-log(max(broadcast_getindex(pred, idx_width, idx_height, idx_chann, idx_num), 1e-20)) .*
-        broadcast_getindex(state.weights_blob.data, idx_width, idx_height, idx_chann, reshape([1],1,1,1,1)))
+    tmp = reshape([1], ones(Int, length(dims))...)
+    loss = sum(-log(max(broadcast_getindex(pred, idx_all...), 1e-20)) .*
+        broadcast_getindex(state.weights_blob.data, idx_all[1:end-1]..., tmp))
   end
-  state.loss = loss / (width*height*num)
+  state.loss = loss / (prod(dims) / dims[state.op_dim])
+
+  #width, height, channels, num = get_whcn(pred)
+
+  #idx_width  = reshape(1:width, (width, 1, 1, 1))
+  #idx_height = reshape(1:height, (1, height, 1, 1))
+  #idx_chann  = int(label)+1
+  #idx_num    = reshape(1:num, (1, 1, 1, num))
+
+  #pred = reshape(pred, (width,height,channels,num))
+  #label = reshape(label, (width,height,1,num))
+
+  #if isa(state.weights_blob, NullBlob)
+  #  loss = sum(-log(max(broadcast_getindex(pred, idx_width, idx_height, idx_chann, idx_num), 1e-20)))
+  #else
+  #  loss = sum(-log(max(broadcast_getindex(pred, idx_width, idx_height, idx_chann, idx_num), 1e-20)) .*
+  #      broadcast_getindex(state.weights_blob.data, idx_width, idx_height, idx_chann, reshape([1],1,1,1,1)))
+  #end
+  #state.loss = loss / (width*height*num)
 end
 
 function backward(backend::Backend, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
