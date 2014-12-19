@@ -37,6 +37,7 @@ function setup(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Ve
   if isempty(layer.weights)
     weights_blob = NullBlob()
   else
+    @assert op_dim == tensor_dim-1 "When weights provided, LogisticLoss can only operate on the second-to-last dimension"
     weights = layer.weights
     if ndims(weights) == 1
       if length(weights) != dims[op_dim]
@@ -91,24 +92,6 @@ function forward(backend::CPUBackend, state::MultinomialLogisticLossLayerState, 
         broadcast_getindex(state.weights_blob.data, idx_all[1:end-1]..., tmp))
   end
   state.loss = loss / (prod(dims) / dims[state.op_dim])
-
-  #width, height, channels, num = get_whcn(pred)
-
-  #idx_width  = reshape(1:width, (width, 1, 1, 1))
-  #idx_height = reshape(1:height, (1, height, 1, 1))
-  #idx_chann  = int(label)+1
-  #idx_num    = reshape(1:num, (1, 1, 1, num))
-
-  #pred = reshape(pred, (width,height,channels,num))
-  #label = reshape(label, (width,height,1,num))
-
-  #if isa(state.weights_blob, NullBlob)
-  #  loss = sum(-log(max(broadcast_getindex(pred, idx_width, idx_height, idx_chann, idx_num), 1e-20)))
-  #else
-  #  loss = sum(-log(max(broadcast_getindex(pred, idx_width, idx_height, idx_chann, idx_num), 1e-20)) .*
-  #      broadcast_getindex(state.weights_blob.data, idx_width, idx_height, idx_chann, reshape([1],1,1,1,1)))
-  #end
-  #state.loss = loss / (width*height*num)
 end
 
 function backward(backend::Backend, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})

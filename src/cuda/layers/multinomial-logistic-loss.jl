@@ -3,9 +3,7 @@ function forward(backend::GPUBackend, state::MultinomialLogisticLossLayerState, 
   label     = inputs[2]
   data_type = eltype(pred)
 
-  width, height, channels, num = get_whcn(pred)
-
-  spatial_dim = height*width
+  spatial_dim, channels, num = split_dims(pred, state.op_dim)
   prob_dim = channels
 
   x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X))
