@@ -3,12 +3,13 @@ type CuDNNSoftmaxState
   outputs_desc :: Vector{CuDNN.Tensor4dDescriptor}
 end
 
-function setup_etc(backend::GPUBackend, layer::SoftmaxLayer, data_type, inputs)
+function setup_etc(backend::GPUBackend, layer::SoftmaxLayer, dims::Vector{Int}, data_type, inputs)
   inputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
   outputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
   for i = 1:length(inputs)
-    inputs_desc[i] = CuDNN.create_tensor4d_descriptor(data_type, get_whcn(inputs[i]))
-    outputs_desc[i] = CuDNN.create_tensor4d_descriptor(data_type, get_whcn(inputs[i]))
+    dim_sp, dim_prob, dim_num = split_dims(inputs[i], dims[i])
+    inputs_desc[i] = CuDNN.create_tensor4d_descriptor(data_type, (1,dim_sp,dim_prob,dim_num))
+    outputs_desc[i] = CuDNN.create_tensor4d_descriptor(data_type, (1,dim_sp,dim_prob,dim_num))
   end
   etc = CuDNNSoftmaxState(inputs_desc, outputs_desc)
   return etc

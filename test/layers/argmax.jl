@@ -1,30 +1,32 @@
-function test_argmax_layer(backend::Backend, n_input, T, eps)
+function test_argmax_layer(backend::Backend, n_input, tensor_dim, T, eps)
   println("-- Testing ArgmaxLayer on $(typeof(backend)){$T}...")
 
-  tensor_dim = abs(rand(Int)) % 4 + 2
   println("    > $tensor_dim-dimensional tensor")
 
   dims = [abs(rand(Int, tensor_dim)) % 6 + 1 for i = 1:n_input]
-  input = [rand(T, dims[i]...) for i = 1:n_input]
-  input_blob = Blob[make_blob(backend, x) for x in input]
+  op_dim = max(abs(rand(Int)) % tensor_dim, 1)
+  inputs = [rand(T, dims[i]...) for i = 1:n_input]
+  input_blob = Blob[make_blob(backend, x) for x in inputs]
   diff_blob = Blob[NullBlob() for i = 1:n_input]
 
   println("    > Setup")
-  layer = ArgmaxLayer(bottoms=Array(Symbol,n_input),tops=Array(Symbol,n_input))
+  layer = ArgmaxLayer(bottoms=Array(Symbol,n_input),tops=Array(Symbol,n_input),dim=op_dim)
   state = setup(backend, layer, input_blob, diff_blob)
 
   println("    > Forward")
   forward(backend, state, input_blob)
   for i = 1:n_input
-    width,height,channels,num = get_whcn(input[i])
-    got_output = zeros(T, width, height, 1, num)
-    canonical_input = reshape(input[i], (width,height,channels,num))
-    expected_output = similar(got_output)
-    for n = 1:num
-      for w = 1:width
-        for h = 1:height
-          expected_output[w,h,1,n] = indmax(canonical_input[w,h,:,n])-1
-        end
+    outdim = [size(inputs[i])...]
+    outdim[op_dim] = 1
+    got_output = zeros(T, outdim...)
+    expected_output = zeros(T, outdim...)
+
+    pre_dim, mid_dim, post_dim = split_dims(inputs[i], op_dim)
+    input = reshape(inputs[i], pre_dim, mid_dim, post_dim)
+    output = reshape(expected_output, pre_dim, 1, post_dim)
+    for x = 1:pre_dim
+      for z = 1:post_dim
+        output[x,1,z] = indmax(input[x,:,z])-1
       end
     end
 
@@ -33,6 +35,11 @@ function test_argmax_layer(backend::Backend, n_input, T, eps)
   end
 
   shutdown(backend, state)
+end
+function test_argmax_layer(backend::Backend, n_input, T, eps)
+  for i = 2:6
+    test_argmax_layer(backend, n_input, i, T, eps)
+  end
 end
 function test_argmax_layer(backend::Backend)
   test_argmax_layer(backend, 3, Float64, 1e-10)

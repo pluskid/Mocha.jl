@@ -1,16 +1,14 @@
-function setup_etc(backend::GPUBackend, layer::ChannelPoolingLayer, inputs, pooled_chann)
+function setup_etc(backend::GPUBackend, layer::ChannelPoolingLayer, inputs, blobs)
   if isa(layer.pooling, Pooling.Max)
     masks = Array(CuPtr, length(inputs))
     for i = 1:length(inputs)
-      masks[i] = CUDA.cualloc(Csize_t, get_width(inputs[i]) * get_height(inputs[i]) *
-          pooled_chann[i] * get_num(inputs[i]))
+      masks[i] = CUDA.cualloc(Csize_t, length(blobs[i]))
     end
     etc = masks
   elseif isa(layer.pooling, Pooling.Mean)
     integrals = Array(CuPtr, length(inputs))
     for i = 1:length(inputs)
-      integrals[i] = CUDA.cualloc(eltype(inputs[i]), get_width(inputs[i]) * get_height(inputs[i]) *
-          get_chann(inputs[i]))
+      integrals[i] = CUDA.cualloc(eltype(inputs[i]), prod(size(inputs[i])[1:end-1]))
     end
     etc = integrals
   else
@@ -39,9 +37,9 @@ function forward(backend::GPUBackend, pool::StdPoolingFunction,
     output = state.blobs[i]
 
     if isa(pool, Pooling.Max)
-      cuda_max_channel_pooling_forward(backend, input, output, state.etc[i], state.layer)
+      cuda_max_channel_pooling_forward(backend, input, output, state.etc[i], state.layer, state.op_dims[i])
     elseif isa(pool, Pooling.Mean)
-      cuda_mean_channel_pooling_forward(backend, input, output, state.etc[i], state.layer)
+      cuda_mean_channel_pooling_forward(backend, input, output, state.etc[i], state.layer, state.op_dims[i])
     else
       error("Pooling for $pool not implemented yet")
     end
@@ -59,9 +57,9 @@ function backward(backend::GPUBackend, pool::StdPoolingFunction, state::ChannelP
     diff = diffs[i]
     if !isa(diff, NullBlob)
       if isa(pool, Pooling.Max)
-        cuda_max_channel_pooling_backward(backend, diff, state.blobs_diff[i], state.etc[i], state.layer)
+        cuda_max_channel_pooling_backward(backend, diff, state.blobs_diff[i], state.etc[i], state.layer, state.op_dims[i])
       elseif isa(pool, Pooling.Mean)
-        cuda_mean_channel_pooling_backward(backend, diff, state.blobs_diff[i], state.layer)
+        cuda_mean_channel_pooling_backward(backend, diff, state.blobs_diff[i], state.layer, state.op_dims[i])
       else
         error("Pooling for $pool not implemented yet")
       end
@@ -72,15 +70,14 @@ function backward(backend::GPUBackend, pool::StdPoolingFunction, state::ChannelP
 end
 
 function cuda_mean_channel_pooling_forward{T}(backend::GPUBackend, input::CuTensorBlob{T},
-    output::CuTensorBlob{T}, integral::CuPtr, layer)
+    output::CuTensorBlob{T}, integral::CuPtr, layer, op_dim)
 
-  width, height, channels, num = size(input)
-  pooled_chann = size(output, 3)
+  spatial_dim_T, channels, num = split_dims(input, op_dim)
+  pooled_chann = size(output, op_dim)
   one = convert(T, 1)
   neg_one = convert(T, -1)
   scale = convert(T, 1.0/layer.kernel)
 
-  spatial_dim_T = width*height
   spatial_dim = spatial_dim_T * sizeof(T)
   fea_dim = spatial_dim * channels
   output_fea_dim = spatial_dim * pooled_chann
@@ -118,15 +115,14 @@ function cuda_mean_channel_pooling_forward{T}(backend::GPUBackend, input::CuTens
 end
 
 function cuda_mean_channel_pooling_backward{T}(backend::GPUBackend, input::CuTensorBlob{T},
-    output::CuTensorBlob{T}, layer)
+    output::CuTensorBlob{T}, layer, op_dim)
 
-  width, height, channels, num = size(input)
-  pooled_chann = size(output, 3)
+  spatial_dim_T, channels, num = split_dims(input, op_dim)
+  pooled_chann = size(output, op_dim)
   scale = 1/convert(T, layer.kernel)
 
   fill!(input, 0)
 
-  spatial_dim_T = width*height
   spatial_dim = spatial_dim_T * sizeof(T)
   fea_dim = spatial_dim * channels
   output_fea_dim = spatial_dim * pooled_chann
@@ -159,11 +155,10 @@ function cuda_geometry_max_chann_pool(sp_dim::Int, num::Int)
 
 end
 function cuda_max_channel_pooling_forward{T}(backend::GPUBackend, input::CuTensorBlob{T},
-    output::CuTensorBlob{T}, mask::CuPtr, layer)
+    output::CuTensorBlob{T}, mask::CuPtr, layer, op_dim)
 
-  width, height, channels, num = size(input)
-  sp_dim = width*height
-  pooled_chann = get_chann(output)
+  sp_dim, channels, num = split_dims(input, op_dim)
+  pooled_chann = size(output, op_dim)
 
   cuda_dim = cuda_geometry_max_chann_pool(sp_dim, num);
   if T == Float32
@@ -179,11 +174,10 @@ function cuda_max_channel_pooling_forward{T}(backend::GPUBackend, input::CuTenso
 end
 
 function cuda_max_channel_pooling_backward{T}(backend::GPUBackend, input::CuTensorBlob{T},
-    output::CuTensorBlob{T}, mask::CuPtr, layer)
+    output::CuTensorBlob{T}, mask::CuPtr, layer, op_dim)
 
-  width, height, channels, num = size(input)
-  sp_dim = width*height
-  pooled_chann = get_chann(output)
+  sp_dim, channels, num = split_dims(input, op_dim)
+  pooled_chann = size(output, op_dim)
 
   cuda_dim = cuda_geometry_max_chann_pool(sp_dim, num);
   if T == Float32

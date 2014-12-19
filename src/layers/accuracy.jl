@@ -1,6 +1,7 @@
 @defstruct AccuracyLayer Layer (
   name :: String = "accuracy",
   report_error :: Bool = false,
+  (dim :: Int = -2, dim != 0),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 @characterize_layer(AccuracyLayer,
@@ -11,18 +12,24 @@
 type AccuracyLayerState <: LayerState
   layer :: AccuracyLayer
 
+  op_dim   :: Int
   accuracy :: Float64
   n_accum  :: Int
   etc      :: Any
 end
 
-function setup_etc(backend::CPUBackend, layer::AccuracyLayer, inputs)
+function setup_etc(backend::CPUBackend, layer::AccuracyLayer, op_dim::Int, inputs)
   nothing
 end
 
 function setup(backend::Backend, layer::AccuracyLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  etc = setup_etc(backend, layer, inputs)
-  return AccuracyLayerState(layer, 0.0, 0, etc)
+  total_dim = ndims(inputs[1])
+  dim = layer.dim < 0 ? layer.dim + total_dim + 1 : layer.dim
+  @assert 1 <= dim <= total_dim
+  @assert dim != total_dim
+
+  etc = setup_etc(backend, layer, dim, inputs)
+  return AccuracyLayerState(layer, dim, 0.0, 0, etc)
 end
 function shutdown(backend::CPUBackend, state::AccuracyLayerState)
 end
@@ -48,20 +55,18 @@ function forward(backend::CPUBackend, state::AccuracyLayerState, inputs::Vector{
   pred = inputs[1].data
   label = inputs[2].data
 
-  width, height, channels, num = get_whcn(pred)
-  canonical_pred  = reshape(pred, (width,height,channels,num))
-  canonical_label = reshape(label, (width,height,1,num))
+  dim_pre, dim_prob, dim_post = split_dims(pred, state.op_dim)
 
   accuracy = 0.0
-  for w = 1:width
-    for h = 1:height
-      for n = 1:num
-        if int(canonical_label[w,h,1,n])+1 == indmax(canonical_pred[w,h,:,n])
-          accuracy += 1.0
-        end
+  for i = 0:dim_pre-1
+    for j = 0:dim_post-1
+      idx = Int[i + dim_pre*(k + dim_prob*j) for k=0:dim_prob-1] + 1
+      @inbounds if int(label[i + dim_pre*j + 1])+1 == indmax(pred[idx])
+        accuracy += 1.0
       end
     end
   end
+
   state.accuracy = float64(state.accuracy * state.n_accum + accuracy) / (state.n_accum + length(label))
   state.n_accum += length(label)
 end

@@ -4,9 +4,7 @@ function backward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vec
     copy!(diff, state.softmax.blobs[1])
 
     data_type = eltype(diff)
-    height, width, channels, num = get_whcn(diff)
-
-    spatial_dim = height*width
+    spatial_dim, channels, num = split_dims(diff, state.logistic.op_dim)
     prob_dim = channels
 
     x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X))

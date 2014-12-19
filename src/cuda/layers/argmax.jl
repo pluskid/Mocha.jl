@@ -3,8 +3,7 @@ function forward(backend::GPUBackend, state::ArgmaxLayerState, inputs::Vector{Bl
     input = inputs[i]
     output = state.blobs[i]
 
-    width, height, channels, num = get_whcn(input)
-    spatial_dim = width*height
+    spatial_dim, channels, num = split_dims(input, state.dims[i])
     data_type = eltype(input)
 
     x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X));

@@ -1,15 +1,21 @@
-function test_multinomial_logistic_loss_layer(backend::Backend, class_weights, T, eps)
+function test_multinomial_logistic_loss_layer(backend::Backend, tensor_dim, class_weights, T, eps)
   println("-- Testing MultinomialLogisticLossLayer{$(class_weights[1]),$(class_weights[2])} on $(typeof(backend)){$T}...")
 
-  tensor_dim = abs(rand(Int)) % 4 + 2
-  dims = tuple((abs(rand(Int,tensor_dim)) % 6 + 6)...)
-  println("    > $dims")
+  dims = abs(rand(Int,tensor_dim)) % 6 + 6
+  if class_weights[1] != :no
+    op_dim = tensor_dim-1
+  else
+    op_dim = max(abs(rand(Int)) % tensor_dim, 1)
+  end
+  println("    > $dims (operate on dimension $op_dim)")
 
-  prob = abs(rand(T, dims))
+  dims_label = copy(dims); dims_label[op_dim] = 1; dims_label = tuple(dims_label...)
+  dims = tuple(dims...)
+  channels = dims[op_dim]
 
-  width, height, channels, num = get_whcn(prob)
+  prob = abs(rand(T, dims)) + 0.01
 
-  label = abs(rand(Int, (width, height, 1, num))) % channels
+  label = abs(rand(Int, dims_label)) % channels
   label = convert(Array{T}, label)
 
   prob_blob = make_blob(backend, prob)
@@ -21,48 +27,62 @@ function test_multinomial_logistic_loss_layer(backend::Backend, class_weights, T
   elseif class_weights[1] == :local
     weights = rand(T, channels)
   elseif class_weights[1] == :global
-    weights = rand(T, width, height, channels)
+    weights = round(1000*rand(T, dims[1:end-1]))/1000
   else
     @assert class_weights[1] == :no
     weights = []
   end
 
   layer = MultinomialLogisticLossLayer(bottoms=[:pred, :labels],
-      weights=weights, normalize=class_weights[2])
+      weights=weights, normalize=class_weights[2], dim=op_dim)
   state = setup(backend, layer, inputs, Blob[])
 
   forward(backend, state, inputs)
 
   if class_weights[1] == :local || class_weights[1] == :equal
-    weights = repeat(reshape(weights,1,1,channels), inner=[width,height,1])
+    new_shape = ones(Int, tensor_dim-1); new_shape[op_dim] = dims[op_dim]
+    rep_shape = [dims[1:end-1]...]; rep_shape[op_dim] = 1
+    weights = repeat(reshape(weights, new_shape...), inner=rep_shape)
   end
   if class_weights[2] == :local
-    weights = weights .* (channels ./ sum(weights,3))
+    weights = weights .* (channels ./ sum(weights,op_dim))
   elseif class_weights[2] == :global
-    weights = weights * (width*height*channels / sum(weights))
+    weights = weights * (prod(dims[1:end-1]) / sum(weights))
   else
     @assert class_weights[2] == :no
   end
 
+  new_shape = [size(weights)..., 1]
+  rep_shape = ones(Int, tensor_dim); rep_shape[end] = dims[end]
+  weights = repeat(reshape(weights, new_shape...), inner=rep_shape)
+
   expected_loss = convert(T, 0)
-  prob = reshape(prob, (width,height,channels,num))
-  for w = 1:width
-    for h = 1:height
-      for n = 1:num
-        if isempty(weights)
-          expected_loss += -log(prob[w, h, int(label[w, h, 1, n])+1, n])
-        else
-          idx = int(label[w,h,1,n])+1
-          expected_loss += -log(prob[w,h,idx,n]) * weights[w,h,idx]
-        end
+  dim_pre, dim_prob, dim_post = split_dims(prob, op_dim)
+  prob = reshape(prob, (dim_pre, dim_prob, dim_post))
+  if !isempty(weights)
+    weights = reshape(weights, (dim_pre, dim_prob, dim_post))
+  end
+  label = reshape(label, (dim_pre, 1, dim_post))
+  for i = 1:dim_pre
+    for j = 1:dim_post
+      if isempty(weights)
+        expected_loss += -log(prob[i, int(label[i,1,j])+1, j])
+      else
+        idx = int(label[i,1,j])+1
+        expected_loss += -log(prob[i,idx,j]) * weights[i,idx,j]
       end
     end
   end
-  expected_loss /= (width*height*num)
+  expected_loss /= prod(dims) / dims[op_dim]
 
   @test -eps < state.loss - expected_loss < eps
 
   shutdown(backend, state)
+end
+function test_multinomial_logistic_loss_layer(backend::Backend, class_weights, T, eps)
+  for i = 2:6
+    test_multinomial_logistic_loss_layer(backend, i, class_weights, T, eps)
+  end
 end
 function test_multinomial_logistic_loss_layer(backend::Backend, T, eps)
   for class_weights in ((:equal,:local),(:local,:local),(:global,:global),(:global,:local),(:no,:no))
@@ -70,8 +90,8 @@ function test_multinomial_logistic_loss_layer(backend::Backend, T, eps)
   end
 end
 function test_multinomial_logistic_loss_layer(backend::Backend)
-  test_multinomial_logistic_loss_layer(backend, Float32, 1e-3)
   test_multinomial_logistic_loss_layer(backend, Float64, 1e-5)
+  test_multinomial_logistic_loss_layer(backend, Float32, 1e-2)
 end
 
 if test_cpu
