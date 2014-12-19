@@ -37,6 +37,11 @@ type LRNLayerState <: LayerState
 end
 
 function setup(backend::Backend, layer::LRNLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+  for i = 1:length(inputs)
+    # currently we only handle 4D-tensor
+    @assert ndims(inputs[i]) == 4
+  end
+
   split_layer = SplitLayer(tops=Array(Symbol,2), bottoms=Array(Symbol,1))
   do_split = setup(backend, split_layer, inputs, diffs)
 
