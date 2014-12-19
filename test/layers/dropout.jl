@@ -1,8 +1,12 @@
 function test_dropout_layer(backend::Backend, T, eps)
   println("-- Testing Dropout on $(typeof(backend)){$T}...")
 
+  tensor_dim = abs(rand(Int)) % 6 + 1
+  dims = tuple((abs(rand(Int, tensor_dim)) % 8 + 1)...)
+  println("    > $dims")
+
   ratio = convert(T, 0.6)
-  input = rand(T, 3, 4, 5, 6)
+  input = rand(T, dims)
   input_blob = make_blob(backend, input)
   diff_blob  = make_blob(backend, input)
 
