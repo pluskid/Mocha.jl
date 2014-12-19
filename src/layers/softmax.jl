@@ -50,7 +50,7 @@ function forward(backend::CPUBackend, state::SoftmaxLayerState, inputs::Vector{B
 
     for i = 0:dim_pre-1
       for j = 0:dim_post-1
-        idx = [i + dim_pre*(k + dim_prob*j) for k=0:dim_prob-1] + 1
+        idx = Int[i + dim_pre*(k + dim_prob*j) for k=0:dim_prob-1] + 1
 
         maxval = -Inf
         for k in idx

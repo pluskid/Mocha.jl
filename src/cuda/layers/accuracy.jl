@@ -1,6 +1,7 @@
-function setup_etc(backend::GPUBackend, layer::AccuracyLayer, inputs)
-  width, height, channels, num = get_whcn(inputs[1])
-  etc = make_blob(backend, eltype(inputs[1]), (width,height,1,num))
+function setup_etc(backend::GPUBackend, layer::AccuracyLayer, op_dim::Int, inputs)
+  dims = [size(inputs[1])...]
+  dims[op_dim] = 1
+  etc = make_blob(backend, eltype(inputs[1]), dims...)
   return etc
 end
 function shutdown(backend::GPUBackend, state::AccuracyLayerState)
@@ -11,8 +12,7 @@ function forward(backend::GPUBackend, state::AccuracyLayerState, inputs::Vector{
   pred = inputs[1]
   label = inputs[2]
 
-  width, height, channels, num = get_whcn(pred)
-  spatial_dim = width*height
+  spatial_dim, pred_dim, num = split_dims(pred, state.op_dim)
   data_type = eltype(pred)
 
   x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X));
@@ -26,7 +26,7 @@ function forward(backend::GPUBackend, state::AccuracyLayerState, inputs::Vector{
     error("Unsupported data type $data_type")
   end
   CUDA.launch(kernel, (x_block,y_block),(CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y),
-      (pred.ptr.p, label.ptr.p, state.etc.ptr.p, num, channels, spatial_dim));
+      (pred.ptr.p, label.ptr.p, state.etc.ptr.p, num, pred_dim, spatial_dim));
 
   N = num * spatial_dim
   accuracy = CuBLAS.dot(backend.cublas_ctx, data_type, N, state.etc.ptr, 1, state.etc.ptr, 1)

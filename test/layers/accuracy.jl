@@ -1,57 +1,64 @@
-function test_accuracy_layer(backend::Backend, T)
+function test_accuracy_layer(backend::Backend, tensor_dim, T)
   println("-- Testing AccuracyLayer on $(typeof(backend)){$T}...")
 
-  tensor_dim = abs(rand(Int)) % 4 + 2
-  dims = tuple((abs(rand(Int,tensor_dim)) % 6 + 6)...)
-  println("    > $dims")
+  dims = abs(rand(Int,tensor_dim)) % 6 + 6
+  op_dim = max(abs(rand(Int)) % tensor_dim, 1)
+  dims_label = copy(dims); dims_label[op_dim] = 1
+  dims = tuple(dims...)
+  dims_label = tuple(dims_label...)
+  println("    > $dims (operate on dimension $op_dim)")
 
   eps = 1e-5
   input = rand(T, dims)
   input_blob = make_blob(backend, input)
 
-  width, height, channels, num = get_whcn(input)
-
-  label = abs(rand(Int, (width, height, 1, num))) % channels
+  label = abs(rand(Int, dims_label)) % dims[op_dim]
   label = convert(Array{T}, label)
   label_blob = make_blob(backend, label)
 
   inputs = Blob[input_blob, label_blob]
 
-  layer = AccuracyLayer(bottoms=[:pred, :labels])
+  layer = AccuracyLayer(bottoms=[:pred, :labels], dim=op_dim)
   state = setup(backend, layer, inputs, Blob[])
 
   println("    > Forward")
   forward(backend, state, inputs)
 
-  @test state.n_accum == width*height*num
+  @test state.n_accum == prod(dims_label)
 
-  canonical_input = reshape(input, (width,height,channels,num))
+  dim_pre, dim_pred, dim_post = split_dims(input, op_dim)
+
+  canonical_input = reshape(input, (dim_pre, dim_pred, dim_post))
+  canonical_label = reshape(label, (dim_pre, 1, dim_post))
   expected_acc = 0.0
-  for n = 1:num
-    for w = 1:width
-      for h = 1:height
-        pred = canonical_input[w, h, :, n]
-        if indmax(pred) == convert(Int, label[w,h,1,n])+1
-          expected_acc += 1
-        end
+  for i = 1:dim_pre
+    for j = 1:dim_post
+      pred = canonical_input[i,:,j]
+      if indmax(pred) == int(canonical_label[i,1,j])+1
+        expected_acc += 1
       end
     end
   end
-  expected_acc /= (width*height*num)
+  expected_acc /= prod(dims_label)
   @test abs(state.accuracy - expected_acc) < eps
 
   println("    > Forward Again")
   forward(backend, state, inputs)
-  @test state.n_accum == 2*width*height*num
+  @test state.n_accum == 2*prod(dims_label)
   @test abs(state.accuracy - expected_acc) < eps
 
   println("    > Forward Again and Again")
   reset_statistics(state)
   forward(backend, state, inputs)
-  @test state.n_accum == width*height*num
+  @test state.n_accum == prod(dims_label)
   @test abs(state.accuracy - expected_acc) < eps
 
   shutdown(backend, state)
+end
+function test_accuracy_layer(backend::Backend, T)
+  for i = 2:5
+    test_accuracy_layer(backend, i, T)
+  end
 end
 function test_accuracy_layer(backend::Backend)
   test_accuracy_layer(backend, Float32)
