@@ -5,6 +5,7 @@
   name :: String = "softmax-loss",
   weights :: Array = [],
   normalize:: Symbol = :local,
+  (dim :: Int = -2, dim != 0),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 @characterize_layer(SoftmaxLossLayer,
@@ -24,12 +25,11 @@ end
 function setup(backend::Backend, layer::SoftmaxLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
 
-  softmax_layer = SoftmaxLayer(tops=Array(Symbol, length(inputs)), bottoms=Array(Symbol, length(inputs)))
-
+  softmax_layer = SoftmaxLayer(tops=Array(Symbol, length(inputs)), bottoms=Array(Symbol, length(inputs)), dim=layer.dim)
   softmax = setup(backend, softmax_layer, Blob[inputs[1]], Blob[])
 
   logistic_layer = MultinomialLogisticLossLayer(bottoms=Array(Symbol, 2),
-      weights=layer.weights, normalize=layer.normalize)
+      weights=layer.weights, normalize=layer.normalize, dim=layer.dim)
   logistic = setup(backend, logistic_layer, inputs, Blob[])
 
   state = SoftmaxLossLayerState(layer, convert(data_type, 0), softmax, logistic)
@@ -49,31 +49,36 @@ end
 function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   diff = diffs[1]
   if isa(diff, CPUBlob)
-    width, height, channels, num = get_whcn(diff)
+    dims = size(diff)
 
-    idx_width  = reshape(1:width, (width, 1, 1, 1))
-    idx_height = reshape(1:height, (1, height, 1, 1))
-    idx_chann  = int(inputs[2].data)+1
-    idx_num    = reshape(1:num, (1, 1, 1, num))
+    idx_all = map(1:length(dims)) do i
+      if i == state.logistic.op_dim
+        int(inputs[2].data) + 1
+      else
+        dim = dims[i]
+        reshape(1:dim, [j == i? dim : 1 for j = 1:length(dims)]...)
+      end
+    end
 
     if isa(state.logistic.weights_blob, NullBlob)
       copy!(diff, state.softmax.blobs[1])
     else
-      idx_num_dumb = reshape([1],1,1,1,1)
-      copy!(diff, reshape(state.softmax.blobs[1].data, (width,height,channels,num)) .*
-          broadcast_getindex(state.logistic.weights_blob.data, idx_width, idx_height, idx_chann, idx_num_dumb))
+      idx_num_dumb = reshape([1], ones(Int, length(dims))...)
+      copy!(diff, state.softmax.blobs[1].data .*
+          broadcast_getindex(state.logistic.weights_blob.data, idx_all[1:end-1]..., idx_num_dumb))
     end
 
-    index = (idx_width,idx_height,idx_chann,idx_num)
-    diff_data = reshape(diff.data, (width,height,channels,num))
+    diff_data = reshape(diff.data, dims)
     if isa(state.logistic.weights_blob, NullBlob)
-      broadcast_setindex!(diff_data, broadcast_getindex(diff_data, index...)-1, index...)
+      broadcast_setindex!(diff_data, broadcast_getindex(diff_data, idx_all...)-1, idx_all...)
     else
-      broadcast_setindex!(diff_data, broadcast_getindex(diff_data, index...) .-
-          broadcast_getindex(state.logistic.weights_blob.data, idx_width,idx_height,idx_chann,idx_num_dumb),
-          index...)
+      # NOTE: here we rely on the fact that op_dim == length(dims)-1, this requirement
+      # is enforced in MultinomialLogisticLossLayer when weights are provided
+      broadcast_setindex!(diff_data, broadcast_getindex(diff_data, idx_all...) .-
+          broadcast_getindex(state.logistic.weights_blob.data, idx_all[1:end-1]...,idx_num_dumb),
+          idx_all...)
     end
-    Vec.mul_scal!(diff.data, 1/(width*height*num))
+    Vec.mul_scal!(diff.data, dims[state.logistic.op_dim]/prod(dims))
   end
 end
 
