@@ -1,15 +1,5 @@
 # News for Mocha Development
 
-## TODO
-
-* Interface
-  * Network architecture visualization
-* Infrastructure
-  * CUDA Stream?
-  * 4D tensor -> ND tensor?
-* Document
-  * Developer's Guide
-
 ## v0.0.5 ???
 
 * Infrastructure
