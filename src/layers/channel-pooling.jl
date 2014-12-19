@@ -105,8 +105,6 @@ function forward(backend::CPUBackend, pool::StdPoolingFunction,
       max_channel_pooling_forward(reshape(input,dims_in), reshape(output,dims_out), reshape(state.etc[i],dims_out), state.layer)
     elseif isa(pool, Pooling.Mean)
       mean_channel_pooling_forward(reshape(input,dims_in), reshape(output,dims_out), state.etc[i], state.layer)
-    else
-      error("Pooling for $pool not implemented yet")
     end
   end
 end
@@ -130,8 +128,6 @@ function backward(backend::CPUBackend, pool::StdPoolingFunction, state::ChannelP
             reshape(state.etc[i],dims_out), state.layer)
       elseif isa(pool, Pooling.Mean)
         mean_channel_pooling_backward(reshape(diff.data,dims_in), reshape(state.blobs_diff[i].data,dims_out), state.layer)
-      else
-        error("Pooling for $pool not implemented yet")
       end
     end
   end
