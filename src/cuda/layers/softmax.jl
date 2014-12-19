@@ -7,8 +7,8 @@ function setup_etc(backend::GPUBackend, layer::SoftmaxLayer, data_type, inputs)
   inputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
   outputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
   for i = 1:length(inputs)
-    inputs_desc[i] = CuDNN.create_tensor4d_descriptor(data_type, size(inputs[i]))
-    outputs_desc[i] = CuDNN.create_tensor4d_descriptor(data_type, size(inputs[i]))
+    inputs_desc[i] = CuDNN.create_tensor4d_descriptor(data_type, get_whcn(inputs[i]))
+    outputs_desc[i] = CuDNN.create_tensor4d_descriptor(data_type, get_whcn(inputs[i]))
   end
   etc = CuDNNSoftmaxState(inputs_desc, outputs_desc)
   return etc

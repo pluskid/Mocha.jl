@@ -3,7 +3,7 @@ function forward(backend::GPUBackend, state::ArgmaxLayerState, inputs::Vector{Bl
     input = inputs[i]
     output = state.blobs[i]
 
-    width, height, channels, num = size(input)
+    width, height, channels, num = get_whcn(input)
     spatial_dim = width*height
     data_type = eltype(input)
 

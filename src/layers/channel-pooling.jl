@@ -41,6 +41,11 @@ function setup_etc(backend::CPUBackend, layer::ChannelPoolingLayer, inputs, pool
 end
 
 function setup(backend::Backend, layer::ChannelPoolingLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+  for i = 1:length(inputs)
+    # currently we only handle 4D-tensor
+    @assert ndims(inputs[i]) == 4
+  end
+
   pooled_chann_all = Array(Int, length(inputs))
   blobs = Array(Blob, length(inputs))
   blobs_diff = Array(Blob, length(inputs))

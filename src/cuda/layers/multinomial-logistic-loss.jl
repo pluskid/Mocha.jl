@@ -3,7 +3,7 @@ function forward(backend::GPUBackend, state::MultinomialLogisticLossLayerState, 
   label     = inputs[2]
   data_type = eltype(pred)
 
-  width, height, channels, num = size(pred)
+  width, height, channels, num = get_whcn(pred)
 
   spatial_dim = height*width
   prob_dim = channels

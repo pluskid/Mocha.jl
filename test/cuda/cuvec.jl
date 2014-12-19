@@ -1,8 +1,7 @@
 function test_cuvec(backend::Backend, T)
   println("-- Testing CuVec Utilities{$T}")
-  width, height, channels, num = (5,6,7,8)
-  spatial_dim = width*height
-  dims = (width, height, channels, num)
+  dims = (5,6,7,8)
+  len = prod(dims)
   eps = 1e-5
 
   X = rand(T, dims)
@@ -12,19 +11,19 @@ function test_cuvec(backend::Backend, T)
 
   println("    > mul!")
   Vec.mul!(X, Y)
-  CuVec.mul!(backend, T, X_blob.ptr.p, Y_blob.ptr.p, spatial_dim, channels, num)
+  CuVec.mul!(backend, T, X_blob.ptr.p, Y_blob.ptr.p, len)
   X2 = similar(X)
   copy!(X2, X_blob)
   @test all(abs(X-X2) .< eps)
 
   println("    > pow!")
   Vec.pow!(X, 2)
-  CuVec.pow!(backend, T, X_blob.ptr.p, 2, spatial_dim, channels, num)
+  CuVec.pow!(backend, T, X_blob.ptr.p, 2, len)
   copy!(X2, X_blob)
   @test all(abs(X-X2) .< eps)
 
   Vec.pow!(X, convert(T, 0.75))
-  CuVec.pow!(backend, T, X_blob.ptr.p, convert(T, 0.75), spatial_dim, channels, num)
+  CuVec.pow!(backend, T, X_blob.ptr.p, convert(T, 0.75), len)
   copy!(X2, X_blob)
   @test all(abs(X-X2) .< eps)
 end

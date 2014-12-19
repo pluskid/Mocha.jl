@@ -4,7 +4,7 @@ function forward(backend::GPUBackend, state::InnerProductLayerState, inputs::Vec
   dtype = eltype(state.W)
   for i = 1:length(inputs)
     input = inputs[i]
-    N = size(input, 4)   # batch size
+    N = get_num(input)   # batch size
     output = state.blobs[i]
     # output = W^T * X
     CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_T, CuBLAS.OP_N, M, N, K, convert(dtype, 1),
@@ -27,7 +27,7 @@ function backward(backend::GPUBackend, state::InnerProductLayerState, inputs::Ve
   for i = 1:length(inputs)
     # ∂f/∂W = input * [∂f/∂o]^T
     input = inputs[i]
-    batch_size = size(input, 4)
+    batch_size = get_num(input)
     ∂f_∂o = state.blobs_diff[i]
     CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_T, source_dim, target_dim, batch_size,
         convert(data_type, 1), input.ptr, source_dim, ∂f_∂o.ptr, target_dim, zero_and_then_one, state.∇W.ptr, source_dim)

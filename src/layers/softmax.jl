@@ -35,7 +35,9 @@ function forward(backend::CPUBackend, state::SoftmaxLayerState, inputs::Vector{B
     input  = inputs[i].data
     output = state.blobs[i].data
 
-    width, height, channels, num = size(input)
+    width, height, channels, num = get_whcn(input)
+    input = reshape(input, (width,height,channels,num))
+    output = reshape(output, (width,height,channels,num))
 
     for w = 1:width
       for h = 1:height

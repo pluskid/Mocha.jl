@@ -48,12 +48,15 @@ function forward(backend::CPUBackend, state::AccuracyLayerState, inputs::Vector{
   pred = inputs[1].data
   label = inputs[2].data
 
-  width, height, channels, num = size(pred)
+  width, height, channels, num = get_whcn(pred)
+  canonical_pred  = reshape(pred, (width,height,channels,num))
+  canonical_label = reshape(label, (width,height,1,num))
+
   accuracy = 0.0
   for w = 1:width
     for h = 1:height
       for n = 1:num
-        if int(label[w,h,1,n])+1 == indmax(pred[w,h,:,n])
+        if int(canonical_label[w,h,1,n])+1 == indmax(canonical_pred[w,h,:,n])
           accuracy += 1.0
         end
       end

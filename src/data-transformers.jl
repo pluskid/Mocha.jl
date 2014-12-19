@@ -33,10 +33,10 @@ function setup(backend::Backend, transformer::DataTransformers.SubMean, input::B
     h5open(transformer.mean_file, "r") do h5
       mean_data = read(h5, "mean")
       mean_dims = size(mean_data)
-      if length(mean_dims) == 3
-        mean_dims = [mean_dims..., 1]
+      if length(mean_dims) == ndims(input) - 1
+        mean_dims = tuple(mean_dims..., 1)
       end
-      mean_blob = make_blob(backend, eltype(input), mean_dims...)
+      mean_blob = make_blob(backend, eltype(input), mean_dims)
       copy!(mean_blob, convert(Array{eltype(input)}, mean_data))
     end
   else
@@ -44,19 +44,16 @@ function setup(backend::Backend, transformer::DataTransformers.SubMean, input::B
     copy!(mean_blob, transformer.mean_blob)
   end
 
-  @assert get_num(mean_blob) == 1
-  @assert get_width(mean_blob) == get_width(input)
-  @assert get_height(mean_blob) == get_height(input)
-  @assert get_chann(mean_blob) == get_chann(input)
+  @assert size(mean_blob)[1:end-1] == size(input)[1:end-1]
 
-  multiplier = make_blob(backend, eltype(input), get_num(input), 1, 1, 1)
+  multiplier = make_blob(backend, eltype(input), get_num(input))
   fill!(multiplier, 1)
 
   return SubMeanState(transformer, mean_blob, multiplier)
 end
 function forward(backend::CPUBackend, state::SubMeanState, input::Blob)
-  width, height, channels, num = size(input)
-  fea_dim = width*height*channels
+  fea_dim = get_fea_size(input)
+  num     = get_num(input)
   RawBLAS.gemm!('N', 'N', fea_dim, num, 1, convert(eltype(input), -1),
       state.mean_blob.data, fea_dim, state.multiplier.data, 1, convert(eltype(input), 1),
       input.data, fea_dim)

@@ -1,8 +1,12 @@
 function test_concat_layer(backend::Backend, dim, T, eps)
   println("-- Testing ConcatLayer(dim=$dim) on $(typeof(backend)){$T}...")
 
+  tensor_dim = max(abs(rand(Int)) % 6 + 2, dim)
+  println("    > $tensor_dim-dimensional tensor")
+
   n_input = 3
-  dims = [[2,3,4,5] for i = 1:n_input]
+  dims_proto = abs(rand(Int, tensor_dim)) % 6 + 1
+  dims = [copy(dims_proto) for i = 1:n_input]
   for i = 1:n_input
     dims[i][dim] = abs(rand(Int)) % 5 + 1
   end
@@ -34,7 +38,7 @@ function test_concat_layer(backend::Backend, dim, T, eps)
 end
 
 function test_concat_layer(backend::Backend, T, eps)
-  for dim = 1:4
+  for dim = 1:5
     test_concat_layer(backend, dim, T, eps)
   end
 end

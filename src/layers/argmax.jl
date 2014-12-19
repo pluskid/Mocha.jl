@@ -11,7 +11,7 @@ end
 
 function setup(backend::Backend, layer::ArgmaxLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   blobs = map(inputs) do input
-    width, height, channels, num = size(input)
+    width, height, channels, num = get_whcn(input)
     data_type = eltype(input)
 
     blob = make_blob(backend, data_type, width, height, 1, num)
@@ -25,13 +25,14 @@ function forward(backend::CPUBackend, state::ArgmaxLayerState, inputs::Vector{Bl
   for i = 1:length(inputs)
     input = inputs[i].data
     output = state.blobs[i].data
-    width, height, channels, num = size(input)
+    width, height, channels, num = get_whcn(input)
+    canonical_input = reshape(input, (width,height,channels,num))
     for n = 1:num
       for w = 1:width
         for h = 1:height
-          maxc = 1; maxval = input[w,h,maxc,n]
+          maxc = 1; maxval = canonical_input[w,h,maxc,n]
           for c = 2:channels
-            @inbounds val = input[w,h,c,n]
+            @inbounds val = canonical_input[w,h,c,n]
             if val > maxval
               maxval = val
               maxc = c

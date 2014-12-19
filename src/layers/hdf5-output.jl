@@ -38,11 +38,10 @@ function setup(backend::Backend, layer::HDF5OutputLayer, inputs::Vector{Blob}, d
   dsets  = Array(Any, length(inputs))
   for i = 1:length(inputs)
     data_type = eltype(inputs[i])
-    width, height, channels, batch_size = size(inputs[i])
+    dims = size(inputs[i])
     dsets[i] = d_create(file, string(datasets[i]), datatype(data_type),
-        dataspace((width, height, channels, batch_size), max_dims=(width, height, channels, -1)),
-        "chunk", (width, height, channels, batch_size))
-    buffer[i] = Array(data_type, width, height, channels, batch_size)
+        dataspace(dims, max_dims=tuple(dims[1:end-1]..., -1)), "chunk", dims)
+    buffer[i] = Array(data_type, dims)
   end
 
   return HDF5OutputLayerState(layer, file, buffer, dsets, 1)
@@ -51,13 +50,15 @@ end
 function forward(backend::Backend, state::HDF5OutputLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     copy!(state.buffer[i], inputs[i])
-    width, height, channels, batch_size = size(state.buffer[i])
+    dims = size(state.buffer[i])
+    batch_size = dims[end]
 
     # extend the HDF5 dataset
-    set_dims!(state.dsets[i], (width, height, channels, state.index*batch_size))
+    set_dims!(state.dsets[i], tuple(dims[1:end-1]..., state.index*batch_size))
 
     # write data
-    state.dsets[i][:,:,:,(state.index-1)*batch_size+1:state.index*batch_size] = state.buffer[i]
+    idx = map(x -> 1:x, dims[1:end-1])
+    state.dsets[i][idx...,(state.index-1)*batch_size+1:state.index*batch_size] = state.buffer[i]
   end
   state.index += 1
 end

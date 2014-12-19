@@ -49,7 +49,7 @@ end
 function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   diff = diffs[1]
   if isa(diff, CPUBlob)
-    width, height, channels, num = size(diff)
+    width, height, channels, num = get_whcn(diff)
 
     idx_width  = reshape(1:width, (width, 1, 1, 1))
     idx_height = reshape(1:height, (1, height, 1, 1))
@@ -60,15 +60,16 @@ function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vec
       copy!(diff, state.softmax.blobs[1])
     else
       idx_num_dumb = reshape([1],1,1,1,1)
-      copy!(diff, state.softmax.blobs[1].data .*
+      copy!(diff, reshape(state.softmax.blobs[1].data, (width,height,channels,num)) .*
           broadcast_getindex(state.logistic.weights_blob.data, idx_width, idx_height, idx_chann, idx_num_dumb))
     end
 
     index = (idx_width,idx_height,idx_chann,idx_num)
+    diff_data = reshape(diff.data, (width,height,channels,num))
     if isa(state.logistic.weights_blob, NullBlob)
-      broadcast_setindex!(diff.data, broadcast_getindex(diff.data, index...)-1, index...)
+      broadcast_setindex!(diff_data, broadcast_getindex(diff_data, index...)-1, index...)
     else
-      broadcast_setindex!(diff.data, broadcast_getindex(diff.data, index...) .-
+      broadcast_setindex!(diff_data, broadcast_getindex(diff_data, index...) .-
           broadcast_getindex(state.logistic.weights_blob.data, idx_width,idx_height,idx_chann,idx_num_dumb),
           index...)
     end

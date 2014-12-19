@@ -1,9 +1,14 @@
 function test_multinomial_logistic_loss_layer(backend::Backend, class_weights, T, eps)
   println("-- Testing MultinomialLogisticLossLayer{$(class_weights[1]),$(class_weights[2])} on $(typeof(backend)){$T}...")
 
-  width, height, channels, num = (5, 6, 7, 8)
+  tensor_dim = abs(rand(Int)) % 4 + 2
+  dims = tuple((abs(rand(Int,tensor_dim)) % 6 + 6)...)
+  println("    > $dims")
 
-  prob = abs(rand(T, width, height, channels, num))
+  prob = abs(rand(T, dims))
+
+  width, height, channels, num = get_whcn(prob)
+
   label = abs(rand(Int, (width, height, 1, num))) % channels
   label = convert(Array{T}, label)
 
@@ -40,6 +45,7 @@ function test_multinomial_logistic_loss_layer(backend::Backend, class_weights, T
   end
 
   expected_loss = convert(T, 0)
+  prob = reshape(prob, (width,height,channels,num))
   for w = 1:width
     for h = 1:height
       for n = 1:num

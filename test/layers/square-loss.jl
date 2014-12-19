@@ -4,7 +4,9 @@ function test_square_loss_layer(backend::Backend, T, eps)
   ############################################################
   # Prepare Data for Testing
   ############################################################
-  dims = (20,3,3,40)
+  tensor_dim = abs(rand(Int)) % 4 + 2
+  dims = tuple((abs(rand(Int,tensor_dim)) % 6 + 6)...)
+  println("    > $dims")
   preds = rand(T, dims)
   labels = rand(T, dims)
 
@@ -12,9 +14,9 @@ function test_square_loss_layer(backend::Backend, T, eps)
   # Setup
   ############################################################
   layer  = SquareLossLayer(; bottoms=[:predictions, :labels])
-  pred_blob  = make_blob(backend, T, dims...)
-  label_blob = make_blob(backend, T, dims...)
-  diff_blob  = make_blob(backend, T, dims...)
+  pred_blob  = make_blob(backend, T, dims)
+  label_blob = make_blob(backend, T, dims)
+  diff_blob  = make_blob(backend, T, dims)
   copy!(pred_blob, preds)
   copy!(label_blob, labels)
   inputs = Blob[pred_blob, label_blob]
@@ -24,11 +26,11 @@ function test_square_loss_layer(backend::Backend, T, eps)
 
   forward(backend, state, inputs)
 
-  loss = 0.5*vecnorm(preds-labels)^2 / dims[4]
+  loss = 0.5*vecnorm(preds-labels)^2 / dims[end]
   @test -eps < loss-state.loss < eps
 
   backward(backend, state, inputs, diffs)
-  grad = (preds - labels) / dims[4]
+  grad = (preds - labels) / dims[end]
   diff = similar(grad)
   copy!(diff, diffs[1])
 
@@ -38,8 +40,8 @@ function test_square_loss_layer(backend::Backend, T, eps)
 end
 
 function test_square_loss_layer(backend::Backend)
-  test_square_loss_layer(backend, Float32, 1e-3)
-  test_square_loss_layer(backend, Float64, 1e-10)
+  test_square_loss_layer(backend, Float32, 1e-2)
+  test_square_loss_layer(backend, Float64, 1e-8)
 end
 
 if test_cpu

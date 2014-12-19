@@ -28,20 +28,13 @@ end
 # [-scale, scale] where scale = sqrt(3 / fan_in) where fan_in is the number
 # of input nodes.
 #
-# The fan-in is found in a heuristic way. Suppose the shape of the blob is
-# (W,H,C,N). If C == N == 1, it is considered as a parameter blob for the
-# inner product layer, and fan-in := W. Otherwise, fan-in := W*H*C.
+# For a ND-tensor blob parameter, the product of the 1 ~ (N-1) dimensions
+# are considered as fan-in, and the last dimension is considered as fan-out.
 ################################################################################
 immutable XavierInitializer <: Initializer
 end
 function init(initializer::XavierInitializer, blob::Blob)
-  w,h,c,n = size(blob)
-  if c == n == 1
-    # inner product parameter
-    fan_in = w
-  else
-    fan_in = w*h*c
-  end
+  fan_in = get_fea_size(blob)
   scale = sqrt(3.0) / fan_in
   init_val = rand(eltype(blob), size(blob)) * 2scale - scale
   copy!(blob, init_val)

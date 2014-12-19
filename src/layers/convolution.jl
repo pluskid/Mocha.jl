@@ -68,6 +68,11 @@ type ConvolutionLayerState <: LayerState
   ∇bias   :: Blob
 
   ConvolutionLayerState(backend::Backend, layer::ConvolutionLayer, shared_params, inputs::Vector{Blob}) = begin
+    for i = 1:length(inputs)
+      # currently we only handle 4D-tensor
+      @assert ndims(inputs[i]) == 4
+    end
+
     channels = get_chann(inputs[1])
     @assert channels % layer.n_group == 0
     @assert layer.n_filter % layer.n_group == 0

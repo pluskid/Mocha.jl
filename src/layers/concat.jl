@@ -1,6 +1,6 @@
 @defstruct ConcatLayer Layer (
   name :: String = "concat",
-  (dim :: Int = 3, 1 <= dim <= 4),
+  (dim :: Int = 3, dim >= 1),
   (bottoms :: Vector{Symbol} = [], length(bottoms) >= 2),
   (tops :: Vector{Symbol} = [], length(tops) == 1)
 )
@@ -15,9 +15,16 @@ type ConcatLayerState <: LayerState
 end
 
 function setup(backend::Backend, layer::ConcatLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+  # make sure all input blobs has the same tensor-dim
+  for i = 2:length(inputs)
+    @assert ndims(inputs[i]) == ndims(inputs[1])
+  end
+  tensor_dim = ndims(inputs[1])
+  @assert layer.dim <= tensor_dim
+
   dims = map(size, inputs)
   dim_total = 0
-  for i = 1:4
+  for i = 1:tensor_dim
     if i == layer.dim
       dim_total = sum(map(x -> x[i], dims))
     else

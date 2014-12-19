@@ -6,8 +6,11 @@ function test_hdf5_output_layer(backend::Backend, T, eps)
   ############################################################
   # Prepare Data for Testing
   ############################################################
-  width, height, channels, batch_size = (5,6,7,8)
-  input = rand(T, width, height, channels, batch_size)
+  tensor_dim = abs(rand(Int)) % 4 + 2
+  dims = tuple((abs(rand(Int, tensor_dim)) % 8 + 1)...)
+  println("    > $dims")
+
+  input = rand(T, dims)
   input_blob = make_blob(backend, input)
 
   output_fn = string(tempname(), ".hdf5")
@@ -28,7 +31,7 @@ function test_hdf5_output_layer(backend::Backend, T, eps)
 
   shutdown(backend, state)
 
-  expected_output = cat(4, input, input, input)
+  expected_output = cat(tensor_dim, input, input, input)
   got_output = h5open(output_fn, "r") do h5
     read(h5, "foobar")
   end

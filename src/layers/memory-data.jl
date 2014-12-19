@@ -22,7 +22,7 @@ type MemoryDataLayerState <: LayerState
     trans = Array(Vector{DataTransformerState}, length(layer.tops))
     transformers = convert(Vector{(Symbol, DataTransformerType)}, layer.transformers)
     for i = 1:length(blobs)
-      dims = tuple(size(layer.data[i])[1:3]..., layer.batch_size)
+      dims = tuple(size(layer.data[i])[1:end-1]..., layer.batch_size)
       idxs = map(x -> 1:x, dims)
 
       blobs[i] = make_blob(backend, eltype(layer.data[i]), dims...)
@@ -36,15 +36,6 @@ end
 
 function setup(backend::Backend, layer::MemoryDataLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   @assert length(inputs) == 0
-  for i = 1:length(layer.data)
-    dims = size(layer.data[i])
-    if length(dims) > 4
-      error("Tensor dimension in data $(layer.tops[i]): $(length(dims)) > 4")
-    elseif length(dims) < 4
-      dims = tuple(ones(Int, 4-length(dims))..., dims...)
-      layer.data[i] = reshape(layer.data[i], dims)
-    end
-  end
   state = MemoryDataLayerState(backend, layer)
   return state
 end
@@ -56,23 +47,23 @@ end
 function forward(backend::Backend, state::MemoryDataLayerState, inputs::Vector{Blob})
   n_done = 0
   while n_done < state.layer.batch_size
-    n_remain = size(state.layer.data[1], 4) - state.curr_idx + 1
+    n_remain = size(state.layer.data[1])[end] - state.curr_idx + 1
     if n_remain == 0
       state.curr_idx = 1
-      n_remain = size(state.layer.data[1], 4)
+      n_remain = size(state.layer.data[1])[end]
     end
 
     n1 = min(state.layer.batch_size - n_done, n_remain)
     for i = 1:length(state.blobs)
       dset = state.layer.data[i]
-      idx = map(x -> 1:x, size(state.blobs[i])[1:3])
+      idx = map(x -> 1:x, size(state.blobs[i])[1:end-1])
       the_data = dset[idx..., state.curr_idx:state.curr_idx+n1-1]
       set_blob_data(the_data, state.blobs[i], n_done+1)
     end
     state.curr_idx += n1
     n_done += n1
 
-    if state.curr_idx > size(state.layer.data[1], 4)
+    if state.curr_idx > size(state.layer.data[1])[end]
       state.epoch += 1
     end
   end
