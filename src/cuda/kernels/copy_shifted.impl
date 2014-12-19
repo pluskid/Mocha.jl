@@ -1,33 +1,31 @@
 /**
- * Helper utilities to copy a 4D tensor into a larger 4D tensor 
+ * Helper utilities to copy a 3D tensor into a larger 3D tensor
  * and back. Used in ConcatLayer.
  */
 #define SHIFTCOPY_BOUNDS_AND_INDEX \
-  int cn = threadIdx.x + blockIdx.x * blockDim.x; \
-  int w  = threadIdx.y + blockIdx.y * blockDim.y; \
-  int h  = threadIdx.z + blockIdx.z * blockDim.z; \
-  if (cn >= channels*num || w >= width || h >= height) \
+  int x = threadIdx.x + blockIdx.x * blockDim.x; \
+  int y  = threadIdx.y + blockIdx.y * blockDim.y; \
+  int z  = threadIdx.z + blockIdx.z * blockDim.z; \
+  if (x >= dim_x || y >= dim_y || z >= dim_z) \
     return; \
-  int c = cn % channels; \
-  int n = cn / channels; \
-  int idx = w + width*(h + height*(c + channels*n)); \
-  int idx_shift = w+w_shift + width2*(h+h_shift + height2*(c+c_shift + channels2*(n+n_shift)))
+  int idx = x + dim_x*(y + dim_y*z); \
+  int idx_shift = x + dim_x*(y + shift + dim_y2*z)
 
 // width2, height2 and channels2 are geometry for the bigger tensor that we are copying into.
 template <typename T>
-__device__ void copy_to_shifted(T *dst, T *src, int width, int height, int channels, int num, int w_shift, int h_shift, int c_shift, int n_shift, int width2, int height2, int channels2) {
+__device__ void copy_to_shifted(T *dst, T *src, int dim_x, int dim_y, int dim_z, int dim_y2, int shift) {
   SHIFTCOPY_BOUNDS_AND_INDEX;
   dst[idx_shift] = src[idx];
 }
 template <typename T>
-__device__ void copy_from_shifted(T *dst, T *src, int width, int height, int channels, int num, int w_shift, int h_shift, int c_shift, int n_shift, int width2, int height2, int channels2) { 
+__device__ void copy_from_shifted(T *dst, T *src, int dim_x, int dim_y, int dim_z, int dim_y2, int shift) {
   SHIFTCOPY_BOUNDS_AND_INDEX;
   dst[idx] = src[idx_shift];
 }
 
 #define DEF_SHIFT_COPY(name, dtype) \
-  __global__ void name ## _ ## dtype(dtype *dst, dtype *src, int width, int height, int channels, int num, int w_shift, int h_shift, int c_shift, int n_shift, int width2, int height2, int channels2) { \
-    name(dst, src, width, height, channels, num, w_shift, h_shift, c_shift, n_shift, width2, height2, channels2); \
+  __global__ void name ## _ ## dtype(dtype *dst, dtype *src, int dim_x, int dim_y, int dim_z, int dim_y2, int shift) { \
+    name(dst, src, dim_x, dim_y, dim_z, dim_y2, shift); \
   }
 
 extern "C" {
