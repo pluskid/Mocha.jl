@@ -41,10 +41,10 @@ function shutdown(backend::CPUBackend, state::SoftmaxLayerState)
 end
 
 function forward(backend::CPUBackend, state::SoftmaxLayerState, inputs::Vector{Blob})
-  for i = 1:length(inputs)
-    input  = inputs[i].data
-    output = state.blobs[i].data
-    op_dim = state.dims[i]
+  for ii = 1:length(inputs)
+    input  = inputs[ii].data
+    output = state.blobs[ii].data
+    op_dim = state.dims[ii]
 
     dim_pre, dim_prob, dim_post = split_dims(input, op_dim)
 
