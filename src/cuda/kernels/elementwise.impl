@@ -1,25 +1,22 @@
 #define ELEMWISE_BOUNDS_AND_INDEX \
-  int s = threadIdx.x + blockIdx.x * blockDim.x; \
-  int k = threadIdx.y + blockIdx.y * blockDim.y; \
-  int n = threadIdx.z + blockIdx.z * blockDim.z; \
-  if (s >= spatial_dim || k >= channels || n >= num) \
-    return; \
-  int idx = s + spatial_dim * (k + channels * n)
+  int idx = threadIdx.x + blockIdx.x * blockDim.x; \
+  if (idx >= len) \
+    return
 
 template <typename T>
-__device__ void add_scal(T *array, T scal, int spatial_dim, int channels, int num) {
+__device__ void add_scal(T *array, T scal, int len) {
   ELEMWISE_BOUNDS_AND_INDEX;
   array[idx] += scal;
 }
 template <typename T>
-__device__ void mul_scal(T *array, T scal, int spatial_dim, int channels, int num) {
+__device__ void mul_scal(T *array, T scal, int len) {
   ELEMWISE_BOUNDS_AND_INDEX;
   array[idx] *= scal;
 }
 
 #define DEF_ELEMWISE_OP(NAME, OP) \
   template <typename T> \
-  __device__ void elem_ ## NAME(T *X, T *Y, int spatial_dim, int channels, int num) { \
+  __device__ void elem_ ## NAME(T *X, T *Y, int len) { \
     ELEMWISE_BOUNDS_AND_INDEX; \
     X[idx] = X[idx] OP Y[idx]; \
   }
@@ -30,23 +27,23 @@ DEF_ELEMWISE_OP(sub, -)
 DEF_ELEMWISE_OP(div, /)
 
 template <typename T>
-__device__ void elem_div2(T *X, T *Y, int spatial_dim, int channels, int num) {
+__device__ void elem_div2(T *X, T *Y, int len) {
   ELEMWISE_BOUNDS_AND_INDEX;
   Y[idx] = X[idx] / Y[idx];
 }
 
 template <typename T1, typename T2>
-__device__ void elem_pow(T1 *X, T2 p, int spatial_dim, int channels, int num) {
+__device__ void elem_pow(T1 *X, T2 p, int len) {
   ELEMWISE_BOUNDS_AND_INDEX;
   X[idx] = pow(X[idx], p);
 }
 
 #define DEF_ELEMWISE_API(NAME) \
-  __global__ void elem_ ## NAME ## _float(float *X, float *Y, int spatial_dim, int channels, int num) { \
-    elem_##NAME(X, Y, spatial_dim, channels, num); \
+  __global__ void elem_ ## NAME ## _float(float *X, float *Y, int len) { \
+    elem_##NAME(X, Y, len); \
   } \
-  __global__ void elem_ ## NAME ## _double(double *X, double *Y, int spatial_dim, int channels, int num) { \
-    elem_##NAME(X, Y, spatial_dim, channels, num); \
+  __global__ void elem_ ## NAME ## _double(double *X, double *Y, int len) { \
+    elem_##NAME(X, Y, len); \
   }
 
 extern "C" {
@@ -58,31 +55,31 @@ DEF_ELEMWISE_API(div)
 DEF_ELEMWISE_API(div2)
 
 
-__global__ void add_scal_float(float *X, float Y, int spatial_dim, int channels, int num) {
-  add_scal(X, Y, spatial_dim, channels, num);
+__global__ void add_scal_float(float *X, float Y, int len) {
+  add_scal(X, Y, len);
 }
-__global__ void add_scal_double(double *X, double Y, int spatial_dim, int channels, int num) {
-  add_scal(X, Y, spatial_dim, channels, num);
-}
-
-__global__ void mul_scal_float(float *X, float Y, int spatial_dim, int channels, int num) {
-  mul_scal(X, Y, spatial_dim, channels, num);
-}
-__global__ void mul_scal_double(double *X, double Y, int spatial_dim, int channels, int num) {
-  mul_scal(X, Y, spatial_dim, channels, num);
+__global__ void add_scal_double(double *X, double Y, int len) {
+  add_scal(X, Y, len);
 }
 
-__global__ void elem_pow_fi(float *X, int p, int spatial_dim, int channels, int num) {
-  elem_pow(X, p, spatial_dim, channels, num);
+__global__ void mul_scal_float(float *X, float Y, int len) {
+  mul_scal(X, Y, len);
 }
-__global__ void elem_pow_di(double *X, int p, int spatial_dim, int channels, int num) {
-  elem_pow(X, p, spatial_dim, channels, num);
+__global__ void mul_scal_double(double *X, double Y, int len) {
+  mul_scal(X, Y, len);
 }
-__global__ void elem_pow_ff(float *X, float p, int spatial_dim, int channels, int num) {
-  elem_pow(X, p, spatial_dim, channels, num);
+
+__global__ void elem_pow_fi(float *X, int p, int len) {
+  elem_pow(X, p, len);
 }
-__global__ void elem_pow_dd(double *X, double p, int spatial_dim, int channels, int num) {
-  elem_pow(X, p, spatial_dim, channels, num);
+__global__ void elem_pow_di(double *X, int p, int len) {
+  elem_pow(X, p, len);
+}
+__global__ void elem_pow_ff(float *X, float p, int len) {
+  elem_pow(X, p, len);
+}
+__global__ void elem_pow_dd(double *X, double p, int len) {
+  elem_pow(X, p, len);
 }
 
 } // extern "C"
