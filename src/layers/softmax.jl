@@ -46,10 +46,7 @@ function forward(backend::CPUBackend, state::SoftmaxLayerState, inputs::Vector{B
     output = state.blobs[i].data
     op_dim = state.dims[i]
 
-    dims = size(input)
-    dim_pre  = prod(dims[1:op_dim-1])
-    dim_prob = dims[op_dim]
-    dim_post = prod(dims[op_dim+1:end])
+    dim_pre, dim_prob, dim_post = split_dims(input, op_dim)
 
     for i = 0:dim_pre-1
       for j = 0:dim_post-1
