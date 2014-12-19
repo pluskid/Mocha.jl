@@ -7,6 +7,8 @@
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE.md)
 <!--[![Build status](https://ci.appveyor.com/api/projects/status/342vcj5lj2jyegsp?svg=true)](https://ci.appveyor.com/project/pluskid/mocha-jl)-->
 
+[Documentation](http://mochajl.readthedocs.org/) | [Release Notes](NEWS.md) | [Roadmap](/pluskid/Mocha.jl/issues/22) | [Issues](/pluskid/Mocha.jl/issues)
+
 Mocha is a Deep Learning framework for [Julia](http://julialang.org/), inspired by the C++ Deep Learning framework [Caffe](http://caffe.berkeleyvision.org/). Some hilights:
 
 - **Modular Architecture**: Mocha has a clean architecture with isolated components like network layers, activation functions, solvers, regularizers, initializers, etc. Built-in components are sufficient for typical deep (convolutional) neural network applications and more are being added in each release. All of them could be easily extended by adding custom sub-types.
