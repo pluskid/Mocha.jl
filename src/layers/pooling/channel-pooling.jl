@@ -1,9 +1,9 @@
 ################################################################################
 # Pooling in channels
 ################################################################################
-function max_channel_pooling_forward{T}(input::Array{T}, output::Array{T}, mask::Array{Csize_t}, layer)
-  width, height, channels, num = size(input)
-  pooled_chann = size(output, 3)
+function max_channel_pooling_forward{T}(input::Array{T,3}, output::Array{T,3}, mask::Array{Csize_t,3}, layer)
+  spatial_dim, channels, num = size(input)
+  pooled_chann = size(output, 2)
 
   for n = 1:num
     for pc = 1:pooled_chann
@@ -11,22 +11,18 @@ function max_channel_pooling_forward{T}(input::Array{T}, output::Array{T}, mask:
       cend   = min(cstart + layer.kernel - 1, channels)
       cstart = max(1, cstart)
 
-      for w = 1:width
-        for h = 1:height
-          @inbounds output[w,h,pc,n] = input[w,h,cstart,n]
-          @inbounds mask[w,h,pc,n] = cstart
-        end
+      for s = 1:spatial_dim
+        @inbounds output[s,pc,n] = input[s,cstart,n]
+        @inbounds mask[s,pc,n] = cstart
       end
 
       for c = cstart+1:cend
-        for w = 1:width
-          for h = 1:height
-            @inbounds maxval = output[w,h,pc,n]
-            @inbounds val = input[w,h,c,n]
-            if val > maxval
-              @inbounds output[w,h,pc,n] = val
-              @inbounds mask[w,h,pc,n] = c
-            end
+        for s = 1:spatial_dim
+          @inbounds maxval = output[s,pc,n]
+          @inbounds val = input[s,c,n]
+          if val > maxval
+            @inbounds output[s,pc,n] = val
+            @inbounds mask[s,pc,n] = c
           end
         end
       end
@@ -34,14 +30,13 @@ function max_channel_pooling_forward{T}(input::Array{T}, output::Array{T}, mask:
   end
 end
 
-function mean_channel_pooling_forward{T}(input::Array{T}, output::Array{T}, integral::Array{T}, layer)
-  width, height, channels, num = size(input)
-  pooled_chann = size(output, 3)
+function mean_channel_pooling_forward{T}(input::Array{T,3}, output::Array{T,3}, integral::Array{T}, layer)
+  spatial_dim_T, channels, num = size(input)
+  pooled_chann = size(output, 2)
   one = convert(T, 1)
   neg_one = convert(T, -1)
   scale = 1/convert(T, layer.kernel)
 
-  spatial_dim_T = width*height
   spatial_dim = spatial_dim_T * sizeof(T)
   fea_dim = spatial_dim * channels
   output_fea_dim = spatial_dim * pooled_chann
@@ -78,9 +73,9 @@ function mean_channel_pooling_forward{T}(input::Array{T}, output::Array{T}, inte
   end
 end
 
-function max_channel_pooling_backward{T}(input::Array{T}, output::Array{T}, mask::Array{Csize_t}, layer)
-  width, height, channels, num = size(input)
-  pooled_chann = size(output, 3)
+function max_channel_pooling_backward{T}(input::Array{T,3}, output::Array{T,3}, mask::Array{Csize_t,3}, layer)
+  spatial_dim, channels, num = size(input)
+  pooled_chann = size(output, 2)
 
   fill!(input, 0)
   for n = 1:num
@@ -89,23 +84,20 @@ function max_channel_pooling_backward{T}(input::Array{T}, output::Array{T}, mask
       cend   = min(cstart + layer.kernel - 1, channels)
       cstart = max(1, cstart)
 
-      for w = 1:width
-        for h = 1:height
-          @inbounds input[w,h,mask[w,h,pc,n],n] += output[w,h,pc,n]
-        end
+      for s = 1:spatial_dim
+        @inbounds input[s,mask[s,pc,n],n] += output[s,pc,n]
       end
     end
   end
 end
 
-function mean_channel_pooling_backward{T}(input::Array{T}, output::Array{T}, layer)
-  width, height, channels, num = size(input)
-  pooled_chann = size(output, 3)
+function mean_channel_pooling_backward{T}(input::Array{T,3}, output::Array{T,3}, layer)
+  spatial_dim_T, channels, num = size(input)
+  pooled_chann = size(output, 2)
   scale = 1/convert(T, layer.kernel)
 
   fill!(input, 0)
 
-  spatial_dim_T = width*height
   spatial_dim = spatial_dim_T * sizeof(T)
   fea_dim = spatial_dim * channels
   output_fea_dim = spatial_dim * pooled_chann

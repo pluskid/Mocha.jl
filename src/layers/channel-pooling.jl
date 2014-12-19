@@ -5,6 +5,7 @@
   (kernel :: Int = 1, kernel > 0),
   (stride :: Int = 1, stride > 0),
   (pad :: NTuple{2, Int} = (0,0), all([pad...] .>= 0)),
+  (dim :: Int = -2, dim != 0),
   pooling :: PoolingFunction = Pooling.Max(),
 )
 @characterize_layer(ChannelPoolingLayer,
@@ -16,6 +17,7 @@ type ChannelPoolingLayerState <: LayerState
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}
 
+  op_dims    :: Vector{Int}
   etc        :: Any
 end
 
@@ -49,8 +51,13 @@ function setup(backend::Backend, layer::ChannelPoolingLayer, inputs::Vector{Blob
   pooled_chann_all = Array(Int, length(inputs))
   blobs = Array(Blob, length(inputs))
   blobs_diff = Array(Blob, length(inputs))
+  op_dims = Array(Int, length(inputs))
 
   for i = 1:length(inputs)
+    dim_total = ndims(inputs[i])
+    dim = layer.dim < 0 ? layer.dim + dim_total+1 : layer.dim
+    op_dims[i] = dim
+
     width, height, channels, num = size(inputs[i])
     pooled_chann = int(ceil(float(channels + layer.pad[1]+layer.pad[2] - layer.kernel) / layer.stride)) + 1
 
@@ -70,7 +77,7 @@ function setup(backend::Backend, layer::ChannelPoolingLayer, inputs::Vector{Blob
   end
 
   etc = setup_etc(backend, layer, inputs, pooled_chann_all)
-  state = ChannelPoolingLayerState(layer, blobs, blobs_diff, etc)
+  state = ChannelPoolingLayerState(layer, blobs, blobs_diff, op_dims, etc)
 end
 function shutdown_etc(backend::CPUBackend, state::ChannelPoolingLayerState)
 end
@@ -90,10 +97,13 @@ function forward(backend::CPUBackend, pool::StdPoolingFunction,
     input = inputs[i].data
     output = state.blobs[i].data
 
+    dims_in = split_dims(input, state.op_dims[i])
+    dims_out = split_dims(output, state.op_dims[i])
+
     if isa(pool, Pooling.Max)
-      max_channel_pooling_forward(input, output, state.etc[i], state.layer)
+      max_channel_pooling_forward(reshape(input,dims_in), reshape(output,dims_out), reshape(state.etc[i],dims_out), state.layer)
     elseif isa(pool, Pooling.Mean)
-      mean_channel_pooling_forward(input, output, state.etc[i], state.layer)
+      mean_channel_pooling_forward(reshape(input,dims_in), reshape(output,dims_out), state.etc[i], state.layer)
     else
       error("Pooling for $pool not implemented yet")
     end
@@ -109,11 +119,16 @@ function backward(backend::CPUBackend, pool::StdPoolingFunction, state::ChannelP
 
   for i = 1:length(inputs)
     diff = diffs[i]
+
     if !isa(diff, NullBlob)
+      dims_in = split_dims(inputs[i], state.op_dims[i])
+      dims_out = split_dims(state.blobs[i], state.op_dims[i])
+
       if isa(pool, Pooling.Max)
-        max_channel_pooling_backward(diff.data, state.blobs_diff[i].data, state.etc[i], state.layer)
+        max_channel_pooling_backward(reshape(diff.data,dims_in), reshape(state.blobs_diff[i].data,dims_out),
+            reshape(state.etc[i],dims_out), state.layer)
       elseif isa(pool, Pooling.Mean)
-        mean_channel_pooling_backward(diff.data, state.blobs_diff[i].data, state.layer)
+        mean_channel_pooling_backward(reshape(diff.data,dims_in), reshape(state.blobs_diff[i].data,dims_out), state.layer)
       else
         error("Pooling for $pool not implemented yet")
       end
