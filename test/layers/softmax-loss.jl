@@ -83,7 +83,7 @@ function test_softmax_loss_layer(backend::Backend, tensor_dim, use_weights::Bool
   shutdown(backend, state)
 end
 function test_softmax_loss_layer(backend::Backend, use_weights::Bool, T, eps)
-  for i = 2:5
+  for i in [2,4,5]
     test_softmax_loss_layer(backend, i, use_weights, T, eps)
   end
 end

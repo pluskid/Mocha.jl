@@ -80,7 +80,7 @@ function test_multinomial_logistic_loss_layer(backend::Backend, tensor_dim, clas
   shutdown(backend, state)
 end
 function test_multinomial_logistic_loss_layer(backend::Backend, class_weights, T, eps)
-  for i = 2:6
+  for i in [2,4,5]
     test_multinomial_logistic_loss_layer(backend, i, class_weights, T, eps)
   end
 end

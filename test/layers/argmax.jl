@@ -37,7 +37,7 @@ function test_argmax_layer(backend::Backend, n_input, tensor_dim, T, eps)
   shutdown(backend, state)
 end
 function test_argmax_layer(backend::Backend, n_input, T, eps)
-  for i = 2:6
+  for i in [2,4,5]
     test_argmax_layer(backend, n_input, i, T, eps)
   end
 end

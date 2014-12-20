@@ -27,7 +27,7 @@ end
 ############################################################
 
 function apply_l2_cons!{T <: FloatingPoint}(backend::CPUBackend, blob::CPUBlob{T},
-                                            coef::FloatingPoint, ninputs::Integer, nunits::Integer)
+                                            coef::FloatingPoint, ninputs::Int, nunits::Int)
   param = reshape(blob.data, (ninputs, nunits))
   # we constrain each column vector
   for i = 1:nunits

@@ -56,7 +56,7 @@ function test_accuracy_layer(backend::Backend, tensor_dim, T)
   shutdown(backend, state)
 end
 function test_accuracy_layer(backend::Backend, T)
-  for i = 2:5
+  for i in [2,4,5]
     test_accuracy_layer(backend, i, T)
   end
 end

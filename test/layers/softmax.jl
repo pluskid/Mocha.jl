@@ -44,7 +44,7 @@ function test_softmax_layer(backend::Backend, tensor_dim, n_input, T, eps)
   shutdown(backend, state)
 end
 function test_softmax_layer(backend::Backend, n_input, T, eps)
-  for td = 2:6
+  for td in [2,4,5]
     test_softmax_layer(backend, td, n_input, T, eps)
   end
 end

@@ -113,7 +113,7 @@ type ConvolutionLayerState <: LayerState
     else
       param_filter = make_parameter(backend,"filter",dtype,(layer.kernel[1],layer.kernel[2],div(channels,layer.n_group), layer.n_filter),
           layer.filter_init, layer.filter_regu, layer.filter_cons, layer.filter_lr)
-      param_bias   = make_parameter(backend,"bias",dtype,(layer.n_filter,1,1,1),
+      param_bias   = make_parameter(backend,"bias",dtype,(layer.n_filter,),
           layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)
     end
 
