@@ -13,6 +13,8 @@ type ArgmaxLayerState <: LayerState
 end
 
 function setup(backend::Backend, layer::ArgmaxLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+  @assert ndims(inputs[1]) == ndims(inputs[2])
+
   dims = Array(Int, length(inputs))
   blobs = Array(Blob, length(inputs))
   for i = 1:length(inputs)
