@@ -31,6 +31,7 @@ end
 # Network
 ############################################################
 include("net/topology.jl")
+include("net/test-gradient-simple.jl")
 
 ############################################################
 # Utilities functions
