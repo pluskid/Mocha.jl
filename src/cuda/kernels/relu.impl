@@ -1,36 +1,33 @@
 #define RELU_BOUNDS_AND_INDEX \
-  int n = threadIdx.x + blockIdx.x * blockDim.x; \
-  int k = threadIdx.y + blockIdx.y * blockDim.y; \
-  int s = threadIdx.z + blockIdx.z * blockDim.z; \
-  if (n >= num || k >= channels || s >= spatial_dim) \
-    return; \
-  int idx = s + spatial_dim * (k + channels * n)
+  int idx = threadIdx.x + blockIdx.x * blockDim.x; \
+  if (idx >= len) \
+    return
 
 template <typename T>
-__device__ void relu_forward(T *data, int num, int channels, int spatial_dim) {
+__device__ void relu_forward(T *data, int len) {
   RELU_BOUNDS_AND_INDEX;
   data[idx] = max(data[idx], static_cast<T>(0));
 }
 
 template <typename T>
-__device__ void relu_backward(T *data, T *gradient, int num, int channels, int spatial_dim) {
+__device__ void relu_backward(T *data, T *gradient, int len) {
   RELU_BOUNDS_AND_INDEX;
   gradient[idx] *= data[idx] > 0;
 }
 
 extern "C" {
-  __global__ void relu_forward_float(float *data, int num, int channels, int spatial_dim) {
-    relu_forward(data, num, channels, spatial_dim);
+  __global__ void relu_forward_float(float *data, int len) {
+    relu_forward(data, len);
   }
-  __global__ void relu_forward_double(double *data, int num, int channels, int spatial_dim) {
-    relu_forward(data, num, channels, spatial_dim);
+  __global__ void relu_forward_double(double *data, int len) {
+    relu_forward(data, len);
   }
 
-  __global__ void relu_backward_float(float *data, float *gradient, int num, int channels, int spatial_dim) {
-    relu_backward(data, gradient, num, channels, spatial_dim);
+  __global__ void relu_backward_float(float *data, float *gradient, int len) {
+    relu_backward(data, gradient, len);
   }
-  __global__ void relu_backward_double(double *data, double *gradient, int num, int channels, int spatial_dim) {
-    relu_backward(data, gradient, num, channels, spatial_dim);
+  __global__ void relu_backward_double(double *data, double *gradient, int len) {
+    relu_backward(data, gradient, len);
   }
 }
 

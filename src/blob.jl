@@ -3,7 +3,7 @@ export CPUBlob, NullBlob
 
 import Base: eltype, size, length, ndims, copy!, fill!, show
 export       eltype, size, length, ndims, copy!, fill!, erase!, show
-export get_num, get_chann, get_height, get_width, get_fea_size, get_whcn, to_array
+export get_num, get_chann, get_height, get_width, get_fea_size, to_array
 export make_blob, make_zero_blob, reshape_blob
 
 ############################################################
@@ -62,35 +62,6 @@ function get_width(blob :: Blob)
 end
 function get_fea_size(blob :: Blob)
   prod(size(blob)[1:end-1])
-end
-
-# Get pseudo 4D dimension
-# Note the behavior when the tensor dimension is less than 4.
-# For example, for 2D tensor, the two dimensions are considered
-# as channels and num. With this convention, InnerProductLayer
-# could produce 2D tensors and those tensors could be naturally
-# processed by existing loss layers without much modifications.
-for obj_type in (Blob, AbstractArray)
-  @eval begin
-    function get_whcn{T}(blob :: $obj_type{T,1})
-      (1,1,1,size(blob,1))
-    end
-    function get_whcn{T}(blob :: $obj_type{T,2})
-      c,n = size(blob)
-      (1,1,c,n)
-    end
-    function get_whcn{T}(blob :: $obj_type{T,3})
-      h,c,n = size(blob)
-      (1,h,c,n)
-    end
-    function get_whcn{T}(blob :: $obj_type{T,4})
-      size(blob)
-    end
-    function get_whcn{T,N}(blob :: $obj_type{T,N})
-      dims = size(blob)
-      (dims[1],dims[2],prod(dims[3:end-1]),dims[end])
-    end
-  end
 end
 
 function show(io::IO, blob :: Blob)

@@ -1,4 +1,4 @@
-julia_cmd := julia --color --check-bounds
+julia_cmd := julia --color=yes --check-bounds
 srun_cmd := srun --pty -p gpu --gres=gpu:1 --mem=8000
 
 default:

@@ -1,36 +1,33 @@
 #define SIGMOID_BOUNDS_AND_INDEX \
-  int n = threadIdx.x + blockIdx.x * blockDim.x; \
-  int k = threadIdx.y + blockIdx.y * blockDim.y; \
-  int s = threadIdx.z + blockIdx.z * blockDim.z; \
-  if (n >= num || k >= channels || s >= spatial_dim) \
-    return; \
-  int idx = s + spatial_dim * (k + channels * n)
+  int idx = threadIdx.x + blockIdx.x * blockDim.x; \
+  if (idx >= len) \
+    return
 
 template <typename T>
-__device__ void sigmoid_forward(T *data, int num, int channels, int spatial_dim) {
+__device__ void sigmoid_forward(T *data, int len) {
   SIGMOID_BOUNDS_AND_INDEX;
   data[idx] = 1.0 / (1 + exp(-data[idx]));
 }
 
 template <typename T>
-__device__ void sigmoid_backward(T *data, T *gradient, int num, int channels, int spatial_dim) {
+__device__ void sigmoid_backward(T *data, T *gradient, int len) {
   SIGMOID_BOUNDS_AND_INDEX;
   gradient[idx] *= data[idx] * (1-data[idx]);
 }
 
 extern "C" {
-  __global__ void sigmoid_forward_float(float *data, int num, int channels, int spatial_dim) {
-    sigmoid_forward(data, num, channels, spatial_dim);
+  __global__ void sigmoid_forward_float(float *data, int len) {
+    sigmoid_forward(data, len);
   }
-  __global__ void sigmoid_forward_double(double *data, int num, int channels, int spatial_dim) {
-    sigmoid_forward(data, num, channels, spatial_dim);
+  __global__ void sigmoid_forward_double(double *data, int len) {
+    sigmoid_forward(data, len);
   }
 
-  __global__ void sigmoid_backward_float(float *data, float *gradient, int num, int channels, int spatial_dim) {
-    sigmoid_backward(data, gradient, num, channels, spatial_dim);
+  __global__ void sigmoid_backward_float(float *data, float *gradient, int len) {
+    sigmoid_backward(data, gradient, len);
   }
-  __global__ void sigmoid_backward_double(double *data, double *gradient, int num, int channels, int spatial_dim) {
-    sigmoid_backward(data, gradient, num, channels, spatial_dim);
+  __global__ void sigmoid_backward_double(double *data, double *gradient, int len) {
+    sigmoid_backward(data, gradient, len);
   }
 }
 
