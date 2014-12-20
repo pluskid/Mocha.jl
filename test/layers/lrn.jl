@@ -19,7 +19,7 @@ function test_lrn_layer(backend::Backend, mode::LRNModeType, tensor_dim, T, eps)
 
   println("    > Forward")
   forward(backend, state, input_blobs)
-  expected_output = lrn_forward(input, state)
+  expected_output = lrn_forward(input, state, op_dim)
   got_output = similar(input)
   copy!(got_output, state.blobs[1])
   @test all(abs(got_output - expected_output) .< eps)
@@ -37,21 +37,24 @@ function test_lrn_layer(backend::Backend, mode::LRNModeType, tensor_dim, T, eps)
   shutdown(backend, state)
 end
 
-function lrn_forward_across_channel{T}(input::Array{T}, state)
+function lrn_forward_across_channel{T}(input::Array{T}, state, op_dim)
   output = similar(input)
-  width, height, channels, num = size(input)
+  pre_dim, chann_dim, post_dim = split_dims(input, op_dim)
   pre_pad = div(state.layer.kernel-1,2)
   post_pad = state.layer.kernel - pre_pad - 1
 
-  for n = 1:num
-    for c = 1:channels
+  canonical_input = reshape(input, (pre_dim, chann_dim, post_dim))
+  canonical_output = reshape(output, (pre_dim, chann_dim, post_dim))
+
+  for n = 1:post_dim
+    for c = 1:chann_dim
       cstart = c-pre_pad
-      cend   = min(c + post_pad, channels)
+      cend   = min(c + post_pad, chann_dim)
       cstart = max(1, cstart)
 
-      tmp = input[:,:,cstart:cend,n].^2 * (state.layer.scale / state.layer.kernel)
-      tmp = (sum(tmp, 3) + state.layer.shift) .^ state.layer.power
-      output[:,:,c,n] = input[:,:,c,n] ./ tmp
+      tmp = canonical_input[:,cstart:cend,n].^2 * (state.layer.scale / state.layer.kernel)
+      tmp = (sum(tmp, 2) + state.layer.shift) .^ state.layer.power
+      canonical_output[:,c,n] = canonical_input[:,c,n] ./ tmp
     end
   end
 
@@ -85,9 +88,9 @@ function lrn_forward_within_channel{T}(input::Array{T}, state)
 
   return output
 end
-function lrn_forward{T}(input::Array{T}, state)
+function lrn_forward{T}(input::Array{T}, state, op_dim)
   if isa(state.layer.mode, LRNMode.AcrossChannel)
-    lrn_forward_across_channel(input, state)
+    lrn_forward_across_channel(input, state, op_dim)
   elseif isa(state.layer.mode, LRNMode.WithinChannel)
     lrn_forward_within_channel(input, state)
   else
