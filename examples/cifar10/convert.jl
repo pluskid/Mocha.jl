@@ -17,7 +17,7 @@ for (key, sources) in datasets
     dset_data = d_create(h5, "data", datatype(Float32), 
         dataspace(width, height, channels, batch_size * length(sources)))
     dset_label = d_create(h5, "label", datatype(Float32), 
-        dataspace(1,1,1, batch_size * length(sources)))
+        dataspace(1, batch_size * length(sources)))
 
     for n = 1:length(sources)
       open("cifar-10-batches-bin/$(sources[n])") do f
@@ -47,7 +47,7 @@ for (key, sources) in datasets
 
         index = (n-1)*batch_size+1:n*batch_size
         dset_data[:,:,:,index] = img
-        dset_label[:,:,:,index] = label
+        dset_label[:,index] = label
       end
     end
 

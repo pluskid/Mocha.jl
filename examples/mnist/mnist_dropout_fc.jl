@@ -68,25 +68,24 @@ drop_layers = [drop_input, drop_fc1, drop_fc2]
 # put training net together, note that the correct ordering will automatically be established by the constructor
 net = Net("MNIST-train", backend, [data_layer, common_layers..., drop_layers..., loss_layer])
 
+base_dir = "snapshots_dropout_fc"
 # we let the learning rate decrease by 0.998 in each epoch (=600 batches of size 100)
 # and let the momentum increase linearly from 0.5 to 0.9 over 500 epochs
 # which is equivalent to an increase step of 0.0008
 # training is done for 2000 epochs
 params = SolverParameters(max_iter=600*2000, regu_coef=0.0,
                           mom_policy=MomPolicy.Linear(0.5, 0.0008, 600, 0.9),
-                          lr_policy=LRPolicy.Step(0.1, 0.998, 600))
+                          lr_policy=LRPolicy.Step(0.1, 0.998, 600),
+                          load_from=base_dir)
 solver = SGD(params)
 
-base_dir = "snapshots_dropout_fc"
 setup_coffee_lounge(solver, save_into="$base_dir/statistics.jld", every_n_iter=5000)
 
 # report training progress every 100 iterations
 add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
 
 # save snapshots every 5000 iterations
-add_coffee_break(solver,
-                 Snapshot(base_dir, auto_load=true),
-                 every_n_iter=5000)
+add_coffee_break(solver, Snapshot(base_dir), every_n_iter=5000)
 
 # show performance on test data every 600 iterations (one epoch)
 data_layer_test = HDF5DataLayer(name="test-data", source="data/test.txt", batch_size=100)

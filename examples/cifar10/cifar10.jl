@@ -47,16 +47,15 @@ lr_policy = LRPolicy.Staged(
   (5000, LRPolicy.Fixed(0.00001)),
 )
 solver_params = SolverParameters(max_iter=70000,
-    regu_coef=0.004, mom_policy=MomPolicy.Fixed(0.9), lr_policy=lr_policy)
+    regu_coef=0.004, mom_policy=MomPolicy.Fixed(0.9), lr_policy=lr_policy,
+    load_from="snapshots")
 solver = SGD(solver_params)
 
 # report training progress every 200 iterations
 add_coffee_break(solver, TrainingSummary(), every_n_iter=200)
 
 # save snapshots every 5000 iterations
-add_coffee_break(solver,
-    Snapshot("snapshots", auto_load=true),
-    every_n_iter=5000)
+add_coffee_break(solver, Snapshot("snapshots"), every_n_iter=5000)
 
 # show performance on test data every 1000 iterations
 test_net = Net("CIFAR10-test", backend, [data_tt_layer, common_layers..., acc_layer])
