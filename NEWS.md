@@ -13,6 +13,11 @@
     * Except that (for now) `ConvolutionLayer` and `PoolingLayer` still requires the inputs to be 4D
     * The generalization is *almost* backward compatible, except
       * The interface for `ReshapeLayer` changed b/c the target shape needs to be ND, instead of 4D now
+      * Parameters added for some layers to allow the user to specify which dimension to operate on
+      * The output of `InnerProductLayer` is now 2D-tensor instead of 4D
+* Documentation
+  * Setup the [Roadmap Ticket](pluskid/Mocha.jl#22), duscussions/suggestions are welcome
+  * Update everything to reflect 4D -> ND tensor changes
 
 ## v0.0.4 2014.12.09
 
