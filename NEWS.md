@@ -1,6 +1,6 @@
 # News for Mocha Development
 
-## v0.0.5 ???
+## v0.0.5 2014.12.20
 
 * Infrastructure
   * **{Breaking Changes}** cuDNN 6.5 R2 (Release Candidate) (@JobJob)
@@ -21,6 +21,8 @@
 * Documentation
   * Setup the [Roadmap Ticket](https://github.com/pluskid/Mocha.jl/issues/22), duscussions/suggestions are welcome
   * Update everything to reflect 4D -> ND tensor changes
+  * Document for parameter norm constraints
+  * Developer's Guide for blob and layer API
 
 ## v0.0.4 2014.12.09
 
