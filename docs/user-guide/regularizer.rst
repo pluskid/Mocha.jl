@@ -49,3 +49,4 @@ local regularization coefficients.
    During the backward pass, :math:`\lambda\text{sign}(W)` is added to the
    parameter gradient. The L1 regularizer has the property of encouraging
    sparsity in the parameters.
+

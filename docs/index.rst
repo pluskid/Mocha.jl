@@ -28,6 +28,7 @@ User's Guide
    user-guide/neuron
    user-guide/initializer
    user-guide/regularizer
+   user-guide/constraint
    user-guide/data-transformer
    user-guide/solver
    user-guide/backend

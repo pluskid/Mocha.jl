@@ -109,6 +109,15 @@ Computation Layers
 
       Default ``NoRegu()``, the regularizer for the bias.
 
+   .. attribute:: filter_cons
+
+      Default ``NoCons()``. :doc:`Norm constraint </user-guide/constraint>` for
+      the filters.
+
+   .. attribute:: bias_cons
+
+      Default ``NoCons()``. Norm constraint for the bias. Typically no
+      norm constraint should be applied to the bias.
    .. attribute:: filter_lr
 
       Default 1.0. The local learning rate for the filters.
@@ -235,6 +244,15 @@ Computation Layers
 
       Default ``NoRegu()``. Regularizer for the bias. Typically no
       regularization should be applied to the bias.
+
+   .. attribute:: weight_cons
+
+      Default ``NoCons()``. :doc:`Norm constraint </user-guide/constraint>` for the weights.
+
+   .. attribute:: bias_cons
+
+      Default ``NoCons()``. Norm constraint for the bias. Typically no
+      norm constraint should be applied to the bias.
 
    .. attribute:: weight_lr
 
