@@ -16,6 +16,7 @@ end # module LRNMode
   (scale :: Number = 1, isreal(scale)),
   (shift :: Number = 1, isreal(shift)),
   (power :: Number = 0.75, isreal(power)),
+  (channel_dim :: Int = -2, channel_dim != 0),
   (tops :: Vector{Symbol} = Symbol[], length(tops) == 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 1),
   mode :: LRNModeType = LRNMode.AcrossChannel(),
@@ -54,7 +55,7 @@ function setup(backend::Backend, layer::LRNLayer, inputs::Vector{Blob}, diffs::V
     post_pad = layer.kernel - pre_pad - 1
     pool_layer = ChannelPoolingLayer(tops=Array(Symbol,1), bottoms=Array(Symbol,1),
         kernel=layer.kernel, stride=1, pad=(pre_pad,post_pad),
-        pooling=Pooling.Mean())
+        pooling=Pooling.Mean(), channel_dim=layer.channel_dim)
   elseif isa(layer.mode, LRNMode.WithinChannel)
     pool_layer = PoolingLayer(tops=Array(Symbol,1), bottoms=Array(Symbol,1),
         kernel=(layer.kernel,layer.kernel), stride=(1,1), pad=(pre_pad,pre_pad),

@@ -10,7 +10,7 @@ function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, 
   println("    > Setup (pool along dimension $op_dim for $tensor_dim-D tensors)")
 
   layer = ChannelPoolingLayer(kernel=kernel, stride=stride, pad=pad, pooling=pooling,
-      tops=Array(Symbol,n_input), bottoms=Array(Symbol,n_input), dim=op_dim)
+      tops=Array(Symbol,n_input), bottoms=Array(Symbol,n_input), channel_dim=op_dim)
 
   input = [rand(T, dim...) for dim in dims]
   inputs = Blob[make_blob(backend, x) for x in input]

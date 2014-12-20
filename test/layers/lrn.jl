@@ -1,12 +1,18 @@
-function test_lrn_layer(backend::Backend, mode::LRNModeType, T, eps)
+function test_lrn_layer(backend::Backend, mode::LRNModeType, tensor_dim, T, eps)
   println("-- Testing LRN($(typeof(mode))) on $(typeof(backend)){$T}...")
-  println("    > Setup")
 
-  input = rand(T, 7,8,9,10)
+
+  dims = tuple((abs(rand(Int,tensor_dim)) % 6 + 6)...)
+  #op_dim = max(abs(rand(Int)) % tensor_dim, 1)
+  op_dim = 3
+
+  println("    > Setup with dims $dims")
+
+  input = rand(T, dims)
   input_blobs = Blob[make_blob(backend, input)]
   diff_blobs = Blob[make_blob(backend, input)]
 
-  layer = LRNLayer(tops=[:output],bottoms=[:input], mode=mode)
+  layer = LRNLayer(tops=[:output],bottoms=[:input], mode=mode, channel_dim=op_dim)
   state = setup(backend, layer, input_blobs, diff_blobs)
 
   @test size(state.blobs[1]) == size(input)
@@ -156,6 +162,10 @@ function lrn_backward{T}(input::Array{T}, top_diff::Array{T}, state)
   else
     error("Unknown LRN-mode $(state.layer.mode)")
   end
+end
+
+function test_lrn_layer(backend::Backend, mode::LRNModeType, T, eps)
+  test_lrn_layer(backend, mode, 4, T, eps)
 end
 
 function test_lrn_layer(backend::Backend, T, eps)

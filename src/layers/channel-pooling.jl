@@ -5,7 +5,7 @@
   (kernel :: Int = 1, kernel > 0),
   (stride :: Int = 1, stride > 0),
   (pad :: NTuple{2, Int} = (0,0), all([pad...] .>= 0)),
-  (dim :: Int = -2, dim != 0),
+  (channel_dim :: Int = -2, channel_dim != 0),
   pooling :: PoolingFunction = Pooling.Max(),
 )
 @characterize_layer(ChannelPoolingLayer,
@@ -48,7 +48,7 @@ function setup(backend::Backend, layer::ChannelPoolingLayer, inputs::Vector{Blob
 
   for i = 1:length(inputs)
     dim_total = ndims(inputs[i])
-    op_dim = layer.dim < 0 ? layer.dim + dim_total+1 : layer.dim
+    op_dim = layer.channel_dim < 0 ? layer.channel_dim + dim_total+1 : layer.channel_dim
     @assert 1 <= op_dim <= dim_total
     @assert op_dim != dim_total
 
