@@ -48,20 +48,12 @@ function length(blob :: Blob)
   return prod(size(blob))
 end
 
-################################################################################
-# Those functions might be removed in the future
-# {
-function get_chann(blob :: Blob)
-  size(blob, 3)
-end
 function get_height(blob :: Blob)
   size(blob, 2)
 end
 function get_width(blob :: Blob)
   size(blob, 1)
 end
-# }
-################################################################################
 
 function get_num(blob :: Blob)
   size(blob, -1)
