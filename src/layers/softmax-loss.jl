@@ -23,8 +23,6 @@ type SoftmaxLossLayerState{T} <: LayerState
 end
 
 function setup(backend::Backend, layer::SoftmaxLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  @assert ndims(inputs[1]) == ndims(inputs[2])
-
   data_type = eltype(inputs[1])
 
   softmax_layer = SoftmaxLayer(tops=Array(Symbol, length(inputs)), bottoms=Array(Symbol, length(inputs)), dim=layer.dim)
@@ -52,10 +50,12 @@ function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vec
   diff = diffs[1]
   if isa(diff, CPUBlob)
     dims = size(diff)
+    label_dim = [i == state.logistic.op_dim ? 1 : dims[i] for i = 1:length(dims)]
+    label = reshape(inputs[2].data, label_dim...)
 
     idx_all = map(1:length(dims)) do i
       if i == state.logistic.op_dim
-        int(inputs[2].data) + 1
+        int(label) + 1
       else
         dim = dims[i]
         reshape(1:dim, [j == i? dim : 1 for j = 1:length(dims)]...)

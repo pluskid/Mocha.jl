@@ -22,8 +22,6 @@ type MultinomialLogisticLossLayerState{T} <: LayerState
 end
 
 function setup(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  @assert ndims(inputs[1]) == ndims(inputs[2])
-
   data_type = eltype(inputs[1])
   tensor_dim = ndims(inputs[1])
   dims = size(inputs[1])
@@ -76,6 +74,8 @@ function forward(backend::CPUBackend, state::MultinomialLogisticLossLayerState, 
   label = inputs[2].data
 
   dims = size(pred)
+  label_dim = [i == state.op_dim ? 1 : dims[i] for i = 1:length(dims)]
+  label = reshape(label, label_dim...)
 
   idx_all = map(1:length(dims)) do i
     if i == state.op_dim

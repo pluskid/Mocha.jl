@@ -8,6 +8,11 @@
     * Forward convolution speed up
     * Pooling with padding is supported
     * Mac OS X is supported
+  * 4D-tensor -> ND-tensor
+    * Mocha is now capable of handling general ND-tensor
+    * Except that (for now) `ConvolutionLayer` and `PoolingLayer` still requires the inputs to be 4D
+    * The generalization is *almost* backward compatible, except
+      * The interface for `ReshapeLayer` changed b/c the target shape needs to be ND, instead of 4D now
 
 ## v0.0.4 2014.12.09
 

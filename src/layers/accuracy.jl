@@ -23,8 +23,6 @@ function setup_etc(backend::CPUBackend, layer::AccuracyLayer, op_dim::Int, input
 end
 
 function setup(backend::Backend, layer::AccuracyLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  @assert ndims(inputs[1]) == ndims(inputs[2])
-
   total_dim = ndims(inputs[1])
   dim = layer.dim < 0 ? layer.dim + total_dim + 1 : layer.dim
   @assert 1 <= dim <= total_dim
