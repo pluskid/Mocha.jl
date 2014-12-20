@@ -32,6 +32,16 @@ function test_l2_constraint(backend::Backend, T, eps)
     norm2 = vecnorm(param_after[:, f])
     @test norm2 <= coef + eps
   end
+
+  # The case for bias
+  len = 10
+  param = rand(T, len) - 0.5
+  param_after = similar(param)
+  param_blob = make_blob(backend, param)
+  cons = L2Cons(coef)
+  constrain!(backend, cons, param_blob)
+  copy!(param_after, param_blob)
+  @test vecnorm(param_after) <= coef+eps
 end
 
 function test_l2_constraint(backend::Backend)
