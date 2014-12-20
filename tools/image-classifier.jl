@@ -140,22 +140,12 @@ function classify_batch(classifier::ImageClassifier, images::Vector{Image}, idx:
   forward(classifier.net)
   copy!(classifier.pred, classifier.pred_blob)
   results = map(1:length(images)) do i
-    pred = classifier.pred[:,:,:,i]
-    ret = Array(Any, size(pred,1), size(pred,2))
-    for w = 1:size(pred,1)
-      for h = 1:size(pred,2)
-        i_class = indmax(pred[w,h,:])
-        if !isempty(classifier.classes)
-          ret[w,h] = classifier.classes[i_class]
-        else
-          ret[w,h] = string(i_class-1) # 0-based class label
-        end
-      end
-    end
-
-    if size(pred,1) == 1 && size(pred,2) == 1
-      ret = ret[1]
-      pred = reshape(pred, size(pred,3), size(pred,4))
+    pred = classifier.pred[:,i]
+    i_class = indmax(pred)
+    if !isempty(classifier.classes)
+      ret = classifier.classes[i_class]
+    else
+      ret = string(i_class-1)
     end
     return (pred, ret)
   end
