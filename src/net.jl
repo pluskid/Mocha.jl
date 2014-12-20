@@ -296,7 +296,7 @@ function check_bp_topology(net::Net)
   # double check the dict we built
   for i = 1:length(net.layers)
     layer = net.layers[i]
-    if can_do_bp(layer) && !is_sink(layer)
+    if can_do_bp(layer) && !is_sink(layer) && !is_inplace(layer)
       for j = 1:length(layer.tops)
         @assert isa(net.states[i].blobs_diff[j], NullBlob) == !bp_needed[layer.tops[j]]
       end
