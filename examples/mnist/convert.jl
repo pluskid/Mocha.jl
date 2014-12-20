@@ -30,7 +30,7 @@ for key in keys(datasets)
 
   h5open("$key.hdf5", "w") do h5
     dset_data = d_create(h5, "data", datatype(Float32), dataspace(w, h, 1, n_data))
-    dset_label = d_create(h5, "label", datatype(Float32), dataspace(1,1,1, n_data))
+    dset_label = d_create(h5, "label", datatype(Float32), dataspace(1, n_data))
 
     for i = 1:n_batch
       idx = (i-1)*batch_size+1:i*batch_size
@@ -47,7 +47,7 @@ for key in keys(datasets)
       for j = 1:length(idx)
         r_idx = rp[j]
         dset_data[:,:,1,idx[j]] = img[(r_idx-1)*h*w+1:r_idx*h*w]
-        dset_label[1,1,1,idx[j]] = class[r_idx]
+        dset_label[1,idx[j]] = class[r_idx]
       end
     end
   end
