@@ -3,10 +3,12 @@ Blob
 
 Blob is the fundamental data representation in Mocha. It is used as both data
 (e.g. mini-batch of data samples) and parameters (e.g. filters of a convolution
-layer). Conceptually, a blob is a 4D tensor. Following the vision (and Caffe)
-convention, the four dimensions are called *width*, *height*, *channels* and
-*num*. The fastest changing dimension is *width* and slowest changing dimension
-is *num*.
+layer). Conceptually, a blob is a N-dimensional tensor.
+
+For example, in vision, a data blob is usually a 4D-tensor. Following the vision
+(and Caffe) convention, the four dimensions are called *width*, *height*,
+*channels* and *num*. The fastest changing dimension is *width* and slowest
+changing dimension is *num*.
 
 .. note::
 
@@ -30,15 +32,14 @@ A backend-dependent blob can be created with the following function:
 .. function::
    make_blob(backend, data_type, dims)
 
-   ``dims`` is a ``NTuple{4, Int}``, specifying the four dimensions of the blob
-   to be created. Currently ``data_type`` should be either ``Float32`` or
-   ``Float64``.
+   ``dims`` is a ``NTuple``, specifying the dimensions of the blob to be
+   created. Currently ``data_type`` should be either ``Float32`` or ``Float64``.
 
 Several helper functions are also provided:
 
-.. function:: make_blob(backend, data_type, width, height, channels, num)
+.. function:: make_blob(backend, data_type, dims...)
 
-   Spell out the four dimensions explicitly.
+   Spell out the dimensions explicitly.
 
 .. function:: make_blob(backend, array)
 
@@ -71,21 +72,45 @@ The blob implements some simple API for a Julia array:
 
    Get the element type of the blob.
 
+.. function:: ndims(blob)
+
+   Get the tensor dimension of the blob. The same as ``length(size(blob))``.
+
 .. function:: size(blob)
 
-   Get the shape of the blob. The return value is a ``NTuple{4, Int}``.
+   Get the shape of the blob. The return value is a ``NTuple``.
 
 .. function:: size(blob, dim)
 
-   Get the size at a particular dimension. For example, ``size(blob, 1)`` gets
-   the width of a blob.
+   Get the size at a particular dimension. ``dim`` could be negative. For
+   example, ``size(blob, -1)`` is the same as ``size(blob)[end]``. For
+   convenience, if ``dim`` exceeds ``ndims(blob)``, the function returns ``1``
+   instead of firing an error.
 
 .. function:: length(blob)
 
    Get the total number of elements in a blob.
 
-The wrappers ``get_width``, ``get_height``, ``get_chann`` and ``get_num`` could
-also be used.
+.. function:: get_width(blob)
+
+   The same as ``size(blob, 1)``.
+
+.. function:: get_height(blob)
+
+   The same as ``size(blob, 2)``.
+
+.. function:: get_num(blob)
+
+   The same as ``size(blob, -1)``.
+
+.. function:: get_fea_size(blob)
+
+   The the *feature size* in a blob, which is the same as
+   ``prod(size(blob)[1:end-1])``.
+
+The wrappers ``get_chann`` is removed from ``v0.0.5`` when Mocha upgrade from
+4D-tensor to general ND-tensor, because the channel dimension is usually
+ambiguous for general ND-tensors.
 
 Accessing Data of a Blob
 ------------------------
