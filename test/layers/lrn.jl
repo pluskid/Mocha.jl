@@ -3,8 +3,7 @@ function test_lrn_layer(backend::Backend, mode::LRNModeType, tensor_dim, T, eps)
 
 
   dims = tuple((abs(rand(Int,tensor_dim)) % 6 + 6)...)
-  #op_dim = max(abs(rand(Int)) % tensor_dim, 1)
-  op_dim = 3
+  op_dim = max(abs(rand(Int)) % tensor_dim, 1)
 
   println("    > Setup with dims $dims")
 
