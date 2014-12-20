@@ -3,9 +3,13 @@ Computation Layers
 
 .. class:: ArgmaxLayer
 
-   Compute the arg-max along the channel dimension. This layer is only used in
+   Compute the arg-max along the "channel" dimension. This layer is only used in
    the test network to produce predicted classes. It has no ability to do back
    propagation.
+
+   .. attribute:: dim
+
+      Default ``-2`` (penultimate). Specify which dimension to operate on.
 
    .. attribute::
       tops
@@ -17,7 +21,14 @@ Computation Layers
 
 .. class:: ChannelPoolingLayer
 
-   1D pooling over the channel dimension.
+   1D pooling over any specified dimension. This is called channel pooling layer
+   because it is designed to pool over the *channel* dimension when Mocha can
+   only handle 4D tensors. For general ND-tensors, the "channel" dimension no
+   longer has a specific semantic, and could be specified by the user.
+
+   .. attribute:: channel_dim
+
+      Default ``-2`` (penultimate). Specify which dimension to pool over.
 
    .. attribute:: kernel
 
@@ -45,7 +56,8 @@ Computation Layers
 
 .. class:: ConvolutionLayer
 
-   Convolution in the spatial dimensions.
+   Convolution in the spatial dimensions. **For now** convolution layer
+   requires the input blobs to be 4D tensors.
 
    .. attribute:: kernel
 
@@ -116,7 +128,8 @@ Computation Layers
 .. class:: CropLayer
 
    Do image cropping. This layer is primarily used only on top of data layer so
-   backpropagation is currently not implemented.
+   backpropagation is currently not implemented. Crop layer requires the input
+   blobs to be 4D tensors.
 
    .. attribute:: crop_size
 
@@ -272,6 +285,9 @@ Computation Layers
      again with zero padding when needed. But it does not extend across
      different channels. In this case :math:`n=k^2`.
 
+     When this mode is used, the input blobs should be 4D tensors **for now**,
+     due to the requirements from the underlying :class:`PoolingLayer`.
+
    .. attribute:: kernel
 
       Default 5, an integer indicating the kernel size. See :math:`k` in the
@@ -302,7 +318,8 @@ Computation Layers
 
 .. class:: PoolingLayer
 
-   2D pooling over the 2 image dimensions (width and height).
+   2D pooling over the 2 image dimensions (width and height). **For now** the
+   input blobs are required to be 4D tensors.
 
    .. attribute:: kernel
 
@@ -374,7 +391,7 @@ Computation Layers
 
 .. class:: SoftmaxLayer
 
-   Compute softmax over the channel dimension. The inputs :math:`x_1,\ldots,x_C`
+   Compute softmax over the "channel" dimension. The inputs :math:`x_1,\ldots,x_C`
    are mapped as
 
    .. math::
@@ -386,6 +403,10 @@ Computation Layers
    train a multi-class classification network with softmax probability output
    and multiclass logistic loss, use the bundled :class:`SoftmaxLossLayer`
    instead.
+
+   .. attribute:: dim
+
+      Default ``-2`` (penultimate). Specify the "channel" dim to operate along.
 
    .. attribute::
       tops
