@@ -21,11 +21,9 @@
 # is available.
 #############################################################
 macro defstruct(name, super_name, fields)
-  if fields.head == :tuple
-    fields = fields.args
-  else
-    fields = [fields]
-  end
+  @assert fields.head == :tuple
+  fields = fields.args
+  @assert length(fields) > 0
 
   field_defs     = Array(Expr, length(fields))     # :(field2 :: Int)
   field_names    = Array(Symbol, length(fields))   # :field2
@@ -43,22 +41,17 @@ macro defstruct(name, super_name, fields)
     field_defaults[i] = Expr(:kw, field.args...)
   end
 
-  if length(fields) == 0
-    # no need to define constructor, empty block
-    ctor = Expr(:block)
-  else
-    # body of layer type, defining fields
-    type_body = Expr(:block, field_defs...)
+  # body of layer type, defining fields
+  type_body = Expr(:block, field_defs...)
 
-    # constructor
-    asserts = map(filter(i -> isdefined(field_asserts,i), 1:length(fields))) do i
-      :(@assert($(field_asserts[i])))
-    end
-    construct = Expr(:call, esc(name), field_names...)
-    ctor_body = Expr(:block, asserts..., construct)
-    ctor_def = Expr(:call, esc(name), Expr(:parameters, field_defaults...))
-    ctor = Expr(:(=), ctor_def, ctor_body)
+  # constructor
+  asserts = map(filter(i -> isdefined(field_asserts,i), 1:length(fields))) do i
+    :(@assert($(field_asserts[i])))
   end
+  construct = Expr(:call, esc(name), field_names...)
+  ctor_body = Expr(:block, asserts..., construct)
+  ctor_def = Expr(:call, esc(name), Expr(:parameters, field_defaults...))
+  ctor = Expr(:(=), ctor_def, ctor_body)
 
   quote
     immutable $(esc(name)) <: $super_name
@@ -81,9 +74,7 @@ end
 macro characterize_layer(layer, properties...)
   defs = Array(Expr, length(properties))
   for (i,prop) in enumerate(properties)
-    if !(isa(prop, Expr) && prop.head == :(=>))
-      error("Property should be: property_name => value")
-    end
+    @assert(isa(prop, Expr) && prop.head == :(=>), "Property should be: property_name => value")
 
     prop_name = prop.args[1]
     prop_val  = prop.args[2]

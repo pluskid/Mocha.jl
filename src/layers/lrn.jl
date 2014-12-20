@@ -60,8 +60,6 @@ function setup(backend::Backend, layer::LRNLayer, inputs::Vector{Blob}, diffs::V
     pool_layer = PoolingLayer(tops=Array(Symbol,1), bottoms=Array(Symbol,1),
         kernel=(layer.kernel,layer.kernel), stride=(1,1), pad=(pre_pad,pre_pad),
         pooling=Pooling.Mean())
-  else
-    error("LRN-mode $(layer.mode) not supported")
   end
   do_pool = setup(backend, pool_layer, do_square.blobs, do_square.blobs_diff)
 
