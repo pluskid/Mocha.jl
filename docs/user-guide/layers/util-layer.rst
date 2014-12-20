@@ -9,8 +9,7 @@ Utility Layers
 
    .. attribute:: dim
 
-      Default 3 (channel). The dimension to concat. Should be an iteger within the
-      range 1 to 4.
+      Default 3 (channel). The dimension to concat.
 
    .. attribute:: bottoms
 
@@ -60,17 +59,11 @@ Utility Layers
    the blob tensor after reshaping should be the same as the original blob
    tensor.
 
-   .. attribute:: width
+   .. attribute:: shape
 
-      Default 1. The new width after reshaping.
-
-   .. attribute:: height
-
-      Default 1. The new height after reshaping.
-
-   .. attribute:: channels
-
-      Default 1. The new channels after reshaping.
+      Should be an ``NTuple`` of ``Int`` specifying the new shape. Note the new
+      shape does not include the last (mini-batch) dimension of a data blob. So
+      a reshape layer cannot change the mini-batch size of a data blob.
 
    .. attribute::
       tops

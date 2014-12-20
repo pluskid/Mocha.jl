@@ -11,3 +11,7 @@ Statistics Layers
    .. attribute:: bottoms
 
       The blob names for prediction and labels (in that order).
+
+   .. attribute:: dim
+
+      Default ``-2`` (penultimate). Specify the dimension to operate on.

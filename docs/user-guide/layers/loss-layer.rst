@@ -9,10 +9,17 @@ Loss Layers
    ground-truth category, and :math:`w_g` is the *weight* for the :math:`g`-th
    class (default 1, see bellow).
 
-   The conditional probability blob should be of the shape :math:`(W,H,C,N)`,
-   and the ground-truth blob should be of the shape :math:`(W,H,1,N)`. Typically
-   there is only one label for each instance, so :math:`W=H=1`. The ground-truth
-   should be a **zero-based** index in the range of :math:`0,\ldots,C-1`.
+   If the conditional probability blob is of the shape ``(dim1, dim2, ...,
+   dim_channel, ..., dimN)``, then the ground-truth blob should be of the shape
+   ``(dim1, dim2, ..., 1, ..., dimN)``. Here ``dim_channel``, historically called
+   the "channel" dimension, is the user specified tensor dimension to compute
+   loss on. This general case allow one to produce multiple labels for each
+   sample. For the typical case where only one (multi-class) label is produced
+   for one sample, the conditional probability blob is the shape ``(dim_channel,
+   dim_num)`` and the ground-truth blob should be of the shape ``(1, dim_num)``.
+
+   The ground-truth should be a **zero-based** index in the range of
+   :math:`0,\ldots,C-1`.
 
    .. attribute:: bottoms
 
@@ -33,6 +40,10 @@ Loss Layers
         this is equivalent to the case above. Otherwise, the weight vector
         across channels is repeated at every location (w,h).
 
+   .. attribute:: dim
+
+      Default ``-2`` (penultimate). Specify the dimension to operate on.
+
    .. attribute:: normalize
 
       Indicating how weights should be normalized if given. The following values
@@ -49,7 +60,6 @@ Loss Layers
       weights are scaled to be equal to weights ⨉ height ⨉ channels. If you
       specify ``:no``, it is your responsibility to properly normalize the
       weights.
-
 
 
 .. class:: SoftmaxLossLayer
@@ -95,6 +105,12 @@ Loss Layers
       Should be a vector containing two symbols. The first one specifies the
       name for the conditional probability input blob, and the second one
       specifies the name for the ground-truth input blob.
+
+   .. attribute:: dim
+
+      Default ``-2`` (penultimate). Specify the dimension to operate on. For
+      a 4D vision tensor blob, the default value (penultimate) translates to the
+      3rd tensor dimension, usually called the "channel" dimension.
 
    .. attribute::
       weights

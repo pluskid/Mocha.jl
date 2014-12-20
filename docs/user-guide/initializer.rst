@@ -23,10 +23,9 @@ called *Fillers*.
    :math:`[-S,S]` where the scale :math:`S=\sqrt{3 / F_{\text{in}}}`. Here
    :math:`F_{\text{in}}` is the fan-in: the number of input nodes.
 
-   Heuristics are used to determine the fan-in: For a 4D tensor parameter blob
-   with the shape :math:`(W,H,C,N)`, if :math:`C=N=1`, then this is considered
-   as a parameter blob for an :class:`InnerProductLayer`, and fan-in = :math:`W`.
-   Otherwise, fan-in is :math:`W\times H\times C`.
+   Heuristics are used to determine the fan-in: For a ND tensor parameter blob,
+   the product of all the 1 to N-1 dimensions are considered as fan-in, while
+   the last dimension is considered as fan-out.
 
    .. [BengioGlorot2010] Y. Bengio and X. Glorot, *Understanding the
       difficulty of training deep feedforward neural networks*, in Proceedings of
