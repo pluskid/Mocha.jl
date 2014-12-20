@@ -16,6 +16,8 @@
       * Parameters added for some layers to allow the user to specify which dimension to operate on
       * The output of `InnerProductLayer` is now 2D-tensor instead of 4D
     * Unit-tests are expanded to cover test cases for ND-tensor when applicable
+* Interface
+  * print a constructed `Net` to get a brief overview of the geometry of input/output blobs in each layers
 * Documentation
   * Setup the [Roadmap Ticket](https://github.com/pluskid/Mocha.jl/issues/22), duscussions/suggestions are welcome
   * Update everything to reflect 4D -> ND tensor changes

@@ -243,7 +243,8 @@ a staged learning policy that makes this easier:
      (5000, LRPolicy.Fixed(0.00001)),
    )
    solver_params = SolverParameters(max_iter=70000,
-       regu_coef=0.004, momentum=0.9, lr_policy=lr_policy)
+       regu_coef=0.004, momentum=0.9, lr_policy=lr_policy,
+       load_from="snapshots")
    solver = SGD(solver_params)
 
 The other parameters like regularization coefficient, momentum are directly
@@ -256,9 +257,7 @@ snapshots could equivalently be done in Mocha as *coffee breaks* for the solver:
    add_coffee_break(solver, TrainingSummary(), every_n_iter=200)
 
    # save snapshots every 5000 iterations
-   add_coffee_break(solver,
-       Snapshot("snapshots", auto_load=true),
-       every_n_iter=5000)
+   add_coffee_break(solver, Snapshot("snapshots"), every_n_iter=5000)
 
    # show performance on test data every 1000 iterations
    test_net = Net("CIFAR10-test", backend, [data_tt_layer, common_layers..., acc_layer])
