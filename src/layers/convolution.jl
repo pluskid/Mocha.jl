@@ -73,25 +73,19 @@ type ConvolutionLayerState <: LayerState
       @assert ndims(inputs[i]) == 4
     end
 
-    channels = get_chann(inputs[1])
+    width, height, channels, batch_size = size(inputs[1])
     @assert channels % layer.n_group == 0
     @assert layer.n_filter % layer.n_group == 0
 
-    batch_size = get_num(inputs[1])
-    height = get_height(inputs[1])
-    width  = get_width(inputs[1])
     width_out  = div(width  + 2*layer.pad[1]-layer.kernel[1], layer.stride[1]) + 1
     height_out = div(height + 2*layer.pad[2]-layer.kernel[2], layer.stride[2]) + 1
 
     dtype = eltype(inputs[1])
 
     # Make sure all input blobs are of the same shape
-    for i = 1:length(inputs)
-      @assert width      == get_width(inputs[i])
-      @assert height     == get_height(inputs[i])
-      @assert channels   == get_chann(inputs[i])
-      @assert batch_size == get_num(inputs[i])
-      @assert dtype      == eltype(inputs[i])
+    for i = 2:length(inputs)
+      @assert (width,height,channels,batch_size) == size(inputs[i])
+      @assert dtype == eltype(inputs[i])
     end
 
     blobs = Array(Blob, length(inputs))

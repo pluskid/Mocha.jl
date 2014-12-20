@@ -15,12 +15,16 @@ end
 function setup(backend::Backend, layer::CropLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   for i = 1:length(inputs)
     @assert ndims(inputs[i]) == 4 "Input blob $(layer.bottoms[i]) should be a 4D tensor"
-    @assert layer.crop_size[1] <= get_width(inputs[i]) && layer.crop_size[2] <= get_height(inputs[i])
     @assert isa(diffs[i], NullBlob) # Back-propagation for crop-layer is not implemented
   end
 
-  blobs = Blob[make_blob(backend, eltype(x),
-      (layer.crop_size[1], layer.crop_size[2], get_chann(x), get_num(x))) for x in inputs]
+  blobs = Array(Blob, length(inputs))
+  for i = 1:length(inputs)
+    width, height, channels, num = size(inputs[i])
+    @assert layer.crop_size[1] <= width && layer.crop_size[2] <= height
+    blobs[i] = make_blob(backend, eltype(inputs[i]),
+        (layer.crop_size[1], layer.crop_size[2],channels,num))
+  end
 
   return CropLayerState(layer, blobs)
 end

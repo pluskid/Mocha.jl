@@ -21,10 +21,10 @@ function setup_etc(backend::GPUBackend, layer::PoolingLayer, inputs,
   outputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
 
   for i = 1:length(inputs)
-    inputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype,
-        (get_width(inputs[i]),get_height(inputs[i]),get_chann(inputs[i]),get_num(inputs[i])))
+    width,height,channels,num = size(inputs[i])
+    inputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype,(width,height,channels,num))
     outputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype,
-        (pooled_width[i],pooled_height[i],get_chann(inputs[i]),get_num(inputs[i])))
+        (pooled_width[i],pooled_height[i],channels,num))
   end
   etc = CuDNNPoolingState(pooling_desc, inputs_desc, outputs_desc)
   return etc
