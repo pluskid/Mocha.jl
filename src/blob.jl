@@ -48,9 +48,9 @@ function length(blob :: Blob)
   return prod(size(blob))
 end
 
-function get_num(blob :: Blob)
-  size(blob, -1)
-end
+################################################################################
+# Those functions might be removed in the future
+# {
 function get_chann(blob :: Blob)
   size(blob, 3)
 end
@@ -59,6 +59,12 @@ function get_height(blob :: Blob)
 end
 function get_width(blob :: Blob)
   size(blob, 1)
+end
+# }
+################################################################################
+
+function get_num(blob :: Blob)
+  size(blob, -1)
 end
 function get_fea_size(blob :: Blob)
   prod(size(blob)[1:end-1])

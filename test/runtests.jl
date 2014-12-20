@@ -59,7 +59,7 @@ include("regularizers/l2.jl")
 include("regularizers/l1.jl")
 
 ############################################################
-# Regularizers
+# Constraints
 ############################################################
 include("constraints/l2.jl")
 

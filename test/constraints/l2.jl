@@ -20,7 +20,7 @@ function test_l2_constraint(backend::Backend, T, eps)
   # this is the same as above but for fully connected weights
   n_input = 10
   n_out   = 12
-  param = rand(T, n_input,n_out,1,1) - 0.5
+  param = rand(T, n_input,n_out) - 0.5
   param_after = zeros(T, size(param))
   param_blob = make_blob(backend, param)
 
@@ -29,7 +29,7 @@ function test_l2_constraint(backend::Backend, T, eps)
   copy!(param_after, param_blob)
   param_after = reshape(param_after, size(param))
   for f=1:n_out
-    norm2 = vecnorm(param_after[:, f, :, :])
+    norm2 = vecnorm(param_after[:, f])
     @test norm2 <= coef + eps
   end
 end

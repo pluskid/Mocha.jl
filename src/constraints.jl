@@ -44,18 +44,9 @@ end
 # this constraints a given blob along the last dimension that is not of size 1
 # it is a bit ugly but was the easiest way to implement it for now
 function constrain!(backend :: Backend, cons :: L2Cons, param :: Blob)
-  W = size(param, 1)   # source dim in fully connected
-  H = size(param, 2)   # target dim in fully connected
-  C = size(param, 3)
-  N = size(param, 4)   # number of filters in convolution
-  if H == 1 && N == 1 && C == 1
-    # only width left ... this is a bias ... lets constrain that
-    apply_l2_cons!(backend, param, cons.coefficient, W, 1)
-  elseif N == 1 && C == 1
-    # we have only one channel and num -> constrain target dim
-    apply_l2_cons!(backend, param, cons.coefficient, W, H)
-  else
-    # constrain on N -> e.g. the number if units for convolutional filters
-    apply_l2_cons!(backend, param, cons.coefficient, W*H*C, N)
+  if ndims(param) == 1 # a bias blob
+    apply_l2_cons!(backend, param, cons.coefficient, length(param), 1)
+  else # general weights
+    apply_l2_cons!(backend, param, cons.coefficient, get_fea_size(param), get_num(param))
   end
 end
