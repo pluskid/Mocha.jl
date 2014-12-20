@@ -5,7 +5,7 @@ ENV["MOCHA_USE_CUDA"] = "true"
 
 using Mocha
 
-data_tr_layer = HDF5DataLayer(name="data-train", source="data/train.txt", batch_size=100)
+data_tr_layer = HDF5DataLayer(name="data-train", source="data/train.txt", batch_size=100, shuffle=true)
 data_tt_layer = HDF5DataLayer(name="data-test", source="data/test.txt", batch_size=100)
 
 conv1_layer = ConvolutionLayer(name="conv1", n_filter=32, kernel=(5,5), pad=(2,2),
