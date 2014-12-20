@@ -22,6 +22,8 @@ type MultinomialLogisticLossLayerState{T} <: LayerState
 end
 
 function setup(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+  @assert ndims(inputs[1]) == ndims(inputs[2])
+
   data_type = eltype(inputs[1])
   tensor_dim = ndims(inputs[1])
   dims = size(inputs[1])

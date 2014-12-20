@@ -23,6 +23,8 @@ type SoftmaxLossLayerState{T} <: LayerState
 end
 
 function setup(backend::Backend, layer::SoftmaxLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+  @assert ndims(inputs[1]) == ndims(inputs[2])
+
   data_type = eltype(inputs[1])
 
   softmax_layer = SoftmaxLayer(tops=Array(Symbol, length(inputs)), bottoms=Array(Symbol, length(inputs)), dim=layer.dim)
