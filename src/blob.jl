@@ -3,7 +3,7 @@ export CPUBlob, NullBlob
 
 import Base: eltype, size, length, ndims, copy!, fill!, show
 export       eltype, size, length, ndims, copy!, fill!, erase!, show
-export get_num, get_chann, get_height, get_width, get_fea_size, to_array
+export get_num, get_height, get_width, get_fea_size, to_array
 export make_blob, make_zero_blob, reshape_blob
 
 ############################################################

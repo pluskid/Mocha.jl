@@ -46,18 +46,36 @@ function save_network(file::JLD.JldFile, net)
       end
 
       @debug("Saving parameters for layer $(key)")
-      params = map(get_param_data, net.states[i].parameters)
+      params = map(param -> to_array(param.blob), net.states[i].parameters)
       params_all[key] = params
     end
   end
   write(file, NETWORK_SAVE_NAME, params_all)
 end
 
-function get_param_data(param)
-  blob = param.blob
-  data = Array(eltype(blob), size(blob))
-  copy!(data, blob)
-  return data
+function is_similar_shape(x, y)
+  function compact_shape(obj)
+    shape = [size(obj)...]
+    mask  = ones(Bool, length(shape))
+    # strip singleton dimension at the two end
+    for i = 1:length(shape)
+      if shape[i] == 1
+        mask[i] = false
+      else
+        break
+      end
+    end
+    for i = length(shape):-1:1
+      if shape[i] == 1
+        mask[i] = false
+      else
+        break
+      end
+    end
+    return shape[mask]
+  end
+
+  compact_shape(x) == compact_shape(y)
 end
 
 function load_network(file::JLD.JldFile, net)
@@ -74,7 +92,7 @@ function load_network(file::JLD.JldFile, net)
       @assert length(params) == length(net.states[i].parameters)
 
       for j = 1:length(params)
-        @assert size(params[j]) == size(net.states[i].parameters[j].blob)
+        @assert is_similar_shape(params[j], net.states[i].parameters[j].blob)
         copy!(net.states[i].parameters[j].blob, params[j])
         net.states[i].parameters[j].initializer = NullInitializer()
       end
@@ -111,7 +129,7 @@ function load_network(file::HDF5File, net, die_if_not_found=true)
           end
         else
           param = read(file, key)
-          if size(param) != size(param_obj.blob)
+          if !is_similar_shape(param, param_obj.blob)
             error("Dimension for $param_name not match: got $(size(param)), expect $(size(param_obj.blob))")
           end
 
