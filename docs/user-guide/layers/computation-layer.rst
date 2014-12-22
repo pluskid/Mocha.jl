@@ -412,6 +412,26 @@ Computation Layers
       blobs and produce the corresponding number of output blobs. The shapes of
       the input blobs do not need to be the same.
 
+.. class:: RandomMaskLayer
+
+   Randomly mask subsets of input as zero. This is a wrapper over
+   :class:`DropoutLayer`, but
+
+   * This layer does not rescale the un-masked part to make the expectation the
+     same as the expectation of the original input.
+   * This layer could handle multiple input blobs while :class:`DropoutLayer`
+     accept only one input blob.
+
+   .. note::
+
+      * This layer is a in-place layer. For example, if you want to use this to
+        construct a denoising auto-encoder, you should use a :class:`SplitLayer`
+        to make two copies of the input data: one is randomly masked (in-place)
+        as the input of the auto-encoder, and the other is directed to
+        a :class:`SquareLoss` layer that measure the reconstruction error.
+      * Although typically not used, this layer is capable of doing
+        back-propagation, powered by the underlying :class:`DropoutLayer`.
+
 .. class:: SoftmaxLayer
 
    Compute softmax over the "channel" dimension. The inputs :math:`x_1,\ldots,x_C`
