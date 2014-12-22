@@ -183,6 +183,11 @@ Computation Layers
       The probability :math:`p` of turning off a response. Or could also be
       interpreted as the ratio of all the responses that are turned off.
 
+   .. attribute:: auto_scale
+
+      Default ``true``. When turned off, does not scale the result by
+      :math:`1/(1-p)`. This option is used when building :class:`RandomMaskLayer`.
+
    .. attribute:: bottoms
 
       The names of the input blobs dropout operates on. Note this is a *in-place
