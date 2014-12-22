@@ -37,14 +37,15 @@ type InnerProductLayerState <: LayerState
 
   InnerProductLayerState(backend::Backend, layer::InnerProductLayer, shared_params, inputs::Vector{Blob}) = begin
     fea_size = get_fea_size(inputs[1])
+    data_type = eltype(inputs[1])
     out_dim = layer.output_dim
 
     # make sure all blobs has the same feature dimension (batch_size could be different)
     for i = 2:length(inputs)
       @assert get_fea_size(inputs[i]) == fea_size
+      @assert eltype(inputs[i]) == data_type
     end
 
-    data_type = eltype(inputs[1])
     blobs = Array(Blob, length(inputs))
     blobs_diff = Array(Blob, length(inputs))
     bias_multipliers = Array(Blob, length(inputs))
@@ -53,7 +54,7 @@ type InnerProductLayerState <: LayerState
       nums = get_num(inputs[i])
       blobs[i] = make_blob(backend, data_type, out_dim, nums)
       blobs_diff[i] = make_blob(backend, data_type, out_dim, nums)
-      bias_multipliers[i] = make_blob(backend, ones(data_type, nums))
+      bias_multipliers[i] = make_blob(backend, ones(data_type, 1, nums))
     end
 
     state = new(layer, blobs, blobs_diff)
@@ -64,14 +65,14 @@ type InnerProductLayerState <: LayerState
       @assert shared_params[1].name == "weight" && shared_params[2].name == "bias"
       @assert size(shared_params[1].blob) == (fea_size, out_dim)
       @assert eltype(shared_params[1].blob) == data_type
-      @assert size(shared_params[2].blob) == (out_dim,)
+      @assert size(shared_params[2].blob) == (out_dim, 1)
       @debug("InnerProductLayer: sharing weights and bias")
 
       param_weight, param_bias = [share_parameter(backend, param) for param in shared_params]
     else
       param_weight = make_parameter(backend, "weight", data_type, (fea_size,out_dim),
           layer.weight_init, layer.weight_regu, layer.weight_cons, layer.weight_lr)
-      param_bias   = make_parameter(backend, "bias", data_type, (out_dim,),
+      param_bias   = make_parameter(backend, "bias", data_type, (out_dim,1),
           layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)
     end
 
@@ -108,11 +109,11 @@ function forward(backend::CPUBackend, state::InnerProductLayerState, inputs::Vec
     N = get_num(input)   # batch size
     output = state.blobs[i]
     # output = W^T * X
-    BLAS.gemm!('T', 'N', convert(dtype, 1), reshape(state.W.data, (K,M)),
-                reshape(input.data, (K,N)), convert(dtype, 0), reshape(output.data, (M,N)))
+    BLAS.gemm!('T', 'N', one(dtype), state.W.data,
+                reshape(input.data, (K,N)), zero(dtype), output.data)
     # output += bias
-    BLAS.gemm!('N', 'N', convert(dtype, 1), reshape(state.b.data, (M,1)),
-                reshape(state.bias_multipliers[i].data, (1,N)), convert(dtype, 1), reshape(output.data, (M,N)))
+    BLAS.gemm!('N', 'N', one(dtype), state.b.data,
+                state.bias_multipliers[i].data, one(dtype), output.data)
   end
 end
 
@@ -123,29 +124,28 @@ function backward(backend::CPUBackend, state::InnerProductLayerState, inputs::Ve
 
   # used in BLAS, at first it is zero, indicating overwriting the data
   # then it becomes one, indicating adding to the data
-  zero_and_then_one = convert(data_type, 0)
+  zero_and_then_one = zero(data_type)
 
   for i = 1:length(inputs)
     # ∂f/∂W = input * [∂f/∂o]^T
     input = inputs[i]
     batch_size = get_num(input)
     ∂f_∂o = state.blobs_diff[i]
-    BLAS.gemm!('N', 'T', convert(data_type, 1), reshape(input.data, (source_dim, batch_size)),
-               reshape(∂f_∂o.data, (target_dim, batch_size)), zero_and_then_one,
-               reshape(state.∇W.data, (source_dim, target_dim)))
+    BLAS.gemm!('N', 'T', one(data_type), reshape(input.data, (source_dim, batch_size)),
+               ∂f_∂o.data, zero_and_then_one, state.∇W.data)
 
     # ∂f/∂b = sum(∂f/∂o, 2)
-    BLAS.gemm!('N', 'N', convert(data_type, 1), reshape(∂f_∂o.data, (target_dim, batch_size)),
-               reshape(state.bias_multipliers[i].data, (batch_size, 1)), zero_and_then_one,
-               reshape(state.∇b.data, (target_dim, 1)))
+    BLAS.gemm!('N', 'N', one(data_type), ∂f_∂o.data,
+               reshape(state.bias_multipliers[i].data, (batch_size, 1)),
+               zero_and_then_one, state.∇b.data)
 
-    zero_and_then_one = convert(data_type, 1)
+    zero_and_then_one = one(data_type)
 
     # if back propagate down
     if isa(diffs[i], CPUBlob)
       # ∂f/∂x = W * [∂f/∂o]
-      BLAS.gemm!('N', 'N', convert(data_type, 1), reshape(state.W.data, (source_dim, target_dim)),
-                 reshape(∂f_∂o.data, (target_dim, batch_size)), convert(data_type, 0),
+      BLAS.gemm!('N', 'N', one(data_type), state.W.data,
+                 ∂f_∂o.data, zero(data_type),
                  reshape(diffs[i].data, (source_dim, batch_size)))
     end
   end
