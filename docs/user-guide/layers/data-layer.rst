@@ -61,6 +61,11 @@ Data Layers
       <https://github.com/timholy/HDF5.jl/blob/master/doc/hdf5.md#memory-mapping>`_
       for more details.
 
+      .. note::
+
+         Current mmap in HDF5.jl does not work on Windows. See `issue 89 on Github
+         <https://github.com/timholy/HDF5.jl/issues/89>`_.
+
 .. class:: MemoryDataLayer
 
    Wrap an in-memory Julia Array as data source. Useful for testing.
