@@ -11,8 +11,8 @@
 @defstruct DropoutLayer Layer (
   name :: String = "dropout",
   auto_scale :: Bool = true,
+  (ratio :: FloatingPoint = 0.5, 0 < ratio < 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 1),
-  (ratio :: FloatingPoint = 0.5, 0 < ratio < 1)
 )
 @characterize_layer(DropoutLayer,
   can_do_bp  => true,
