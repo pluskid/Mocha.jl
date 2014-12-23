@@ -10,8 +10,9 @@
 ############################################################
 @defstruct DropoutLayer Layer (
   name :: String = "dropout",
+  auto_scale :: Bool = true,
+  (ratio :: FloatingPoint = 0.5, 0 < ratio < 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 1),
-  (ratio :: FloatingPoint = 0.5, 0 < ratio < 1)
 )
 @characterize_layer(DropoutLayer,
   can_do_bp  => true,
@@ -36,9 +37,11 @@ function setup(backend::Backend, layer::DropoutLayer, inputs::Vector{Blob}, diff
   data_type = eltype(inputs[1])
   rand_vals = make_blob(backend, data_type, size(inputs[1]))
 
+  scale = layer.auto_scale ? 1.0/(1-layer.ratio) : 1
+
   etc = setup_etc(backend, layer, inputs)
   return DropoutLayerState(layer, rand_vals,
-      convert(data_type, layer.ratio), convert(data_type, 1.0/(1-layer.ratio)), etc)
+      convert(data_type, layer.ratio), convert(data_type, scale), etc)
 end
 function destroy_etc(backend::CPUBackend, state::DropoutLayerState)
   # do nothing

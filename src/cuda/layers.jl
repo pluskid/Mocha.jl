@@ -18,6 +18,7 @@ include("layers/dropout.jl")
 include("layers/argmax.jl")
 include("layers/crop.jl")
 include("layers/concat.jl")
+include("layers/tied-inner-product.jl")
 
 #############################################################
 # Loss Layers
