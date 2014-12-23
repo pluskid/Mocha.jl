@@ -1,6 +1,6 @@
 export Net
 export init, destroy, forward, backward, forward_backward, get_epoch, check_bp_topology
-export get_layer, get_layer_state
+export get_layer, get_layer_state, freeze!, unfreeze!, freeze_all!, unfreeze_all!
 export show_statistics, reset_statistics
 
 type Net{T <: Backend}
@@ -56,6 +56,33 @@ function get_layer_state(net::Net, idx::Int)
 end
 function get_layer_state(net::Net, name::String)
   net.states[get_layer_index(net, name)]
+end
+
+function freeze!(net::Net, idx::Int...)
+  for i in idx
+    freeze!(get_layer_state(net, i))
+  end
+end
+function freeze!(net::Net, names::String...)
+  for name in names
+    freeze!(get_layer_state(net, name))
+  end
+end
+function unfreeze!(net::Net, idx::Int...)
+  for i in idx
+    unfreeze!(get_layer_state(net, i))
+  end
+end
+function unfreeze!(net::Net, names::String...)
+  for name in names
+    unfreeze!(get_layer_state(net, name))
+  end
+end
+function freeze_all!(net::Net)
+  map(freeze!, net.states)
+end
+function unfreeze_all!(net::Net)
+  map(unfreeze!, net.states)
 end
 
 function init(net::Net)
