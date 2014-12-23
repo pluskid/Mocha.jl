@@ -58,6 +58,7 @@ function get_layer_state(net::Net, name::String)
   net.states[get_layer_index(net, name)]
 end
 
+function freeze!(net::Net) end
 function freeze!(net::Net, idx::Int...)
   for i in idx
     freeze!(get_layer_state(net, i))
@@ -68,6 +69,8 @@ function freeze!(net::Net, names::String...)
     freeze!(get_layer_state(net, name))
   end
 end
+
+function unfreeze!(net::Net) end
 function unfreeze!(net::Net, idx::Int...)
   for i in idx
     unfreeze!(get_layer_state(net, i))
