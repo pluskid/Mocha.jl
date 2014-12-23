@@ -38,11 +38,8 @@ function size{T,N}(blob :: Blob{T,N}, dim :: Int)
   if dim < 0
     dim = N+1 + dim
   end
-  if dim > N
-    return 1
-  end
 
-  size(blob)[dim]
+  return dim > N ? 1 : size(blob)[dim]
 end
 function length(blob :: Blob)
   return prod(size(blob))
