@@ -59,6 +59,11 @@ Computation Layers
    Convolution in the spatial dimensions. **For now** convolution layer
    requires the input blobs to be 4D tensors.
 
+   .. attribute:: param_key
+
+      Default ``""``. The unique identifier for layers with shared parameters. When
+      empty, the layer ``name`` is used as identifier instead.
+
    .. attribute:: kernel
 
       Default (1,1), a 2-tuple specifying the width and height of the
@@ -118,6 +123,7 @@ Computation Layers
 
       Default ``NoCons()``. Norm constraint for the bias. Typically no
       norm constraint should be applied to the bias.
+
    .. attribute:: filter_lr
 
       Default 1.0. The local learning rate for the filters.
@@ -226,6 +232,11 @@ Computation Layers
 
    where :math:`w_{ij}` are the weights and :math:`b_i` are bias.
 
+   .. attribute:: param_key
+
+      Default ``""``. The unique identifier for layers with shared parameters. When
+      empty, the layer ``name`` is used as identifier instead.
+
    .. attribute:: output_dim
 
       Output dimension of the linear map. The input dimension is automatically
@@ -278,9 +289,9 @@ Computation Layers
 
       Blob names for output and input. This layer can take multiple input blobs
       and produce the corresponding number of output blobs. The feature
-      dimensions (the product of the first 3 dimensions) of all input blobs
+      dimensions (the product of the first N-1 dimensions) of all input blobs
       should be the same, but they could potentially have different batch sizes
-      (the 4th dimension).
+      (the last dimension).
 
 .. class:: LRNLayer
 
@@ -458,4 +469,80 @@ Computation Layers
       Blob names for output and input. This layer could take multiple input
       blobs and produce the corresponding number of output blobs. The shapes of
       the input blobs do not need to be the same.
+
+.. class:: TiedInnerProductLayer
+
+   Similar to :class:`InnerProductLayer` but with *tied weights* to an existing
+   :class:`InnerProductLayer`. Used in auto-encoders. During training, an
+   auto-encoder defines the following mapping
+
+   .. math::
+
+      \mathbf{x} \longrightarrow \mathbf{h} = \mathbf{W}_1^T\mathbf{x}
+      + \mathbf{b}_1 \longrightarrow \tilde{\mathbf{x}} = \mathbf{W}_2^T\mathbf{h}
+        + \mathbf{b}_2
+
+   Here :math:`\mathbf{x}` is input, :math:`\mathbf{h}` is latent codes, and
+   :math:`\tilde{\mathbf{x}}` is decoded reconstruction of the input. Sometimes
+   it is desired to have *tied weights* for the encoder and decoder:
+   :math:`\mathbf{W}_1 = \mathbf{W}^T`. In this case, the encoder will be an
+   :class:`InnerProductLayer`, and the decoder a :class:`TiedInnerProductLayer`
+   with tied weights to the encoder layer.
+
+   Note the tied decoder layer does *not* perform learning for the weights.
+   However, even tied layer has independent bias parameters that is learned
+   independently.
+
+   .. attribute:: tied_param_key
+
+      The ``param_key`` of the encoder layer that this layer wants to share tied
+      wights with.
+
+   .. attribute:: param_key
+
+      Default ``""``. The unique identifier for layers with shared parameters.
+      If empty, the layer ``name`` is used as identifier instead.
+
+      .. tip::
+
+         * ``param_key`` is used for :class:`TiedInnerProductLayer` to share
+           parameters. For example, the same layer in a training net and in
+           a validation / testing net use this mechanism to share parameters.
+         * ``tied_param_key`` is used to find the :class:`InnerProductLayer` to
+           enable *tied weights*. This should be equal to the ``param_key``
+           property of the inner product layer you want to have tied weights
+           with.
+
+   .. attribute:: bias_init
+
+      Default ``ConstantInitializer(0)``. The :doc:`initializer
+      </user-guide/initializer>` for the bias.
+
+   .. attribute:: bias_regu
+
+      Default ``NoRegu()``, the regularizer for the bias.
+
+   .. attribute:: bias_cons
+
+      Default ``NoCons()``. Norm constraint for the bias. Typically no
+      norm constraint should be applied to the bias.
+
+   .. attribute:: bias_lr
+
+      Default 2.0. The local learning rate for the bias.
+
+   .. attribute:: neuron
+
+      Default ``Neurons.Identity()``, an optional :doc:`activation function
+      </user-guide/neuron>` for the output of this layer.
+
+   .. attribute::
+      tops
+      bottoms
+
+      Blob names for output and input. This layer can take multiple input blobs
+      and produce the corresponding number of output blobs. The feature
+      dimensions (the product of the first N-1 dimensions) of all input blobs
+      should be the same, but they could potentially have different batch sizes
+      (the last dimension).
 
