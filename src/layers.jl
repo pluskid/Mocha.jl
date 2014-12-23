@@ -185,6 +185,7 @@ include("layers/reshape.jl")
 include("layers/crop.jl")
 include("layers/concat.jl")
 include("layers/random-mask.jl")
+include("layers/tied-inner-product.jl")
 
 #############################################################
 # Utility layers

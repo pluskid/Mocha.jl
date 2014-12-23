@@ -3,7 +3,7 @@
   param_key :: String = "",
   (tied_param_key :: String = "", !isempty(tied_param_key)),
   (tops :: Vector{Symbol} = Symbol[], length(tops) > 0),
-  (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(top)),
+  (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(tops)),
   bias_init :: Initializer = ConstantInitializer(0),
   bias_regu :: Regularizer = NoRegu(),
   bias_cons :: Constraint = NoCons(),
@@ -57,12 +57,13 @@ type TiedInnerProductLayerState <: LayerState
       bias_multipliers[i] = make_blob(backend, ones(data_type, 1, nums))
     end
 
-    state = new(layer, blobs, blobs_diff, bias_multipliers)
+    state = new(layer, blobs, blobs_diff)
+    state.bias_multipliers = bias_multipliers
 
     if shared_params != nothing
       @assert length(shared_params) == 1
       @assert shared_params[1].name == "bias"
-      @assert size(shared_params[1].blob) == (out_dim,1)
+      @assert size(shared_params[1].blob) == (out_dim, 1)
       @debug("TiedInnerProductLayer: sharing bias")
 
       params = [share_parameter(backend, shared_params[1])]
@@ -106,7 +107,7 @@ function forward(backend::CPUBackend, state::TiedInnerProductLayerState, inputs:
     N = get_num(input)
     output = state.blobs[i]
     # output = (W^T)^T * X
-    BLAS.gemm!('N', 'N', one(dtype), state.W,
+    BLAS.gemm!('N', 'N', one(dtype), state.W.data,
                 reshape(input.data, (hidden_dim,N)), zero(dtype), output.data)
     # output += bias
     BLAS.gemm!('N', 'N', one(dtype), state.b.data,
@@ -139,7 +140,8 @@ function backward(backend::CPUBackend, state::TiedInnerProductLayerState, inputs
     if isa(diffs[i], CPUBlob)
       # ∂f/∂x = W^T * [∂f/∂o]
       BLAS.gemm!('T', 'N', one(data_type), state.W.data,
-                 ∂f_∂o.data, zero(data_type), diffs[i].data)
+                 ∂f_∂o.data, zero(data_type),
+                 reshape(diffs[i].data, (hidden_dim, batch_size)))
     end
   end
 end
