@@ -16,6 +16,7 @@ include("utils/blas.jl")
 include("utils/math.jl")
 include("utils/io.jl")
 include("utils/tensor.jl")
+include("utils/ref-count.jl")
 
 if Config.use_native_extension
   include("utils/im2col-native.jl")
