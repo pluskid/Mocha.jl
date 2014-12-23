@@ -1,5 +1,5 @@
-function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, n_input, T, eps)
-  println("-- Testing Convolution on $(typeof(backend)){$T} filter=$((filter_w,filter_h))...")
+function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, n_input, freeze, T, eps)
+  println("-- Testing Convolution(frozen=$freeze) on $(typeof(backend)){$T} filter=$((filter_w,filter_h))...")
   println("    > Setup")
   input_w = 16
   input_h = 10
@@ -43,6 +43,9 @@ function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, p
     copy!(state.blobs_diff[i], top_diff[i])
   end
 
+  if freeze
+    freeze!(state)
+  end
   backward(backend, state, inputs, data_diffs)
 
   grad_filter_exp = zeros(T, filter_dims)
@@ -61,8 +64,20 @@ function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, p
   grad_bias_got = similar(grad_bias_exp)
   copy!(grad_filter_got, state.∇filter)
   copy!(grad_bias_got, state.∇bias)
-  @test all(abs(grad_filter_exp - grad_filter_got) .< eps)
-  @test all(abs(grad_bias_exp - grad_bias_got) .< eps)
+
+  is_grad_filter_match = all(abs(grad_filter_exp - grad_filter_got) .< eps)
+  is_grad_bias_match   = all(abs(grad_bias_exp - grad_bias_got) .< eps)
+
+  if freeze
+    # when frozen, the gradients are not computed, so the got value
+    # should be random un-initialized values, so should not match (with
+    # very high probability)
+    @test !is_grad_bias_match
+    @test !is_grad_filter_match
+  else
+    @test is_grad_filter_match
+    @test is_grad_bias_match
+  end
 
   shutdown(backend, state)
 end
@@ -163,6 +178,10 @@ function convolution_backward(state, filter::Array, bias::Array, input::Array, t
   return (∇filter, ∇bias, ∇input)
 end
 
+function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, n_input, T, eps)
+  test_convolution_layer(backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, n_input, true, T, eps)
+  test_convolution_layer(backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, n_input, false, T, eps)
+end
 function test_convolution_layer(backend::Backend, n_input, T, eps)
   test_convolution_layer(backend, 2, 3, 4, 2, 2, 1, 2, n_input, T, eps)
   test_convolution_layer(backend, 1, 1, 1, 0, 0, 1, 1, n_input, T, eps)

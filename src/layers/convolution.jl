@@ -130,6 +130,8 @@ type ConvolutionLayerState <: LayerState
 
     state.etc = etc
 
+    state.frozen = false
+
     return state
   end
 
@@ -138,6 +140,18 @@ type ConvolutionLayerState <: LayerState
   width_out  :: Int
 
   etc        :: Any # whatever status a computation backend needs to maintain
+
+  frozen     :: Bool
+end
+
+function freeze!(state::ConvolutionLayerState)
+  state.frozen = true
+end
+function unfreeze!(state::ConvolutionLayerState)
+  state.frozen = false
+end
+function is_frozen(state::ConvolutionLayerState)
+  state.frozen
 end
 
 function setup(backend::Backend, layer::ConvolutionLayer, shared_state, inputs::Vector{Blob}, diffs::Vector{Blob})
@@ -206,29 +220,31 @@ function backward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vec
     top_offset = state.etc.M * state.etc.N * sizeof(dtype)
     top_img_offset = state.height_out * state.width_out * state.layer.n_filter * sizeof(dtype)
 
-    for n = 1:num
-      top_diff_ptr = convert(Ptr{dtype}, top_diff.data) + top_img_offset * (n-1)
+    if !state.frozen
+      for n = 1:num
+        top_diff_ptr = convert(Ptr{dtype}, top_diff.data) + top_img_offset * (n-1)
 
-      #----------------------------------------------
-      # bias gradient
-      RawBLAS.gemv!('T', state.etc.M, state.layer.n_filter, convert(dtype, 1), top_diff_ptr,
-          state.etc.bias_multiplier.data, convert(dtype, 1), pointer(state.∇bias.data))
+        #----------------------------------------------
+        # bias gradient
+        RawBLAS.gemv!('T', state.etc.M, state.layer.n_filter, convert(dtype, 1), top_diff_ptr,
+            state.etc.bias_multiplier.data, convert(dtype, 1), pointer(state.∇bias.data))
 
-      #----------------------------------------------
-      # filter gradient
-      if isa(state.etc.col_buffer, NullBlob)
-        col_buffer = convert(Ptr{dtype}, input.data) + img_offset * (n-1)
-      else
-        col_buffer = state.etc.col_buffer.data
-        im2col(input.data, n, col_buffer,
-            width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
-        col_buffer = convert(Ptr{dtype}, col_buffer)
-      end
-      for g = 1:state.layer.n_group
-        RawBLAS.gemm!('T', 'N', state.etc.K, state.etc.N, state.etc.M, convert(dtype, 1),
-            col_buffer + col_offset * (g-1),
-            top_diff_ptr + top_offset * (g-1), convert(dtype, 1),
-            convert(Ptr{dtype}, pointer(state.∇filter.data)) + weight_offset * (g-1))
+        #----------------------------------------------
+        # filter gradient
+        if isa(state.etc.col_buffer, NullBlob)
+          col_buffer = convert(Ptr{dtype}, input.data) + img_offset * (n-1)
+        else
+          col_buffer = state.etc.col_buffer.data
+          im2col(input.data, n, col_buffer,
+              width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
+          col_buffer = convert(Ptr{dtype}, col_buffer)
+        end
+        for g = 1:state.layer.n_group
+          RawBLAS.gemm!('T', 'N', state.etc.K, state.etc.N, state.etc.M, convert(dtype, 1),
+              col_buffer + col_offset * (g-1),
+              top_diff_ptr + top_offset * (g-1), convert(dtype, 1),
+              convert(Ptr{dtype}, pointer(state.∇filter.data)) + weight_offset * (g-1))
+        end
       end
     end
 

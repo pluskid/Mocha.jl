@@ -29,9 +29,11 @@ function backward(backend::GPUBackend, state::TiedInnerProductLayerState, inputs
     batch_size = get_num(input)
     ∂f_∂o = state.blobs_diff[i]
 
-    # ∂f/∂b = sum(∂f/∂o, 2)
-    CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_N, recon_dim, 1, batch_size,
-        convert(data_type, 1), ∂f_∂o.ptr, recon_dim, state.bias_multipliers[i].ptr, batch_size, zero_and_then_one, state.∇b.ptr, recon_dim)
+    if !state.frozen
+      # ∂f/∂b = sum(∂f/∂o, 2)
+      CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_N, recon_dim, 1, batch_size,
+          convert(data_type, 1), ∂f_∂o.ptr, recon_dim, state.bias_multipliers[i].ptr, batch_size, zero_and_then_one, state.∇b.ptr, recon_dim)
+    end
 
     zero_and_then_one = one(data_type)
 

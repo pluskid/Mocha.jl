@@ -29,12 +29,15 @@ function backward(backend::GPUBackend, state::InnerProductLayerState, inputs::Ve
     input = inputs[i]
     batch_size = get_num(input)
     ∂f_∂o = state.blobs_diff[i]
-    CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_T, source_dim, target_dim, batch_size,
-        convert(data_type, 1), input.ptr, source_dim, ∂f_∂o.ptr, target_dim, zero_and_then_one, state.∇W.ptr, source_dim)
 
-    # ∂f/∂b = sum(∂f/∂o, 2)
-    CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_N, target_dim, 1, batch_size,
-        convert(data_type, 1), ∂f_∂o.ptr, target_dim, state.bias_multipliers[i].ptr, batch_size, zero_and_then_one, state.∇b.ptr, target_dim)
+    if !state.frozen
+      CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_T, source_dim, target_dim, batch_size,
+          one(data_type), input.ptr, source_dim, ∂f_∂o.ptr, target_dim, zero_and_then_one, state.∇W.ptr, source_dim)
+
+      # ∂f/∂b = sum(∂f/∂o, 2)
+      CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_N, target_dim, 1, batch_size,
+          one(data_type), ∂f_∂o.ptr, target_dim, state.bias_multipliers[i].ptr, batch_size, zero_and_then_one, state.∇b.ptr, target_dim)
+    end
 
     zero_and_then_one = convert(data_type, 1)
 

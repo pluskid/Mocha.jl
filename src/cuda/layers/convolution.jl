@@ -104,17 +104,19 @@ function backward(backend::GPUBackend, state::ConvolutionLayerState, inputs::Vec
     top_diff = state.blobs_diff[i]
 
     for g = 1:state.layer.n_group
-      # gradient w.r.t. bias
-      CuDNN.convolution_backward_bias(backend.cudnn_ctx, alpha,
-          state.etc.outputs_desc[i], CuPtr(top_diff.ptr.p + state.etc.top_offset * (g-1)),
-          beta_accumulate, state.etc.bias_desc, CuPtr(state.∇bias.ptr.p + state.etc.bias_offset * (g-1)))
+      if !state.frozen
+        # gradient w.r.t. bias
+        CuDNN.convolution_backward_bias(backend.cudnn_ctx, alpha,
+            state.etc.outputs_desc[i], CuPtr(top_diff.ptr.p + state.etc.top_offset * (g-1)),
+            beta_accumulate, state.etc.bias_desc, CuPtr(state.∇bias.ptr.p + state.etc.bias_offset * (g-1)))
 
-      # gradient w.r.t. weights
-      CuDNN.convolution_backward_filter(backend.cudnn_ctx, alpha,
-          state.etc.inputs_desc[i], CuPtr(bottom.ptr.p + state.etc.bottom_offset * (g-1)),
-          state.etc.outputs_desc[i], CuPtr(top_diff.ptr.p + state.etc.top_offset * (g-1)),
-          state.etc.conv_desc[i],
-          beta_accumulate, state.etc.filter_desc, CuPtr(state.∇filter.ptr.p + state.etc.weight_offset * (g-1)))
+        # gradient w.r.t. weights
+        CuDNN.convolution_backward_filter(backend.cudnn_ctx, alpha,
+            state.etc.inputs_desc[i], CuPtr(bottom.ptr.p + state.etc.bottom_offset * (g-1)),
+            state.etc.outputs_desc[i], CuPtr(top_diff.ptr.p + state.etc.top_offset * (g-1)),
+            state.etc.conv_desc[i],
+            beta_accumulate, state.etc.filter_desc, CuPtr(state.∇filter.ptr.p + state.etc.weight_offset * (g-1)))
+      end
 
       # gradient w.r.t. bottom data
       if isa(diffs[i], CuTensorBlob)

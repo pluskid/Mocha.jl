@@ -35,6 +35,8 @@ type InnerProductLayerState <: LayerState
   # a all-1 vector used in gemm to help bias calculation
   bias_multipliers :: Vector{Blob}
 
+  frozen :: Bool
+
   InnerProductLayerState(backend::Backend, layer::InnerProductLayer, shared_params, inputs::Vector{Blob}) = begin
     fea_size = get_fea_size(inputs[1])
     data_type = eltype(inputs[1])
@@ -81,9 +83,20 @@ type InnerProductLayerState <: LayerState
     state.b  = param_bias.blob
     state.∇b = param_bias.gradient
     state.parameters = [param_weight, param_bias]
+    state.frozen = false
 
     return state
   end
+end
+
+function freeze!(state::InnerProductLayerState)
+  state.frozen = true
+end
+function unfreeze!(state::InnerProductLayerState)
+  state.frozen = false
+end
+function is_frozen(state::InnerProductLayerState)
+  state.frozen
 end
 
 function setup(backend::Backend, layer::InnerProductLayer, shared_state, inputs::Vector{Blob}, diffs::Vector{Blob})
@@ -131,13 +144,16 @@ function backward(backend::CPUBackend, state::InnerProductLayerState, inputs::Ve
     input = inputs[i]
     batch_size = get_num(input)
     ∂f_∂o = state.blobs_diff[i]
-    BLAS.gemm!('N', 'T', one(data_type), reshape(input.data, (source_dim, batch_size)),
-               ∂f_∂o.data, zero_and_then_one, state.∇W.data)
 
-    # ∂f/∂b = sum(∂f/∂o, 2)
-    BLAS.gemm!('N', 'N', one(data_type), ∂f_∂o.data,
-               reshape(state.bias_multipliers[i].data, (batch_size, 1)),
-               zero_and_then_one, state.∇b.data)
+    if !state.frozen
+      BLAS.gemm!('N', 'T', one(data_type), reshape(input.data, (source_dim, batch_size)),
+                 ∂f_∂o.data, zero_and_then_one, state.∇W.data)
+
+      # ∂f/∂b = sum(∂f/∂o, 2)
+      BLAS.gemm!('N', 'N', one(data_type), ∂f_∂o.data,
+                 reshape(state.bias_multipliers[i].data, (batch_size, 1)),
+                 zero_and_then_one, state.∇b.data)
+    end
 
     zero_and_then_one = one(data_type)
 

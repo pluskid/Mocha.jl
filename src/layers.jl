@@ -12,6 +12,7 @@ export setup, forward, backward, shutdown
 
 export get_param_key
 export reset_statistics, show_statistics
+export freeze!, unfreeze!, is_frozen
 
 ############################################################
 # Implementing a Layer
@@ -123,6 +124,20 @@ function param_key(layer::Layer)
   @assert has_param(layer)
   key = layer.param_key
   return isempty(key) ? layer.name : key
+end
+
+# If a layer state is frozen, its parameters will not be trained, also there is no
+# need to compute the gradients for the parameters
+function freeze!(state::LayerState)
+  @assert !has_param(state.layer) "Layers with parameters should implement their own freeze function"
+  # freeze has no effects for layers without parameters
+end
+function unfreeze!(state::LayerState)
+  @assert !has_param(state.layer) "Layers with parameters should implement their own unfreeze function"
+end
+function is_frozen(state::LayerState)
+  @assert !has_param(state.layer) "Layers with parameters should implement their own is_frozen function"
+  false # layers without parameters are never frozen
 end
 
 #############################################################
