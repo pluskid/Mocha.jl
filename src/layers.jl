@@ -5,6 +5,7 @@ export InnerProductLayer, ConvolutionLayer, PoolingLayer, SoftmaxLayer
 export PowerLayer, SplitLayer, ElementWiseLayer, ChannelPoolingLayer
 export LRNLayer, DropoutLayer, ReshapeLayer, ArgmaxLayer, HDF5OutputLayer
 export CropLayer, ConcatLayer, RandomMaskLayer, TiedInnerProductLayer
+export IdentityLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export AccuracyLayer
 
@@ -201,6 +202,7 @@ include("layers/crop.jl")
 include("layers/concat.jl")
 include("layers/random-mask.jl")
 include("layers/tied-inner-product.jl")
+include("layers/identity.jl")
 
 #############################################################
 # Utility layers

@@ -49,6 +49,20 @@ Utility Layers
       file. If this attribute is given, the corresponding symbol in this list is
       used as the dataset name instead of the original blob's name.
 
+.. class:: IdentityLayer
+
+   Identity layer maps inputs to outputs without changing anything. This could
+   be useful as glue layers to rename some blobs. There is no data-copying for
+   this layer.
+
+   .. attribute::
+      tops
+      bottoms
+
+      Blob names for output and input. This layer could take multiple input
+      blobs and produce the corresponding number of output blobs. The shapes of
+      the input blobs do not need to be the same.
+
 .. class:: ReshapeLayer
 
    Reshape a blob. Can be useful if, for example, you want to make the *flat*
