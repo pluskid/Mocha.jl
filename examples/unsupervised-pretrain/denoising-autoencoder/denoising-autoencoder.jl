@@ -78,7 +78,7 @@ pred_layer = InnerProductLayer(name="pred", output_dim=10,
     bottoms=[symbol("ip$n_hidden_layer")], tops=[:pred])
 loss_layer = SoftmaxLossLayer(bottoms=[:pred, :label])
 
-net = Net("MNIST", backend, [data_layer, rename_layer, hidden_layers..., pred_layer, loss_layer])
+net = Net("MNIST-finetune", backend, [data_layer, rename_layer, hidden_layers..., pred_layer, loss_layer])
 
 base_dir = "finetune"
 params = SolverParameters(max_iter=div(finetune_epoch*60000,batch_size),
@@ -86,12 +86,14 @@ params = SolverParameters(max_iter=div(finetune_epoch*60000,batch_size),
     lr_policy=LRPolicy.Fixed(finetune_lr), load_from=base_dir)
 solver = SGD(params)
 
+setup_coffee_lounge(solver, save_into="$base_dir/statistics.jld", every_n_iter=10000)
+
 add_coffee_break(solver, TrainingSummary(), every_n_iter=1000)
 add_coffee_break(solver, Snapshot(base_dir), every_n_iter=10000)
 
 data_layer_test = HDF5DataLayer(name="test-data", source="data/test.txt", batch_size=100)
 acc_layer = AccuracyLayer(name="test-accuracy", bottoms=[:pred, :label])
-test_net = Net("MNIST-test", backend, [data_layer_test, rename_layer,
+test_net = Net("MNIST-finetune-test", backend, [data_layer_test, rename_layer,
     hidden_layers..., pred_layer, acc_layer])
 add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=5000)
 
@@ -99,4 +101,29 @@ solve(solver, net)
 
 destroy(net)
 destroy(test_net)
+
+################################################################################
+# Random-initialization, for comparison
+################################################################################
+registry_reset(backend)
+net = Net("MNIST-rnd", backend, [data_layer, rename_layer, hidden_layers..., pred_layer, loss_layer])
+base_dir = "randinit"
+
+params = copy(params, load_from=base_dir)
+solver = SGD(params)
+
+setup_coffee_lounge(solver, save_into="$base_dir/statistics.jld", every_n_iter=10000)
+
+add_coffee_break(solver, TrainingSummary(), every_n_iter=1000)
+add_coffee_break(solver, Snapshot(base_dir), every_n_iter=10000)
+test_net = Net("MNIST-randinit-test", backend, [data_layer_test, rename_layer,
+    hidden_layers..., pred_layer, acc_layer])
+add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=5000)
+
+solve(solver, net)
+
+destroy(net)
+destroy(test_net)
+
+
 shutdown(backend)
