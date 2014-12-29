@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:gadfly="http://www.gadflyjl.org/ns"
+     version="1.2"
+     width="120mm" height="60mm" viewBox="0 0 120 60"
+     stroke="none"
+     fill="#000000"
+     stroke-width="0.3"
+     font-size="3.88"
+>
+<g class="plotroot xscalable yscalable" id="fig-8ebc30f6211c465d849ae25dbc924258-element-1">
+  <g font-size="3.88" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" fill="#564A55" stroke="none" id="fig-8ebc30f6211c465d849ae25dbc924258-element-2">
+    <text x="57.85" y="52" text-anchor="middle">Iteration</text>
+  </g>
+  <g class="guide xlabels" font-size="2.82" font-family="'PT Sans Caption','Helvetica Neue','Helvetica',sans-serif" fill="#6C606B" id="fig-8ebc30f6211c465d849ae25dbc924258-element-3">
+    <text x="20.5" y="46.39" text-anchor="middle">0</text>
+    <text x="32.95" y="46.39" text-anchor="middle">1.0×10⁵</text>
+    <text x="45.4" y="46.39" text-anchor="middle">2.0×10⁵</text>
+    <text x="57.85" y="46.39" text-anchor="middle">3.0×10⁵</text>
+    <text x="70.3" y="46.39" text-anchor="middle">4.0×10⁵</text>
+    <text x="82.75" y="46.39" text-anchor="middle">5.0×10⁵</text>
+    <text x="95.2" y="46.39" text-anchor="middle">6.0×10⁵</text>
+  </g>
+  <g class="guide colorkey" id="fig-8ebc30f6211c465d849ae25dbc924258-element-4">
+    <g fill="#4C404B" font-size="2.82" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" id="fig-8ebc30f6211c465d849ae25dbc924258-element-5">
+      <text x="101.01" y="27.66" dy="0.35em" id="fig-8ebc30f6211c465d849ae25dbc924258-element-6" class="color_pre-train">pre-train</text>
+      <text x="101.01" y="31.29" dy="0.35em" id="fig-8ebc30f6211c465d849ae25dbc924258-element-7" class="color_random_init">random init</text>
+    </g>
+    <g stroke="none" id="fig-8ebc30f6211c465d849ae25dbc924258-element-8">
+      <rect x="98.2" y="26.76" width="1.81" height="1.81" id="fig-8ebc30f6211c465d849ae25dbc924258-element-9" class="color_pre-train" fill="#00BFFF"/>
+      <rect x="98.2" y="30.38" width="1.81" height="1.81" id="fig-8ebc30f6211c465d849ae25dbc924258-element-10" class="color_random_init" fill="#D4CA3A"/>
+    </g>
+    <g fill="#362A35" font-size="3.88" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" stroke="none" id="fig-8ebc30f6211c465d849ae25dbc924258-element-11">
+      <text x="98.2" y="23.84" id="fig-8ebc30f6211c465d849ae25dbc924258-element-12">category</text>
+    </g>
+  </g>
+  <g clip-path="url(#fig-8ebc30f6211c465d849ae25dbc924258-element-14)" id="fig-8ebc30f6211c465d849ae25dbc924258-element-13">
+    <g pointer-events="visible" opacity="1" fill="none" stroke="none" class="guide background" id="fig-8ebc30f6211c465d849ae25dbc924258-element-15">
+      <rect x="18.5" y="12.61" width="78.7" height="30.1" id="fig-8ebc30f6211c465d849ae25dbc924258-element-16"/>
+    </g>
+    <g class="guide ygridlines xfixed" stroke-dasharray="0.5,0.5" stroke-width="0.2" stroke="#D0D0E0" id="fig-8ebc30f6211c465d849ae25dbc924258-element-17">
+      <path fill="none" d="M18.5,40.72 L 97.2 40.72" id="fig-8ebc30f6211c465d849ae25dbc924258-element-18"/>
+      <path fill="none" d="M18.5,34.19 L 97.2 34.19" id="fig-8ebc30f6211c465d849ae25dbc924258-element-19"/>
+      <path fill="none" d="M18.5,27.66 L 97.2 27.66" id="fig-8ebc30f6211c465d849ae25dbc924258-element-20"/>
+      <path fill="none" d="M18.5,21.14 L 97.2 21.14" id="fig-8ebc30f6211c465d849ae25dbc924258-element-21"/>
+      <path fill="none" d="M18.5,14.61 L 97.2 14.61" id="fig-8ebc30f6211c465d849ae25dbc924258-element-22"/>
+    </g>
+    <g class="guide xgridlines yfixed" stroke-dasharray="0.5,0.5" stroke-width="0.2" stroke="#D0D0E0" id="fig-8ebc30f6211c465d849ae25dbc924258-element-23">
+      <path fill="none" d="M20.5,12.61 L 20.5 42.72" id="fig-8ebc30f6211c465d849ae25dbc924258-element-24"/>
+      <path fill="none" d="M32.95,12.61 L 32.95 42.72" id="fig-8ebc30f6211c465d849ae25dbc924258-element-25"/>
+      <path fill="none" d="M45.4,12.61 L 45.4 42.72" id="fig-8ebc30f6211c465d849ae25dbc924258-element-26"/>
+      <path fill="none" d="M57.85,12.61 L 57.85 42.72" id="fig-8ebc30f6211c465d849ae25dbc924258-element-27"/>
+      <path fill="none" d="M70.3,12.61 L 70.3 42.72" id="fig-8ebc30f6211c465d849ae25dbc924258-element-28"/>
+      <path fill="none" d="M82.75,12.61 L 82.75 42.72" id="fig-8ebc30f6211c465d849ae25dbc924258-element-29"/>
+      <path fill="none" d="M95.2,12.61 L 95.2 42.72" id="fig-8ebc30f6211c465d849ae25dbc924258-element-30"/>
+    </g>
+    <g class="plotpanel" id="fig-8ebc30f6211c465d849ae25dbc924258-element-31">
+      <g stroke-width="0.3" fill="none" id="fig-8ebc30f6211c465d849ae25dbc924258-element-32">
+        <path fill="none" d="M20.5,38.08 L 21.12 36.21 21.74 30.79 22.37 25.42 22.99 18.35 23.61 16.8 24.23 16.37 24.86 16.14 25.48 15.96 26.1 15.63 26.72 15.58 27.35 15.53 27.97 15.61 28.59 15.55 29.21 15.42 29.84 15.41 30.46 15.35 31.08 15.33 31.7 15.35 32.33 15.35 32.95 15.33 33.57 15.34 34.19 15.35 34.82 15.32 35.44 15.32 36.06 15.31 36.68 15.33 37.31 15.31 37.93 15.31 38.55 15.31 39.17 15.31 39.8 15.3 40.42 15.3 41.04 15.32 41.66 15.32 42.29 15.31 42.91 15.31 43.53 15.31 44.15 15.3 44.78 15.3 45.4 15.32 46.02 15.3 46.64 15.31 47.27 15.31 47.89 15.31 48.51 15.3 49.13 15.29 49.76 15.31 50.38 15.3 51 15.3 51.62 15.31 52.25 15.3 52.87 15.29 53.49 15.29 54.11 15.3 54.74 15.3 55.36 15.3 55.98 15.3 56.6 15.28 57.23 15.3 57.85 15.29 58.47 15.29 59.09 15.3 59.72 15.3 60.34 15.29 60.96 15.29 61.58 15.29 62.21 15.29 62.83 15.29 63.45 15.29 64.07 15.3 64.7 15.29 65.32 15.28 65.94 15.29 66.56 15.29 67.19 15.29 67.81 15.28 68.43 15.29 69.05 15.29 69.68 15.29 70.3 15.29 70.92 15.28 71.54 15.29 72.17 15.29 72.79 15.28 73.41 15.29 74.03 15.28 74.66 15.28 75.28 15.29 75.9 15.28 76.52 15.29 77.15 15.28 77.77 15.29 78.39 15.29 79.01 15.29 79.64 15.29 80.26 15.28 80.88 15.28 81.5 15.29 82.13 15.27 82.75 15.28 83.37 15.28 83.99 15.28 84.62 15.28 85.24 15.27 85.86 15.27 86.48 15.28 87.11 15.27 87.73 15.28 88.35 15.28 88.97 15.28 89.6 15.27 90.22 15.27 90.84 15.28 91.46 15.27 92.09 15.28 92.71 15.27 93.33 15.28 93.95 15.27 94.58 15.27 95.2 15.28" id="fig-8ebc30f6211c465d849ae25dbc924258-element-33" class="geometry color_pre-train" stroke="#00BFFF"/>
+        <path fill="none" d="M20.5,38.03 L 21.12 37.75 21.74 33.72 22.37 31.08 22.99 28.03 23.61 25.92 24.23 24.48 24.86 23.63 25.48 23.38 26.1 22.8 26.72 20.05 27.35 18 27.97 16.8 28.59 16.24 29.21 16.06 29.84 15.81 30.46 15.67 31.08 15.74 31.7 15.57 32.33 15.55 32.95 15.47 33.57 15.46 34.19 15.49 34.82 15.43 35.44 15.49 36.06 15.45 36.68 15.48 37.31 15.44 37.93 15.41 38.55 15.42 39.17 15.43 39.8 15.4 40.42 15.42 41.04 15.41 41.66 15.42 42.29 15.4 42.91 15.41 43.53 15.4 44.15 15.4 44.78 15.41 45.4 15.39 46.02 15.39 46.64 15.41 47.27 15.39 47.89 15.4 48.51 15.39 49.13 15.39 49.76 15.38 50.38 15.4 51 15.39 51.62 15.39 52.25 15.38 52.87 15.37 53.49 15.38 54.11 15.39 54.74 15.39 55.36 15.38 55.98 15.37 56.6 15.38 57.23 15.38 57.85 15.38 58.47 15.38 59.09 15.38 59.72 15.38 60.34 15.38 60.96 15.38 61.58 15.37 62.21 15.38 62.83 15.38 63.45 15.38 64.07 15.37 64.7 15.37 65.32 15.38 65.94 15.37 66.56 15.37 67.19 15.38 67.81 15.37 68.43 15.38 69.05 15.38 69.68 15.37 70.3 15.37 70.92 15.38 71.54 15.38 72.17 15.37 72.79 15.37 73.41 15.37 74.03 15.37 74.66 15.37 75.28 15.37 75.9 15.38 76.52 15.37 77.15 15.38 77.77 15.37 78.39 15.38 79.01 15.37 79.64 15.37 80.26 15.37 80.88 15.37 81.5 15.37 82.13 15.37 82.75 15.37 83.37 15.37 83.99 15.37 84.62 15.37 85.24 15.38 85.86 15.37 86.48 15.37 87.11 15.37 87.73 15.37 88.35 15.37 88.97 15.37 89.6 15.37 90.22 15.36 90.84 15.37 91.46 15.37 92.09 15.37 92.71 15.37 93.33 15.37 93.95 15.36 94.58 15.37 95.2 15.36" id="fig-8ebc30f6211c465d849ae25dbc924258-element-34" class="geometry color_random_init" stroke="#D4CA3A"/>
+      </g>
+    </g>
+  </g>
+  <g class="guide ylabels" font-size="2.82" font-family="'PT Sans Caption','Helvetica Neue','Helvetica',sans-serif" fill="#6C606B" id="fig-8ebc30f6211c465d849ae25dbc924258-element-35">
+    <text x="17.5" y="40.72" text-anchor="end" dy="0.35em" id="fig-8ebc30f6211c465d849ae25dbc924258-element-36">0.00</text>
+    <text x="17.5" y="34.19" text-anchor="end" dy="0.35em" id="fig-8ebc30f6211c465d849ae25dbc924258-element-37">0.25</text>
+    <text x="17.5" y="27.66" text-anchor="end" dy="0.35em" id="fig-8ebc30f6211c465d849ae25dbc924258-element-38">0.50</text>
+    <text x="17.5" y="21.14" text-anchor="end" dy="0.35em" id="fig-8ebc30f6211c465d849ae25dbc924258-element-39">0.75</text>
+    <text x="17.5" y="14.61" text-anchor="end" dy="0.35em" id="fig-8ebc30f6211c465d849ae25dbc924258-element-40">1.00</text>
+  </g>
+  <g font-size="3.88" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" fill="#564A55" stroke="none" id="fig-8ebc30f6211c465d849ae25dbc924258-element-41">
+    <text x="8.81" y="27.66" text-anchor="end" dy="0.35em" id="fig-8ebc30f6211c465d849ae25dbc924258-element-42">y</text>
+  </g>
+  <g font-size="3.88" font-family="'PT Sans','Helvetica Neue','Helvetica',sans-serif" fill="#564A55" stroke="none" id="fig-8ebc30f6211c465d849ae25dbc924258-element-43">
+    <text x="57.85" y="10.61" text-anchor="middle" id="fig-8ebc30f6211c465d849ae25dbc924258-element-44">Accuracy (Test set)</text>
+  </g>
+</g>
+<defs>
+<clipPath id="fig-8ebc30f6211c465d849ae25dbc924258-element-14">
+  <path d="M18.5,12.61 L 97.2 12.61 97.2 42.72 18.5 42.72" />
+</clipPath
+></defs>
+</svg>
