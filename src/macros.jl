@@ -19,11 +19,21 @@
 # could be used to force user to provide a
 # valid value when no meaningful default value
 # is available.
+#
+# The macro will define a constructor that could accept
+# the keyword arguments. Since the defined type is
+# immutable, a "copy" function is also defined, which
+# takes a prototype object, and accept extra keyword
+# parameters that could be used to construct a new
+# object with specified changes of fields.
 #############################################################
+import Base.copy
+export      copy
 macro defstruct(name, super_name, fields)
   @assert fields.head == :tuple
   fields = fields.args
   @assert length(fields) > 0
+  name = esc(name)
 
   field_defs     = Array(Expr, length(fields))     # :(field2 :: Int)
   field_names    = Array(Symbol, length(fields))   # :field2
@@ -48,17 +58,39 @@ macro defstruct(name, super_name, fields)
   asserts = map(filter(i -> isdefined(field_asserts,i), 1:length(fields))) do i
     :(@assert($(field_asserts[i])))
   end
-  construct = Expr(:call, esc(name), field_names...)
+  construct = Expr(:call, name, field_names...)
   ctor_body = Expr(:block, asserts..., construct)
-  ctor_def = Expr(:call, esc(name), Expr(:parameters, field_defaults...))
+  ctor_def = Expr(:call, name, Expr(:parameters, field_defaults...))
   ctor = Expr(:(=), ctor_def, ctor_body)
 
+  # for copy constructor
+  field_assigns = Expr(:block, [:(params[symbol($(esc(string(fname))))] = proto.$fname) for fname in field_names]...)
+  field_expose = Expr(:block, [:($(esc(fname)) = params[symbol($(esc(string(fname))))]) for fname in field_names]...)
+  assert_block = Expr(:block, asserts...)
+  obj_construct = Expr(:call, name, field_names...)
+  copy_fname = esc(:copy)
+
   quote
-    immutable $(esc(name)) <: $super_name
+    immutable $(name) <: $super_name
       $type_body
     end
 
     $ctor
+
+    function $copy_fname(proto::$name; kw...)
+      params = Dict()
+      $field_assigns
+
+      for (k,v) in kw
+        @assert haskey(params, k) "Unrecognized field " * string(k) * " for " * $(string(name.args[1]))
+        params[k] = v
+      end
+
+      $field_expose
+      $assert_block
+
+      $obj_construct
+    end
   end
 end
 

@@ -5,6 +5,7 @@ export InnerProductLayer, ConvolutionLayer, PoolingLayer, SoftmaxLayer
 export PowerLayer, SplitLayer, ElementWiseLayer, ChannelPoolingLayer
 export LRNLayer, DropoutLayer, ReshapeLayer, ArgmaxLayer, HDF5OutputLayer
 export CropLayer, ConcatLayer, RandomMaskLayer, TiedInnerProductLayer
+export IdentityLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export AccuracyLayer
 
@@ -166,13 +167,13 @@ function show_layer(io::IO, state::LayerState, inputs::Vector{Blob})
   if !is_source(state.layer)
     println(io, "    Inputs ----------------------------")
     for i = 1:length(inputs)
-      println(io, "     $(@sprintf("%6s", state.layer.bottoms[i])): $(inputs[i])")
+      println(io, "     $(@sprintf("%9s", state.layer.bottoms[i])): $(inputs[i])")
     end
   end
   if !is_sink(state.layer) && !is_inplace(state.layer)
     println(io, "    Outputs ---------------------------")
     for i = 1:length(state.blobs)
-      println(io, "     $(@sprintf("%6s", state.layer.tops[i])): $(state.blobs[i])")
+      println(io, "     $(@sprintf("%9s", state.layer.tops[i])): $(state.blobs[i])")
     end
   end
 end
@@ -201,6 +202,7 @@ include("layers/crop.jl")
 include("layers/concat.jl")
 include("layers/random-mask.jl")
 include("layers/tied-inner-product.jl")
+include("layers/identity.jl")
 
 #############################################################
 # Utility layers
