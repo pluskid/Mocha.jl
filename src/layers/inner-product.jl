@@ -68,7 +68,7 @@ type InnerProductLayerState <: LayerState
       @assert size(shared_params[1].blob) == (fea_size, out_dim)
       @assert eltype(shared_params[1].blob) == data_type
       @assert size(shared_params[2].blob) == (out_dim, 1)
-      @debug("InnerProductLayer: sharing weights and bias")
+      @debug("InnerProductLayer($(layer.name)): sharing weights and bias")
 
       param_weight, param_bias = [share_parameter(backend, param) for param in shared_params]
     else

@@ -92,7 +92,7 @@ function init(net::Net)
   @debug("Init network $(net.name)")
   for i = 1:length(net.layers)
     state = net.states[i]
-    if has_param(net.layers[i])
+    if has_param(net.layers[i]) && !is_frozen(net.states[i])
       for param in state.parameters
         if !isa(param.initializer, NullInitializer)
           @debug("Init parameter $(param.name) for layer $(net.layers[i].name)")
@@ -173,7 +173,7 @@ function backward(net::Net, regu_coef :: FloatingPoint = 0.0)
     backward(net.backend, net.states[i], net.blobs_forward[i], net.blobs_backward[i])
 
     # handle regularization
-    if has_param(net.layers[i])
+    if has_param(net.layers[i]) && !is_frozen(net.states[i])
       for param in net.states[i].parameters
         backward(net.backend, param.regularizer, regu_coef, param.blob, param.gradient)
       end

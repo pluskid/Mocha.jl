@@ -18,7 +18,8 @@ type NesterovInternalState <: SolverInternelState
 end
 
 function setup(nag::Nesterov, net::Net, solver_state::SolverState)
-  param_states  = filter(x -> :parameters ∈ names(x), net.states)
+  param_states  = map(i -> net.states[i],
+      filter(i -> has_param(net.layers[i]) && !is_frozen(net.states[i]), 1:length(net.layers)))
   param_history = Array(Vector{Blob}, length(param_states))
   for i = 1:length(param_states)
     state = param_states[i]

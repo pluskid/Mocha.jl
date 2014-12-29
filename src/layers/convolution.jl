@@ -101,7 +101,7 @@ type ConvolutionLayerState <: LayerState
       @assert shared_params[1].name == "filter" && shared_params[2].name == "bias"
       @assert size(shared_params[1].blob) == tuple(layer.kernel...,div(channels,layer.n_group),layer.n_filter)
       @assert eltype(shared_params[1].blob) == dtype
-      @debug("ConvolutionLayer: sharing filters and bias")
+      @debug("ConvolutionLayer($(layer.name)): sharing filters and bias")
 
       param_filter, param_bias = [share_parameter(backend, param) for param in shared_params]
     else

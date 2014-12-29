@@ -2,8 +2,9 @@
 # Configuration
 ################################################################################
 ENV["MOCHA_USE_CUDA"] = "true"
+using Mocha
 
-n_hidden_layer   = 2
+n_hidden_layer   = 3
 n_hidden_unit    = 1000
 neuron           = Neurons.Sigmoid()
 param_key_prefix = "ip-layer"
@@ -15,10 +16,11 @@ momentum         = 0.0
 pretrain_lr      = 0.001
 finetune_lr      = 0.1
 
+param_keys       = ["$param_key_prefix-$i" for i = 1:n_hidden_layer]
+
 ################################################################################
 # Construct the Net
 ################################################################################
-using Mocha
 srand(12345678)
 
 backend = GPUBackend()
@@ -27,37 +29,33 @@ init(backend)
 data_layer = HDF5DataLayer(name="train-data", source="data/train.txt",
     batch_size=batch_size, shuffle=@windows ? false : true)
 rename_layer = IdentityLayer(bottoms=[:data], tops=[:ip0])
-
 hidden_layers = [
-  InnerProductLayer(name="ip-$i", param_key="$param_key_prefix-$i",
+  InnerProductLayer(name="ip-$i", param_key=param_keys[i],
       output_dim=n_hidden_unit, neuron=neuron,
       bottoms=[symbol("ip$(i-1)")], tops=[symbol("ip$i")])
   for i = 1:n_hidden_layer
 ]
 
-pred_layer = InnerProductLayer(name="pred", output_dim=10,
-    bottoms=[symbol("ip$n_hidden_layer")], tops=[:pred])
-loss_layer = SoftmaxLossLayer(bottoms=[:pred, :label])
-
-net = Net("MNIST", backend, [data_layer, rename_layer, hidden_layers..., pred_layer, loss_layer])
-
 ################################################################################
 # Layerwise pre-training for hidden layers
 ################################################################################
 for i = 1:n_hidden_layer
-  recon_layer = TiedInnerProductLayer(name="tied-ip-$i", tied_param_key="$param_key_prefix-$i",
-      tops=[:recon], bottoms=[symbol("ip$i")])
-  recon_loss_layer = SquareLossLayer(bottoms=[:recon, :orig_data])
-  recon_data_layer = SplitLayer(bottoms=[:data], tops=[:orig_data, :corrupt_data])
+  ae_data_layer = SplitLayer(bottoms=[symbol("ip$(i-1)")], tops=[:orig_data, :corrupt_data])
   corrupt_layer = RandomMaskLayer(ratio=corruption_rates[i], bottoms=[:corrupt_data])
 
-  da_layers = [data_layer, recon_data_layer, corrupt_layer, hidden_layers[1:i]...,
-      recon_layer, recon_loss_layer]
+  encode_layer  = copy(hidden_layers[i], bottoms=[:corrupt_data])
+  recon_layer   = TiedInnerProductLayer(name="tied-ip-$i", tied_param_key=param_keys[i],
+      tops=[:recon], bottoms=[symbol("ip$i")])
+  recon_loss_layer = SquareLossLayer(bottoms=[:recon, :orig_data])
+
+  da_layers = [data_layer, rename_layer, ae_data_layer, corrupt_layer, hidden_layers[1:i-1]...,
+      encode_layer, recon_layer, recon_loss_layer]
   da = Net("Denoising-Autoencoder-$i", backend, da_layers)
+  println(da)
 
   # freeze all but the layers for auto-encoder
-  freeze_all!(net)
-  unfreeze!(net, "ip-$i", "tied-ip-$i")
+  freeze_all!(da)
+  unfreeze!(da, "ip-$i", "tied-ip-$i")
 
   base_dir = "pretrain-$i"
   pretrain_params  = SolverParameters(max_iter=div(pretrain_epoch*60000,batch_size),
@@ -66,11 +64,21 @@ for i = 1:n_hidden_layer
   solver = SGD(pretrain_params)
 
   add_coffee_break(solver, TrainingSummary(), every_n_iter=1000)
-  add_coffee_break(solver, Snapshot(base_dir), every_n_iter=10000)
+  add_coffee_break(solver, Snapshot(base_dir), every_n_iter=3000)
   solve(solver, da)
 
   destroy(da)
 end
+
+################################################################################
+# Fine-tuning
+################################################################################
+
+pred_layer = InnerProductLayer(name="pred", output_dim=10,
+    bottoms=[symbol("ip$n_hidden_layer")], tops=[:pred])
+loss_layer = SoftmaxLossLayer(bottoms=[:pred, :label])
+
+net = Net("MNIST", backend, [data_layer, rename_layer, hidden_layers..., pred_layer, loss_layer])
 
 base_dir = "finetune"
 params = SolverParameters(max_iter=div(finetune_epoch*60000,batch_size),

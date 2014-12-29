@@ -5,6 +5,15 @@ function forward(backend::GPUBackend, state::SquareLossLayerState, inputs::Vecto
   data_type = eltype(pred)
   n = length(pred)
 
+  pred_arr = to_array(pred)
+  if any(isnan(pred_arr))
+    error("NaN in pred")
+  end
+  label_arr = to_array(label)
+  if any(isnan(label_arr))
+    error("NaN in label")
+  end
+
   copy!(state.pred_copy, pred)
   CuBLAS.axpy(backend.cublas_ctx, n, convert(data_type, -1), label.ptr, 1, state.pred_copy.ptr, 1)
   state.loss = 0.5/get_num(pred)*CuBLAS.dot(backend.cublas_ctx, data_type, n, state.pred_copy.ptr, 1, state.pred_copy.ptr, 1)

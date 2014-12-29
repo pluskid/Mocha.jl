@@ -11,6 +11,7 @@ show(io::IO, backend::Backend) = show(io, typeof(backend))
 function init(backend::Backend)
 end
 function shutdown(backend::Backend)
+  registry_reset(backend)
 end
 function registry_reset(backend::Backend)
   map(params -> map(destroy, params), backend.param_registry)
@@ -18,7 +19,7 @@ function registry_reset(backend::Backend)
 end
 function registry_put(backend::Backend, key::String, params::Vector)
   if haskey(backend.param_registry, key)
-    map(old_params -> map(destroy, old_params), backend.param_registry[key])
+    map(destroy, backend.param_registry[key])
   end
 
   # we keep a reference to the parameters, so that even those the original
