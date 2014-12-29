@@ -15,6 +15,7 @@ Tutorials
    tutorial/mnist
    tutorial/cifar10
    tutorial/ijulia-imagenet
+   tutorial/mnist-sDA
 
 ############
 User's Guide
