@@ -14,7 +14,9 @@ function shutdown(backend::Backend)
   registry_reset(backend)
 end
 function registry_reset(backend::Backend)
-  map(params -> map(destroy, params), backend.param_registry)
+  for (k,params) in backend.param_registry
+    map(destroy, params)
+  end
   backend.param_registry = ParameterRegistry()
 end
 function registry_put(backend::Backend, key::String, params::Vector)
