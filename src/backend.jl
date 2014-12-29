@@ -13,11 +13,17 @@ end
 function shutdown(backend::Backend)
 end
 function registry_reset(backend::Backend)
+  map(params -> map(destroy, params), backend.param_registry)
   backend.param_registry = ParameterRegistry()
 end
 function registry_put(backend::Backend, key::String, params::Vector)
-  # convert Vector{Parameter} to Vector{AbstractParameter}
-  backend.param_registry[key] = convert(Vector{AbstractParameter}, params)
+  if haskey(backend.param_registry, key)
+    map(old_params -> map(destroy, old_params), backend.param_registry[key])
+  end
+
+  # we keep a reference to the parameters, so that even those the original
+  # network is destroyed, we still have valid access to those trained parameters
+  backend.param_registry[key] = AbstractParameter[share_parameter(backend, p) for p in params]
 end
 function registry_get(backend::Backend, key::String)
   return get(backend.param_registry, key, nothing)
