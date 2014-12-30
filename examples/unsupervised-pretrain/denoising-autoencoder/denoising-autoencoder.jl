@@ -4,6 +4,7 @@
 ENV["MOCHA_USE_CUDA"] = "true"
 using Mocha
 
+# --start-config--
 n_hidden_layer   = 3
 n_hidden_unit    = 1000
 neuron           = Neurons.Sigmoid()
@@ -17,6 +18,7 @@ pretrain_lr      = 0.001
 finetune_lr      = 0.1
 
 param_keys       = ["$param_key_prefix-$i" for i = 1:n_hidden_layer]
+# --end-config--
 
 ################################################################################
 # Construct the Net
@@ -26,6 +28,7 @@ srand(12345678)
 backend = GPUBackend()
 init(backend)
 
+# --start-basic-layers--
 data_layer = HDF5DataLayer(name="train-data", source="data/train.txt",
     batch_size=batch_size, shuffle=@windows ? false : true)
 rename_layer = IdentityLayer(bottoms=[:data], tops=[:ip0])
@@ -35,10 +38,12 @@ hidden_layers = [
       bottoms=[symbol("ip$(i-1)")], tops=[symbol("ip$i")])
   for i = 1:n_hidden_layer
 ]
+# --end-basic-layers--
 
 ################################################################################
 # Layerwise pre-training for hidden layers
 ################################################################################
+# --start-pre-train--
 for i = 1:n_hidden_layer
   ae_data_layer = SplitLayer(bottoms=[symbol("ip$(i-1)")], tops=[:orig_data, :corrupt_data])
   corrupt_layer = RandomMaskLayer(ratio=corruption_rates[i], bottoms=[:corrupt_data])
@@ -48,8 +53,8 @@ for i = 1:n_hidden_layer
       tops=[:recon], bottoms=[symbol("ip$i")])
   recon_loss_layer = SquareLossLayer(bottoms=[:recon, :orig_data])
 
-  da_layers = [data_layer, rename_layer, ae_data_layer, corrupt_layer, hidden_layers[1:i-1]...,
-      encode_layer, recon_layer, recon_loss_layer]
+  da_layers = [data_layer, rename_layer, ae_data_layer, corrupt_layer,
+      hidden_layers[1:i-1]..., encode_layer, recon_layer, recon_loss_layer]
   da = Net("Denoising-Autoencoder-$i", backend, da_layers)
   println(da)
 
@@ -69,6 +74,7 @@ for i = 1:n_hidden_layer
 
   destroy(da)
 end
+# --end-pre-train--
 
 ################################################################################
 # Fine-tuning
