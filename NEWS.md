@@ -1,5 +1,16 @@
 # News for Mocha Development
 
+## v0.0.6 2014.12.31
+
+* Infrastructure
+  * Numerical gradient checking in unit-tests (@pcmoritz)
+  * Simple ref-counting for shared parameters
+* Network
+  * RandomMaskLayer, TiedInnerProductLayer, IdentityLayer
+  * Freezing / unfreezing some layers of a network to allow layer-wise pre-training
+* Documentation
+  * A new tutorial on MNIST that compares unsupervised pre-training via stacked denoising auto-encoders and random initialization
+
 ## v0.0.5 2014.12.20
 
 * Infrastructure
