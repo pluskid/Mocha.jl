@@ -3,6 +3,7 @@
 ############################################################
 @defstruct SplitLayer Layer (
   name :: String = "split",
+  no_copy :: Bool = false,
   (tops :: Vector{Symbol} = Symbol[], length(tops) > 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 1),
 )
@@ -19,8 +20,16 @@ end
 function setup(backend::Backend, layer::SplitLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   N = length(layer.tops)
 
-  # directly re-use the input blob
-  blobs = Blob[inputs[1] for i = 1:N]
+  if layer.no_copy
+    # directly re-use the input blob
+    blobs = Blob[inputs[1] for i = 1:N]
+  else
+    blobs = Array(Blob, N)
+    blobs[1] = inputs[1]
+    for i = 2:N
+      blobs[i] = make_blob(backend, eltype(inputs[1]), size(inputs[1]))
+    end
+  end
   blobs_diff = Array(Blob, N)
   blobs_diff[1] = diffs[1] # re-use the first backward blob
   for i = 2:N
@@ -41,7 +50,11 @@ function shutdown(backend::Backend, state::SplitLayerState)
 end
 
 function forward(backend::Backend, state::SplitLayerState, inputs::Vector{Blob})
-  # do nothing
+  if !state.layer.no_copy
+    for i = 2:length(state.blobs)
+      copy!(state.blobs[i], inputs[1])
+    end
+  end
 end
 
 function backward{N}(backend::CPUBackend, state::SplitLayerState{N}, inputs::Vector{Blob}, diffs::Vector{Blob})

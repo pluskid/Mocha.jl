@@ -21,5 +21,5 @@ for (var, title) in plot_vars
   the_plot = plot(df, x="x", y="y", color="category",
       Geom.line, Guide.xlabel("Iteration"), Guide.title(title))
 
-  draw(SVG("$var.svg", 12cm, 6cm), the_plot)
+  draw(SVG("$var.svg", 18cm, 9cm), the_plot)
 end

@@ -90,7 +90,7 @@ Utility Layers
 
 .. class:: SplitLayer
 
-   Split layer produces identical *copies* [1]_ of the input. The number of copies
+   Split layer produces identical copies of the input. The number of copies
    is determined by the length of the ``tops`` property. During back propagation,
    derivatives from all the output copies are added together and propagated down.
 
@@ -105,4 +105,10 @@ Utility Layers
 
       Output blob names, should be more than one output blobs.
 
-   .. [1] All the data is shared, so there is no actually data copying.
+   .. attribute:: no_copy
+
+      Default ``false``. When ``true``, no data is copied in the forward pass.
+      In this case, all the output blobs share data. When, for example, an
+      *in-place* layer is used to modify one of the output blobs, all the other
+      output blobs will also change.
+
