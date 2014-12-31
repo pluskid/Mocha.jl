@@ -115,6 +115,22 @@ blob. This makes it easier to define the hidden layers in a unified manner.
 Pre-training
 ------------
 
+We construct stacked denoising auto-encoders to do pre-training for weights and
+bias for the hidden layers we just defined. We do layer-wise pre-training in
+a ``for`` loop as listed below:
+
 .. literalinclude:: ../../examples/unsupervised-pretrain/denoising-autoencoder/denoising-autoencoder.jl
    :start-after: --start-pre-train--
    :end-before: --end-pre-train--
+
+Several Mocha primitives are useful for building auto-encoders:
+
+* :class:`RandomMaskLayer`: given a corruption ratio, this layer could randomly
+  mask parts of the input blobs as zero. We use this to create corruptions in
+  denoising auto-encoders.
+
+  Note this is a *in-place* layer. In other words, it modifies the input
+  directly. Recall that the reconstruction error is computed against the
+  *uncorruppted* input. So we need to use the following layer to create a copy
+  of the input before applying corruption.
+* :class:`SplitLayer`: create multiple copies of a blob.

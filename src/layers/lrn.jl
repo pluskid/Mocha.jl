@@ -43,7 +43,7 @@ function setup(backend::Backend, layer::LRNLayer, inputs::Vector{Blob}, diffs::V
     @assert ndims(inputs[i]) == 4
   end
 
-  split_layer = SplitLayer(tops=Array(Symbol,2), bottoms=Array(Symbol,1))
+  split_layer = SplitLayer(no_copy=true, tops=Array(Symbol,2), bottoms=Array(Symbol,1))
   do_split = setup(backend, split_layer, inputs, diffs)
 
   square_layer = PowerLayer(power=2, tops=Array(Symbol,1), bottoms=Array(Symbol,1))

@@ -22,6 +22,14 @@ function test_split_layer(backend::Backend, T)
     @test all(abs(got_output - input) .< eps)
   end
 
+  # modifying one split should not affect the other split
+  # consider the case of an in-place layer applied to one of the
+  # split
+  corruption = rand(T, size(input))
+  copy!(state.blobs[1], corruption)
+  orig_data = to_array(state.blobs[2])
+  @test !all(abs(corruption - orig_data) .< eps)
+
   println("    > Backward")
   top_diff = Array{T}[rand(T, size(input)), rand(T, size(input))]
   for i = 1:2
