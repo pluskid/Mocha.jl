@@ -57,7 +57,36 @@ Computation Layers
 .. class:: ConvolutionLayer
 
    Convolution in the spatial dimensions. **For now** convolution layer
-   requires the input blobs to be 4D tensors.
+   requires the input blobs to be 4D tensors. For a 4D input blob of the shape
+   ``width``-by-``height``-by-``channels``-by-``num``, The output blob shape is decided by the
+   ``kernel`` size (a.k.a. receptive field), the ``stride``, the ``pad`` and the
+   ``n_filter``.
+
+   The ``kernel`` size specifies the geometry of a filter, also called a kernel or a local
+   receptive field. Note implicitly a filter also has a channel dimension that
+   is the same size as the input image. As a filter moves across the image by
+   the specified ``stride`` and optionally ``pad`` when on the boundary of the
+   input image, it produce a real number by computing the inner-product between the
+   filter weights and the local image patch at each spatial position. The
+   formular for the spatial dimension of the output blob is
+
+   .. code-block:: julia
+
+      width_out  = div(width_in  + 2*pad[1]-kernel[1], stride[1]) + 1
+      height_out = div(height_in + 2*pad[2]-kernel[2], stride[2]) + 1
+
+   The ``n_filter`` parameter specifies the number of such filters. The final
+   output blob will have the shape
+   ``width_out``-by-``height_out``-by-``n_filter``-by-``num``. An illustration
+   of typical convolution (and pooling) is shown below:
+
+   .. image:: ../images/cnn-layer.*
+
+   :sub:`image credit:
+   http://ufldl.stanford.edu/tutorial/supervised/ConvolutionalNeuralNetwork/`
+
+   Here the *RF size* is *receptive field size*, and *maps* (identified by
+   different colors) correspond to different filters.
 
    .. attribute:: param_key
 
