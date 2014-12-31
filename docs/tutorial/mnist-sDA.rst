@@ -25,7 +25,7 @@ trained model on the test set.
 As we can see, faster convergence could be observed when initialize with
 pre-training.
 
-(stacked) Denoising Auto-encoders
+(Stacked) Denoising Auto-encoders
 ---------------------------------
 
 We provide a brief introduction to (stacked) denoising auto-encoders in this
@@ -117,13 +117,7 @@ Pre-training
 
 We construct stacked denoising auto-encoders to do pre-training for weights and
 bias for the hidden layers we just defined. We do layer-wise pre-training in
-a ``for`` loop as listed below:
-
-.. literalinclude:: ../../examples/unsupervised-pretrain/denoising-autoencoder/denoising-autoencoder.jl
-   :start-after: --start-pre-train--
-   :end-before: --end-pre-train--
-
-Several Mocha primitives are useful for building auto-encoders:
+a ``for`` loop. Several Mocha primitives are useful for building auto-encoders:
 
 * :class:`RandomMaskLayer`: given a corruption ratio, this layer could randomly
   mask parts of the input blobs as zero. We use this to create corruptions in
@@ -133,4 +127,103 @@ Several Mocha primitives are useful for building auto-encoders:
   directly. Recall that the reconstruction error is computed against the
   *uncorruppted* input. So we need to use the following layer to create a copy
   of the input before applying corruption.
-* :class:`SplitLayer`: create multiple copies of a blob.
+* :class:`SplitLayer`: split a blob into multiple copies.
+* :class:`InnerProductLayer`: the encoder layer is just an ordinary
+  inner-product layer in DNNs.
+* :class:`TiedInnerProductLayer`: if we do not want *tied weights*, we could use
+  another inner-product layer as the decoder. Here we use a special layer to
+  construct decoders with *tied weights*. The ``tied_param_key`` attribute is
+  used to identify the corresponding encoder layer we want to tie weights with.
+* :class:`SquareLossLayer`: used to compute reconstruction error.
+
+We list the code for the layer definitions of the auto-encoders again:
+
+.. literalinclude:: ../../examples/unsupervised-pretrain/denoising-autoencoder/denoising-autoencoder.jl
+   :start-after: --start-sda-layers--
+   :end-before: --end-sda-layers--
+
+Note the i-th auto-encoder is built on top of the output of the (i-1)-th hidden
+layer (blob name ``symbol("ip$(i-1)")``). We split the blob into ``:orig_data``
+and ``:corrupt_data``, and add corruption to the ``:corrupt_data`` blob.
+
+The encoder layer is basically the same as the i-th hidden layer. But it should
+take the corrupted blob as input, so use the ``copy`` function to make a new
+layer based on the i-th hidden layer but change the ``bottoms`` property. The
+decoder layer has *tied weights* with the encoder layer, and the square-loss
+layer compute the reconstruction error.
+
+Recall that in layer-wise pre-training, we fix the parameters of the encoder
+layers that we already trained, and only train the top-most encoder-decoder
+pair. In Mocha, we could *freeze* layers in a net to prevent their parameters
+being modified during training. In this case, we freeze all layers except the
+encoder and the decoder layers:
+
+.. literalinclude:: ../../examples/unsupervised-pretrain/denoising-autoencoder/denoising-autoencoder.jl
+   :start-after: --start-freeze--
+   :end-before: --end-freeze--
+
+Now we are ready to do the pre-training. In this example, we do not use
+regularization or momentum:
+
+.. literalinclude:: ../../examples/unsupervised-pretrain/denoising-autoencoder/denoising-autoencoder.jl
+   :start-after: --start-pre-train--
+   :end-before: --end-pre-train--
+
+Fine Tuning
+-----------
+
+After pre-training, we are now ready to do supervised fine tuning. This part is
+almost identical to the original :doc:`MNIST tutorial </tutorial/mnist>`.
+
+.. literalinclude:: ../../examples/unsupervised-pretrain/denoising-autoencoder/denoising-autoencoder.jl
+   :start-after: --start-finetune--
+   :end-before: --end-finetune--
+
+Note the key to allow the ``MNIST-finetune`` net to use the pre-trained weights
+as initialization of the hidden layers is that we specify the same ``param_key``
+property for the hidden layers and the encoder layers. Those parameters are
+stored in the registry of the ``backend``. When a net is constructed, if
+a layer finds existing parameters with its ``param_key``, it will use the
+existing parameters, and ignore the :doc:`parameter initializers
+</user-guide/initializer>` specified by the users. Debug information will be
+printed to the console:
+
+.. code-block:: text
+
+   31-Dec 02:37:46:DEBUG:root:InnerProductLayer(ip-1): sharing weights and bias
+   31-Dec 02:37:46:DEBUG:root:InnerProductLayer(ip-2): sharing weights and bias
+   31-Dec 02:37:46:DEBUG:root:InnerProductLayer(ip-3): sharing weights and bias
+
+
+Comparison with Random Initialization
+-------------------------------------
+
+In order to see whether pre-training is helpful, we train the same DNN but with
+random initialization. The same layer definitions are re-used. But note the
+highlighted line below: we reset the registry in the backend to clear the
+pre-trained parameters before constructing the net:
+
+.. literalinclude:: ../../examples/unsupervised-pretrain/denoising-autoencoder/denoising-autoencoder.jl
+   :start-after: --start-randinit--
+   :end-before: --end-randinit--
+   :emphasize-lines: 1
+
+We can check from the log that randomly initialized parameters are used in this
+case:
+
+.. code-block:: text
+
+   31-Dec 01:55:06:DEBUG:root:Init network MNIST-rnd
+   31-Dec 01:55:06:DEBUG:root:Init parameter weight for layer ip-1
+   31-Dec 01:55:06:DEBUG:root:Init parameter bias for layer ip-1
+   31-Dec 01:55:06:DEBUG:root:Init parameter weight for layer ip-2
+   31-Dec 01:55:06:DEBUG:root:Init parameter bias for layer ip-2
+   31-Dec 01:55:06:DEBUG:root:Init parameter weight for layer ip-3
+   31-Dec 01:55:06:DEBUG:root:Init parameter bias for layer ip-3
+   31-Dec 01:55:06:DEBUG:root:Init parameter weight for layer pred
+   31-Dec 01:55:06:DEBUG:root:Init parameter bias for layer pred
+
+The plots shown at the beginning of this tutorial are generated from the saved
+statistics from the *coffee lounges*. If you are interested in how those plots
+are generated, please refer to the ``plot-all.jl`` script in the code directory of this
+tutorial.

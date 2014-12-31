@@ -43,8 +43,8 @@ hidden_layers = [
 ################################################################################
 # Layerwise pre-training for hidden layers
 ################################################################################
-# --start-pre-train--
 for i = 1:n_hidden_layer
+  # --start-sda-layers--
   ae_data_layer = SplitLayer(bottoms=[symbol("ip$(i-1)")], tops=[:orig_data, :corrupt_data])
   corrupt_layer = RandomMaskLayer(ratio=corruption_rates[i], bottoms=[:corrupt_data])
 
@@ -52,7 +52,9 @@ for i = 1:n_hidden_layer
   recon_layer   = TiedInnerProductLayer(name="tied-ip-$i", tied_param_key=param_keys[i],
       tops=[:recon], bottoms=[symbol("ip$i")])
   recon_loss_layer = SquareLossLayer(bottoms=[:recon, :orig_data])
+  # --end-sda-layers--
 
+  # --start-freeze--
   da_layers = [data_layer, rename_layer, ae_data_layer, corrupt_layer,
       hidden_layers[1:i-1]..., encode_layer, recon_layer, recon_loss_layer]
   da = Net("Denoising-Autoencoder-$i", backend, da_layers)
@@ -61,7 +63,9 @@ for i = 1:n_hidden_layer
   # freeze all but the layers for auto-encoder
   freeze_all!(da)
   unfreeze!(da, "ip-$i", "tied-ip-$i")
+  # --end-freeze--
 
+  # --start-pre-train--
   base_dir = "pretrain-$i"
   pretrain_params  = SolverParameters(max_iter=div(pretrain_epoch*60000,batch_size),
       regu_coef=0.0, mom_policy=MomPolicy.Fixed(momentum),
@@ -73,18 +77,20 @@ for i = 1:n_hidden_layer
   solve(solver, da)
 
   destroy(da)
+  # --end-pre-train--
 end
-# --end-pre-train--
 
 ################################################################################
 # Fine-tuning
 ################################################################################
 
+# --start-finetune--
 pred_layer = InnerProductLayer(name="pred", output_dim=10,
     bottoms=[symbol("ip$n_hidden_layer")], tops=[:pred])
 loss_layer = SoftmaxLossLayer(bottoms=[:pred, :label])
 
-net = Net("MNIST-finetune", backend, [data_layer, rename_layer, hidden_layers..., pred_layer, loss_layer])
+net = Net("MNIST-finetune", backend, [data_layer, rename_layer,
+    hidden_layers..., pred_layer, loss_layer])
 
 base_dir = "finetune"
 params = SolverParameters(max_iter=div(finetune_epoch*60000,batch_size),
@@ -107,12 +113,16 @@ solve(solver, net)
 
 destroy(net)
 destroy(test_net)
+# --end-finetune--
 
 ################################################################################
 # Random-initialization, for comparison
 ################################################################################
+# --start-randinit--
 registry_reset(backend)
-net = Net("MNIST-rnd", backend, [data_layer, rename_layer, hidden_layers..., pred_layer, loss_layer])
+
+net = Net("MNIST-rnd", backend, [data_layer, rename_layer,
+    hidden_layers..., pred_layer, loss_layer])
 base_dir = "randinit"
 
 params = copy(params, load_from=base_dir)
@@ -130,6 +140,6 @@ solve(solver, net)
 
 destroy(net)
 destroy(test_net)
-
+# --end-randinit--
 
 shutdown(backend)
