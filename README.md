@@ -7,7 +7,7 @@
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE.md)
 <!--[![Build status](https://ci.appveyor.com/api/projects/status/342vcj5lj2jyegsp?svg=true)](https://ci.appveyor.com/project/pluskid/mocha-jl)-->
 
-[Documentation](http://mochajl.readthedocs.org/) | [Release Notes](NEWS.md) | [Roadmap](https://github.com/pluskid/Mocha.jl/issues/22) | [Issues](https://github.com/pluskid/Mocha.jl/issues)
+[Tutorials](http://mochajl.readthedocs.org/en/latest/#tutorials) | [Documentation](http://mochajl.readthedocs.org/) | [Release Notes](NEWS.md) | [Roadmap](https://github.com/pluskid/Mocha.jl/issues/22) | [Issues](https://github.com/pluskid/Mocha.jl/issues)
 
 Mocha is a Deep Learning framework for [Julia](http://julialang.org/), inspired by the C++ Deep Learning framework [Caffe](http://caffe.berkeleyvision.org/). Some hilights:
 
