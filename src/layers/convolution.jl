@@ -17,6 +17,7 @@
   bias_cons :: Constraint = NoCons(),
   filter_lr :: FloatingPoint = 1.0,
   bias_lr :: FloatingPoint = 2.0,
+  deconv :: Bool = false,
 )
 @characterize_layer(ConvolutionLayer,
   has_param  => true,
@@ -26,32 +27,37 @@
 
 type CPUConvState
   col_buffer      :: Blob
-  M               :: Int
-  N               :: Int
-  K               :: Int
 
   # a all-1 vector used in gemm to help bias calculation
   bias_multiplier :: Blob
   img_buffer      :: Array
 end
 
-function setup_etc(backend::CPUBackend, layer::ConvolutionLayer, dtype, width, height,
-    channels, batch_size, width_out, height_out, inputs)
+function setup_etc(backend::CPUBackend, layer::ConvolutionLayer, dtype, state, inputs)
 
   if layer.kernel[1] == 1 && layer.kernel[2] == 1 &&
      layer.stride[1] == 1 && layer.stride[2] == 1 &&
      layer.pad[1] == 0 && layer.pad[2] == 0
     col_buffer = NullBlob()
   else
-    col_buffer = CPUBlob(Array(dtype, width_out, height_out, channels*prod(layer.kernel), 1))
+    if layer.deconv
+      col_buffer = CPUBlob(Array(dtype, state.width, state.height, state.kernel_dim))
+    else
+      col_buffer = CPUBlob(Array(dtype, state.width_out, state.height_out, state.kernel_dim))
+    end
   end
-  M = height_out * width_out
-  N = div(layer.n_filter, layer.n_group)
-  K = div(channels * layer.kernel[1] * layer.kernel[2], layer.n_group)
-  bias_multiplier = make_blob(backend, dtype, M, 1, 1, 1)
-  fill!(bias_multiplier, convert(dtype,1))
-  img_buffer = Array(dtype, width, height, channels)
-  etc = CPUConvState(col_buffer, M, N, K, bias_multiplier, img_buffer)
+
+  #M = height_out * width_out
+  #N = div(layer.n_filter, layer.n_group)
+  #K = div(channels * layer.kernel[1] * layer.kernel[2], layer.n_group)
+
+  bias_multiplier = make_blob(backend, ones(dtype, state.width_out*state.height_out))
+  if layer.deconv
+    img_buffer = Array(dtype, state.width_out, state.height_out, layer.n_filter)
+  else
+    img_buffer = Array(dtype, state.width, state.height, state.channels)
+  end
+  etc = CPUConvState(col_buffer, bias_multiplier, img_buffer)
   return etc
 end
 
@@ -74,13 +80,42 @@ type ConvolutionLayerState <: LayerState
     end
 
     width, height, channels, batch_size = size(inputs[1])
+    dtype = eltype(inputs[1])
+
     @assert channels % layer.n_group == 0
     @assert layer.n_filter % layer.n_group == 0
 
-    width_out  = div(width  + 2*layer.pad[1]-layer.kernel[1], layer.stride[1]) + 1
-    height_out = div(height + 2*layer.pad[2]-layer.kernel[2], layer.stride[2]) + 1
+    state = new(layer)
+    state.width      = width
+    state.height     = height
+    state.channels   = channels
+    state.batch_size = batch_size
+    state.dtype      = dtype
 
-    dtype = eltype(inputs[1])
+    if layer.deconv
+      state.width_out      = layer.stride[1] * (width-1) + layer.kernel[1] - 2*layer.pad[1]
+      state.height_out     = layer.stride[2] * (width-1) + layer.kernel[2] - 2*layer.pad[2]
+
+      state.conv_width_in  = state.width_out
+      state.conv_height_in = state.height_out
+      state.conv_out_sp    = width*height
+      state.conv_chann_in  = layer.n_filter
+      state.conv_chann_out = channels
+    else
+      state.width_out      = div(width  + 2*layer.pad[1]-layer.kernel[1], layer.stride[1]) + 1
+      state.height_out     = div(height + 2*layer.pad[2]-layer.kernel[2], layer.stride[2]) + 1
+
+      state.conv_width_in  = width
+      state.conv_height_in = height
+      state.conv_out_sp    = state.width_out*state.height_out
+      state.conv_chann_in  = channels
+      state.conv_chann_out = layer.n_filter
+    end
+
+    state.kernel_dim    = state.conv_chann_in * prod(layer.kernel)
+    state.weight_offset = div(state.conv_chann_out * state.kernel_dim, layer.n_group*layer.n_group) * sizeof(state.dtype)
+    state.col_offset    = div(state.kernel_dim * state.conv_out_sp, layer.n_group) * sizeof(state.dtype)
+    state.output_offset = div(state.conv_chann_out * state.conv_out_sp, layer.n_group) * sizeof(state.dtype)
 
     # Make sure all input blobs are of the same shape
     for i = 2:length(inputs)
@@ -92,20 +127,21 @@ type ConvolutionLayerState <: LayerState
     blobs_diff = Array(Blob, length(inputs))
 
     for i = 1:length(inputs)
-      blobs[i] = make_blob(backend, dtype, width_out, height_out, layer.n_filter, batch_size)
-      blobs_diff[i] = make_blob(backend, dtype, width_out, height_out, layer.n_filter, batch_size)
+      blobs[i] = make_blob(backend, dtype, state.width_out, state.height_out, layer.n_filter, batch_size)
+      blobs_diff[i] = make_blob(backend, dtype, state.width_out, state.height_out, layer.n_filter, batch_size)
     end
 
     if shared_params != nothing
       @assert length(shared_params) == 2
       @assert shared_params[1].name == "filter" && shared_params[2].name == "bias"
-      @assert size(shared_params[1].blob) == tuple(layer.kernel...,div(channels,layer.n_group),layer.n_filter)
+      @assert size(shared_params[1].blob) == tuple(layer.kernel...,div(state.conv_chann_in,layer.n_group),state.conv_chann_out)
       @assert eltype(shared_params[1].blob) == dtype
       @debug("ConvolutionLayer($(layer.name)): sharing filters and bias")
 
       param_filter, param_bias = [share_parameter(backend, param) for param in shared_params]
     else
-      param_filter = make_parameter(backend,"filter",dtype,(layer.kernel[1],layer.kernel[2],div(channels,layer.n_group), layer.n_filter),
+      param_filter = make_parameter(backend,"filter",dtype,(layer.kernel[1],layer.kernel[2],
+          div(state.conv_chann_in,layer.n_group), state.conv_chann_out),
           layer.filter_init, layer.filter_regu, layer.filter_cons, layer.filter_lr)
       param_bias   = make_parameter(backend,"bias",dtype,(layer.n_filter,),
           layer.bias_init, layer.bias_regu, layer.bias_cons, layer.bias_lr)
@@ -117,27 +153,44 @@ type ConvolutionLayerState <: LayerState
     ∇bias      = param_bias.gradient
     parameters = [param_filter, param_bias]
 
-    etc = setup_etc(backend, layer, dtype, width, height, channels, batch_size, width_out, height_out, inputs)
+    etc = setup_etc(backend, layer, dtype, state, inputs)
 
-    state = new(layer, blobs, blobs_diff, parameters)
-    state.filter = filter
-    state.∇filter = ∇filter
-    state.bias = bias
-    state.∇bias = ∇bias
+    state.blobs      = blobs
+    state.blobs_diff = blobs_diff
+    state.parameters = parameters
 
-    state.height_out = height_out
-    state.width_out = width_out
+    state.filter     = filter
+    state.∇filter    = ∇filter
+    state.bias       = bias
+    state.∇bias      = ∇bias
 
-    state.etc = etc
+    state.etc        = etc
 
-    state.frozen = false
+    state.frozen     = false
 
     return state
   end
 
-  # Auxiliary variables
+  # Convolution Operation Parameters, depending on whether we are doing conv or de-conv
+  conv_chann_out :: Int
+  conv_chann_in  :: Int
+  conv_width_in  :: Int
+  conv_height_in :: Int
+  conv_out_sp    :: Int
+
+  kernel_dim     :: Int
+  weight_offset  :: Int
+  col_offset     :: Int
+  output_offset  :: Int
+
+  # Layer parameters, regardless of deconv or not
   height_out :: Int
   width_out  :: Int
+  width      :: Int
+  height     :: Int
+  channels   :: Int
+  batch_size :: Int
+  dtype      :: Type
 
   etc        :: Any # whatever status a computation backend needs to maintain
 
@@ -170,38 +223,80 @@ function shutdown(backend::Backend, state::ConvolutionLayerState)
   shutdown_etc(backend, state)
 end
 
+# convolution forward on one data sample
+function conv_fwd_impl(backend::CPUBackend, state::ConvolutionLayerState, input::Blob, output::Blob)
+  width, height, channels, num = size(input)
+  img_offset = width*height*channels * sizeof(state.dtype)
+
+  width_out, height_out, channels_out, num_out = size(output)
+  top_img_offset = width_out*height_out*channels_out * sizeof(state.dtype)
+
+  for n = 1:num
+    if isa(state.etc.col_buffer, NullBlob)
+      col_buffer = convert(Ptr{state.dtype}, input.data) + img_offset * (n-1)
+    else
+      col_buffer = state.etc.col_buffer.data
+      im2col(input.data, n, col_buffer,
+          width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
+      col_buffer = convert(Ptr{state.dtype}, col_buffer)
+    end
+
+    output_ptr = convert(Ptr{state.dtype}, output.data) + top_img_offset * (n-1)
+    for g = 1:state.layer.n_group
+      RawBLAS.gemm!('N', 'N', state.conv_out_sp, div(state.conv_chann_out, state.layer.n_group),
+          div(state.kernel_dim, state.layer.n_group),
+          convert(state.dtype, 1), col_buffer + state.col_offset * (g-1),
+          convert(Ptr{state.dtype}, pointer(state.filter.data)) + state.weight_offset * (g-1),
+          convert(state.dtype, 0), output_ptr + state.output_offset * (g-1))
+    end
+  end
+end
+
+# convolution backward on one data sample
+function conv_bwd_impl(backend::CPUBackend, state::ConvolutionLayerState, diff::Blob, top_diff::Blob)
+  width, height, channels, num = size(diff)
+  img_offset = width*height*channels * sizeof(state.dtype)
+
+  width_top, height_top, channels_top, num_top = size(top_diff)
+  top_img_offset = width_top*height_top*channels_top * sizeof(state.dtype)
+
+  for n = 1:num
+    top_diff_ptr = convert(Ptr{state.dtype}, top_diff.data) + top_img_offset * (n-1)
+    if isa(state.etc.col_buffer, NullBlob)
+      col_buffer = convert(Ptr{state.dtype}, diff.data) + img_offset * (n-1)
+    else
+      col_buffer = convert(Ptr{state.dtype}, state.etc.col_buffer.data)
+    end
+
+    for g = 1:state.layer.n_group
+      RawBLAS.gemm!('N', 'T', state.conv_out_sp, div(state.kernel_dim, state.layer.n_group),
+          div(state.conv_chann_out, state.layer.n_group),
+          convert(state.dtype, 1), top_diff_ptr + state.output_offset * (g-1),
+          convert(Ptr{state.dtype}, state.filter.data) + state.weight_offset * (g-1),
+          convert(state.dtype, 0), col_buffer + state.col_offset * (g-1))
+    end
+    if !(isa(state.etc.col_buffer, NullBlob))
+       col2im(state.etc.col_buffer.data, diff.data, n, state.etc.img_buffer,
+          width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
+    end
+  end
+end
+
 function forward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input = inputs[i]
     output = state.blobs[i]
     erase!(output)
-    dtype = eltype(input)
-    width, height, channels, num = size(input)
-    img_offset = width*height*channels * sizeof(dtype)
-    weight_offset = state.etc.N * state.etc.K * sizeof(dtype)
-    col_offset = state.etc.M * state.etc.K * sizeof(dtype)
-    top_offset = state.etc.M * state.etc.N * sizeof(dtype)
-    top_img_offset = state.height_out * state.width_out * state.layer.n_filter * sizeof(dtype)
 
-    for n = 1:num
-      if isa(state.etc.col_buffer, NullBlob)
-        col_buffer = convert(Ptr{dtype}, input.data) + img_offset * (n-1)
-      else
-        col_buffer = state.etc.col_buffer.data
-        im2col(input.data, n, col_buffer,
-            width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
-        col_buffer = convert(Ptr{dtype}, col_buffer)
-      end
+    conv_fwd_impl(backend, state, input, output)
 
-      output_ptr = convert(Ptr{dtype}, output.data) + top_img_offset * (n-1)
-      for g = 1:state.layer.n_group
-        RawBLAS.gemm!('N', 'N', state.etc.M, state.etc.N, state.etc.K, convert(dtype, 1),
-            col_buffer + col_offset * (g-1),
-            convert(Ptr{dtype}, pointer(state.filter.data)) + weight_offset * (g-1),
-            convert(dtype, 0), output_ptr + top_offset * (g-1))
-      end
-      RawBLAS.gemm!('N', 'N', state.etc.M, state.layer.n_filter, 1, convert(dtype, 1),
-          state.etc.bias_multiplier.data, pointer(state.bias.data), convert(dtype, 1), output_ptr)
+    width_out, height_out, channels_out, num_out = size(output)
+    top_img_offset = width_out*height_out*channels_out * sizeof(state.dtype)
+
+    for n = 1:num_out
+      output_ptr = convert(Ptr{state.dtype}, output.data) + top_img_offset * (n-1)
+      RawBLAS.gemm!('N', 'N', state.width_out*state.height_out, state.layer.n_filter, 1, convert(state.dtype, 1),
+          state.etc.bias_multiplier.data, pointer(state.bias.data), convert(state.dtype, 1), output_ptr)
     end
   end
 end
@@ -212,38 +307,38 @@ function backward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vec
   for i = 1:length(inputs)
     input = inputs[i]
     top_diff = state.blobs_diff[i]
-    dtype = eltype(input)
+
     width, height, channels, num = size(input)
-    img_offset = width*height*channels * sizeof(dtype)
-    weight_offset = state.etc.N * state.etc.K * sizeof(dtype)
-    col_offset = state.etc.M * state.etc.K * sizeof(dtype)
-    top_offset = state.etc.M * state.etc.N * sizeof(dtype)
-    top_img_offset = state.height_out * state.width_out * state.layer.n_filter * sizeof(dtype)
+    img_offset = width*height*channels * sizeof(state.dtype)
+
+    width_out, height_out, channels_out, num_out = size(top_diff)
+    top_img_offset = height_out * width_out * channels_out * sizeof(state.dtype)
 
     if !state.frozen
       for n = 1:num
-        top_diff_ptr = convert(Ptr{dtype}, top_diff.data) + top_img_offset * (n-1)
+        top_diff_ptr = convert(Ptr{state.dtype}, top_diff.data) + top_img_offset * (n-1)
 
         #----------------------------------------------
         # bias gradient
-        RawBLAS.gemv!('T', state.etc.M, state.layer.n_filter, convert(dtype, 1), top_diff_ptr,
-            state.etc.bias_multiplier.data, convert(dtype, 1), pointer(state.∇bias.data))
+        RawBLAS.gemv!('T', state.width_out*state.height_out, state.layer.n_filter, convert(state.dtype, 1), top_diff_ptr,
+            state.etc.bias_multiplier.data, convert(state.dtype, 1), pointer(state.∇bias.data))
 
         #----------------------------------------------
         # filter gradient
         if isa(state.etc.col_buffer, NullBlob)
-          col_buffer = convert(Ptr{dtype}, input.data) + img_offset * (n-1)
+          col_buffer = convert(Ptr{state.dtype}, input.data) + img_offset * (n-1)
         else
           col_buffer = state.etc.col_buffer.data
           im2col(input.data, n, col_buffer,
               width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
-          col_buffer = convert(Ptr{dtype}, col_buffer)
+          col_buffer = convert(Ptr{state.dtype}, col_buffer)
         end
         for g = 1:state.layer.n_group
-          RawBLAS.gemm!('T', 'N', state.etc.K, state.etc.N, state.etc.M, convert(dtype, 1),
-              col_buffer + col_offset * (g-1),
-              top_diff_ptr + top_offset * (g-1), convert(dtype, 1),
-              convert(Ptr{dtype}, pointer(state.∇filter.data)) + weight_offset * (g-1))
+          RawBLAS.gemm!('T', 'N',
+              div(state.kernel_dim, state.layer.n_group), div(state.conv_chann_out, state.layer.n_group),
+              state.conv_out_sp, convert(state.dtype, 1), col_buffer + state.col_offset * (g-1),
+              top_diff_ptr + state.output_offset * (g-1), convert(state.dtype, 1),
+              convert(Ptr{state.dtype}, pointer(state.∇filter.data)) + state.weight_offset * (g-1))
         end
       end
     end
@@ -252,25 +347,7 @@ function backward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vec
     # back propagate gradient
     if isa(diffs[i], CPUBlob)
       diff = diffs[i]
-      for n = 1:num
-        top_diff_ptr = convert(Ptr{dtype}, top_diff.data) + top_img_offset * (n-1)
-        if isa(state.etc.col_buffer, NullBlob)
-          col_buffer = convert(Ptr{dtype}, diff.data) + img_offset * (n-1)
-        else
-          col_buffer = convert(Ptr{dtype}, state.etc.col_buffer.data)
-        end
-
-        for g = 1:state.layer.n_group
-          RawBLAS.gemm!('N', 'T', state.etc.M, state.etc.K, state.etc.N, convert(dtype, 1),
-              top_diff_ptr + top_offset * (g-1),
-              convert(Ptr{dtype}, state.filter.data) + weight_offset * (g-1),
-              convert(dtype, 0), col_buffer + col_offset * (g-1))
-        end
-        if !(isa(state.etc.col_buffer, NullBlob))
-           col2im(state.etc.col_buffer.data, diff.data, n, state.etc.img_buffer,
-              width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
-        end
-      end
+      conv_bwd_impl(backend, state, diff, top_diff)
     end
   end
 end
