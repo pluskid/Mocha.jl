@@ -119,5 +119,20 @@ Loss Layers
       Properties for the underlying :class:`MultinomialLogisticLossLayer`. See
       document there for details.
 
+.. class:: SquareLossLayer
 
+   Compute the square loss for real-valued regression problems:
 
+   .. math::
+
+      \frac{1}{2N}\sum_{i=1}^N \|\mathbf{y}_i - \hat{\mathbf{y}}_i\|^2
+
+   Here :math:`N` is the batch-size, :math:`\mathbf{y}_i` is the real-valued
+   (vector or scalar) ground-truth label of the :math:`i`-th sample, and
+   :math:`\hat{\mathbf{y}}_i` is the corresponding prediction.
+
+   .. attribute:: bottoms
+
+      Should be a vector containing two symbols. The first one specifies the
+      name for the prediction :math:`\hat{\mathbf{y}}`, and the second one
+      specifies the name for the ground-truth :math:`\mathbf{y}`.
