@@ -18,6 +18,15 @@ if test_gpu
   init(backend_gpu)
 end
 
+# a wrapper to rand, make simple random numbers
+# with only a few effective digit after the decimal
+# point, making it easier when one need to do
+# manual calculation to debug
+function simplerand(args...)
+  ret = rand(args...)
+  round(ret*100)/100
+end
+
 # run test in the whole directory, latest modified files
 # are run first, this makes waiting time shorter when writing
 # or modifying unit-tests

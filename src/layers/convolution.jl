@@ -93,8 +93,8 @@ type ConvolutionLayerState <: LayerState
     state.dtype      = dtype
 
     if layer.deconv
-      state.width_out      = layer.stride[1] * (width-1) + layer.kernel[1] - 2*layer.pad[1]
-      state.height_out     = layer.stride[2] * (width-1) + layer.kernel[2] - 2*layer.pad[2]
+      state.width_out      = layer.stride[1] * (width-1)  + layer.kernel[1] - 2*layer.pad[1]
+      state.height_out     = layer.stride[2] * (height-1) + layer.kernel[2] - 2*layer.pad[2]
 
       state.conv_width_in  = state.width_out
       state.conv_height_in = state.height_out
@@ -253,7 +253,7 @@ function conv_fwd_impl(backend::CPUBackend, state::ConvolutionLayerState, input:
 end
 
 # convolution backward on one data sample
-function conv_bwd_impl(backend::CPUBackend, state::ConvolutionLayerState, diff::Blob, top_diff::Blob)
+function conv_bwd_impl(backend::CPUBackend, state::ConvolutionLayerState, top_diff::Blob, diff::Blob)
   width, height, channels, num = size(diff)
   img_offset = width*height*channels * sizeof(state.dtype)
 
@@ -288,8 +288,13 @@ function forward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vect
     output = state.blobs[i]
     erase!(output)
 
-    conv_fwd_impl(backend, state, input, output)
+    if state.layer.deconv
+      conv_bwd_impl(backend, state, input, output)
+    else
+      conv_fwd_impl(backend, state, input, output)
+    end
 
+    # add bias
     width_out, height_out, channels_out, num_out = size(output)
     top_img_offset = width_out*height_out*channels_out * sizeof(state.dtype)
 
@@ -347,7 +352,7 @@ function backward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vec
     # back propagate gradient
     if isa(diffs[i], CPUBlob)
       diff = diffs[i]
-      conv_bwd_impl(backend, state, diff, top_diff)
+      conv_bwd_impl(backend, state, top_diff, diff)
     end
   end
 end

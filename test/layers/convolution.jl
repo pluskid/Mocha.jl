@@ -1,5 +1,5 @@
-function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, n_input, freeze, T, eps)
-  println("-- Testing Convolution(frozen=$freeze) on $(typeof(backend)){$T} filter=$((filter_w,filter_h))...")
+function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, n_input, freeze, deconv, T, eps)
+  println("-- Testing $(deconv?"De-":"")Convolution(frozen=$freeze) on $(typeof(backend)){$T} filter=$((filter_w,filter_h))...")
   println("    > Setup")
   input_w = 16
   input_h = 10
@@ -8,37 +8,40 @@ function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, p
   n_filter = 12
 
   input_dims = (input_w, input_h, input_chann, input_num)
-  filter_dims = (filter_w, filter_h, int(input_chann/n_group), n_filter)
+  if deconv
+    filter_dims = (filter_w, filter_h, div(n_filter,n_group), input_chann)
+  else
+    filter_dims = (filter_w, filter_h, div(input_chann,n_group), n_filter)
+  end
   bias_dims = (1, 1, n_filter, 1)
 
   layer = ConvolutionLayer(name="conv", kernel=(filter_w, filter_h), stride=(stride_w, stride_h),
-      pad=(pad_w,pad_h), n_filter=n_filter, n_group=n_group,
+      pad=(pad_w,pad_h), n_filter=n_filter, n_group=n_group, deconv=deconv,
       tops=Array(Symbol,n_input), bottoms=Array(Symbol,n_input))
 
   # convolution layer requires each input blob to be the same shape
-  input = [rand(T, input_dims) for i = 1:n_input]
+  input = [simplerand(T, input_dims) for i = 1:n_input]
   inputs = Blob[make_blob(backend, x) for x in input]
   data_diffs = Blob[make_blob(backend, x) for x in input]
 
   state = setup(backend, layer, inputs, data_diffs)
 
   println("    > Forward")
-  filter = rand(T, filter_dims)
+  filter = simplerand(T, filter_dims)
   copy!(state.filter, filter)
-  bias = rand(T, bias_dims)
+  bias = simplerand(T, bias_dims)
   copy!(state.bias, bias)
 
   forward(backend, state, inputs)
   for i = 1:n_input
     expected_output = convolution_forward(state, filter, bias, input[i])
     @test size(expected_output) == size(state.blobs[i])
-    got_output = similar(expected_output)
-    copy!(got_output, state.blobs[i])
+    got_output = to_array(state.blobs[i])
     @test all(-eps .< expected_output - got_output .< eps)
   end
 
   println("    > Backward")
-  top_diff = [rand(T, size(state.blobs[1])) for i = 1:n_input]
+  top_diff = [simplerand(T, size(state.blobs[1])) for i = 1:n_input]
   for i = 1:n_input
     copy!(state.blobs_diff[i], top_diff[i])
   end
@@ -85,26 +88,52 @@ end
 # naive implementation of convolution forward, used to check the correctness
 function convolution_forward(state, filter::Array, bias::Array, input::Array)
   width, height, channel, num = size(input)
+  output = zeros(eltype(input), size(state.blobs[1]))
+
   n_group = state.layer.n_group
   o_g = int(state.layer.n_filter / n_group)
   k_g = int(channel / n_group)
 
-  output = Array(eltype(input), size(state.blobs[1]))
-  output[:] = 0
-
-  for n = 1:num
-    for g = 1:n_group
-      for o = 1:o_g
-        for k = 1:k_g
-          for y = 1:state.height_out
-            for x = 1:state.width_out
-              for p = 1:state.layer.kernel[2]
-                for q = 1:state.layer.kernel[1]
-                  in_y = (y-1) * state.layer.stride[2] - state.layer.pad[2] + p
-                  in_x = (x-1) * state.layer.stride[1] - state.layer.pad[1] + q
-                  if (in_y >= 1 && in_y <= height && in_x >= 1 && in_x <= width)
-                    output[x, y, (g-1)*o_g+o, n] += input[in_x, in_y, (g-1)*k_g+k, n] *
-                        filter[q, p, k, (g-1)*o_g+o]
+  if state.layer.deconv
+    ## Deconvolution
+    for n = 1:num
+      for g = 1:n_group
+        for o = 1:o_g
+          for k = 1:k_g
+            for y = 1:height
+              for x = 1:width
+                for p = 1:state.layer.kernel[2]
+                  for q = 1:state.layer.kernel[1]
+                    out_y = (y-1) * state.layer.stride[2] - state.layer.pad[2] + p
+                    out_x = (x-1) * state.layer.stride[1] - state.layer.pad[1] + q
+                    if (out_y >= 1 && out_y <= state.height_out && out_x >= 1 && out_x <= state.width_out)
+                      output[out_x,out_y,(g-1)*o_g+o,n] += input[x,y,(g-1)*k_g+k,n] *
+                          filter[q,p,(g-1)*o_g+o,k]
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  else
+    ## Ordinary Convolution
+    for n = 1:num
+      for g = 1:n_group
+        for o = 1:o_g
+          for k = 1:k_g
+            for y = 1:state.height_out
+              for x = 1:state.width_out
+                for p = 1:state.layer.kernel[2]
+                  for q = 1:state.layer.kernel[1]
+                    in_y = (y-1) * state.layer.stride[2] - state.layer.pad[2] + p
+                    in_x = (x-1) * state.layer.stride[1] - state.layer.pad[1] + q
+                    if (in_y >= 1 && in_y <= height && in_x >= 1 && in_x <= width)
+                      output[x, y, (g-1)*o_g+o, n] += input[in_x, in_y, (g-1)*k_g+k, n] *
+                          filter[q, p, k, (g-1)*o_g+o]
+                    end
                   end
                 end
               end
@@ -178,13 +207,17 @@ function convolution_backward(state, filter::Array, bias::Array, input::Array, t
   return (∇filter, ∇bias, ∇input)
 end
 
+function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, n_input, freeze, T, eps)
+  test_convolution_layer(backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, n_input, freeze, false, T, eps)
+  test_convolution_layer(backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, n_input, freeze, true, T, eps)
+end
 function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, n_input, T, eps)
   test_convolution_layer(backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, n_input, true, T, eps)
   test_convolution_layer(backend, n_group, filter_w, filter_h, pad_w, pad_h, stride_w, stride_h, n_input, false, T, eps)
 end
 function test_convolution_layer(backend::Backend, n_input, T, eps)
-  test_convolution_layer(backend, 2, 3, 4, 2, 2, 1, 2, n_input, T, eps)
   test_convolution_layer(backend, 1, 1, 1, 0, 0, 1, 1, n_input, T, eps)
+  test_convolution_layer(backend, 2, 3, 4, 2, 2, 1, 2, n_input, T, eps)
 end
 
 function test_convolution_layer(backend::Backend)
