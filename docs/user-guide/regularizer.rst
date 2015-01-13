@@ -2,23 +2,23 @@ Regularizers
 ============
 
 Regularizers add extra penalties or constraints for network parameters to
-restrict the model complexity. The correspondences in Caffe are weight decays.
-Regularizers and weight decays are equivalent in back-propagation. The
+restrict the model complexity. The corresponding term used in Caffe is *weight decay*.
+Regularization and weight decay are equivalent in back-propagation. The
 *conceptual* difference in the forward pass is that when treated as weight
-decay, they are not considered as parts of the objective function. However, in
-order to save computation, Mocha also omit forward computation for regularizers
+decay, they are not considered being part of the objective function. However, in
+order to reduce the number of computations, Mocha also omits the forward computation for regularizers
 by default. We choose to use the term regularization instead of weight decay
 just because it is easier to understand when generalizing to sparse,
 group-sparse or even more complicated structural regularizations.
 
 All regularizers have the property ``coefficient``, corresponding to the
 regularization coefficient. During training, a global regularization coefficient
-can also be specified (see :doc:`user-guide/solver`), that globally scale all
+can also be specified (see :doc:`user-guide/solver`), which globally scales all
 local regularization coefficients.
 
 .. class:: NoRegu
 
-   Regularizer that impose no regularization.
+   Regularizer that imposes no regularization.
 
 .. class:: L2Regu
 
@@ -32,7 +32,7 @@ local regularization coefficients.
 
    .. note::
 
-      Caffe, only :math:`\lambda W` is added as a weight decay in back propagation,
+      In Caffe, only :math:`\lambda W` is added as a weight decay in back propagation,
       which is equivalent to having a L2 regularizer with coefficient
       :math:`0.5\lambda`.
 
@@ -45,7 +45,7 @@ local regularization coefficients.
 
       \|W\|_1 = \sum_i |W_i|
 
-   is computed. And :math:`\lambda \|W\|_1` is added to the objective function.
+   is computed, and :math:`\lambda \|W\|_1` is added to the objective function.
    During the backward pass, :math:`\lambda\text{sign}(W)` is added to the
    parameter gradient. The L1 regularizer has the property of encouraging
    sparsity in the parameters.
