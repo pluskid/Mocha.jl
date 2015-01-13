@@ -5,7 +5,7 @@ This tutorial goes through the code in ``examples/mnist`` to explain
 the basic usages of Mocha. We will use the architecture known as
 [LeNet]_, which is a deep convolutional neural network known to work
 well on handwritten digit classification tasks. More specifically, we
-will use the Caffe's modified architecture, by replacing the sigmoid
+will use Caffe's modified architecture, by replacing the sigmoid
 activation functions with Rectified Learning Unit (ReLU) activation
 functions.
 
@@ -18,14 +18,14 @@ functions.
 Preparing the Data
 ------------------
 
-`MNIST <http://yann.lecun.com/exdb/mnist/>`_ is handwritten digit
+`MNIST <http://yann.lecun.com/exdb/mnist/>`_ is a handwritten digit
 recognition dataset containing 60,000 training examples and 10,000
 test examples. Each example is a 28x28 single channel grayscale
 image. The dataset in a binary format could be downloaded from `Yann
 LeCun's website <http://yann.lecun.com/exdb/mnist/>`_. We have created
 a script ``get-mnist.sh`` to download the dataset, and it will call
-``mnist.convert.jl`` to convert the binary dataset into HDF5 file that
-Mocha could read.
+``mnist.convert.jl`` to convert the binary dataset into a HDF5 file that
+Mocha can read.
 
 When the conversion finishes, ``data/train.hdf5`` and
 ``data/test.hdf5`` will be generated.
@@ -44,7 +44,7 @@ Mocha package.
 
    using Mocha
 
-Then we will define a data layer, which read the HDF5 file and provide
+Then we will define a data layer, which reads the HDF5 file and provides
 input for the network:
 
 .. code-block:: julia
@@ -52,10 +52,10 @@ input for the network:
    data_layer  = HDF5DataLayer(name="train-data", source="data/train.txt",
        batch_size=64, shuffle=true)
 
-Note the ``source`` is a simple text file what contains a list of real
+Note the ``source`` is a simple text file that contains a list of real
 data files (in this case ``data/train.hdf5``). This behavior is the
 same as in Caffe, and could be useful when your dataset contains a lot
-of files. The network process data in mini-batches, and we are using a batch
+of files. The network processes data in mini-batches, and we are using a batch
 size of 64 in this example. We also enable random shuffling of the data set.
 
 Next we define a convolution layer in a similar way:
@@ -68,13 +68,13 @@ Next we define a convolution layer in a similar way:
 There are more parameters we specified here
 
 ``name``
-  Every layer could be given a name. When saving the model to
+  Every layer can be given a name. When saving the model to
   disk and loading back, this is used as an identifier to map to the
   correct layer. So if your layer contains learned parameters (a
   convolution layer contains learned filters), you should give it a
   unique name. It is a good practice to give every layer a unique name,
   for the purpose of getting more informative debugging information
-  when there is any potential issues.
+  when there are any potential issues.
 ``n_filter``
   Number of convolution filters.
 ``kernel``
@@ -85,14 +85,14 @@ There are more parameters we specified here
   An array of symbols specifying where to get data from. In this case,
   we are asking for a single data source called ``:data``. This is
   provided by the HDF5 data layer we just defined. By default, the
-  HDF5 data layer tries to find two dataset named ``data`` and
-  ``label`` from the HDF5 file, and provide two stream of data called
+  HDF5 data layer tries to find two datasets named ``data`` and
+  ``label`` from the HDF5 file, and to provide two streams of data called
   ``:data`` and ``:label``, respectively. You can change that by
   specifying the ``tops`` property for the HDF5 data layer if needed.
 ``tops``
-  This specify a list of names for the output of the convolution
+  This specifies a list of names for the output of the convolution
   layer. In this case, we are only taking one stream of input and
-  after convolution, we output on stream of convolved data with the
+  after convolution, we output one stream of convolved data with the
   name ``:conv``.
 
 Another convolution layer and pooling layer are defined similarly,
@@ -107,7 +107,7 @@ with more filters this time:
    pool2_layer = PoolingLayer(name="pool2", kernel=(2,2), stride=(2,2),
        bottoms=[:conv2], tops=[:pool2])
 
-Note the ``tops`` and ``bottoms`` define the computation or data
+Note how ``tops`` and ``bottoms`` define the computation or data
 dependency. After the convolution and pooling layers, we add two fully
 connected layers. They are called ``InnerProductLayer`` because the
 computation is basically inner products between the input and the
@@ -121,8 +121,8 @@ names to the two layers:
    fc2_layer  = InnerProductLayer(name="ip2", output_dim=10,
        bottoms=[:ip1], tops=[:ip2])
 
-Everything should be self-evidence. The ``output_dim`` property of an
-inner product layer specify the dimension of the output. Note the
+Everything should be self-evident. The ``output_dim`` property of an
+inner product layer specifies the dimension of the output. Note the
 dimension of the input is automatically determined from the bottom
 data stream.
 
