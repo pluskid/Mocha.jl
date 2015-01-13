@@ -15,20 +15,20 @@ Computation Layers
       tops
       bottoms
 
-      Blob names for output and input. This layer could take multiple input
+      Blob names for output and input. This layer can take multiple input
       blobs and produce the corresponding number of output blobs. The shapes of
       the input blobs do not need to be the same.
 
 .. class:: ChannelPoolingLayer
 
-   1D pooling over any specified dimension. This is called channel pooling layer
-   because it is designed to pool over the *channel* dimension when Mocha can
-   only handle 4D tensors. For general ND-tensors, the "channel" dimension no
-   longer has a specific semantic, and could be specified by the user.
+   1D pooling over any specified dimension. This layer is called channel pooling layer
+   because it was designed to pool over the pre-defined *channel* dimension back when Mocha could
+   only handle 4D tensors. For the new, general ND-tensors the dimension to be pooled 
+   over can be freely specified by the user.
 
    .. attribute:: channel_dim
 
-      Default ``-2`` (penultimate). Specify which dimension to pool over.
+      Default ``-2`` (penultimate). Specifies which dimension to pool over.
 
    .. attribute:: kernel
 
@@ -50,25 +50,25 @@ Computation Layers
       tops
       bottoms
 
-      Blob names for output and input. This layer could take multiple input
+      Blob names for output and input. This layer can take multiple input
       blobs and produce the corresponding number of output blobs. The shapes of
       the input blobs do not need to be the same.
 
 .. class:: ConvolutionLayer
 
-   Convolution in the spatial dimensions. **For now** convolution layer
-   requires the input blobs to be 4D tensors. For a 4D input blob of the shape
+   Convolution in the spatial dimensions. **For now** convolution layers
+   require the input blobs to be 4D tensors. For a 4D input blob of the shape
    ``width``-by-``height``-by-``channels``-by-``num``, The output blob shape is decided by the
    ``kernel`` size (a.k.a. receptive field), the ``stride``, the ``pad`` and the
    ``n_filter``.
 
    The ``kernel`` size specifies the geometry of a filter, also called a kernel or a local
-   receptive field. Note implicitly a filter also has a channel dimension that
+   receptive field. Note that implicitly, a filter also has a channel dimension that
    is the same size as the input image. As a filter moves across the image by
    the specified ``stride`` and optionally ``pad`` when on the boundary of the
    input image, it produce a real number by computing the inner-product between the
    filter weights and the local image patch at each spatial position. The
-   formular for the spatial dimension of the output blob is
+   formula for the spatial dimension of the output blob is
 
    .. code-block:: julia
 
@@ -82,7 +82,7 @@ Computation Layers
 
    .. image:: ../images/cnn-layer.*
 
-   :sub:`image credit:
+   :sub:`Image credit:
    http://ufldl.stanford.edu/tutorial/supervised/ConvolutionalNeuralNetwork/`
 
    Here the *RF size* is *receptive field size*, and *maps* (identified by
@@ -127,12 +127,12 @@ Computation Layers
 
    .. attribute:: filter_init
 
-      Default ``XavierInitializer()``. The :doc:`initializer
+      Default ``XavierInitializer()``. See :doc:`initializer
       </user-guide/initializer>` for the filters.
 
    .. attribute:: bias_init
 
-      Default ``ConstantInitializer(0)``. The :doc:`initializer
+      Default ``ConstantInitializer(0)``. See :doc:`initializer
       </user-guide/initializer>` for the bias.
 
    .. attribute:: filter_regu
@@ -171,7 +171,7 @@ Computation Layers
 
 .. class:: CropLayer
 
-   Do image cropping. This layer is primarily used only on top of data layer so
+   Do image cropping. This layer is primarily used only on top of data layers so
    backpropagation is currently not implemented. Crop layer requires the input
    blobs to be 4D tensors.
 
@@ -182,12 +182,12 @@ Computation Layers
    .. attribute:: random_crop
 
       Default ``false``. When enabled, randomly place the cropping box instead
-      of putting at the center. This is useful to produce random perturbation of
+      of putting at the center. This is useful to produce random perturbations of
       the input images during training.
 
    .. attribute:: random_mirror
 
-      Default ``faulse``. When enabled, randomly (with probability 0.5) mirror
+      Default ``false``. When enabled, randomly (with probability 0.5) mirror
       the input images (flip the width dimension).
 
    .. attribute::
@@ -202,8 +202,8 @@ Computation Layers
 .. class:: DropoutLayer
 
    Dropout is typically used during training, and it has been demonstrated to be
-   effective as regularizers for large scale networks. Dropout operates by
-   randomly "turn off" some responses. Specifically, the forward computation is
+   effective as a regularizer for large scale networks. Dropout operates by
+   randomly "turning off" some responses. Specifically, the forward computation is
 
    .. math::
 
@@ -215,7 +215,7 @@ Computation Layers
 
    .. attribute:: ratio
 
-      The probability :math:`p` of turning off a response. Or could also be
+      The probability :math:`p` of turning off a response. Can also be
       interpreted as the ratio of all the responses that are turned off.
 
    .. attribute:: auto_scale
@@ -234,11 +234,11 @@ Computation Layers
 
 .. class:: ElementWiseLayer
 
-   Element-wise layer implements basic element-wise operations on inputs.
+   The Element-wise layer implements basic element-wise operations on inputs.
 
    .. attribute:: operation
 
-      Element-wise operation. Built-in operations are in module
+      Element-wise operation. Built-in operations are defined in module
       ``ElementWiseFunctors``, including ``Add``, ``Subtract``, ``Multiply`` and
       ``Divide``.
 
@@ -259,7 +259,7 @@ Computation Layers
 
       y_i = \sum_j w_{ij}x_j + b_i
 
-   where :math:`w_{ij}` are the weights and :math:`b_i` are bias.
+   where :math:`w_{ij}` are the weights and :math:`b_i` are the biases.
 
    .. attribute:: param_key
 
@@ -392,12 +392,12 @@ Computation Layers
    .. attribute:: stride
 
       Default (1,1), a 2-tuple of integers specifying pooling stride in the
-      width and height dimensions respectively.
+      width and height dimensions, respectively.
 
    .. attribute:: pad
 
       Default (0,0), a 2-tuple of integers specifying the padding in the width and
-      height dimensions respectively. Paddings are two-sided, so a pad of (1,0)
+      height dimensions, respectively. Paddings are two-sided, so a pad of (1,0)
       will pad one pixel in both the left and the right boundary of an image.
 
    .. attribute:: pooling
@@ -408,7 +408,7 @@ Computation Layers
       tops
       bottoms
 
-      Blob names for output and input. This layer could take multiple input
+      Blob names for output and input. This layer can take multiple input
       blobs and produce the corresponding number of output blobs. The shapes of
       the input blobs do not need to be the same.
 
@@ -429,8 +429,8 @@ Computation Layers
      \frac{\partial y}{\partial x} = pa(ax + b)^{p-1}
 
    Power layer is implemented separately instead of as an Element-wise layer
-   for better performance because there are some many special cases of Power layer that
-   could be computed more efficiently.
+   for better performance because there are some special cases of the Power layer that
+   can be computed more efficiently.
 
    .. attribute:: power
 
@@ -448,7 +448,7 @@ Computation Layers
       tops
       bottoms
 
-      Blob names for output and input. This layer could take multiple input
+      Blob names for output and input. This layer can take multiple input
       blobs and produce the corresponding number of output blobs. The shapes of
       the input blobs do not need to be the same.
 
@@ -459,7 +459,7 @@ Computation Layers
 
    * This layer does not rescale the un-masked part to make the expectation the
      same as the expectation of the original input.
-   * This layer could handle multiple input blobs while :class:`DropoutLayer`
+   * This layer can handle multiple input blobs while :class:`DropoutLayer`
      accept only one input blob.
 
    .. note::
@@ -482,7 +482,7 @@ Computation Layers
       \sigma(x_1,\ldots,x_C) = (\sigma_1,\ldots,\sigma_C) = \left(\frac{e^{x_1}}{\sum_j
       e^{x_j}},\ldots,\frac{e^{x_C}}{\sum_je^{x_j}}\right)
 
-   Note currently back-propagation for softmax layer is not implemented. To
+   Note that currently back-propagation for the softmax layer is not implemented. To
    train a multi-class classification network with softmax probability output
    and multiclass logistic loss, use the bundled :class:`SoftmaxLossLayer`
    instead.
@@ -495,13 +495,13 @@ Computation Layers
       tops
       bottoms
 
-      Blob names for output and input. This layer could take multiple input
+      Blob names for output and input. This layer can take multiple input
       blobs and produce the corresponding number of output blobs. The shapes of
       the input blobs do not need to be the same.
 
 .. class:: TiedInnerProductLayer
 
-   Similar to :class:`InnerProductLayer` but with *tied weights* to an existing
+   Similar to :class:`InnerProductLayer` but with *weights tied* to an existing
    :class:`InnerProductLayer`. Used in auto-encoders. During training, an
    auto-encoder defines the following mapping
 
@@ -511,21 +511,21 @@ Computation Layers
       + \mathbf{b}_1 \longrightarrow \tilde{\mathbf{x}} = \mathbf{W}_2^T\mathbf{h}
         + \mathbf{b}_2
 
-   Here :math:`\mathbf{x}` is input, :math:`\mathbf{h}` is latent codes, and
-   :math:`\tilde{\mathbf{x}}` is decoded reconstruction of the input. Sometimes
+   Here :math:`\mathbf{x}` is input, :math:`\mathbf{h}` is the latent encoding, and
+   :math:`\tilde{\mathbf{x}}` is the decoded reconstruction of the input. Sometimes
    it is desired to have *tied weights* for the encoder and decoder:
    :math:`\mathbf{W}_1 = \mathbf{W}^T`. In this case, the encoder will be an
    :class:`InnerProductLayer`, and the decoder a :class:`TiedInnerProductLayer`
    with tied weights to the encoder layer.
 
    Note the tied decoder layer does *not* perform learning for the weights.
-   However, even tied layer has independent bias parameters that is learned
+   However, even a tied layer has independent bias parameters that are learned
    independently.
 
    .. attribute:: tied_param_key
 
       The ``param_key`` of the encoder layer that this layer wants to share tied
-      wights with.
+      weights with.
 
    .. attribute:: param_key
 
@@ -572,6 +572,6 @@ Computation Layers
       Blob names for output and input. This layer can take multiple input blobs
       and produce the corresponding number of output blobs. The feature
       dimensions (the product of the first N-1 dimensions) of all input blobs
-      should be the same, but they could potentially have different batch sizes
+      should be the same, but they can potentially have different batch sizes
       (the last dimension).
 

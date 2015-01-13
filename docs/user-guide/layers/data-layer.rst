@@ -3,7 +3,7 @@ Data Layers
 
 .. class:: HDF5DataLayer
 
-   Load data from a list of HDF5 files and feed them to upper layers in mini
+   Loads data from a list of HDF5 files and feeds them to upper layers in mini
    batches. The layer will do automatic round wrapping and report epochs after
    going over a full round of list data sources. Currently randomization is not
    supported.
@@ -57,7 +57,7 @@ Data Layers
       shuffling is useful in training, but for testing, there is no need to do
       shuffling. Shuffled access is a little bit slower, and it requires the
       HDF5 dataset to be *mmappable*. For example, the dataset can neither be
-      chunked nor be compressed. Please refer to `the document of HDF5.jl
+      chunked nor be compressed. Please refer to `the documention for HDF5.jl
       <https://github.com/timholy/HDF5.jl/blob/master/doc/hdf5.md#memory-mapping>`_
       for more details.
 
