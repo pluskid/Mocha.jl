@@ -14,26 +14,26 @@ The `CIFAR-10 dataset <http://www.cs.toronto.edu/~kriz/cifar.html>`_ is
 a labeled subset of the `80 Million Tiny Images
 <http://people.csail.mit.edu/torralba/tinyimages/>`_ dataset, containing 60,000
 32x32 color images in 10 categories. They are split into 50,000 training images
-and 10,000 test images. The number of samples are the same to :doc:`the MNIST
+and 10,000 test images. The number of samples are the same as in :doc:`the MNIST
 example </tutorial/mnist>`. However, the images here are a bit larger and have
 3 channels. As we will see soon, the network is also larger, with one extra
 convolution and pooling and two local response normalization layers. It is
 recommended to read :doc:`the MNIST tutorial </tutorial/mnist>` first, as we
-will not repeat many details here.
+will not repeat all details here.
 
 Caffe's Tutorial and Code
 -------------------------
 
 Caffe's tutorial for CIFAR-10 can be found `on their website
 <http://caffe.berkeleyvision.org/gathered/examples/cifar10.html>`_. The code
-could be located in ``examples/cifar10`` under Caffe's source tree. The code
-folder contains several different definition of networks and solvers. The
+can be located in ``examples/cifar10`` under Caffe's source tree. The code
+folder contains several different definitions of networks and solvers. The
 filenames should be self-explanatory. The *quick* files corresponds to a smaller
-network without local response normalization layers. And this is documented in
-Caffe's tutorial, according to which, produces around 75% test accuracy.
+network without local response normalization layers. These networks are documented in
+Caffe's tutorial, according to which they obtain around 75% test accuracy.
 
 We will be using the *full* models, which gives us around 81% test accuracy.
-Caffe's definition of the full model could be found in the file
+Caffe's definition of the full model can be found in the file
 `cifar10_full_train_test.prototxt
 <https://github.com/BVLC/caffe/blob/master/examples/cifar10/cifar10_full_train_test.prototxt>`_.
 The training script is
@@ -55,21 +55,21 @@ Preparing the Data
 Looking at the data layer of Caffe's network definition, it uses a LevelDB
 database as a data source. The LevelDB database is converted from the original
 binary files downloaded from `the CIFAR-10 dataset's website
-<http://www.cs.toronto.edu/~kriz/cifar.html>`_. Mocha does not support LevelDB
+<http://www.cs.toronto.edu/~kriz/cifar.html>`_. Mocha does not support the LevelDB
 database, so we will do the same thing: download the original binary files and
-convert into a Mocha-recognizable data format, HDF5 dataset here. We have
+convert them into a Mocha-recognizable data format, in our case a HDF5 dataset. We have
 provided a Julia script `convert.jl`_ [1]_. You can call `get-cifar10.sh
 <https://github.com/pluskid/Mocha.jl/blob/master/examples/cifar10/get-cifar10.sh>`_
-directly, which will automatically download the binary files, convert it to HDF5
-and prepare text index files that points to the HDF5 datasets.
+directly, which will automatically download the binary files, convert them to HDF5
+and prepare text index files that point to the HDF5 datasets.
 
 Notice in Caffe's data layer, a ``transform_param`` is specified with
 a ``mean_file``. We could use Mocha's :doc:`data transformers
 </user-guide/data-transformer>` to do the same thing. But since we need to
 compute the data mean during data conversion, for simplicity, we also perform
-mean subtraction when converting data to HDF5 format. See `convert.jl`_ for
+mean subtraction when converting data to the HDF5 format. See `convert.jl`_ for
 details. Please refer to the :doc:`user's guide </user-guide/layers/data-layer>`
-for more details about HDF5 data format that Mocha reads.
+for more details about the HDF5 data format that Mocha expects.
 
 After converting the data, you should be ready to load the data in Mocha with
 :class:`HDF5DataLayer`. We define two layers for training data and test data
@@ -80,16 +80,16 @@ separately, using the same batch size as in Caffe's model definition:
    data_tr_layer = HDF5DataLayer(name="data-train", source="data/train.txt", batch_size=100)
    data_tt_layer = HDF5DataLayer(name="data-test", source="data/test.txt", batch_size=100)
 
-In order to share the definition of common computation layers, Caffe use the
-same file to define both the training and test networks, and use *phase* to
-include and exclude layers that are used only in training or testing phases.
+In order to share the definition of common computation layers, Caffe uses the
+same file to define both the training and test networks, and uses *phases* to
+include and exclude layers that are used only in the training or testing phase.
 Mocha does not do this as the layers defined in Julia code are just Julia
 objects. We will simply construct training and test nets with a different
 subsets of those Julia layer objects.
 
 .. _convert.jl: https://github.com/pluskid/Mocha.jl/blob/master/examples/cifar10/convert.jl
 
-.. [1] All the CIFAR-10 example related code in Mocha could be found in the
+.. [1] All the CIFAR-10 example related code in Mocha can be found in the
    ``examples/cifar10`` directory under the source tree.
 
 Computation and Loss Layers
@@ -164,7 +164,7 @@ The rest of the translated Mocha computation layers are listed here:
    ip1_layer   = InnerProductLayer(name="ip1", output_dim=10, weight_init=GaussianInitializer(std=0.01),
        weight_regu=L2Regu(250), bottoms=[:pool3], tops=[:ip1])
 
-You might have already noticed is that Mocha does not have a ReLU layer.
+You might have already noticed that Mocha does not have a ReLU layer.
 Instead, ReLU, like Sigmoid, are treated as :doc:`neurons or activation
 functions </user-guide/neuron>` attached to layers.
 
@@ -182,7 +182,7 @@ definitions:
    acc_layer   = AccuracyLayer(name="accuracy", bottoms=[:ip1, :label])
 
 Next we collect the layers, and define a Mocha :class:`Net` on
-a :class:`CuDNNBackend`. You could use :class:`CPUBackend` if no CUDA-compatible
+a :class:`CuDNNBackend`. You can use :class:`CPUBackend` if no CUDA-compatible
 GPU devices are available. But it will be much slower (see also
 :doc:`/user-guide/backend`).
 
@@ -230,9 +230,9 @@ The configuration for Caffe's solver looks like this
    # solver mode: CPU or GPU
    solver_mode: GPU
 
-First of all, the learning rate is drop by a factor of 10 [3]_. Caffe
+First of all, the learning rate is dropped by a factor of 10 twice [3]_. Caffe
 implements this by having three solver configurations with different learning
-rate for each stage. We could do the same thing for Mocha, but Mocha has
+rates for each stage. We could do the same thing for Mocha, but Mocha has
 a staged learning policy that makes this easier:
 
 .. code-block:: julia
@@ -247,9 +247,9 @@ a staged learning policy that makes this easier:
        load_from="snapshots")
    solver = SGD(solver_params)
 
-The other parameters like regularization coefficient, momentum are directly
-translated from Caffe's solver configuration. Progress report, automatic
-snapshots could equivalently be done in Mocha as *coffee breaks* for the solver:
+The other parameters like regularization coefficient and momentum are directly
+translated from Caffe's solver configuration. Progress reporting and automatic
+snapshots can equivalently be done in Mocha as *coffee breaks* for the solver:
 
 .. code-block:: julia
 
@@ -263,14 +263,14 @@ snapshots could equivalently be done in Mocha as *coffee breaks* for the solver:
    test_net = Net("CIFAR10-test", backend, [data_tt_layer, common_layers..., acc_layer])
    add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
 
-.. [3] Looking at the Caffe's solver configuration, I happily realized that I am
+.. [3] Looking at the Caffe solver configuration, I happily realized that I am
    not the only person in the world who sometimes mis-type o as 0. :P
 
 Training
 --------
 
-Now we could start training by calling ``solve(solver, net)``. Depending on
-different :doc:`backends </user-guide/backend>`, the training speed could vary.
+Now we can start training by calling ``solve(solver, net)``. Depending on
+different :doc:`backends </user-guide/backend>`, the training speed can vary.
 Here are some sample training logs from my own test. Note this is **not**
 a controlled comparison, just to get a rough feeling.
 
