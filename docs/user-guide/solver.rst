@@ -8,7 +8,7 @@ machine learning models.
 A solver is constructed by specifying general *solver parameters* that
 characterize *learning rate*, *momentum*, and *stop conditions*, etc. and an
 *algorithm* that characterizes how the parameters are updated in each solver
-iteration. The following is an example taken from the `MNIST tutorial
+iteration. The following is an example taken from the :doc:`MNIST tutorial
 </tutorial/mnist>`_.
 
 .. code-block:: julia
@@ -62,8 +62,8 @@ General Solver Parameters
         initialize the network from the model saved in the HDF5 file. This can
         be used to fine-tune a trained (relatively) general model on a domain
         specific (maybe smaller) dataset. You can also load HDF5 models
-        `exported from external deep learning tools
-        </user-guide/tools/import-caffe-model>`_.
+    :doc:`exported from external deep learning tools
+    </user-guide/tools/import-caffe-model>`_.
 
 Learning Rate Policy
 ~~~~~~~~~~~~~~~~~~~~
@@ -92,7 +92,7 @@ Learning Rate Policy
 .. class:: LRPolicy.Staged
 
    This policy provides different learning rate policies at different *stages*.
-   Stages are specified by number of training iterations. See `the CIFAR-10
+   Stages are specified by number of training iterations. See :doc:`the CIFAR-10
    tutorial </tutorial/cifar10>`_ for an example of staged learning rate policy.
 
 Momentum Policy
@@ -132,7 +132,7 @@ Training is a very computationally intensive loop of iterations. Being afraid
 that the solver might silently go crazy under such heavy load, Mocha provides
 the solver opportunities to have a break periodically. During the breaks, the
 solver can have a change of mood by, for example, talking to the outside world
-about its "mental status". Here is a snippet taken from `the MNIST tutorial
+about its "mental status". Here is a snippet taken from :doc:`the MNIST tutorial
 </tutorial/mnist>`_:
 
 .. code-block:: julia
@@ -197,7 +197,7 @@ Built-in Coffee Breaks
 
    Automatically save solver and model snapshots to a given snapshot directory.
    The snapshot saved at iteration 0 corresponds to the init model (randomly
-   initialized via `initializers </user-guide/initializer>`_ or loaded from
+   initialized via :doc:`initializers </user-guide/initializer>`_ or loaded from
    existing model file).
 
 .. class:: ValidationPerformance
@@ -205,7 +205,7 @@ Built-in Coffee Breaks
    Run an epoch over a validation set and report the performance (e.g.
    multiclass classification accuracy). You will need to construct a validation
    network that shares parameters with the training network and provides access to
-   the validation dataset. See `the MNIST tutorial </tutorial/mnist>`_ for
+   the validation dataset. See :doc:`the MNIST tutorial </tutorial/mnist>`_ for
    a concrete example.
 
 
