@@ -1,18 +1,18 @@
 Neurons (Activation Functions)
 ==============================
 
-They could be attached to any layers. The neuron of each layer will affect the
+Neurons can be attached to any layer. The neuron of each layer will affect the
 output in the forward pass and the gradient in the backward pass automatically
-unless it is an identity neuron. A layer have an identity neuron by default [1]_.
+unless it is an identity neuron. Layers have an identity neuron by default [1]_.
 
 .. class:: Neurons.Identity
 
-   An activation function that does nothing.
+   An activation function that does not change its input.
 
 .. class:: Neurons.ReLU
 
-   Rectified Linear Unit. During the forward pass, it inhibit all the negative
-   activations. In other words, it compute point-wisely :math:`y=\max(0, x)`. The
+   Rectified Linear Unit. During the forward pass, it inhibits all negative
+   activations. In other words, it computes point-wise :math:`y=\max(0, x)`. The
    point-wise derivative for ReLU is
 
    .. math::
@@ -22,9 +22,9 @@ unless it is an identity neuron. A layer have an identity neuron by default [1]_
    .. note::
 
       ReLU is actually not differentialble at 0. But it has *subdifferential*
-      :math:`[0,1]`. Any value in that interval could be taken as
-      a *subderivative*, and could be used in SGD if we generalize from gradient
-      descent to *subgradient* descent. In the implementation, we choose 0.
+      :math:`[0,1]`. Any value in that interval can be taken as
+      a *subderivative*, and can be used in SGD if we generalize from gradient
+      descent to *subgradient* descent. In the implementation, we choose the subgradient at :math:`x==0` to be 0.
 
 .. class:: Neurons.Sigmoid
 

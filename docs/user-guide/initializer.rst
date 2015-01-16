@@ -6,7 +6,7 @@ called *Fillers*.
 
 .. class:: NullInitializer
 
-   An initializer that does nothing.
+   An initializer that does nothing. To initialize with zeros, use a ConstantInitializer.
 
 .. class:: ConstantInitializer
 

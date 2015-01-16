@@ -7,8 +7,8 @@ the MNIST dataset. Please see :doc:`the LeNet tutorial on
 MNIST </tutorial/mnist>` on how to prepare the HDF5 dataset.
 
 Unsupervised pre-training is a way to initialize the weights when training
-a deep neural networks. Initialization with pre-training could have better
-convergence property than simple random training, especially when the number of
+deep neural networks. Initialization with pre-training can have better
+convergence properties than simple random training, especially when the number of
 (labeled) training points is not very large.
 
 In the following two figures, we show the results generated from this tutorial.
@@ -22,7 +22,7 @@ trained model on the test set.
 
 .. image:: images/mnist-sDA/test-accuracy-accuracy.*
 
-As we can see, faster convergence could be observed when initialize with
+As we can see, faster convergence can be observed when we initialize with
 pre-training.
 
 (Stacked) Denoising Auto-encoders
@@ -52,8 +52,8 @@ weights in the encoder. This is referred to as *tied weights*:
 
    \tilde{\mathbf{W}} = \mathbf{W}^T
 
-Note the bias :math:`\mathbf{b}` and :math:`\tilde{\mathbf{b}}` are still
-different even when the weights are *tied*. An auto-encoder is trained by
+Note that the biases :math:`\mathbf{b}` and :math:`\tilde{\mathbf{b}}` are still
+different even when the weights are tied. An auto-encoder is trained by
 minimizing the reconstruction error, typically with the square loss
 :math:`\ell(\mathbf{x},\mathbf{z})=\|\mathbf{x}-\mathbf{z}\|^2`.
 
@@ -66,19 +66,19 @@ against the original uncorrupted input :math:`\mathbf{x}`.
 After training, we can take the weights and bias of the encoder layer in
 a (denoising) auto-encoder as an initialization of an hidden (inner-product)
 layer of a DNN. When there are multiple hidden layers, layer-wise pre-training
-of stacked (denoising) auto-encoders could be used to obtain initializations for
+of stacked (denoising) auto-encoders can be used to obtain initializations for
 all the hidden layers.
 
 Layer-wise pre-training of stacked auto-encoders consists of the following
-procedures:
+steps:
 
-1. Train the bottom most auto-encoder.
+1. Train the bottommost auto-encoder.
 2. After training, remove the decoder layer, construct a new auto-encoder by
-   taking the *latent representation* of existing auto-encoder as input.
+   taking the *latent representation* of the previous auto-encoder as input.
 3. Train the new auto-encoder. Note the weights and bias of the encoder from the
    previously trained auto-encoders are **fixed** when training the newly
    constructed auto-encoder.
-4. Repeat step 2 and 3 until enough layers pre-trained.
+4. Repeat step 2 and 3 until enough layers are pre-trained.
 
 Next we will show how to train denoising auto-encoders in Mocha and use them to
 initialize DNNs.
@@ -86,7 +86,7 @@ initialize DNNs.
 Experiment Configuration
 ------------------------
 
-We will train a DNN with 3 hidden layers using sigmoid nonlinearity. All the
+We will train a DNN with 3 hidden layers using sigmoid nonlinearities. All the
 parameters are listed below:
 
 .. literalinclude:: ../../examples/unsupervised-pretrain/denoising-autoencoder/denoising-autoencoder.jl
@@ -96,9 +96,9 @@ parameters are listed below:
 As we can see, we will do 15 epochs when pre-training for each layer, and do
 1000 epochs of fine-tuning.
 
-In Mocha, parameters (weights and bias) could be shared among different layers
+In Mocha, parameters (weights and bias) can be shared among different layers
 by specifying the ``param_key`` parameter when constructing layers. The
-``param_keys`` variable defined above are unique identifiers for each of
+``param_keys`` variables defined above are unique identifiers for each of
 the hidden layers. We will use those identifiers to indicate that the encoders
 in pre-training share parameters with the hidden layers in DNN fine-tuning.
 
@@ -115,11 +115,11 @@ blob. This makes it easier to define the hidden layers in a unified manner.
 Pre-training
 ------------
 
-We construct stacked denoising auto-encoders to do pre-training for weights and
-bias for the hidden layers we just defined. We do layer-wise pre-training in
+We construct stacked denoising auto-encoders to perform pre-training for the weights and
+biases of the hidden layers we just defined. We do layer-wise pre-training in
 a ``for`` loop. Several Mocha primitives are useful for building auto-encoders:
 
-* :class:`RandomMaskLayer`: given a corruption ratio, this layer could randomly
+* :class:`RandomMaskLayer`: given a corruption ratio, this layer can randomly
   mask parts of the input blobs as zero. We use this to create corruptions in
   denoising auto-encoders.
 
@@ -142,7 +142,7 @@ We list the code for the layer definitions of the auto-encoders again:
    :start-after: --start-sda-layers--
    :end-before: --end-sda-layers--
 
-Note the i-th auto-encoder is built on top of the output of the (i-1)-th hidden
+Note how the i-th auto-encoder is built on top of the output of the (i-1)-th hidden
 layer (blob name ``symbol("ip$(i-1)")``). We split the blob into ``:orig_data``
 and ``:corrupt_data``, and add corruption to the ``:corrupt_data`` blob.
 
@@ -154,7 +154,7 @@ layer compute the reconstruction error.
 
 Recall that in layer-wise pre-training, we fix the parameters of the encoder
 layers that we already trained, and only train the top-most encoder-decoder
-pair. In Mocha, we could *freeze* layers in a net to prevent their parameters
+pair. In Mocha, we can *freeze* layers in a net to prevent their parameters
 being modified during training. In this case, we freeze all layers except the
 encoder and the decoder layers:
 
@@ -179,13 +179,13 @@ almost identical to the original :doc:`MNIST tutorial </tutorial/mnist>`.
    :start-after: --start-finetune--
    :end-before: --end-finetune--
 
-Note the key to allow the ``MNIST-finetune`` net to use the pre-trained weights
+Note that the key to allow the ``MNIST-finetune`` net to use the pre-trained weights
 as initialization of the hidden layers is that we specify the same ``param_key``
 property for the hidden layers and the encoder layers. Those parameters are
 stored in the registry of the ``backend``. When a net is constructed, if
 a layer finds existing parameters with its ``param_key``, it will use the
 existing parameters, and ignore the :doc:`parameter initializers
-</user-guide/initializer>` specified by the users. Debug information will be
+</user-guide/initializer>` specified by the user. Debug information will be
 printed to the console:
 
 .. code-block:: text

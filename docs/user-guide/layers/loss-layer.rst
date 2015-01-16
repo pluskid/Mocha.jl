@@ -13,7 +13,7 @@ Loss Layers
    dim_channel, ..., dimN)``, then the ground-truth blob should be of the shape
    ``(dim1, dim2, ..., 1, ..., dimN)``. Here ``dim_channel``, historically called
    the "channel" dimension, is the user specified tensor dimension to compute
-   loss on. This general case allow one to produce multiple labels for each
+   loss on. This general case allows to produce multiple labels for each
    sample. For the typical case where only one (multi-class) label is produced
    for one sample, the conditional probability blob is the shape ``(dim_channel,
    dim_num)`` and the ground-truth blob should be of the shape ``(1, dim_num)``.
@@ -29,7 +29,7 @@ Loss Layers
 
    .. attribute:: weights
 
-      This could be used to specify weights for different classes. The following
+      This can be used to specify weights for different classes. The following
       values are allowed
 
       * Empty array (default). This means each category should be equally
@@ -57,7 +57,7 @@ Loss Layers
       The weights normalization are done in a way that you get the same
       objective function when specifying *equal weights* for each class as when
       you do not specify any weights. In other words, the total sum of the
-      weights are scaled to be equal to weights ⨉ height ⨉ channels. If you
+      weights are scaled to be equal to weights x height x channels. If you
       specify ``:no``, it is your responsibility to properly normalize the
       weights.
 
@@ -86,10 +86,10 @@ Loss Layers
    the :math:`g`-th category. See the document of :class:`MultinomialLogisticLossLayer` for more
    details on what the weights mean and how to specify them.
 
-   The shapes of inputs is the same as :class:`MultinomialLogisticLossLayer`:
+   The shapes of the inputs are the same as for the :class:`MultinomialLogisticLossLayer`:
    the multi-class predictions are assumed to be along the channel dimension.
 
-   The reason we provide a combined softmax loss layer instead using one softmax
+   The reason we provide a combined softmax loss layer instead of using one softmax
    layer and one multinomial logistic layer is that the combined layer produces
    the back-propagation error in a more numerically robust way.
 
@@ -117,7 +117,7 @@ Loss Layers
       normalize
 
       Properties for the underlying :class:`MultinomialLogisticLossLayer`. See
-      document there for details.
+      its documentation for details.
 
 .. class:: SquareLossLayer
 

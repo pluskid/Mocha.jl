@@ -3,13 +3,13 @@ Utility Layers
 
 .. class:: ConcatLayer
 
-   Concating multiple blobs into one along the specified dimension. Except in
-   the concatenation dimension, the shapes of the blobs being concatenated should
+   Concatenates multiple blobs into a single blob along the specified dimension. Except in
+   the concatenation dimension, the shapes of the blobs being concatenated have to 
    be the same.
 
    .. attribute:: dim
 
-      Default 3 (channel). The dimension to concat.
+      Default 3 (channel). The dimension to concatenate.
 
    .. attribute:: bottoms
 
@@ -21,8 +21,8 @@ Utility Layers
 
 .. class:: HDF5OutputLayer
 
-   Take some blobs in the network and write the blob contents to a HDF5 file.
-   Note the target HDF5 file will be overwritten when the network is first
+   Takes some blobs in the network and writes them to a HDF5 file.
+   Note that the target HDF5 file will be overwritten when the network is first
    constructed, but later iterations will **append** data for each mini-batch.
    This is useful for storing the final predictions or the intermediate
    representations (feature extraction) of a network.
@@ -51,31 +51,31 @@ Utility Layers
 
 .. class:: IdentityLayer
 
-   Identity layer maps inputs to outputs without changing anything. This could
-   be useful as glue layers to rename some blobs. There is no data-copying for
+   An Identity layer maps inputs to outputs without changing anything. This can
+   be useful as a glue layer to rename some blobs. There is no data-copying for
    this layer.
 
    .. attribute::
       tops
       bottoms
 
-      Blob names for output and input. This layer could take multiple input
+      Blob names for output and input. This layer can take multiple input
       blobs and produce the corresponding number of output blobs. The shapes of
       the input blobs do not need to be the same.
 
 .. class:: ReshapeLayer
 
-   Reshape a blob. Can be useful if, for example, you want to make the *flat*
+   Reshapes a blob. Can be useful if, for example, you want to make the *flat*
    output from an :class:`InnerProductLayer` *meaningful* by assigning each
    dimension spatial information.
 
-   Internally there is no data copying going on. The total number of elements in
-   the blob tensor after reshaping should be the same as the original blob
+   Internally, no data is copied. The total number of elements in
+   the blob tensor after reshaping has to be the same as the original blob
    tensor.
 
    .. attribute:: shape
 
-      Should be an ``NTuple`` of ``Int`` specifying the new shape. Note the new
+      Has to be an ``NTuple`` of ``Int`` specifying the new shape. Note that the new
       shape does not include the last (mini-batch) dimension of a data blob. So
       a reshape layer cannot change the mini-batch size of a data blob.
 
@@ -83,14 +83,14 @@ Utility Layers
       tops
       bottoms
 
-      Blob names for output and input. This layer could take multiple input
+      Blob names for output and input. This layer can take multiple input
       blobs and produce the corresponding number of output blobs. The shapes of
       the input blobs do not need to be the same. But the feature dimensions
-      (product of the first 3 dimensions) should be the same.
+      (i.e. the product of the first 3 dimensions) have to be the same.
 
 .. class:: SplitLayer
 
-   Split layer produces identical copies of the input. The number of copies
+   A Split layer produces identical copies of the input. The number of copies
    is determined by the length of the ``tops`` property. During back propagation,
    derivatives from all the output copies are added together and propagated down.
 

@@ -14,4 +14,4 @@ Statistics Layers
 
    .. attribute:: dim
 
-      Default ``-2`` (penultimate). Specify the dimension to operate on.
+      Default ``-2`` (penultimate). Specifies the dimension to operate on.

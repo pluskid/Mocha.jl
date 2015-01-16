@@ -1,7 +1,7 @@
 Mocha Backends
 ==============
 
-A backend in Mocha is a component that carries out actual numerical computation.
+A backend in Mocha is a component that carries out the actual numerical computation.
 Mocha is designed to support multiple backends, and switching between different
 backends should be almost transparent to the rest of the world.
 
@@ -9,17 +9,17 @@ Pure Julia CPU Backend
 ----------------------
 
 A pure Julia CPU backend is implemented in Julia. This backend is reasonably
-fast by making heavy use of the Julia's built-in BLAS matrix computation library
+fast by making heavy use of Julia's built-in BLAS matrix computation library
 and `performance annotations
 <http://julia.readthedocs.org/en/latest/manual/performance-tips/#performance-annotations>`_
-to help the LLVM-based JIT compiler producing high performance instructions.
+to help the LLVM-based JIT compiler produce high performance instructions.
 
-A pure Julia CPU backend could be instantiated by calling the constructor
-``CPUBackend()``. Because there is no external dependency, it should runs on any
+A pure Julia CPU backend can be instantiated by calling the constructor
+``CPUBackend()``. Because there is no external dependency, it should run on any
 platform that runs Julia.
 
 If you have many cores in your computer, you can play with the number of threads
-used by the Julia's BLAS matrix computation library by:
+used by Julia's BLAS matrix computation library by:
 
 .. code-block:: julia
 
@@ -39,8 +39,8 @@ first (if it is not built automatically when installing the package).
 
    Pkg.build("Mocha")
 
-After successfully building the native extension, it could be enabled by setting
-the environment variable. On bash or zsh, execute
+After successfully building the native extension, it can be enabled by setting
+the following environment variable. In bash or zsh, execute
 
 .. code-block:: bash
 
@@ -55,21 +55,21 @@ code:
 
    using Mocha
 
-Note you should set the environment variable **before** loading the Mocha
+Note you need to set the environment variable **before** loading the Mocha
 module. Otherwise Mocha will not load the native extension sub-module at all.
 
 The native extension uses `OpenMP <http://openmp.org/wp/>`_ to do parallel
-computation on Linux. The number of OpenMP threads used could be controlled by
-the ``OMP_NUM_THREADS`` environment variable. Note this variable is not specific
-to Mocha. If you have other programs that uses OpenMP, setting this environment
-variable in a shell will also affect those problems started subsequently. If you
-want to restrict to Mocha, simply set the variable in the Julia code:
+computation on Linux. The number of OpenMP threads used can be controlled by
+the ``OMP_NUM_THREADS`` environment variable. Note that this variable is not specific
+to Mocha. If you have other programs that use OpenMP, setting this environment
+variable in a shell will also affect the programs started subsequently. If you
+want to restrict the effect to Mocha, simply set the variable in the Julia code:
 
 .. code-block:: julia
 
    ENV["OMP_NUM_THREADS"] = 1
 
-Note setting to 1 disabled the OpenMP parallelization. Depending on the problem
+Note that setting it to 1 disables the OpenMP parallelization. Depending on the problem
 size and a lot of other factors, using multi-thread OpenMP parallelization is
 not necessarily faster because of the overhead of multi-threads.
 
@@ -88,16 +88,16 @@ please refer to `Clang-OMP <http://clang-omp.github.io/>`_ and compile manually
 Native Extension on Windows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The native extension does not support Windows because automatic building script
-does not work on Windows. However, the native codes themselves does not use any
-OS specific features. If you have a compiler installed on Windows, you could try
+The native extension does not support Windows because the automatic building script
+does not work on Windows. However, the native code themselve does not use any
+OS specific features. If you have a compiler installed on Windows, you can try
 to compile the native extension manually. However, I have **not** tested the
 native extension on Windows personally.
 
 Compile Native Extension Manually
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The native codes are located in the ``deps`` directory of Mocha. Use
+The native code is located in the ``deps`` directory of Mocha. Use
 
 .. code-block:: julia
 
@@ -112,16 +112,16 @@ OS.
 CUDA Backend
 ------------
 
-GPU has been shown to be very effective at training large scale deep neural
+GPUs have been shown to be very effective at training large scale deep neural
 networks. NVidia® recently released a GPU accelerated library of primitives for
 deep neural networks called `cuDNN <https://developer.nvidia.com/cuDNN>`_. Mocha
-implemented a CUDA backend by combining cuDNN, `cuBLAS
+implementes a CUDA backend by combining cuDNN, `cuBLAS
 <https://developer.nvidia.com/cublas>`_ and plain CUDA kernels.
 
-In order to use the CUDA backend, you need to have CUDA-compatible GPU devices.
-The CUDA toolkit should be installed in order to compile the Mocha CUDA kernels.
-cuBLAS is included in CUDA distribution. But cuDNN needs to be installed
-separately. You could obtain cuDNN from `Nvidia's website
+In order to use the CUDA backend, you need to have a CUDA-compatible GPU device.
+The CUDA toolkit needs to be installed in order to compile the Mocha CUDA kernels.
+cuBLAS is included in the CUDA distribution. But cuDNN needs to be installed
+separately. You can obtain cuDNN from `Nvidia's website
 <https://developer.nvidia.com/cuDNN>`_ by registering as a CUDA developer for
 free.
 
@@ -134,10 +134,10 @@ free.
      available on Mac OS X.
    * cuDNN 6.5 R2 is **not** backward compatible with cuDNN 6.5 R1.
 
-Before using the CUDA backend, Mocha kernels needs to be compiled. The kernels
+Before using the CUDA backend, the Mocha kernels needs to be compiled. The kernels
 are located in ``src/cuda/kernels``. Please use ``Pkg.dir("Mocha")`` to find out
 where Mocha is installed on your system. We have included a Makefile for
-convenience, but if you don't have ``make`` installed, the compiling command is
+convenience, but if you don't have ``make`` installed, the command for compiling is
 as simple as
 
 .. code-block:: bash
@@ -160,17 +160,19 @@ setting the environment variable ``MOCHA_USE_CUDA``. For example:
 
    shutdown(backend)
 
-Note instead of instantiate a ``CPUBackend``, you now construct
-a ``GPUBackend``. The environment variable should be set **before** loading
+Note that instead of instantiating a ``CPUBackend``, you now construct
+a ``GPUBackend``. The environment variable needs to be set **before** loading
 Mocha. It is designed to use conditional loading so that the pure CPU backend
-could still run on machines without any GPU device or CUDA library installed.
+can still run on machines which don't have a GPU device or don't have the CUDA library installed.
 
 Recompiling Kernels
 ~~~~~~~~~~~~~~~~~~~
 
 When you upgrade Mocha to a higher version, the source code for some CUDA kernel
-implementations might be changed. Mocha will compile the timestamps for the
-compiled kernel and the source files. An error will raise if the compiled kernel
-file is found older than the kernel source files. Just follow the procedures
+implementations might have changed. Mocha will compile the timestamps for the
+compiled kernel and the source files. An error will be raised if the compiled kernel
+file is found to be older than the kernel source files. Simply following the procedures
 above to compile the kernel again will solve this problem.
+
+
 

@@ -5,7 +5,7 @@ This tutorial goes through the code in ``examples/mnist`` to explain
 the basic usages of Mocha. We will use the architecture known as
 [LeNet]_, which is a deep convolutional neural network known to work
 well on handwritten digit classification tasks. More specifically, we
-will use the Caffe's modified architecture, by replacing the sigmoid
+will use Caffe's modified architecture, by replacing the sigmoid
 activation functions with Rectified Learning Unit (ReLU) activation
 functions.
 
@@ -18,14 +18,14 @@ functions.
 Preparing the Data
 ------------------
 
-`MNIST <http://yann.lecun.com/exdb/mnist/>`_ is handwritten digit
+`MNIST <http://yann.lecun.com/exdb/mnist/>`_ is a handwritten digit
 recognition dataset containing 60,000 training examples and 10,000
 test examples. Each example is a 28x28 single channel grayscale
 image. The dataset in a binary format could be downloaded from `Yann
 LeCun's website <http://yann.lecun.com/exdb/mnist/>`_. We have created
 a script ``get-mnist.sh`` to download the dataset, and it will call
-``mnist.convert.jl`` to convert the binary dataset into HDF5 file that
-Mocha could read.
+``mnist.convert.jl`` to convert the binary dataset into a HDF5 file that
+Mocha can read.
 
 When the conversion finishes, ``data/train.hdf5`` and
 ``data/test.hdf5`` will be generated.
@@ -44,7 +44,7 @@ Mocha package.
 
    using Mocha
 
-Then we will define a data layer, which read the HDF5 file and provide
+Then we will define a data layer, which reads the HDF5 file and provides
 input for the network:
 
 .. code-block:: julia
@@ -52,10 +52,10 @@ input for the network:
    data_layer  = HDF5DataLayer(name="train-data", source="data/train.txt",
        batch_size=64, shuffle=true)
 
-Note the ``source`` is a simple text file what contains a list of real
+Note the ``source`` is a simple text file that contains a list of real
 data files (in this case ``data/train.hdf5``). This behavior is the
 same as in Caffe, and could be useful when your dataset contains a lot
-of files. The network process data in mini-batches, and we are using a batch
+of files. The network processes data in mini-batches, and we are using a batch
 size of 64 in this example. We also enable random shuffling of the data set.
 
 Next we define a convolution layer in a similar way:
@@ -68,13 +68,13 @@ Next we define a convolution layer in a similar way:
 There are more parameters we specified here
 
 ``name``
-  Every layer could be given a name. When saving the model to
+  Every layer can be given a name. When saving the model to
   disk and loading back, this is used as an identifier to map to the
   correct layer. So if your layer contains learned parameters (a
   convolution layer contains learned filters), you should give it a
   unique name. It is a good practice to give every layer a unique name,
   for the purpose of getting more informative debugging information
-  when there is any potential issues.
+  when there are any potential issues.
 ``n_filter``
   Number of convolution filters.
 ``kernel``
@@ -85,14 +85,14 @@ There are more parameters we specified here
   An array of symbols specifying where to get data from. In this case,
   we are asking for a single data source called ``:data``. This is
   provided by the HDF5 data layer we just defined. By default, the
-  HDF5 data layer tries to find two dataset named ``data`` and
-  ``label`` from the HDF5 file, and provide two stream of data called
+  HDF5 data layer tries to find two datasets named ``data`` and
+  ``label`` from the HDF5 file, and to provide two streams of data called
   ``:data`` and ``:label``, respectively. You can change that by
   specifying the ``tops`` property for the HDF5 data layer if needed.
 ``tops``
-  This specify a list of names for the output of the convolution
+  This specifies a list of names for the output of the convolution
   layer. In this case, we are only taking one stream of input and
-  after convolution, we output on stream of convolved data with the
+  after convolution, we output one stream of convolved data with the
   name ``:conv``.
 
 Another convolution layer and pooling layer are defined similarly,
@@ -107,7 +107,7 @@ with more filters this time:
    pool2_layer = PoolingLayer(name="pool2", kernel=(2,2), stride=(2,2),
        bottoms=[:conv2], tops=[:pool2])
 
-Note the ``tops`` and ``bottoms`` define the computation or data
+Note how ``tops`` and ``bottoms`` define the computation or data
 dependency. After the convolution and pooling layers, we add two fully
 connected layers. They are called ``InnerProductLayer`` because the
 computation is basically inner products between the input and the
@@ -121,8 +121,8 @@ names to the two layers:
    fc2_layer  = InnerProductLayer(name="ip2", output_dim=10,
        bottoms=[:ip1], tops=[:ip2])
 
-Everything should be self-evidence. The ``output_dim`` property of an
-inner product layer specify the dimension of the output. Note the
+Everything should be self-evident. The ``output_dim`` property of an
+inner product layer specifies the dimension of the output. Note the
 dimension of the input is automatically determined from the bottom
 data stream.
 
@@ -151,8 +151,8 @@ directly from the HDF5 data layer. It will compute an averaged loss
 over each mini batch, which allows us to initiate back propagation to
 update network parameters.
 
-Configuring Backend and Building Network
-----------------------------------------
+Configuring the Backend and Building the Network
+------------------------------------------------
 
 Now we have defined all the relevant layers. Let's setup the
 computation backend and construct a network with those layers. In this
@@ -163,7 +163,7 @@ example, we will go with the simple pure Julia CPU backend first:
    backend = CPUBackend()
 
 The ``init`` function of a Mocha Backend will initialize the
-computation backend. With an initialized backend, we could go ahead and
+computation backend. With an initialized backend, we can go ahead and
 construct our network:
 
 .. code-block:: julia
@@ -173,11 +173,11 @@ construct our network:
    net = Net("MNIST-train", backend, [data_layer, common_layers..., loss_layer])
 
 A network is built by passing the constructor an initialized backend,
-and a list of layers. Note we use ``common_layers`` to collect a
+and a list of layers. Note how we use ``common_layers`` to collect a
 subset of the layers. We will explain this in a minute.
 
-Configuring Solver
-------------------
+Configuring the Solver
+----------------------
 
 We will use Stochastic Gradient Descent (SGD) to solve or train our
 deep network.
@@ -204,8 +204,8 @@ The behavior of the solver is specified in the following parameters
   global scaling factor for all the local regularization coefficients
   if any.
 ``mom_policy``
-  This specify the policy of setting momentum during training. Here we are using
-  a policy that simply use a fixed momentum of 0.9 all the time. See the `Caffe document
+  This specifies the policy of setting the momentum during training. Here we are using
+  a policy that simply uses a fixed momentum of 0.9 all the time. See the `Caffe document
   <http://caffe.berkeleyvision.org/tutorial/solver.html>`_ for *rules
   of thumb* for setting the learning rate and momentum.
 ``lr_policy``
@@ -214,36 +214,35 @@ The behavior of the solver is specified in the following parameters
   gradually shrink the learning rate, by setting it to base_lr * (1 +
   gamma * iter)\ :sup:`-power`.
 ``load_from``
-  This could be a file of saved model or a directory. For the latter case, the
+  This could be a file of a saved model or a directory. For the latter case, the
   latest saved model snapshot will be loaded automatically before the solver
   loop starts. We will see in a minute how to configure the solver to save
   snapshots automatically during training.
 
-  This is useful to recover from crash; continue training with a larger
-  ``max_iter``; or do fine tuning on some pre-trained models.
+  This is useful to recover from a crash, to continue training with a larger
+  ``max_iter`` or to perform fine tuning on some pre-trained models.
 
 Coffee Breaks for the Solver
 ----------------------------
 
-Now our solver is ready to go. But in order to give him a healthy
-working plan, we decided to allow him some chances to have some coffee
-breaks.
+Now our solver is ready to go. But in order to give it a healthy
+working plan, we provide it with some coffee breaks:
 
 .. code-block:: julia
 
    setup_coffee_lounge(solver, save_into="$exp_dir/statistics.hdf5", every_n_iter=1000)
 
-This setup the coffee lounge. It also specify a file to save the information we
+This sets up the coffee lounge. It also specifies a file to save the information we
 accumulated in coffee breaks. Depending on the coffee breaks, useful statistics
 like objective function values during training will be saved into that file, and
-could be loaded later for plotting or inspecting.
+can be loaded later for plotting or inspecting.
 
 .. code-block:: julia
 
    add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
 
 First of all, we allow the solver to have a coffee break after every
-100 iterations so that he could give us a brief summary of the
+100 iterations so that it can give us a brief summary of the
 training process. Currently ``TrainingSummary`` will print the loss
 function value on the last training mini-batch.
 
@@ -254,7 +253,7 @@ network every 5,000 iterations.
 
    add_coffee_break(solver, Snapshot(exp_dir), every_n_iter=5000)
 
-Note we are passing ``exp_dir`` to the constructor of the ``Snapshot`` coffee
+Note that we are passing ``exp_dir`` to the constructor of the ``Snapshot`` coffee
 break. The snapshots will be saved into that directory. And according to our
 configuration of the solver above, the latest snapshots will
 be automatically loaded by the solver if you run this script again.
@@ -266,8 +265,8 @@ dataset as the validation set.
 
 We will define a new network to perform the evaluation. The evaluation
 network will have exactly the same architecture, except with a
-different data layer that reads from validation dataset instead of
-training set. We also do not need the softmax loss layer as we will
+different data layer that reads from the validation dataset instead of
+the training set. We also do not need the softmax loss layer as we will
 not train the validation network. Instead, we will add an accuracy
 layer on the top, which will compute the classification accuracy for
 us.
@@ -294,18 +293,18 @@ performance:
 
    add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=1000)
 
-Please note we use a different batch size (100) in the validation
+Please note that we use a different batch size (100) in the validation
 network. During the coffee break, Mocha will run exactly one epoch on
 the validation net (100 iterations in our case, as we have 10,000
-samples in MNIST test set), and report the average classification
+samples in the MNIST test set), and report the average classification
 accuracy. You do not need to specify the number of iterations here as
-the HDF5 data layer will report epoch number as it goes through a full
+the HDF5 data layer will report the epoch number as it goes through a full
 pass of the whole dataset.
 
 Training
 --------
 
-Without further due, we could finally start the training process:
+Without further ado, we can finally start the training process:
 
 .. code-block:: julia
 
@@ -316,15 +315,15 @@ Without further due, we could finally start the training process:
    shutdown(backend)
 
 After training, we will shutdown the system to release all the allocated
-resources. Now you are ready run the script
+resources. Now you are ready run the script:
 
 .. code-block:: text
 
    julia mnist.jl
 
-As training goes on, you will see training progress printed. It will take about
-10~20 seconds every 100 iterations on my machine depending on the server load
-and many factors.
+As training proceeds, progress information will be reported. It takes about
+10~20 seconds every 100 iterations, i.e. about 7 iterations per second, on my machine, depending on the server load
+and many other factors.
 
 .. code-block:: text
 
@@ -341,12 +340,12 @@ and many factors.
   14-Nov 11:58:01:INFO:root:002100 :: TRAIN obj-val = 0.18091436
   14-Nov 11:58:21:INFO:root:002200 :: TRAIN obj-val = 0.14225903
 
-The training could run faster by enabling native extension for the CPU backend,
-or use a CUDA backend if CUDA compatible GPU devices are available. Please refer
+The training could run faster by enabling the native extension for the CPU backend,
+or by using the CUDA backend if CUDA compatible GPU devices are available. Please refer
 to :doc:`/user-guide/backend` for how to use different backends.
 
-Just to give you a feeling, this is a sample log from running with Native
-Extension enabled CPU backend. It takes about 5 seconds to run 100 iterations.
+Just to give you a feeling for the potential speed improvement, this is a sample log from running with the Native
+Extension enabled CPU backend. It runs at about 20 iterations per second.
 
 .. code-block:: text
 
@@ -363,8 +362,8 @@ Extension enabled CPU backend. It takes about 5 seconds to run 100 iterations.
    14-Nov 12:16:18:INFO:root:002100 :: TRAIN obj-val = 0.20689486
    14-Nov 12:16:23:INFO:root:002200 :: TRAIN obj-val = 0.17757215
 
-The followings are a sample log from running with the
-CUDA backend. It runs about 300 iterations per second.
+The following is a sample log from running with the
+CUDA backend. It runs at about 300 iterations per second.
 
 .. code-block:: text
 
@@ -384,8 +383,10 @@ CUDA backend. It runs about 300 iterations per second.
 Remarks
 -------
 
-The accuracy from two different trains are different due to different random
-initialization. The objective function values shown here are also slightly
+The accuracy from two different training runs are different due to different random
+initializations. The objective function values shown here are also slightly
 different to Caffe's, as until recently, Mocha counts regularizers in the
-forward stage and add them into objective functions. This behavior is removed to
-avoid unnecessary computation in more recent versions of Mocha.
+forward stage and adds them into the objective functions. This behavior is removed
+in more recent versions of Mocha to avoid unnecessary computations.
+
+
