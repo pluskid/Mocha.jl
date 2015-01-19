@@ -62,8 +62,8 @@ General Solver Parameters
         initialize the network from the model saved in the HDF5 file. This can
         be used to fine-tune a trained (relatively) general model on a domain
         specific (maybe smaller) dataset. You can also load HDF5 models
-    :doc:`exported from external deep learning tools
-    </user-guide/tools/import-caffe-model>`_.
+        :doc:`exported from external deep learning tools
+        </user-guide/tools/import-caffe-model>`_.
 
 Learning Rate Policy
 ~~~~~~~~~~~~~~~~~~~~
