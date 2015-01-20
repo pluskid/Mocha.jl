@@ -54,16 +54,19 @@ end
 function update_parameters(net::Net{CPUBackend}, solver::Nesterov, learning_rate,
     last_momentum, momentum, param_blob, hist_blob, gradient, data_type)
 
+  # param_blob += -momentum_last* hist_blob (update with vt-1)
+  BLAS.axpy!(length(hist_blob), convert(data_type, -momentum_last), hist_blob.data, 1, param_blob.data, 1)
+
   # hist_blob = last_momentum * hist_blob
-  BLAS.scal!(length(hist_blob), convert(data_type, momentum), hist_blob.data, 1)
-  # hist_blob = -learning_rate * gradient + hist_blob
+  BLAS.scal!(length(hist_blob), convert(data_type, last_momentum), hist_blob.data, 1)
+
+  # hist_blob = -learning_rate * gradient + hist_blob (calc vt)
   BLAS.axpy!(length(hist_blob), convert(data_type, -learning_rate), gradient.data, 1, hist_blob.data, 1)
 
-  # update parameter
 
-  # param_blob += momentum * hist_blob
-  BLAS.axpy!(length(hist_blob), convert(data_type, momentum), hist_blob.data, 1, param_blob.data, 1)
-  # param_blob -= learning_rate * gradient
-  BLAS.axpy!(length(hist_blob), convert(data_type, -learning_rate), gradient.data, 1, param_blob.data, 1)
+  # param_blob += (1+momentum) * hist_blob (update with vt)
+  BLAS.axpy!(length(hist_blob), convert(data_type, 1 + momentum), hist_blob.data, 1, param_blob.data, 1)
+
+
 end
 
