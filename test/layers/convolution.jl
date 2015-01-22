@@ -8,7 +8,11 @@ function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, p
   n_filter = 12
 
   input_dims = (input_w, input_h, input_chann, input_num)
-  filter_dims = (filter_w, filter_h, div(input_chann,n_group), n_filter)
+  if deconv
+    filter_dims = (filter_w, filter_h, div(n_filter,n_group), input_chann)
+  else
+    filter_dims = (filter_w, filter_h, div(input_chann,n_group), n_filter)
+  end
   bias_dims = (1, 1, n_filter, 1)
 
   layer = ConvolutionLayer(name="conv", kernel=(filter_w, filter_h), stride=(stride_w, stride_h),
@@ -104,7 +108,7 @@ function convolution_forward(state, filter::Array, bias::Array, input::Array)
                     out_x = (x-1) * state.layer.stride[1] - state.layer.pad[1] + q
                     if (out_y >= 1 && out_y <= state.height_out && out_x >= 1 && out_x <= state.width_out)
                       output[out_x,out_y,(g-1)*o_g+o,n] += input[x,y,(g-1)*k_g+k,n] *
-                          filter[q,p,k,(g-1)*o_g+o]
+                          filter[q,p,o,(g-1)*k_g+k]
                     end
                   end
                 end
@@ -190,8 +194,8 @@ function convolution_backward(state, filter::Array, bias::Array, input::Array, t
                     out_y = (y-1) * state.layer.stride[2] - state.layer.pad[2] + p
                     out_x = (x-1) * state.layer.stride[1] - state.layer.pad[1] + q
                     if (out_y >= 1 && out_y <= state.height_out && out_x >= 1 && out_x <= state.width_out)
-                      ∇filter[q,p,k,(g-1)*o_g+o] += top_diff[out_x,out_y,(g-1)*o_g+o,n] * input[x,y,(g-1)*k_g+k,n]
-                      ∇input[x,y,(g-1)*k_g+k,n] += top_diff[out_x,out_y,(g-1)*o_g+o,n] * filter[q,p,k,(g-1)*o_g+o]
+                      ∇filter[q,p,o,(g-1)*k_g+k] += top_diff[out_x,out_y,(g-1)*o_g+o,n] * input[x,y,(g-1)*k_g+k,n]
+                      ∇input[x,y,(g-1)*k_g+k,n] += top_diff[out_x,out_y,(g-1)*o_g+o,n] * filter[q,p,o,(g-1)*k_g+k]
                     end
                   end
                 end
