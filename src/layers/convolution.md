@@ -22,6 +22,8 @@ im2col(img) x filter => img_out: (w_out, h_out) x (n_filter)
 
 ∂img_out x Tr(filter) => ∂(im2col(img))
 
+Tr(im2col(img)) x ∂img_out => ∂filter
+
 ## Deconvolution
 
 ### Deconvolution Forward
@@ -32,6 +34,7 @@ img x Tr(filter) => im2col(img_out): (w,h) x (kernel_w,kernel_h,n_filter)
 
 im2col(∂img_out) x filter => ∂img: (w,h) x chann
 
+Tr(im2col(∂img_out)) x img => ∂filter: (kernel_w,kernel_h,n_filter) x (chann)
 
 
 
