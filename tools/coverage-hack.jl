@@ -1,3 +1,8 @@
+# The julia Coverage count all files in src by default. However, our
+# CUDA components are only tested locally because the Travis-CI does
+# not have GPU devices. This caused the coverage of Mocha to be very
+# low. We add a simple hacking that allow us to ignore the "cuda"
+# sub-directory to fix the coverage reporting.
 using Coverage
 
 function process_folder(folder="src", ignore=[])
