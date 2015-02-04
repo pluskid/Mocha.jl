@@ -1,4 +1,4 @@
-export CoffeeBreak
+export CoffeeBreak, Coffee, CoffeeLounge
 export init, enjoy, destroy
 export CoffeeLounge, add_coffee_break, check_coffee_break, setup, update_statistics
 export save_statistics, shutdown
