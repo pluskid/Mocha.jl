@@ -135,7 +135,7 @@ end
 ############################################################
 # General utilities that could be used by all solvers
 ############################################################
-function load_snapshot(net::Net, state=nothing, path::String="")
+function load_snapshot(net::Net, path::String="", state=nothing)
   if isempty(path)
     return state
   end
@@ -211,7 +211,7 @@ function solve(solver::Solver, net::Net)
   check_bp_topology(net)
 
   solver_state = SolverState()
-  solver_state = load_snapshot(net, solver_state, solver.params.load_from)
+  solver_state = load_snapshot(net, solver.params.load_from, solver_state)
   solver_state.learning_rate = get_learning_rate(solver.params.lr_policy, solver_state)
   solver_state.momentum = get_momentum(solver.params.mom_policy, solver_state)
 
