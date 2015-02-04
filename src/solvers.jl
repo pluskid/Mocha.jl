@@ -4,6 +4,7 @@ export SGD, Nesterov
 export LearningRatePolicy, LRPolicy, get_learning_rate, MomentumPolicy, MomPolicy, get_momentum
 
 export setup_coffee_lounge, add_coffee_break, solve
+export load_snapshot
 
 ############################################################
 # Learning rate policy
@@ -134,7 +135,7 @@ end
 ############################################################
 # General utilities that could be used by all solvers
 ############################################################
-function load_snapshot(net::Net, state::SolverState, path::String)
+function load_snapshot(net::Net, state=nothing, path::String="")
   if isempty(path)
     return state
   end
