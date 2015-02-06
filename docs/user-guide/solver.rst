@@ -63,7 +63,7 @@ General Solver Parameters
         be used to fine-tune a trained (relatively) general model on a domain
         specific (maybe smaller) dataset. You can also load HDF5 models
         :doc:`exported from external deep learning tools
-        </user-guide/tools/import-caffe-model>`_.
+        </user-guide/tools/import-caffe-model>`.
 
 Learning Rate Policy
 ~~~~~~~~~~~~~~~~~~~~
@@ -93,7 +93,7 @@ Learning Rate Policy
 
    This policy provides different learning rate policies at different *stages*.
    Stages are specified by number of training iterations. See :doc:`the CIFAR-10
-   tutorial </tutorial/cifar10>`_ for an example of staged learning rate policy.
+   tutorial </tutorial/cifar10>` for an example of staged learning rate policy.
 
 Momentum Policy
 ~~~~~~~~~~~~~~~
@@ -139,7 +139,7 @@ that the solver might silently go crazy under such heavy load, Mocha provides
 the solver opportunities to have a break periodically. During the breaks, the
 solver can have a change of mood by, for example, talking to the outside world
 about its "mental status". Here is a snippet taken from :doc:`the MNIST tutorial
-</tutorial/mnist>`_:
+</tutorial/mnist>`:
 
 .. code-block:: julia
 
@@ -203,7 +203,7 @@ Built-in Coffee Breaks
 
    Automatically save solver and model snapshots to a given snapshot directory.
    The snapshot saved at iteration 0 corresponds to the init model (randomly
-   initialized via :doc:`initializers </user-guide/initializer>`_ or loaded from
+   initialized via :doc:`initializers </user-guide/initializer>` or loaded from
    existing model file).
 
 .. class:: ValidationPerformance
@@ -211,7 +211,7 @@ Built-in Coffee Breaks
    Run an epoch over a validation set and report the performance (e.g.
    multiclass classification accuracy). You will need to construct a validation
    network that shares parameters with the training network and provides access to
-   the validation dataset. See :doc:`the MNIST tutorial </tutorial/mnist>`_ for
+   the validation dataset. See :doc:`the MNIST tutorial </tutorial/mnist>` for
    a concrete example.
 
 
