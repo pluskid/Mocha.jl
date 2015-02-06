@@ -114,6 +114,12 @@ Momentum Policy
    Here *base_mom*, *gamma*, *stepsize* and *max_mom* are policy parameters and
    *iter* is the training iteration.
 
+.. class:: LRPolicy.Staged
+
+   This policy provides different momentum policies at different *stages*.
+   Stages are specified by number of training iterations. also
+   :class:`LRPolicy.Staged`.
+
 Solver Algorithms
 -----------------
 
