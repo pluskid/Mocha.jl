@@ -9,7 +9,7 @@ A solver is constructed by specifying general *solver parameters* that
 characterize *learning rate*, *momentum*, and *stop conditions*, etc. and an
 *algorithm* that characterizes how the parameters are updated in each solver
 iteration. The following is an example taken from the :doc:`MNIST tutorial
-</tutorial/mnist>`_.
+</tutorial/mnist>`.
 
 .. code-block:: julia
 

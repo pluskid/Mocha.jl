@@ -102,6 +102,23 @@ type Linear <: MomentumPolicy
   max_mom  :: FloatingPoint
 end
 
+type Staged <: MomentumPolicy
+  stages     :: Vector{(Int, MomentumPolicy)}
+  curr_stage :: Int
+
+  Staged(stages...) = begin
+    accum_stages = Array((Int, MomentumPolicy), length(stages))
+    accum_iter = 0
+    for i = 1:length(stages)
+      (n, mmp) = stages[i]
+      accum_iter += n
+      accum_stages[i] = (accum_iter, convert(MomentumPolicy, mmp))
+    end
+
+    new(accum_stages, 1)
+  end
+end
+
 end # module MomPolicy
 
 get_momentum(policy::MomPolicy.Fixed, state::SolverState) = policy.base_mom
@@ -109,6 +126,20 @@ get_momentum(policy::MomPolicy.Step, state::SolverState) =
     min(policy.base_mom * policy.gamma ^ (floor(state.iter / policy.stepsize)), policy.max_mom)
 get_momentum(policy::MomPolicy.Linear, state::SolverState) =
     min(policy.base_mom + floor(state.iter / policy.stepsize) * policy.gamma, policy.max_mom)
+
+function get_momentum(policy::MomPolicy.Staged, state::SolverState)
+  if policy.curr_stage == length(policy.stages)
+    # already in the last stage, stick there forever
+  else
+    maxiter = policy.stages[policy.curr_stage][1]
+    while state.iter >= maxiter && policy.curr_stage < length(policy.stages)
+      policy.curr_stage += 1
+      @info("Staged learning rate policy: switching to stage $(policy.curr_stage)")
+      maxiter = policy.stages[policy.curr_stage][1]
+    end
+  end
+  return get_momentum(policy.stages[policy.curr_stage][2], state)
+end
 
 @defstruct SolverParameters Any (
   lr_policy :: LearningRatePolicy = LRPolicy.Fixed(0.01),
