@@ -18,6 +18,8 @@ type SolverState
   SolverState() = new(0, 0.0, 0.0, 0.0)
 end
 function copy_solver_state!(dst::SolverState, src::SolverState)
-  dst.iter = src.iter
-  dst.obj_val = src.obj_val
+  dst.iter          = src.iter
+  dst.obj_val       = src.obj_val
+  dst.learning_rate = src.learning_rate
+  dst.momentum      = src.momentum
 end

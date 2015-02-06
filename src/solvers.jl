@@ -35,6 +35,44 @@ type Inv <: LearningRatePolicy
   power   :: FloatingPoint
 end
 
+# curr_lr *= gamma whenever performance
+# drops on the validation set
+type DecayOnValidation <: LearningRatePolicy
+  base_lr  :: FloatingPoint
+  gamma    :: FloatingPoint
+
+  key      :: String
+  curr_lr  :: FloatingPoint
+  listener :: Function
+  solver   :: Any
+
+  DecayOnValidation(base_lr, key, gamma=0.5) = begin
+    policy = new(base_lr, gamma, key, base_lr)
+    policy.solver = nothing
+    policy.listener = (coffee_lounge,net,state) -> begin
+      stats = get_statistics(coffee_lounge, key)
+      index = sort(keys(stats))
+      if length(index) > 1
+        if stats[index[end]] < stats[index[end-1]]
+          # performance drop
+          @info("lr decay %e -> %e", policy.curr_lr, policy.curr_lr*policy.gamma)
+          policy.curr_lr *= policy.gamma
+
+          # revert to a previously saved "good" snapshot
+          if isa(policy.solver, Solver)
+            @info("reverting to previous saved snapshot")
+            solver_state = load_snapshot(net, solver.params.load_from, state)
+            @info("snapshot at iteration %d loaded", solver_state.iter)
+            copy_solver_state!(state, solver_state)
+          end
+        end
+      end
+    end
+
+    policy
+  end
+end
+
 type Staged <: LearningRatePolicy
   stages     :: Vector{(Int, LearningRatePolicy)}
   curr_stage :: Int
@@ -61,6 +99,15 @@ get_learning_rate(policy::LRPolicy.Exp, state::SolverState) =
     policy.base_lr * policy.gamma ^ state.iter
 get_learning_rate(policy::LRPolicy.Inv, state::SolverState) =
     policy.base_lr * (1 + policy.gamma * state.iter) ^ (-policy.power)
+
+
+function setup(policy::DecayOnValidation, validation::ValidationPerformance, solver::Solver)
+  validation.add_listener(policy.listener)
+  policy.solver = solver
+end
+
+get_learning_rate(policy::LRPolicy.DecayOnValidation, state::SolverState) =
+    policy.curr_lr
 
 function get_learning_rate(policy::LRPolicy.Staged, state::SolverState)
   if policy.curr_stage == length(policy.stages)
