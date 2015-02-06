@@ -4,6 +4,8 @@ export register
 type ValidationPerformance <: Coffee
   validation_net :: Net
 
+  ValidationPerformance(net::Net) = new(net, Function[])
+
   # listeners will be notified each time we compute
   # performance on the validation set
   listeners :: Vector{Function}
