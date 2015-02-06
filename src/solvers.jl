@@ -43,19 +43,20 @@ function decay_on_validation_listener(policy, key::String, coffee_lounge::Coffee
   if length(index) > 1
     if stats[index[end]] < stats[index[end-1]]
       # performance drop
-      info("lr decay %e -> %e", policy.curr_lr, policy.curr_lr*policy.gamma)
+      info(@sprintf("lr decay %e -> %e", policy.curr_lr, policy.curr_lr*policy.gamma))
       policy.curr_lr *= policy.gamma
 
       # revert to a previously saved "good" snapshot
       if isa(policy.solver, Solver)
         info("reverting to previous saved snapshot")
-        solver_state = load_snapshot(net, solver.params.load_from, state)
-        info("snapshot at iteration %d loaded", solver_state.iter)
+        solver_state = load_snapshot(net, policy.solver.params.load_from, state)
+        info("snapshot at iteration $(solver_state.iter) loaded")
         copy_solver_state!(state, solver_state)
       end
     end
   end
 end
+
 type DecayOnValidation <: LearningRatePolicy
   base_lr  :: FloatingPoint
   gamma    :: FloatingPoint
