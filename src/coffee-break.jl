@@ -75,6 +75,9 @@ function setup(lounge::CoffeeLounge, state::SolverState, net::Net)
   end
 end
 
+function update_statistics(dummy::Nothing, key::String, val::StatisticsValue)
+  # dummy function used when you do not want to record statistics
+end
 function update_statistics(lounge::CoffeeLounge, key::String, val::StatisticsValue)
   dict = get(lounge.statistics, key, StatisticsRecords())
   dict[lounge.curr_iter] = val
