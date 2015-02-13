@@ -1,7 +1,7 @@
 export Net
 export init, destroy, forward, backward, forward_backward, get_epoch, check_bp_topology
 export get_layer, get_layer_state, freeze!, unfreeze!, freeze_all!, unfreeze_all!
-export show_statistics, reset_statistics
+export dump_statistics, reset_statistics
 
 type Net{T <: Backend}
   name           :: String
