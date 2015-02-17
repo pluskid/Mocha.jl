@@ -2,6 +2,15 @@ function forward(backend::GPUBackend, state::SquareLossLayerState, inputs::Vecto
   pred = inputs[1]
   label = inputs[2]
 
+  #XXX
+  #a = to_array(pred)
+  #b = to_array(label)
+  #println(size(b))
+  #println("max(a) = $(maximum(a))")
+  #println("max(b) = $(maximum(b))")
+  #println(vecnorm(a-b))
+  #exit(0)
+
   data_type = eltype(pred)
   n = length(pred)
 
@@ -27,5 +36,11 @@ function backward(backend::GPUBackend, state::SquareLossLayerState, inputs::Vect
     erase!(diff)
     CuBLAS.axpy(backend.cublas_ctx, n, convert(data_type, state.layer.weight/num), pred.ptr, 1, diff.ptr, 1)
     CuBLAS.axpy(backend.cublas_ctx, n, convert(data_type, -state.layer.weight/num), label.ptr, 1, diff.ptr, 1)
+  end
+
+  # the "label" also needs gradient
+  if isa(diffs[2], CuTensorBlob)
+    copy!(diffs[2], diff)
+    CuBLAS.scal(backend.cublas_ctx, n, -one(data_type), diffs[2].ptr, 1)
   end
 end

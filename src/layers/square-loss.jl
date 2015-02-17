@@ -81,5 +81,11 @@ function backward(backend::CPUBackend, state::SquareLossLayerState, inputs::Vect
     BLAS.axpy!(n, convert(data_type, state.layer.weight/num), pred.data, 1, diff.data, 1)
     BLAS.axpy!(n, convert(data_type, -state.layer.weight/num), label.data, 1, diff.data, 1)
   end
+
+  # the "label" also needs gradient
+  if isa(diffs[2], CPUBlob)
+    copy!(diffs[2], diff)
+    BLAS.scal!(n, -one(data_type), diffs[2].data, 1)
+  end
 end
 
