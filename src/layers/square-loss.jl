@@ -5,6 +5,7 @@
 ############################################################
 @defstruct SquareLossLayer Layer (
   name :: String = "square-loss",
+  (weight :: FloatingPoint = 1.0, weight >= 0),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 @characterize_layer(SquareLossLayer,
@@ -59,7 +60,7 @@ function forward(backend::CPUBackend, state::SquareLossLayerState, inputs::Vecto
 
   copy!(state.pred_copy, pred)
   BLAS.axpy!(n, convert(data_type, -1), label.data, 1, state.pred_copy.data, 1)
-  state.loss = 0.5/get_num(pred)*BLAS.dot(state.pred_copy.data, state.pred_copy.data)
+  state.loss = state.layer.weight * 0.5/get_num(pred)*BLAS.dot(state.pred_copy.data, state.pred_copy.data)
 
   # accumulate statistics
   state.loss_accum = (state.loss_accum*state.n_accum + state.loss*get_num(pred)) / (state.n_accum+get_num(pred))
@@ -77,11 +78,8 @@ function backward(backend::CPUBackend, state::SquareLossLayerState, inputs::Vect
     num = get_num(pred)
 
     erase!(diff)
-    BLAS.axpy!(n, convert(data_type, 1.0/num), pred.data, 1, diff.data, 1)
-    BLAS.axpy!(n, convert(data_type, -1.0/num), label.data, 1, diff.data, 1)
+    BLAS.axpy!(n, convert(data_type, state.layer.weight/num), pred.data, 1, diff.data, 1)
+    BLAS.axpy!(n, convert(data_type, -state.layer.weight/num), label.data, 1, diff.data, 1)
   end
-end
-
-function backward(backend::Backend, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
 

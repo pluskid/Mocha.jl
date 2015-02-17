@@ -16,7 +16,7 @@ function forward(backend::GPUBackend, state::SquareLossLayerState, inputs::Vecto
 
   copy!(state.pred_copy, pred)
   CuBLAS.axpy(backend.cublas_ctx, n, convert(data_type, -1), label.ptr, 1, state.pred_copy.ptr, 1)
-  state.loss = 0.5/get_num(pred)*CuBLAS.dot(backend.cublas_ctx, data_type, n, state.pred_copy.ptr, 1, state.pred_copy.ptr, 1)
+  state.loss = state.layer.weight * 0.5/get_num(pred)*CuBLAS.dot(backend.cublas_ctx, data_type, n, state.pred_copy.ptr, 1, state.pred_copy.ptr, 1)
 
   # accumulate statistics
   state.loss_accum = (state.loss_accum*state.n_accum + state.loss*get_num(pred)) / (state.n_accum+get_num(pred))
@@ -34,7 +34,7 @@ function backward(backend::GPUBackend, state::SquareLossLayerState, inputs::Vect
     num = get_num(pred)
 
     erase!(diff)
-    CuBLAS.axpy(backend.cublas_ctx, n, convert(data_type, 1.0/num), pred.ptr, 1, diff.ptr, 1)
-    CuBLAS.axpy(backend.cublas_ctx, n, convert(data_type, -1.0/num), label.ptr, 1, diff.ptr, 1)
+    CuBLAS.axpy(backend.cublas_ctx, n, convert(data_type, state.layer.weight/num), pred.ptr, 1, diff.ptr, 1)
+    CuBLAS.axpy(backend.cublas_ctx, n, convert(data_type, -state.layer.weight/num), label.ptr, 1, diff.ptr, 1)
   end
 end
