@@ -65,20 +65,16 @@ function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vec
     if isa(state.logistic.weights_blob, NullBlob)
       copy!(diff, state.softmax.blobs[1])
     else
-      idx_num_dumb = reshape([1], ones(Int, length(dims))...)
       copy!(diff, state.softmax.blobs[1].data .*
-          broadcast_getindex(state.logistic.weights_blob.data, idx_all[1:end-1]..., idx_num_dumb))
+          broadcast_getindex(state.logistic.weights_blob.data, idx_all...))
     end
 
     diff_data = reshape(diff.data, dims)
     if isa(state.logistic.weights_blob, NullBlob)
       broadcast_setindex!(diff_data, broadcast_getindex(diff_data, idx_all...)-1, idx_all...)
     else
-      # NOTE: here we rely on the fact that op_dim == length(dims)-1, this requirement
-      # is enforced in MultinomialLogisticLossLayer when weights are provided
       broadcast_setindex!(diff_data, broadcast_getindex(diff_data, idx_all...) .-
-          broadcast_getindex(state.logistic.weights_blob.data, idx_all[1:end-1]...,idx_num_dumb),
-          idx_all...)
+          broadcast_getindex(state.logistic.weights_blob.data, idx_all...), idx_all...)
     end
     Vec.mul_scal!(diff.data, dims[state.logistic.op_dim]/prod(dims))
   end
