@@ -21,7 +21,7 @@ __device__ void logistic_loss_forward(T *prob, T *label, T *weights, int num, in
     T the_prob = prob[idx * (spatial_dim*prob_dim) + y*spatial_dim + idx_sp];
     T log_prob = -log(max(the_prob, static_cast<T>(LOG_THRESHOLD)));
     if (weights != NULL)
-      log_prob *= weights[y*spatial_dim + idx_sp];
+      log_prob *= weights[idx * (spatial_dim*prob_dim) + y*spatial_dim + idx_sp];
     local_loss[threadIdx.x] = log_prob;
   }
 
