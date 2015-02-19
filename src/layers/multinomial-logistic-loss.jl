@@ -37,7 +37,6 @@ function setup(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Ve
   if isempty(layer.weights)
     weights_blob = NullBlob()
   else
-    @assert op_dim == tensor_dim-1 "When weights provided, LogisticLoss can only operate on the second-to-last dimension"
     weights = layer.weights
 
     if ndims(weights) == 1
