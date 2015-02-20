@@ -34,11 +34,15 @@ Loss Layers
 
       * Empty array (default). This means each category should be equally
         weighted.
-      * A 3D tensor of the shape (width, height, channels). Here the (w,h,c)
-        entry indicates the weights for category c at location (w,h).
-      * A 1D vector of length ``channels``. When both width and height are 1,
-        this is equivalent to the case above. Otherwise, the weight vector
-        across channels is repeated at every location (w,h).
+      * A 1D vector of length ``channels``. This defines weights for each
+        category.
+      * An (N-1)D tensor of the shape of a data point. In other words, the same
+        shape as the prediction except that the last mini-batch dimension is
+        removed. This is equivalent to the above case if the prediction is a 2D
+        tensor of the shape ``channels``-by-``mini-batch``.
+      * An ND tensor of the same shape as the prediction blob. This allows us to
+        fully specify different weights for different data points in
+        a mini-batch. See :class:`SoftlabelSoftmaxLossLayer`.
 
    .. attribute:: dim
 
@@ -61,6 +65,25 @@ Loss Layers
       specify ``:no``, it is your responsibility to properly normalize the
       weights.
 
+.. class:: SoftlabelSoftmaxLossLayer
+
+   Like the :class:`SoftmaxLossLayer`, except that this deals with *soft
+   labels*. For multiclass classification with :math:`K` categories, we call an integer
+   value :math:`y\in\{0,\ldots,K-1\}` a *hard label*. In contrast, a soft label is
+   a vector on the :math:`K`-dimensional simplex. In other words, a soft label
+   specifies a probability distribution over all the :math:`K` categories, while
+   a hard label is a special case where all the probability masses concentrates
+   on one single category.
+
+   .. attribute:: dim
+
+      Default ``-2`` (penultimate). Specify the dimension to operate on.
+
+   .. attribute:: bottoms
+
+      Should be a vector containing two symbols. The first one specifies the
+      name for the conditional probability input blob, and the second one
+      specifies the name for the ground-truth (soft labels) input blob.
 
 .. class:: SoftmaxLossLayer
 
