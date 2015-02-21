@@ -7,6 +7,7 @@ export LRNLayer, DropoutLayer, ReshapeLayer, ArgmaxLayer, HDF5OutputLayer
 export CropLayer, ConcatLayer, RandomMaskLayer, TiedInnerProductLayer
 export IdentityLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
+export SoftlabelSoftmaxLossLayer
 export AccuracyLayer
 
 export setup, forward, backward, shutdown
@@ -216,6 +217,7 @@ include("layers/hdf5-output.jl")
 include("layers/square-loss.jl")
 include("layers/multinomial-logistic-loss.jl")
 include("layers/softmax-loss.jl")
+include("layers/softlabel-softmax-loss.jl")
 
 #############################################################
 # Statistics Layers

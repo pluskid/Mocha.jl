@@ -26,6 +26,7 @@ include("layers/tied-inner-product.jl")
 include("layers/square-loss.jl")
 include("layers/multinomial-logistic-loss.jl")
 include("layers/softmax-loss.jl")
+include("layers/softlabel-softmax-loss.jl")
 
 #############################################################
 # Statistics Layers

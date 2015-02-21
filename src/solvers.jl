@@ -58,20 +58,27 @@ function decay_on_validation_listener(policy, key::String, coffee_lounge::Coffee
 end
 
 type DecayOnValidation <: LearningRatePolicy
-  base_lr  :: FloatingPoint
-  gamma    :: FloatingPoint
+  base_lr     :: FloatingPoint
+  gamma       :: FloatingPoint
 
-  key      :: String
-  curr_lr  :: FloatingPoint
-  listener :: Function
-  solver   :: Any
+  key         :: String
+  curr_lr     :: FloatingPoint
+  min_lr      :: FloatingPoint
+  listener    :: Function
+  solver      :: Any
+  initialized :: Bool
 
-  DecayOnValidation(base_lr, key, gamma=0.5) = begin
-    policy = new(base_lr, gamma, key, base_lr)
+  DecayOnValidation(base_lr, key, gamma=0.5, min_lr=1e-5) = begin
+    policy = new(base_lr, gamma, key, base_lr, min_lr)
     policy.solver = nothing
     policy.listener = (coffee_lounge,net,state) -> begin
+      if policy.curr_lr < policy.min_lr
+        # do nothing if we already fall below the minimal learning rate
+        return
+      end
       decay_on_validation_listener(policy, key, coffee_lounge, net, state)
     end
+    policy.initialized = false
 
     policy
   end
@@ -110,8 +117,19 @@ function setup(policy::LRPolicy.DecayOnValidation, validation::ValidationPerform
   policy.solver = solver
 end
 
-get_learning_rate(policy::LRPolicy.DecayOnValidation, state::SolverState) =
-    policy.curr_lr
+get_learning_rate(policy::LRPolicy.DecayOnValidation, state::SolverState) = begin
+  if !policy.initialized
+    if state.learning_rate > 0
+      # state.learning_rate is initialized to 0, if it is non-zero, then this might
+      # be loaded from some saved snapshot, we try to align with that
+      @info("Switching to base learning rate $(state.learning_rate)")
+      policy.base_lr = state.learning_rate
+    end
+    policy.initialized = true
+  end
+
+  policy.curr_lr
+end
 
 function get_learning_rate(policy::LRPolicy.Staged, state::SolverState)
   if policy.curr_stage == length(policy.stages)

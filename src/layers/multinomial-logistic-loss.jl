@@ -37,8 +37,8 @@ function setup(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Ve
   if isempty(layer.weights)
     weights_blob = NullBlob()
   else
-    @assert op_dim == tensor_dim-1 "When weights provided, LogisticLoss can only operate on the second-to-last dimension"
     weights = layer.weights
+
     if ndims(weights) == 1
       if length(weights) != dims[op_dim]
         error("Invalid weights: size should be equal to number of classes")
@@ -47,15 +47,24 @@ function setup(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Ve
       rep_shape = [dims[1:end-1]...]; rep_shape[op_dim] = 1
       weights = repeat(reshape(weights, new_shape...), inner=rep_shape)
     end
-    if ndims(weights) != tensor_dim-1 || size(weights) != dims[1:end-1]
-      error("Invalid weights: should be either a ND-tensor of one data point or a vector of (classes)")
+
+    if ndims(weights) == tensor_dim-1
+      @assert size(weights) == dims[1:end-1]
+      new_shape = [size(weights)..., 1]
+      rep_shape = [ones(Int64, length(dims)-1)..., dims[end]]
+      weights = repeat(reshape(weights, new_shape...), inner=rep_shape)
     end
+
+    @assert size(weights) == dims
     weights = convert(Array{data_type}, weights)
 
     if layer.normalize == :local
       weights = weights .* (dims[op_dim] ./ sum(weights, op_dim))
     elseif layer.normalize == :global
-      weights = weights * (prod(size(weights)) / sum(weights))
+      for i = 1:dims[end]
+        idx = map(x -> 1:x, dims[1:end-1])
+        weights[idx..., i] = weights[idx..., i] * (prod(dims[1:end-1]) / sum(weights[idx..., i]))
+      end
     else
       @assert layer.normalize == :no
     end
@@ -89,9 +98,8 @@ function forward(backend::CPUBackend, state::MultinomialLogisticLossLayerState, 
   if isa(state.weights_blob, NullBlob)
     loss = sum(-log(max(broadcast_getindex(pred, idx_all...), 1e-20)))
   else
-    tmp = reshape([1], ones(Int, length(dims))...)
     loss = sum(-log(max(broadcast_getindex(pred, idx_all...), 1e-20)) .*
-        broadcast_getindex(state.weights_blob.data, idx_all[1:end-1]..., tmp))
+        broadcast_getindex(state.weights_blob.data, idx_all...))
   end
   state.loss = loss / (prod(dims) / dims[state.op_dim])
 end
