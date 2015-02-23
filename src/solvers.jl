@@ -332,7 +332,7 @@ function solve(solver::Solver, net::Net)
 
   @debug("Entering solver loop")
   trainable_layers = filter(i -> has_param(net.layers[i]) && !is_frozen(net.states[i]), 1:length(net.layers))
-  while true
+  while !stop_condition_satisfied(solver, solver_state, net)
     solver_state.iter += 1
 
     backward(net, solver.params.regu_coef)
