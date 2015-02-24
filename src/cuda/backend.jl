@@ -83,6 +83,8 @@ end
   elem_pow_di,
   elem_pow_ff,
   elem_pow_dd,
+  elem_log_double,
+  elem_log_float,
 
   max_channel_pooling_forward_float,
   max_channel_pooling_forward_double,

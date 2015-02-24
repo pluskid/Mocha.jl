@@ -45,6 +45,8 @@ function test_softlabel_softmax_loss_layer(backend::Backend, tensor_dim, T, eps)
   expected_grad *= scale
   expected_grad = reshape(expected_grad, size(input))
 
+  println("$(state.loss)")
+  println("exp: $expected_loss")
   @test -eps < state.loss - expected_loss < eps
 
   println("    > Backward")

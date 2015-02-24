@@ -26,6 +26,13 @@ function test_cuvec(backend::Backend, T)
   CuVec.pow!(backend, T, X_blob.ptr.p, convert(T, 0.75), len)
   copy!(X2, X_blob)
   @test all(abs(X-X2) .< eps)
+
+  println("    > log!")
+  X = max(X, convert(T,1e-20))
+  copy!(X_blob, X)
+  CuVec.log!(backend, X_blob)
+  X2 = to_array(X_blob)
+  @test all(abs(X2 - log(X)) .< eps)
 end
 
 function test_cuvec(backend::Backend)

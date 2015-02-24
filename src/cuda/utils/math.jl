@@ -33,6 +33,16 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
     end
   end
 
+  # define log!
+  @eval begin
+    function log!(backend::GPUBackend, ::Type{$dtype}, X, len::Int)
+      X = convert(Ptr{Void}, X)
+      cuda_dim = cuda_geometry(len)
+      kernel = backend.mocha.$(symbol("elem_log_$ctype"))
+      CUDA.launch(kernel, cuda_dim..., (X,len))
+    end
+  end
+
   # define mul_scal!
   @eval begin
     function mul_scal!(backend::GPUBackend, ::Type{$dtype}, X, Y, len::Int)
@@ -63,6 +73,9 @@ function mul_scal!{T}(backend::GPUBackend, X::CuTensorBlob{T}, Y)
   Y = convert(T, Y)
   len = length(X)
   mul_scal!(backend, T, X.ptr.p, Y, len)
+end
+function log!{T}(backend::GPUBackend, X::CuTensorBlob{T})
+  log!(backend, T, X.ptr.p, length(X))
 end
 
 for (postfix, dt1, dt2) in [(:fi, Float32, Int), (:di, Float64, Int),

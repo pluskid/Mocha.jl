@@ -38,6 +38,12 @@ __device__ void elem_pow(T1 *X, T2 p, int len) {
   X[idx] = pow(X[idx], p);
 }
 
+template <typename T>
+__device__ void elem_log(T *X, int len) {
+  ELEMWISE_BOUNDS_AND_INDEX;
+  X[idx] = log(X[idx] > 1e-20 ? X[idx] : 1e-20);
+}
+
 #define DEF_ELEMWISE_API(NAME) \
   __global__ void elem_ ## NAME ## _float(float *X, float *Y, int len) { \
     elem_##NAME(X, Y, len); \
@@ -80,6 +86,13 @@ __global__ void elem_pow_ff(float *X, float p, int len) {
 }
 __global__ void elem_pow_dd(double *X, double p, int len) {
   elem_pow(X, p, len);
+}
+
+__global__ void elem_log_double(double *X, int len) {
+  elem_log(X, len);
+}
+__global__ void elem_log_float(float *X, int len) {
+  elem_log(X, len);
 }
 
 } // extern "C"

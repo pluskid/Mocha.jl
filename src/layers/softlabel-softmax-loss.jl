@@ -13,11 +13,13 @@ type SoftlabelSoftmaxLossLayerState{T} <: LayerState
   layer :: SoftlabelSoftmaxLossLayer
   loss  :: T
 
-  softmax_loss :: SoftmaxLossLayerState
-  fake_labels :: Vector{Blob}
-  fake_diff   :: Blob
+  softmax :: SoftmaxLayerState
+  op_dim  :: Int
+  etc     :: Any
 end
 
+function setup_etc(backend::CPUBackend, state::SoftlabelSoftmaxLossLayerState, inputs::Vector{Blob})
+end
 function setup(backend::Backend, layer::SoftlabelSoftmaxLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
   tensor_dim = ndims(inputs[1])
@@ -28,54 +30,46 @@ function setup(backend::Backend, layer::SoftlabelSoftmaxLossLayer, inputs::Vecto
   @assert 1 <= op_dim <= tensor_dim
   @assert op_dim != tensor_dim # the last dimension is the mini-batch dimension
 
-  # weights will be the soft labels
   weights = zeros(data_type, size(inputs[1]))
-  softmax_loss_layer = SoftmaxLossLayer(bottoms=Array(Symbol, length(inputs)), dim=layer.dim,
-      weights=weights, normalize=:no)
+  softmax_layer = SoftmaxLayer(bottoms=[:softmax_input], tops=[:softmax_output], dim=layer.dim)
+  softmax = setup(backend, softmax_layer, Blob[inputs[1]], Blob[diffs[1]])
+  state = SoftlabelSoftmaxLossLayerState(layer, zero(data_type), softmax, op_dim, nothing)
 
-  dims = size(inputs[1])
-  dims_label = map(1:length(dims)) do i
-    i == op_dim ? 1 : dims[i]
-  end
-  fake_labels = Blob[make_blob(backend, zeros(data_type, dims_label...)+(i-1)) for i = 1:dims[op_dim]]
-  fake_diff = make_blob(backend, data_type, dims)
+  setup_etc(backend, state, inputs)
 
-  softmax_loss = setup(backend, softmax_loss_layer, Blob[inputs[1], fake_labels[1]], diffs)
-  state = SoftlabelSoftmaxLossLayerState(layer, convert(data_type, 0), softmax_loss, fake_labels, fake_diff)
   return state
 end
 
+function shutdown_etc(backend::CPUBackend, state::SoftlabelSoftmaxLossLayerState)
+end
 function shutdown(backend::Backend, state::SoftlabelSoftmaxLossLayerState)
-  shutdown(backend, state.softmax_loss)
-  map(destroy, state.fake_labels)
+  shutdown_etc(backend, state)
+  shutdown(backend, state.softmax)
 end
 
-function forward(backend::Backend, state::SoftlabelSoftmaxLossLayerState, inputs::Vector{Blob})
+function forward(backend::CPUBackend, state::SoftlabelSoftmaxLossLayerState, inputs::Vector{Blob})
   pred = inputs[1]
   label = inputs[2]
 
-  state.loss = 0
+  forward(backend, state.softmax, Blob[pred])
+  prob = state.softmax.blobs[1]
 
-  copy!(state.softmax_loss.logistic.weights_blob, label)
-  for i = 1:length(state.fake_labels)
-    forward(backend, state.softmax_loss, Blob[pred, state.fake_labels[i]])
-    state.loss += state.softmax_loss.loss
-  end
+  dims = size(prob)
+  state.loss = sum(-log(max(prob.data, 1e-20)) .* label.data) / (prod(dims) / dims[state.op_dim])
 end
 
 function backward(backend::CPUBackend, state::SoftlabelSoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   diff = diffs[1]
 
   if isa(diff, CPUBlob)
-    pred = inputs[1]
-    label = inputs[2]
-    data_type = eltype(pred)
-    copy!(state.softmax_loss.logistic.weights_blob, label)
-    erase!(diff)
+    diff  = diff.data
+    pred  = inputs[1].data
+    label = inputs[2].data
 
-    for i = 1:length(state.fake_labels)
-      backward(backend, state.softmax_loss, Blob[pred, state.fake_labels[i]], Blob[state.fake_diff])
-      BLAS.axpy!(length(pred), one(data_type), state.fake_diff.data, 1, diff.data, 1)
-    end
+    data_type = eltype(pred)
+    copy!(diff, state.softmax.blobs[1])
+    BLAS.axpy!(length(pred), -one(data_type), label, 1, diff, 1)
+    dims = size(pred)
+    Vec.mul_scal!(diff, dims[state.op_dim]/prod(dims))
   end
 end
