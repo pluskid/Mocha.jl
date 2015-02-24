@@ -1,0 +1,22 @@
+template <typename T>
+__device__ void softlabel_softmax_loss_backward(T *prob, T *label, int num, int spatial_dim, int prob_dim) {
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+  int idx_sp = blockIdx.y;
+  int idx_y = blockIdx.z;
+  if (idx >= num || idx_sp >= spatial_dim || idx_y >= prob_dim)
+    return;
+
+  int loc = idx * (spatial_dim*prob_dim) + idx_y*spatial_dim + idx_sp;
+  prob[loc] -= label[loc];
+}
+
+extern "C" {
+  __global__ void softlabel_softmax_loss_backward_float(float *prob, float *label, int num, int spatial_dim, int prob_dim) {
+    softlabel_softmax_loss_backward(prob, label, num, spatial_dim, prob_dim);
+  }
+  __global__ void softlabel_softmax_loss_backward_double(double *prob, double *label, int num, int spatial_dim, int prob_dim) {
+    softlabel_softmax_loss_backward(prob, label, num, spatial_dim, prob_dim);
+  }
+}
+
+// vim: ft=cuda
