@@ -16,7 +16,8 @@ function test_softlabel_softmax_loss_layer(backend::Backend, tensor_dim, T, eps)
 
   inputs = Blob[input_blob, label_blob]
 
-  layer = SoftlabelSoftmaxLossLayer(bottoms=[:pred, :labels], dim=op_dim)
+  loss_weight = abs(rand(T))
+  layer = SoftlabelSoftmaxLossLayer(bottoms=[:pred, :labels], dim=op_dim, weight=loss_weight)
   state = setup(backend, layer, inputs, Blob[diff_blob])
 
   println("    > Forward")
@@ -41,12 +42,10 @@ function test_softlabel_softmax_loss_layer(backend::Backend, tensor_dim, T, eps)
     end
   end
   scale = dims[op_dim] / prod(dims)
-  expected_loss *= scale
-  expected_grad *= scale
+  expected_loss *= scale * loss_weight
+  expected_grad *= scale * loss_weight
   expected_grad = reshape(expected_grad, size(input))
 
-  println("$(state.loss)")
-  println("exp: $expected_loss")
   @test -eps < state.loss - expected_loss < eps
 
   println("    > Backward")

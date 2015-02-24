@@ -1,5 +1,6 @@
 @defstruct SoftlabelSoftmaxLossLayer Layer (
   name :: String = "softlabel-softmax-loss",
+  (weight :: FloatingPoint = 1.0, weight >= 0),
   (dim :: Int = -2, dim != 0),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
@@ -55,7 +56,7 @@ function forward(backend::CPUBackend, state::SoftlabelSoftmaxLossLayerState, inp
   prob = state.softmax.blobs[1]
 
   dims = size(prob)
-  state.loss = sum(-log(max(prob.data, 1e-20)) .* label.data) / (prod(dims) / dims[state.op_dim])
+  state.loss = state.layer.weight * sum(-log(max(prob.data, 1e-20)) .* label.data) / (prod(dims) / dims[state.op_dim])
 end
 
 function backward(backend::CPUBackend, state::SoftlabelSoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
@@ -70,6 +71,6 @@ function backward(backend::CPUBackend, state::SoftlabelSoftmaxLossLayerState, in
     copy!(diff, state.softmax.blobs[1])
     BLAS.axpy!(length(pred), -one(data_type), label, 1, diff, 1)
     dims = size(pred)
-    Vec.mul_scal!(diff, dims[state.op_dim]/prod(dims))
+    Vec.mul_scal!(diff, state.layer.weight * dims[state.op_dim]/prod(dims))
   end
 end
