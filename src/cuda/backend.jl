@@ -50,8 +50,6 @@ end
   logistic_loss_forward_double,
   softmax_loss_backward_float,
   softmax_loss_backward_double,
-  softlabel_softmax_loss_backward_float,
-  softlabel_softmax_loss_backward_double,
   relu_forward_float,
   relu_forward_double,
   relu_backward_float,
