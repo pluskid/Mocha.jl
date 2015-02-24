@@ -61,12 +61,16 @@ end
 function freeze!(net::Net) end
 function freeze!(net::Net, idx::Int...)
   for i in idx
-    freeze!(get_layer_state(net, i))
+    layer_state = get_layer_state(net, i)
+    @info("Freezing layer $(layer_state.layer.name) in network $(net.name)...")
+    freeze!(layer_state)
   end
 end
 function freeze!(net::Net, names::String...)
   for name in names
-    freeze!(get_layer_state(net, name))
+    layer_state = get_layer_state(net, name)
+    @info("Freezing layer $(layer_state.layer.name) in network $(net.name)...")
+    freeze!(layer_state)
   end
 end
 
