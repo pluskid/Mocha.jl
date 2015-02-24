@@ -3,6 +3,7 @@
 ############################################################
 @defstruct SoftmaxLossLayer Layer (
   name :: String = "softmax-loss",
+  (weight :: FloatingPoint = 1.0, weight >= 0),
   weights :: Array = [],
   normalize:: Symbol = :local,
   (dim :: Int = -2, dim != 0),
@@ -43,7 +44,7 @@ end
 function forward(backend::Backend, state::SoftmaxLossLayerState, inputs::Vector{Blob})
   forward(backend, state.softmax, Blob[inputs[1]])
   forward(backend, state.logistic, Blob[state.softmax.blobs[1], inputs[2]])
-  state.loss = state.logistic.loss
+  state.loss = state.logistic.loss * state.layer.weight
 end
 
 function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
@@ -76,7 +77,7 @@ function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vec
       broadcast_setindex!(diff_data, broadcast_getindex(diff_data, idx_all...) .-
           broadcast_getindex(state.logistic.weights_blob.data, idx_all...), idx_all...)
     end
-    Vec.mul_scal!(diff.data, dims[state.logistic.op_dim]/prod(dims))
+    Vec.mul_scal!(diff.data, state.layer.weight * dims[state.logistic.op_dim]/prod(dims))
   end
 end
 
