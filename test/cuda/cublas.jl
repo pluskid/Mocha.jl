@@ -49,6 +49,12 @@ function test_cublas(backend::Backend, T)
   CuBLAS.copy(backend.cublas_ctx, T, length(x), x_blob.ptr.p, 1, x2_blob.ptr.p, 1)
   copy!(x2, x2_blob)
   @test all(-eps .< x2-x .< eps)
+
+  println("    > fill!")
+  fill!(x_blob, 0)
+  @test all(-eps .< to_array(x_blob) .< eps)
+  fill!(x_blob, 1)
+  @test all(-eps .< to_array(x_blob) - 1 .< eps)
 end
 
 function test_cublas(backend::Backend)
