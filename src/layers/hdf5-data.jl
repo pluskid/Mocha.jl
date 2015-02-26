@@ -25,6 +25,7 @@ type HDF5DataLayerState <: LayerState
   curr_hdf5_file :: HDF5File
   curr_index     :: Int
   shuffle_idx    :: Vector{Int}
+  shuffle_src    :: Vector{Int}
 
   HDF5DataLayerState(backend::Backend, layer::HDF5DataLayer) = begin
     state = new(layer)
@@ -34,9 +35,16 @@ type HDF5DataLayerState <: LayerState
     end
     @assert(length(sources) > 0)
     state.sources = sources
+
+    if layer.shuffle
+      state.shuffle_src = randperm(length(state.sources))
+    else
+      state.shuffle_src = collect(1:length(state.sources))
+    end
+
     state.epoch = 0
     state.curr_source = 1
-    state.curr_hdf5_file = h5open(sources[1], "r")
+    state.curr_hdf5_file = h5open(sources[state.shuffle_src[1]], "r")
 
     state.dsets = [state.curr_hdf5_file[string(x)] for x in layer.tops]
     if layer.shuffle
@@ -86,7 +94,7 @@ function forward(backend::Backend, state::HDF5DataLayerState, inputs::Vector{Blo
     if n_remain == 0
       close(state.curr_hdf5_file)
       state.curr_source = state.curr_source % length(state.sources) + 1
-      state.curr_hdf5_file = h5open(state.sources[state.curr_source], "r")
+      state.curr_hdf5_file = h5open(state.sources[state.shuffle_src[state.curr_source]], "r")
       state.dsets = [state.curr_hdf5_file[string(x)] for x in state.layer.tops]
 
       if state.layer.shuffle
