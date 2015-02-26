@@ -1,6 +1,6 @@
 export LayerState
 
-export HDF5DataLayer, MemoryDataLayer
+export HDF5DataLayer, MemoryDataLayer, AsyncHDF5DataLayer
 export InnerProductLayer, ConvolutionLayer, PoolingLayer, SoftmaxLayer
 export PowerLayer, SplitLayer, ElementWiseLayer, ChannelPoolingLayer
 export LRNLayer, DropoutLayer, ReshapeLayer, ArgmaxLayer, HDF5OutputLayer
@@ -184,6 +184,7 @@ end
 #############################################################
 include("layers/hdf5-data.jl")
 include("layers/memory-data.jl")
+include("layers/async-hdf5-data.jl")
 
 #############################################################
 # General Computation Layers

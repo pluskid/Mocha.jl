@@ -1,7 +1,7 @@
 using HDF5
 
-function test_hdf5_data_layer(backend::Backend, T, eps)
-  println("-- Testing HDF5 Data Layer on $(typeof(backend)){$T}...")
+function test_hdf5_data_layer(backend::Backend, async, T, eps)
+  println("-- Testing $(async ? "(Async)" : "") HDF5 Data Layer on $(typeof(backend)){$T}...")
 
   ############################################################
   # Prepare Data for Testing
@@ -32,8 +32,13 @@ function test_hdf5_data_layer(backend::Backend, T, eps)
   ############################################################
 
   scale = rand()
-  layer = HDF5DataLayer(source = source_fn, tops = [:data], batch_size=batch_size,
-      transformers=[(:data, DataTransformers.Scale(scale))])
+  if async
+    layer = AsyncHDF5DataLayer(source = source_fn, tops = [:data], batch_size=batch_size,
+        transformers=[(:data, DataTransformers.Scale(scale))])
+  else
+    layer = HDF5DataLayer(source = source_fn, tops = [:data], batch_size=batch_size,
+        transformers=[(:data, DataTransformers.Scale(scale))])
+  end
   state = setup(backend, layer, Blob[], Blob[])
   @test state.epoch == 0
 
@@ -60,8 +65,13 @@ function test_hdf5_data_layer(backend::Backend, T, eps)
   end
 end
 
-function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
-  println("-- Testing HDF5 Data Layer (shuffle,n=$n,b=$batch_size) on $(typeof(backend)){$T}...")
+function test_hdf5_data_layer(backend::Backend, T, eps)
+  test_hdf5_data_layer(backend, false, T, eps)
+  test_hdf5_data_layer(backend, true, T, eps)
+end
+
+function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, async, n, T)
+  println("-- Testing $(async ? "(Async)" : "") HDF5 Data Layer (shuffle,n=$n,b=$batch_size) on $(typeof(backend)){$T}...")
 
   # To test random shuffling, we generate a dataset containing integer 1:n.
   # Then we run HDF5 layer n times forward, and collect all the output data.
@@ -79,7 +89,11 @@ function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
     println(file, h5fn)
   end
 
-  layer = HDF5DataLayer(source=source_fn, tops=[:data], batch_size=batch_size, shuffle=true)
+  if async
+    layer = AsyncHDF5DataLayer(source=source_fn, tops=[:data], batch_size=batch_size, shuffle=true)
+  else
+    layer = HDF5DataLayer(source=source_fn, tops=[:data], batch_size=batch_size, shuffle=true)
+  end
   state = setup(backend, layer, Blob[], Blob[])
 
   data_got_all = Int[]
@@ -101,6 +115,10 @@ function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
   shutdown(backend, state)
   rm(source_fn)
   rm(h5fn)
+end
+function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
+  test_hdf5_data_layer_shuffle(backend, batch_size, false, n, T)
+  test_hdf5_data_layer_shuffle(backend, batch_size, true, n, T)
 end
 
 function test_hdf5_data_layer_shuffle(backend::Backend, T)
