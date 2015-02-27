@@ -1,7 +1,39 @@
 Data Layers
 ~~~~~~~~~~~
 
+.. class:: AsyncHDF5DataLayer
+
+   Asynchronized HDF5 Data Layer. It has the same interface to :class:`HDF5DataLayer`, except that
+
+   * The data IO is performed asynchronized with Julia coroutines. Noticeable
+     speedups could typically be observed for large problems.
+   * The data is read in chunks. This allows fast data shuffling of HDF5 dataset
+     without using ``mmap``.
+
+   The properties are the same as :class:`HDF5DataLayer`, with one more extra
+   property controlling chunking.
+
+   .. attribute:: chunk_size
+
+      Default ``2^20``. The number of data points to read in each chunk. The
+      data are read in chunks and cached in memory for fast random access,
+      especially when data shuffling is turned on. Larger chunk size typically
+      leads to better performance. Adjust this parameter according to the memory
+      budget of your computing node.
+
+      .. tip::
+
+         * The cache only occupies host memory even when GPU backend is used for
+           computation.
+         * There is no correspondence between this chunk size and the *chunk
+           size* property defined in a HDF5 dataset. They do not need to be the
+           same.
+
 .. class:: HDF5DataLayer
+
+
+   Starting from v0.0.7, Mocha.jl contains an :class:`AsyncHDF5DataLayer`, which
+   is typically more preferable than this one.
 
    Loads data from a list of HDF5 files and feeds them to upper layers in mini
    batches. The layer will do automatic round wrapping and report epochs after
