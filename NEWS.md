@@ -3,6 +3,7 @@
 ## v0.0.7 2015.02.27
 
 * Infrastructure
+  * Boltzmann.jl now supports DBN pre-training for Mocha.jl
   * Clearer Nesterov solver (@the-moliver)
   * Staged momentum policy
   * Learning rate policy to decay dynamically based on performance on validation set
