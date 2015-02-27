@@ -4,7 +4,7 @@ using HDF5
   name :: String = "hdf5-data",
   (source :: String = "", source != ""),
   (batch_size :: Int = 0, batch_size > 0),
-  (chunk_size :: Int = 8192, chunk_size > 0),
+  (chunk_size :: Int = 2^20, chunk_size > 0),
   (tops :: Vector{Symbol} = Symbol[:data,:label], length(tops) > 0),
   shuffle :: Bool = false,
   transformers :: Vector = [],
