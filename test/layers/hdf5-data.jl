@@ -33,7 +33,7 @@ function test_hdf5_data_layer(backend::Backend, async, T, eps)
 
   scale = rand()
   if async
-    layer = AsyncHDF5DataLayer(source = source_fn, tops = [:data], batch_size=batch_size,
+    layer = AsyncHDF5DataLayer(source = source_fn, tops = [:data], batch_size=batch_size, chunk_size=4,
         transformers=[(:data, DataTransformers.Scale(scale))])
   else
     layer = HDF5DataLayer(source = source_fn, tops = [:data], batch_size=batch_size,
@@ -90,7 +90,7 @@ function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, async, n, T)
   end
 
   if async
-    layer = AsyncHDF5DataLayer(source=source_fn, tops=[:data], batch_size=batch_size, shuffle=true)
+    layer = AsyncHDF5DataLayer(source=source_fn, tops=[:data], batch_size=batch_size, shuffle=true, chunk_size=2)
   else
     layer = HDF5DataLayer(source=source_fn, tops=[:data], batch_size=batch_size, shuffle=true)
   end

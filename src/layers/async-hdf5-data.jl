@@ -4,6 +4,7 @@ using HDF5
   name :: String = "hdf5-data",
   (source :: String = "", source != ""),
   (batch_size :: Int = 0, batch_size > 0),
+  (chunk_size :: Int = 8192, chunk_size > 0),
   (tops :: Vector{Symbol} = Symbol[:data,:label], length(tops) > 0),
   shuffle :: Bool = false,
   transformers :: Vector = [],
@@ -20,7 +21,6 @@ type AsyncHDF5DataLayerState <: LayerState
   trans :: Vector{Vector{DataTransformerState}}
 
   sources        :: Vector{String}
-  shuffle_src    :: Vector{Int}
 
   io_task        :: Task
   stop_task      :: Bool
@@ -35,12 +35,6 @@ type AsyncHDF5DataLayerState <: LayerState
     state.sources = sources
     state.epoch = 0
 
-    if layer.shuffle
-      state.shuffle_src = randperm(length(sources))
-    else
-      state.shuffle_src = collect(1:length(sources))
-    end
-
     # empty array, will be constructed in setup
     state.blobs = Array(Blob, length(layer.tops))
     state.trans = Array(Vector{DataTransformerState}, length(layer.tops))
@@ -53,9 +47,8 @@ function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}
   @assert length(inputs) == 0
   state = AsyncHDF5DataLayerState(backend, layer)
 
-  h5_file = h5open(state.sources[state.shuffle_src[1]], "r")
+  h5_file = h5open(state.sources[1], "r")
   dsets = [h5_file[string(x)] for x in layer.tops]
-  shuffle_idx = randperm(size(dsets[1],4))
 
   # setup blob shapes and data transformers
   transformers = convert(Vector{(Symbol, DataTransformerType)}, state.layer.transformers)
@@ -71,64 +64,82 @@ function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}
         for (k,t) in filter(kt -> kt[1] == state.layer.tops[i], transformers)]
   end
 
-  # start data reading task
   state.stop_task = false
-
+  close(h5_file)
 
   function io_task_impl()
-    curr_index = 1
-    curr_source = 1
-
+    # data blocks to produce
     data_blocks = Array[Array(eltype(x), size(x)) for x in state.blobs]
+    n_done = 0
 
-    @info("AsyncHDF5DataLayer: IO Task starting...")
-    while !state.stop_task
-      # read and produce data
-      n_done = 0
-      while n_done < state.layer.batch_size
-        n_remain = size(dsets[1])[end] - curr_index + 1
-        if n_remain == 0
-          # open next HDF5 file
-          close(h5_file)
-          curr_source = curr_source % length(state.sources) + 1
-          h5_file = h5open(state.sources[state.shuffle_src[curr_source]], "r")
-          dsets = [h5_file[string(x)] for x in state.layer.tops]
+    while true
+      if layer.shuffle
+        shuffle_src = randperm(length(state.sources))
+      else
+        shuffle_src = collect(1:length(state.sources))
+      end
 
-          if state.layer.shuffle
-            shuffle_idx = randperm(size(dsets[1])[end])
-          end
+      for i_file = 1:length(shuffle_src)
+        h5_file = h5open(state.sources[shuffle_src[i_file]], "r")
+        dsets = [h5_file[string(x)] for x in layer.tops]
 
-          curr_index = 1
-          n_remain = size(dsets[1])[end]
+        n_total = size(dsets[1])[end]
+        chunk_idx = 1:layer.chunk_size:n_total
+        if layer.shuffle
+          shuffle_chunk = randperm(length(chunk_idx))
+        else
+          shuffle_chunk = collect(1:length(chunk_idx))
         end
 
-        n1 = min(state.layer.batch_size-n_done, n_remain)
-        if n1 > 0
-          for i = 1:length(state.blobs)
-            idx = map(x -> 1:x, size(state.blobs[i])[1:end-1])
-            dset = dsets[i]
-            if state.layer.shuffle
-              for kk = 1:n1
-                data_blocks[i][idx...,n_done+kk] = dset[idx...,shuffle_idx[curr_index+kk-1]]
+        # load data in chunks
+        for i_chunk = 1:length(chunk_idx)
+          idx_start = chunk_idx[shuffle_chunk[i_chunk]]
+          idx_end = min(idx_start+layer.chunk_size-1, n_total)
+
+          data_chunks = map(1:length(dsets)) do i_dset
+            idx = map(x -> 1:x, size(state.blobs[i_dset])[1:end-1])
+            dsets[i_dset][idx..., idx_start:idx_end]
+          end
+
+          n_chunk = idx_end - idx_start+1
+          if layer.shuffle
+            # shuffle within chunk
+            shuffle_idx = randperm(n_chunk)
+          end
+
+          curr_idx = 1
+          while curr_idx <= n_chunk
+            if n_done == layer.batch_size
+              produce(data_blocks)
+              if state.stop_task
+                @info("AsyncHDF5DataLayer: IO Task reaching the end...")
+                close(h5_file)
+                produce(nothing)
+                return
               end
-            else
-              data_blocks[i][idx...,n_done+1:n_done+n1] = dset[idx..., curr_index:curr_index+n1-1]
-            end
-          end
-        end
-        curr_index += n1
-        n_done += n1
 
-        # update epoch
-        if curr_index > size(dsets[1])[end] && curr_source == length(state.sources)
-          state.epoch += 1
+              n_done = 0
+            end
+            n_todo = layer.batch_size - n_done
+
+            n_take = min(n_todo, n_chunk-curr_idx+1)
+            for i_dset = 1:length(dsets)
+              idx = map(x -> 1:x, size(state.blobs[i_dset])[1:end-1])
+              idx_take = curr_idx:curr_idx+n_take-1
+              if layer.shuffle
+                idx_take = shuffle_idx[idx_take]
+              end
+              data_blocks[i_dset][idx...,n_done+1:n_done+n_take] = data_chunks[i_dset][idx..., idx_take]
+            end
+            curr_idx += n_take
+            n_done += n_take
+          end
         end
       end
-      produce(data_blocks)
+
+      # update epoch
+      state.epoch += 1
     end
-    @info("AsyncHDF5DataLayer: IO Task reaching the end...")
-    close(h5_file)
-    produce(nothing)
   end
 
   # start the IO task
