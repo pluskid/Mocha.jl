@@ -1,5 +1,17 @@
 # News for Mocha Development
 
+## v0.0.7 2015.02.27
+
+* Infrastructure
+  * Clearer Nesterov solver (@the-moliver)
+  * Staged momentum policy
+  * Learning rate policy to decay dynamically based on performance on validation set
+* Network
+  * Async HDF5 data layer: faster and with chunking to support fast data shuffling
+  * Softlabel-softmax-loss layer allows training with posterior (instead of hard labels) as labels
+  * Weight loss layers to combine multiple loss functions in one network
+  * Square loss layer is now capable of propagating gradients to both sides
+
 ## v0.0.6 2014.12.31
 
 * Infrastructure
