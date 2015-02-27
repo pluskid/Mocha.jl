@@ -27,6 +27,11 @@ Loss Layers
       name for the conditional probability input blob, and the second one
       specifies the name for the ground-truth input blob.
 
+   .. attribute:: weight
+
+      Default ``1.0``. Weight of this loss function. Could be useful when
+      combining multiple loss functions in a network.
+
    .. attribute:: weights
 
       This can be used to specify weights for different classes. The following
@@ -78,6 +83,11 @@ Loss Layers
    .. attribute:: dim
 
       Default ``-2`` (penultimate). Specify the dimension to operate on.
+
+   .. attribute:: weight
+
+      Default ``1.0``. Weight of this loss function. Could be useful when
+      combining multiple loss functions in a network.
 
    .. attribute:: bottoms
 
@@ -135,6 +145,11 @@ Loss Layers
       a 4D vision tensor blob, the default value (penultimate) translates to the
       3rd tensor dimension, usually called the "channel" dimension.
 
+   .. attribute:: weight
+
+      Default ``1.0``. Weight of this loss function. Could be useful when
+      combining multiple loss functions in a network.
+
    .. attribute::
       weights
       normalize
@@ -153,6 +168,11 @@ Loss Layers
    Here :math:`N` is the batch-size, :math:`\mathbf{y}_i` is the real-valued
    (vector or scalar) ground-truth label of the :math:`i`-th sample, and
    :math:`\hat{\mathbf{y}}_i` is the corresponding prediction.
+
+   .. attribute:: weight
+
+      Default ``1.0``. Weight of this loss function. Could be useful when
+      combining multiple loss functions in a network.
 
    .. attribute:: bottoms
 

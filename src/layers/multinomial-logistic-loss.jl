@@ -4,6 +4,7 @@
 @defstruct MultinomialLogisticLossLayer Layer (
   name :: String = "multinomial-logistic-loss",
   weights :: Array = [],
+  (weight :: FloatingPoint = 1.0, weight >= 0),
   (dim :: Int = -2, dim != 0),
   (normalize:: Symbol = :local, in(normalize,[:local,:global,:no])),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
@@ -101,7 +102,7 @@ function forward(backend::CPUBackend, state::MultinomialLogisticLossLayerState, 
     loss = sum(-log(max(broadcast_getindex(pred, idx_all...), 1e-20)) .*
         broadcast_getindex(state.weights_blob.data, idx_all...))
   end
-  state.loss = loss / (prod(dims) / dims[state.op_dim])
+  state.loss = state.layer.weight * loss / (prod(dims) / dims[state.op_dim])
 end
 
 function backward(backend::Backend, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
