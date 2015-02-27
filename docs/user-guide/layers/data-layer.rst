@@ -104,7 +104,7 @@ Data Layers
 
    .. attribute:: tops
 
-      List of symbols, specifying the name of the blobs to produce.
+      Default ``[:data, :label]``. List of symbols, specifying the name of the blobs to produce.
 
    .. attribute:: batch_size
 
