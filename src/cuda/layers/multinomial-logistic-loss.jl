@@ -30,7 +30,7 @@ function forward(backend::GPUBackend, state::MultinomialLogisticLossLayerState, 
 
   loss = Float32[0]
   copy!(loss, loss_blob)
-  state.loss = state.weight * loss[1] / (spatial_dim * num)
+  state.loss = state.layer.weight * loss[1] / (spatial_dim * num)
   destroy(loss_blob)
 end
 
