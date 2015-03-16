@@ -1,29 +1,42 @@
-include("gradient-checking.jl")
 
 function test_simple_net_gradient(backend)
-  println("-- Testing gradients on simple network (example for gradient checking code)")
+    println("-- Testing gradients on simple network (example for gradient checking code)")
 
-  batch_size = 1
-  X = randn(10, batch_size)
-  Y = ones(1, batch_size)
-  data = MemoryDataLayer(name="data", data=Array[X], tops=[:data], batch_size=batch_size)
-  label = MemoryDataLayer(name="label", data=Array[Y], tops=[:label], batch_size=batch_size)
-  fc1_layer = InnerProductLayer(name="ip1", output_dim=2, neuron=Neurons.ReLU(), bottoms=[:data], tops=[:ip1])
-  loss_layer = SoftmaxLossLayer(name="loss", bottoms=[:ip1, :label])
-  net = Net("simple", backend, [data, label, fc1_layer, loss_layer])
+    srand(12345678)
+    ############################################################
+    # Prepare Random Data
+    ############################################################
+    N = 5    # works with arbitrary minibatch size as long as
+             # N == batch_size in MemoryDataLayer so it cycles through
+             # and gets the same data during forward()
+    M = 10
+    P = 4
 
-  copy!(net.states[3].parameters[1].blob, randn(10*2))
-  copy!(net.states[3].parameters[2].blob, randn(2))
+    X = rand(M, N)
+    W = rand(M, P)
+    B = rand(P, 1)
 
-  test_gradients(net, 1e-4)
-  destroy(net)
+    Y = (W'*X .+ B)
+    Y = Y + 0.01*randn(size(Y))
+
+    ############################################################
+    # Define network
+    ############################################################
+    data_layer = MemoryDataLayer(batch_size=N, data=Array[X,Y])
+
+    w1 = InnerProductLayer(neuron=Neurons.Sigmoid(), name="ip1",output_dim=20, tops=[:a], bottoms=[:data])
+    w2 = InnerProductLayer(neuron=Neurons.Identity(), name="ip2",output_dim=4, tops=[:b], bottoms=[:a])
+    loss_layer = SquareLossLayer(name="loss", bottoms=[:b, :label] )
+
+
+    net = Net("TEST", backend, [w1,w2, loss_layer, data_layer])
+
+    # epsilon:     milage may vary 1e-4 - 1e-8
+    # digit:       compare this many digits to check for 'identity'
+    # visualize:   prints out correct and failed positions of gradients
+    return test_gradients(net, epsilon=1e-8, digit=6, visual=false )
 end
 
 if test_cpu
-  test_simple_net_gradient(backend_cpu)
+    test_simple_net_gradient(backend_cpu)
 end
-# This test is not available for GPU backend yet as the implementation
-# currently explicitly access the data of a CPU blob
-#if test_gpu
-#  test_simple_net_gradient(backend_gpu)
-#end
