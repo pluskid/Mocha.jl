@@ -37,7 +37,7 @@ end
 # space, where unrolling becomes trivial
 # it left as an exercise for the reader
 function unroll_parameters( model::Net )
-    theta = Array(Float64) # initial state is one length ??? weird
+    theta = Array(Float64,0) # initial state
     for l = 1:length(model.layers)
         if Mocha.has_param(model.layers[l])
 
@@ -48,13 +48,11 @@ function unroll_parameters( model::Net )
             end
         end
     end
-    # note the begining, work around the first element
-    # is fluke
-    return theta[2:end]
+    return theta[1:end]
 end
 
 function unroll_gradients( model::Net )
-    theta = Array(Float64) # initial state is one length ??? weird
+    theta = Array(Float64,0) # initial state
     for l = 1:length(model.layers)
         if Mocha.has_param(model.layers[l])
             for m in model.states[l].parameters
@@ -64,9 +62,7 @@ function unroll_gradients( model::Net )
             end
         end
     end
-    # note the begining, work around as the first element
-    # is fluke
-    return theta[2:end]
+    return theta[1:end]
 end
 
 #################################################
