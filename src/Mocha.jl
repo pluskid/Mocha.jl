@@ -77,4 +77,6 @@ if Config.use_cuda
   include("cuda/solvers.jl")
 end
 
+include("utils/gradient-checking.jl")
+
 end # module
