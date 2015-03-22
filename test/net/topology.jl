@@ -61,7 +61,9 @@ function test_net_topology_dangling_blob(backend::Backend)
   net = Net("net", backend, [layer1, layer_ip1, layer_out, layer_loss])
   @test check_bp_topology(net)
   destroy(net)
-  rm(tmp_h5)
+  if isfile(tmp_h5)
+    rm(tmp_h5)
+  end
 
   #----
   # This one is bad, because the ip2 blob requires bp, but not connected in a valid bp path
@@ -86,7 +88,9 @@ function test_net_topology_dangling_blob(backend::Backend)
   net = Net("net", backend, [layer1, layer_split, layer_ip3, layer_out2, layer_loss2])
   @test check_bp_topology(net)
   destroy(net)
-  rm(tmp_h5)
+  if isfile(tmp_h5)
+    rm(tmp_h5)
+  end
 
   #--
   # This one is bad, in a split layer, both of the output blobs data1 and data2 require
@@ -99,7 +103,9 @@ function test_net_topology_dangling_blob(backend::Backend)
   net = Net("net", backend, [layer0, layer_ip0, layer_split, layer_ip3, layer_out2, layer_loss2])
   @test_throws TopologyError check_bp_topology(net)
   destroy(net)
-  rm(tmp_h5)
+  if isfile(tmp_h5)
+    rm(tmp_h5)
+  end
 end
 
 function test_net_topology(backend::Backend)
