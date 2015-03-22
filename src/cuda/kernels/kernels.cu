@@ -14,6 +14,7 @@
 #include "channel_pooling.impl"
 #include "dropout.impl"
 #include "argmax.impl"
+#include "index2onehot.impl"
 
 #include "relu.impl"
 #include "sigmoid.impl"

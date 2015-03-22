@@ -19,6 +19,7 @@ include("layers/argmax.jl")
 include("layers/crop.jl")
 include("layers/concat.jl")
 include("layers/tied-inner-product.jl")
+include("layers/index2onehot.jl")
 
 #############################################################
 # Loss Layers

@@ -32,7 +32,7 @@ function setup(backend::Backend, layer::Index2OnehotLayer, inputs::Vector{Blob},
   return Index2OnehotLayerState(layer, blobs, dims)
 end
 
-function shutdown(backend::CPUBackend, state::Index2OnehotLayerState)
+function shutdown(backend::Backend, state::Index2OnehotLayerState)
   map(destroy, state.blobs)
 end
 

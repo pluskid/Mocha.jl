@@ -62,6 +62,8 @@ end
   accuracy_forward_double,
   argmax_forward_float,
   argmax_forward_double,
+  index2onehot_forward_float,
+  index2onehot_forward_double,
 
   add_scal_float,
   add_scal_double,
