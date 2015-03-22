@@ -78,7 +78,9 @@ Loss Layers
    a vector on the :math:`K`-dimensional simplex. In other words, a soft label
    specifies a probability distribution over all the :math:`K` categories, while
    a hard label is a special case where all the probability masses concentrates
-   on one single category.
+   on one single category. In this case, this loss is basically computing the
+   KL-divergence D(p||q), where p is the ground-truth softlabel, and q is the
+   predicted distribution.
 
    .. attribute:: dim
 
