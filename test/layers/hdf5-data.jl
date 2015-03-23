@@ -12,7 +12,7 @@ function test_hdf5_data_layer(backend::Backend, async, T, eps)
   println("    > $data_dim")
 
   data_all = [rand(T, data_dim..., x) for x in [5 1 2]]
-  h5fn_all = [string(tempname(), ".hdf5") for x in 1:length(data_all)]
+  h5fn_all = [string(Mocha.temp_filename(), ".hdf5") for x in 1:length(data_all)]
 
   for i = 1:length(data_all)
     h5 = h5open(h5fn_all[i], "w")
@@ -20,7 +20,7 @@ function test_hdf5_data_layer(backend::Backend, async, T, eps)
     close(h5)
   end
 
-  source_fn = string(tempname(), ".txt")
+  source_fn = string(Mocha.temp_filename(), ".txt")
   open(source_fn, "w") do s
     for fn in h5fn_all
       println(s, fn)
@@ -79,12 +79,12 @@ function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, async, n, T)
   # is the batch size.
 
   data = reshape(convert(Array{T}, collect(1:n)), 1, 1, 1, n)
-  h5fn = string(tempname(), ".hdf5")
+  h5fn = string(Mocha.temp_filename(), ".hdf5")
   h5open(h5fn, "w") do file
     file["data"] = data
   end
 
-  source_fn = string(tempname(), ".txt")
+  source_fn = string(Mocha.temp_filename(), ".txt")
   open(source_fn, "w") do file
     println(file, h5fn)
   end

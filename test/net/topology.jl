@@ -48,7 +48,7 @@ function test_net_topology_multiple_bp(backend::Backend)
   @test_throws TopologyError check_bp_topology(net)
 end
 function test_net_topology_dangling_blob(backend::Backend)
-  tmp_h5 = tempname()
+  tmp_h5 = Mocha.temp_filename()
   #----
   # This one is good, the ip1 layer is connected with a loss layer.
   println("-- Testing network topology with dangling blob")
@@ -78,7 +78,6 @@ function test_net_topology_dangling_blob(backend::Backend)
   # This one is good, although the data2 blob is dangling, but it actually comes directly
   # from a data layer, thus no bp is needed. In this case, the SplitLayer could actually
   # be omitted
-  tmp_h5 = tempname()
   println("    > Good case 2")
   layer_split = SplitLayer(bottoms=[:data], tops=[:data1, :data2])
   layer_ip3 = InnerProductLayer(tops=[:ip3], bottoms=[:data1], output_dim=1, name="ip3")
@@ -95,7 +94,6 @@ function test_net_topology_dangling_blob(backend::Backend)
   #--
   # This one is bad, in a split layer, both of the output blobs data1 and data2 require
   # bp, but data2 is only connected to an HDF5 output layer, which does not do bp
-  tmp_h5 = tempname()
   println("    > Bad case 2")
   layer0 = MemoryDataLayer(tops=[:data0,:label], batch_size=1,data=Array[rand(1,1,1,1),rand(1,1,1,1)])
   layer_ip0 = InnerProductLayer(tops=[:data], bottoms=[:data0], output_dim=1, name="ip0")
