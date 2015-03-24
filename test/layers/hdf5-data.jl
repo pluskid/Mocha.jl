@@ -61,7 +61,12 @@ function test_hdf5_data_layer(backend::Backend, async, T, eps)
   shutdown(backend, state)
   rm(source_fn)
   for fn in h5fn_all
-    rm(fn)
+    # workaround for issue #58
+    try
+      rm(fn)
+    catch e
+      println(e)
+    end
   end
 end
 
