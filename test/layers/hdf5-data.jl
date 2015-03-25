@@ -122,7 +122,10 @@ function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, async, n, T)
   rm(h5fn)
 end
 function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
-  test_hdf5_data_layer_shuffle(backend, batch_size, false, n, T)
+  # do not run (non-async) HDF5 data layer shuffling on windows, because it is implemented
+  # with memmap, which is not working properly on Windows.
+  @windows? nothing : test_hdf5_data_layer_shuffle(backend, batch_size, false, n, T)
+
   test_hdf5_data_layer_shuffle(backend, batch_size, true, n, T)
 end
 
