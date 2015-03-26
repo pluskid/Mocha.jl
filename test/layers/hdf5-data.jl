@@ -119,7 +119,11 @@ function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, async, n, T)
 
   shutdown(backend, state)
   rm(source_fn)
-  rm(h5fn)
+  try
+    rm(h5fn)
+  catch e
+    println(e)
+  end
 end
 function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
   # do not run (non-async) HDF5 data layer shuffling on windows, because it is implemented
