@@ -56,7 +56,7 @@ function forward(backend::CPUBackend, state::SoftlabelSoftmaxLossLayerState, inp
   prob = state.softmax.blobs[1]
 
   dims = size(prob)
-  state.loss = state.layer.weight * sum(-log(max(prob.data, 1e-20)) .* label.data) / (prod(dims) / dims[state.op_dim])
+  state.loss = state.layer.weight * sum(-vec(log(max(prob.data, 1e-20))) .* vec(label.data)) / (prod(dims) / dims[state.op_dim])
 end
 
 function backward(backend::CPUBackend, state::SoftlabelSoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
