@@ -16,7 +16,10 @@ type WassersteinLossLayerState{T} <: LayerState
   loss  :: T
 
   K     :: Blob
+  KM    :: Blob
   alpha :: Blob
+  u     :: Blob
+  tmps  :: Vector{Blob}
 end
 
 function setup(backend::Backend, layer::WassersteinLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
@@ -28,14 +31,18 @@ function setup(backend::Backend, layer::WassersteinLossLayer, inputs::Vector{Blo
   @assert size(layer.M, 2) == get_fea_size(label)
 
   K = convert(Array{data_type}, exp(-layer.lambda * layer.M))
-  K_blob = make_blob(backend, K)
+  KM = K .* convert(Array{data_type}, layer.M)
   alpha  = make_blob(backend, zeros(get_fea_size(pred), get_num(pred)))
-  state = WassersteinLossLayerState(layer, zero(data_type), K_blob, alpha)
+  u = make_blob(backend, zeros(get_fea_size(pred), get_num(pred)))
+  state = WassersteinLossLayerState(layer, zero(data_type),
+      make_blob(backend, K), make_blob(backend, KM), alpha, u, Blob[])
   return state
 end
 
 function shutdown(backend::Backend, state::WassersteinLossLayerState)
   destroy(state.K)
+  destroy(state.M)
+  map(destroy, state.tmps)
 end
 
 function sinkhorn(backend::CPUBackend, state::WassersteinLossLayerState, inputs::Vector{Blob})
@@ -46,7 +53,8 @@ function sinkhorn(backend::CPUBackend, state::WassersteinLossLayerState, inputs:
   pred_num  = get_num(pred)
 
   # init as uniform distribution
-  u = ones(pred_size, pred_num) / pred_size;
+  copy!(state.u, ones(pred_size, pred_num) / pred_size);
+  u = state.u.data
 
   a = reshape(pred.data, pred_size, pred_num)
   b = reshape(label.data, get_fea_size(label), pred_num)
@@ -58,14 +66,14 @@ function sinkhorn(backend::CPUBackend, state::WassersteinLossLayerState, inputs:
 
   # compute objective function
   v = b ./ (K'*u)
-  state.loss = sum(u .* ((K .* state.layer.M)*v)) / pred_num
+  state.loss = sum(u .* ((state.KM.data)*v)) / pred_num
 
   # compute gradient
   alpha = log(u) / state.layer.lambda / pred_num
   copy!(state.alpha, alpha)
 end
 
-function forward(backend::CPUBackend, state::WassersteinLossLayerState, inputs::Vector{Blob})
+function forward(backend::Backend, state::WassersteinLossLayerState, inputs::Vector{Blob})
   sinkhorn(backend, state, inputs)
 end
 

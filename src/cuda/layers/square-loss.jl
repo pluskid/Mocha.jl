@@ -2,15 +2,6 @@ function forward(backend::GPUBackend, state::SquareLossLayerState, inputs::Vecto
   pred = inputs[1]
   label = inputs[2]
 
-  #XXX
-  #a = to_array(pred)
-  #b = to_array(label)
-  #println(size(b))
-  #println("max(a) = $(maximum(a))")
-  #println("max(b) = $(maximum(b))")
-  #println(vecnorm(a-b))
-  #exit(0)
-
   data_type = eltype(pred)
   n = length(pred)
 
