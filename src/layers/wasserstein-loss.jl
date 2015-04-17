@@ -27,7 +27,7 @@ function setup(backend::Backend, layer::WassersteinLossLayer, inputs::Vector{Blo
   @assert size(layer.M, 1) == get_fea_size(pred)
   @assert size(layer.M, 2) == get_fea_size(label)
 
-  K = convert(Array{T}, exp(-layer.lambda * layer.M))
+  K = convert(Array{data_type}, exp(-layer.lambda * layer.M))
   K_blob = make_blob(backend, K)
   alpha  = make_blob(backend, zeros(get_fea_size(pred), get_num(pred)))
   state = WassersteinLossLayerState(layer, zero(data_type), K_blob, alpha)
@@ -58,7 +58,7 @@ function sinkhorn(backend::CPUBackend, state::WassersteinLossLayerState, inputs:
 
   # compute objective function
   v = b ./ (K'*u)
-  state.loss = sum(u .* ((K .* M)*v)) / pred_num
+  state.loss = sum(u .* ((K .* state.layer.M)*v)) / pred_num
 
   # compute gradient
   alpha = log(u) / state.layer.lambda / pred_num

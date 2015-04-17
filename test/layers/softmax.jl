@@ -7,12 +7,13 @@ function test_softmax_layer(backend::Backend, tensor_dim, n_input, T, eps)
   dims = [abs(rand(Int,tensor_dim)) % 6 + 6 for i = 1:n_input]
   input = [rand(T, dims[i]...) for i = 1:n_input]
   input_blob = Blob[make_blob(backend, x) for x in input]
-  diff_blob = Blob[NullBlob() for i = 1:n_input]
+  diff_blob = Blob[make_blob(backend, x) for x in input]
 
   layer = SoftmaxLayer(tops=Array(Symbol,n_input), bottoms=Array(Symbol,n_input),
       dim=norm_dim-tensor_dim-1)
   state = setup(backend, layer, input_blob, diff_blob)
 
+  println("    > Forward")
   forward(backend, state, input_blob)
 
   for i = 1:n_input
@@ -39,6 +40,34 @@ function test_softmax_layer(backend::Backend, tensor_dim, n_input, T, eps)
     copy!(got_output, state.blobs[i])
 
     @test all(-eps .< output[:] - got_output[:] .< eps)
+  end
+
+  println("    > Backward")
+  for i = 1:n_input
+    copy!(state.blobs_diff[i], rand(T, size(input[i])))
+  end
+  backward(backend, state, input_blob, diff_blob)
+
+  for i = 1:n_input
+    my_dims  = size(input[i])
+    dim_pre  = prod(my_dims[1:norm_dim-1])
+    dim_prob = my_dims[norm_dim]
+    dim_post = prod(my_dims[norm_dim+1:end])
+
+    canonical_output = reshape(to_array(state.blobs[i]), (dim_pre, dim_prob, dim_post))
+    canonical_topdiff = reshape(to_array(state.blobs_diff[i]), (dim_pre, dim_prob, dim_post))
+    grad = similar(canonical_output)
+
+    for x = 1:dim_pre
+      for y = 1:dim_post
+        topdiff0 = canonical_topdiff[x,:,y]
+        output0 = canonical_output[x,:,y]
+        grad[x,:,y] = topdiff0.*output0 - dot(vec(topdiff0), vec(output0))*output0
+      end
+    end
+
+    got_grad = to_array(diff_blob[i])
+    @test all(-eps .< vec(got_grad)-vec(grad) .< eps)
   end
 
   shutdown(backend, state)
