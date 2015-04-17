@@ -32,8 +32,8 @@ function setup(backend::Backend, layer::WassersteinLossLayer, inputs::Vector{Blo
 
   K = convert(Array{data_type}, exp(-layer.lambda * layer.M))
   KM = K .* convert(Array{data_type}, layer.M)
-  alpha  = make_blob(backend, zeros(get_fea_size(pred), get_num(pred)))
-  u = make_blob(backend, zeros(get_fea_size(pred), get_num(pred)))
+  alpha  = make_blob(backend, zeros(data_type, get_fea_size(pred), get_num(pred)))
+  u = make_blob(backend, zeros(data_type, get_fea_size(pred), get_num(pred)))
   state = WassersteinLossLayerState(layer, zero(data_type),
       make_blob(backend, K), make_blob(backend, KM), alpha, u, Blob[])
   return state

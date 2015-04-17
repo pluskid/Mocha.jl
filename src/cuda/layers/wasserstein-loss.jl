@@ -9,7 +9,7 @@ function sinkhorn(backend::GPUBackend, state::WassersteinLossLayerState, inputs:
   label_size= get_fea_size(label)
 
   # init as uniform distribution
-  copy!(state.u, ones(pred_size, pred_num) / pred_size);
+  copy!(state.u, ones(data_type, pred_size, pred_num) / pred_size);
   u = state.u
   a = pred
   b = label
