@@ -372,15 +372,17 @@ function softmax_forward{T<:FloatingPoint}(handle::Handle, algorithm::Int, mode:
              handle, algorithm, mode, alpha_ptr, src_desc, src.p, beta_ptr, dest_desc, dest.p)
 end
 
-function softmax_backward(handle::Handle, algorithm::Int, mode::Int,
-    src_desc::Tensor4dDescriptor, src::CuPtr, srcdiff_desc::Tensor4dDescriptor, srcdiff::CuPtr,
-    destdiff_desc::Tensor4dDescriptor, descdiff::CuPtr)
+function softmax_backward{T<:FloatingPoint}(handle::Handle, algorithm::Int, mode::Int,
+    alpha::T, src_desc::Tensor4dDescriptor, src::CuPtr, srcdiff_desc::Tensor4dDescriptor, srcdiff::CuPtr,
+    beta::T, destdiff_desc::Tensor4dDescriptor, destdiff::CuPtr)
   @assert CUDNN_SOFTMAX_FAST <= algorithm <= CUDNN_SOFTMAX_ACCURATE
   @assert CUDNN_SOFTMAX_MODE_INSTANCE <= mode <= CUDNN_SOFTMAX_MODE_CHANNEL
-  @cudnncall(:cudnnSoftmaxBackward, (Handle, Cint, Cint, Tensor4dDescriptor, Ptr{Void},
-                                     Tensor4dDescriptor, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}),
-             handle, algorithm, mode, src_desc, src.p, srcdiff_desc, srcdiff.p,
-             destdiff_desc, destdiff.p)
+  alpha_ptr = T[alpha]
+  beta_ptr = T[beta]
+  @cudnncall(:cudnnSoftmaxBackward, (Handle, Cint, Cint, Ptr{Void}, Tensor4dDescriptor, Ptr{Void},
+                                     Tensor4dDescriptor, Ptr{Void}, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}),
+             handle, algorithm, mode, alpha_ptr, src_desc, src.p, srcdiff_desc, srcdiff.p,
+             beta_ptr, destdiff_desc, destdiff.p)
 end
 
 const CUDNN_POOLING_MAX     = 0

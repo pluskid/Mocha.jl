@@ -78,13 +78,13 @@ function test_softmax_layer(backend::Backend, n_input, T, eps)
   end
 end
 function test_softmax_layer(backend::Backend)
-  test_softmax_layer(backend, 3, Float32, 1e-5)
   test_softmax_layer(backend, 3, Float64, 1e-10)
+  test_softmax_layer(backend, 3, Float32, 1e-5)
 end
 
-if test_cpu
-  test_softmax_layer(backend_cpu)
-end
 if test_gpu
   test_softmax_layer(backend_gpu)
+end
+if test_cpu
+  test_softmax_layer(backend_cpu)
 end
