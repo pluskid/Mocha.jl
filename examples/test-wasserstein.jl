@@ -1,5 +1,5 @@
 use_cuda = true
-data_type = Float64
+data_type = Float32
 
 if use_cuda
   ENV["MOCHA_USE_CUDA"] = "true"

@@ -49,11 +49,12 @@ function sinkhorn(backend::CPUBackend, state::WassersteinLossLayerState, inputs:
   pred  = inputs[1]
   label = inputs[2]
 
+  data_type = eltype(pred)
   pred_size = get_fea_size(pred)
   pred_num  = get_num(pred)
 
   # init as uniform distribution
-  copy!(state.u, ones(pred_size, pred_num) / pred_size);
+  copy!(state.u, ones(data_type, pred_size, pred_num) / pred_size);
   u = state.u.data
 
   a = reshape(pred.data, pred_size, pred_num)
