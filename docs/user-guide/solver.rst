@@ -225,11 +225,38 @@ Built-in Coffee Breaks
 .. class:: TrainingSummary
 
    This is a coffee break in which the solver talks about the training summary.
-   Currently, only the training objective function value at the current
-   iteration is reported. Reporting for other solver states like the current
-   learning rate and momentum could be easily added.
+   The training objective function value at the current
+   iteration is reported by default. You can also call the function with the following
+   named parameters in order to customize the output:
 
-   The training summary at iteration 0 shows the results before training starts.
+   .. attribute:: show_iter(=true)
+   Shows the current iteration number.
+
+   .. attribute:: show_obj_val(=true)
+   Shows the current value of the objective function.
+
+   .. attribute:: show_lr(=false)
+   Shows the current value of the learning rate.
+
+   .. attribute:: show_mom(=false)
+   Shows the current momentum.
+
+   Here are a few examples of usage:
+
+   .. code-block:: julia
+
+      #same as original functionality, shows iteration and obj_val by defualt
+      TrainingSummary()
+   
+      #will only show objective function value
+      TrainingSummary(show_iter=false)
+
+      #shows iteration, obj_val, learning_rate, and momentum
+      TrainingSummary(show_lr=true,show_mom=true)
+
+   Note that the training summary at iteration 0 shows the results before training starts.
+   Also, any values that are shown with this method will also be added to the lounge 
+   using the `update_statistics()` function.
 
 .. class:: Snapshot
 
