@@ -229,19 +229,34 @@ Built-in Coffee Breaks
    iteration is reported by default. You can also call the function with the following
    named parameters in order to customize the output:
 
-   .. attribute:: showIter(=true)
+   .. attribute:: show_iter(=true)
    Shows the current iteration number.
 
-   .. attribute:: showObj_val(=true)
+   .. attribute:: show_obj_val(=true)
    Shows the current value of the objective function.
 
-   .. attribute:: showLR(=false)
+   .. attribute:: show_lr(=false)
    Shows the current value of the learning rate.
 
-   .. attribute:: showMom(=false)
+   .. attribute:: show_mom(=false)
    Shows the current momentum.
 
-   The training summary at iteration 0 shows the results before training starts.
+   Here are a few examples of usage:
+
+   .. code-block:: julia
+
+      #same as original functionality, shows iteration and obj_val by defualt
+      TrainingSummary()
+   
+      #will only show objective function value
+      TrainingSummary(show_iter=false)
+
+      #shows iteration, obj_val, learning_rate, and momentum
+      TrainingSummary(show_lr=true,show_mom=true)
+
+   Note that the training summary at iteration 0 shows the results before training starts.
+   Also, any values that are shown with this method will also be added to the lounge 
+   using the `update_statistics()` function.
 
 .. class:: Snapshot
 

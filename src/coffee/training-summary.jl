@@ -1,14 +1,14 @@
 export TrainingSummary
 
 type TrainingSummary <: Coffee
-  dispIter :: Bool
-  dispObj_val :: Bool
-  dispLR :: Bool
-  dispMom:: Bool
+  show_iter :: Bool
+  show_obj_val :: Bool
+  show_lr :: Bool
+  show_mom:: Bool
   
   #Default Constructor
-  function TrainingSummary(;showIter=true,showObj_val=true,showLR=false,showMom=false)
-    newTrainingSummary = new(showIter,showObj_val,showLR,showMom)
+  function TrainingSummary(;show_iter=true,show_obj_val=true,show_lr=false,show_mom=false)
+    newTrainingSummary = new(show_iter,show_obj_val,show_lr,show_mom)
 
     return newTrainingSummary
   end
@@ -17,33 +17,34 @@ end
 
 function enjoy(lounge::CoffeeLounge, coffee::TrainingSummary, ::Net, state::SolverState)
   # we do not report objective value at iteration 0 because it has not been computed yet
-  if coffee.dispIter
-    txtIter = @sprintf("ITER = %06d",state.iter)
+  if coffee.show_iter
+    txt_iter = @sprintf("ITER = %06d",state.iter)
   else
-    txtIter = ""
+    txt_iter = ""
   end
 
-  if coffee.dispObj_val
-    txtObj_val = @sprintf(":: TRAIN obj-val = %.8f",state.obj_val)
+  if coffee.show_obj_val
+    txt_obj_val = @sprintf(":: TRAIN obj-val = %.8f",state.obj_val)
+    update_statistics(lounge, "obj-val", state.obj_val)
   else
-    txtObj_val = ""
+    txt_obj_val = ""
   end
 
-  if coffee.dispLR
-    txtLR = @sprintf(":: LR = %.8f",state.learning_rate)
+  if coffee.show_lr
+    txt_lr = @sprintf(":: LR = %.8f",state.learning_rate)
+    update_statistics(lounge, "learning-rate", state.learning_rate)
   else
-    txtLR = ""
+    txt_lr = ""
   end
 
-  if coffee.dispMom
-    txtMom = @sprintf(":: MOM = %.8f",state.momentum)
+  if coffee.show_mom
+    txt_mom = @sprintf(":: MOM = %.8f",state.momentum)
+    update_statistics(lounge, "momentum", state.momentum)
   else
-    txtMom = ""
+    txt_mom = ""
   end
 
-  summary = string(txtIter,txtObj_val,txtLR,txtMom)
+  summary = string(txt_iter,txt_obj_val,txt_lr,txt_mom)
   
   @info(summary)
-
-  update_statistics(lounge, "obj-val", state.obj_val)
 end
