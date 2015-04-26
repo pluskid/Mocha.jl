@@ -225,9 +225,21 @@ Built-in Coffee Breaks
 .. class:: TrainingSummary
 
    This is a coffee break in which the solver talks about the training summary.
-   Currently, only the training objective function value at the current
-   iteration is reported. Reporting for other solver states like the current
-   learning rate and momentum could be easily added.
+   The training objective function value at the current
+   iteration is reported by default. You can also call the function with the following
+   named parameters in order to customize the output:
+
+   .. attribute:: showIter(=true)
+   Shows the current iteration number.
+
+   .. attribute:: showObj_val(=true)
+   Shows the current value of the objective function.
+
+   .. attribute:: showLR(=false)
+   Shows the current value of the learning rate.
+
+   .. attribute:: showMom(=false)
+   Shows the current momentum.
 
    The training summary at iteration 0 shows the results before training starts.
 
