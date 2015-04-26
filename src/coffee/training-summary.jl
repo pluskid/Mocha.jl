@@ -7,14 +7,11 @@ type TrainingSummary <: Coffee
   dispMom:: Bool
   
   #Default Constructor
-  #Put the "string" parameter to make the rest be optional
-  function TrainingSummary(string="dontuseme";showIter=true,showObj_val=true,showLR=false,showMom=false)
+  function TrainingSummary(;showIter=true,showObj_val=true,showLR=false,showMom=false)
     newTrainingSummary = new(showIter,showObj_val,showLR,showMom)
 
     return newTrainingSummary
   end
-
-  TrainingSummary() = new(true,true,false,false)
 
 end
 
