@@ -67,7 +67,7 @@ type DecayOnValidation <: LearningRatePolicy
   solver      :: Any
   initialized :: Bool
 
-  DecayOnValidation(base_lr, key, gamma=0.5, min_lr=1e-5) = begin
+  DecayOnValidation(base_lr, key, gamma=0.5, min_lr=1e-8) = begin
     policy = new(gamma, key, base_lr, min_lr)
     policy.solver = nothing
     policy.listener = (coffee_lounge,net,state) -> begin

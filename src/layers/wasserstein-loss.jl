@@ -41,7 +41,9 @@ end
 
 function shutdown(backend::Backend, state::WassersteinLossLayerState)
   destroy(state.K)
-  destroy(state.M)
+  destroy(state.KM)
+  destroy(state.alpha)
+  destroy(state.u)
   map(destroy, state.tmps)
 end
 
