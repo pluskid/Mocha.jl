@@ -135,7 +135,7 @@ function init(backend::GPUBackend)
 
   @info("Initializing CuDNN backend...")
   CUDA.init()
-  dev = CUDA.CuDevice(0)
+  dev = CUDA.CuDevice(Config.cuda_dev_id)
   backend.cu_ctx = CUDA.create_context(dev)
   backend.cublas_ctx = CuBLAS.create()
   backend.cudnn_ctx = CuDNN.create()
