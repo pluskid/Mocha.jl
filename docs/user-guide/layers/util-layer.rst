@@ -22,7 +22,7 @@ Utility Layers
 .. class:: MemoryOutputLayer
 
    Takes some blobs in the network and collect their data during forward pass of
-   the network as a list of julia ``Array``s. Useful when doing in-memory
+   the network as a list of julia ``Array`` objects. Useful when doing in-memory
    testing for collecting the output. After running the forward pass of the
    network, the ``outputs`` field of the corresponding layer state object will
    contain a vector of the same size as the ``bottoms`` attribute. Each element
