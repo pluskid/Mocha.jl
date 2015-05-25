@@ -5,7 +5,7 @@ export InnerProductLayer, ConvolutionLayer, PoolingLayer, SoftmaxLayer
 export PowerLayer, SplitLayer, ElementWiseLayer, ChannelPoolingLayer
 export LRNLayer, DropoutLayer, ReshapeLayer, ArgmaxLayer, HDF5OutputLayer
 export CropLayer, ConcatLayer, RandomMaskLayer, TiedInnerProductLayer
-export IdentityLayer, Index2OnehotLayer
+export IdentityLayer, Index2OnehotLayer, MemoryOutputLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export SoftlabelSoftmaxLossLayer, WassersteinLossLayer
 export AccuracyLayer
@@ -212,6 +212,7 @@ include("layers/identity.jl")
 include("layers/argmax.jl")
 include("layers/hdf5-output.jl")
 include("layers/index2onehot.jl")
+include("layers/memory-output.jl")
 
 #############################################################
 # Loss Layers
