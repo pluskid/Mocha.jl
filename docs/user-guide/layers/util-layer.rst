@@ -19,6 +19,20 @@ Utility Layers
 
       Name of the concatenated output blob.
 
+.. class:: MemoryOutputLayer
+
+   Takes some blobs in the network and collect their data during forward pass of
+   the network as a list of julia ``Array``s. Useful when doing in-memory
+   testing for collecting the output. After running the forward pass of the
+   network, the ``outputs`` field of the corresponding layer state object will
+   contain a vector of the same size as the ``bottoms`` attribute. Each element
+   of the vector is a list of tensors (julia ``Array`` objects), each tensor
+   corresponds to the output in a mini-batch.
+
+   .. attribute:: bottoms
+
+      A list of names of the blobs in the network to store.
+
 .. class:: HDF5OutputLayer
 
    Takes some blobs in the network and writes them to a HDF5 file.
