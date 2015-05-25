@@ -1,4 +1,4 @@
-export reset
+export reset_outputs
 
 @defstruct MemoryOutputLayer Layer (
   name :: String = "memory-output",
@@ -13,7 +13,7 @@ type MemoryOutputLayerState <: LayerState
   outputs :: Vector{Vector{Array}}
 end
 
-function reset(state::MemoryOutputLayerState)
+function reset_outputs(state::MemoryOutputLayerState)
   for i = 1:length(state.outputs)
     state.outputs[i] = Array[]
   end

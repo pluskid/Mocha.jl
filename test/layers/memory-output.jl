@@ -22,7 +22,7 @@ function test_memory_output_layer(backend::Backend, T, eps)
     @test all(abs(state.outputs[i][2]-inputs[i]) .< eps)
   end
 
-  reset(state)
+  reset_outputs(state)
   forward(backend, state, input_blobs)
   @test length(state.outputs) == length(inputs)
   for i = 1:length(inputs)
