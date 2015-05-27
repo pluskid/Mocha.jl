@@ -1,5 +1,18 @@
 # News for Mocha Development
 
+## v0.0.8 2015.05.27
+
+* Interface
+  * Option to display other information for training summary (@bisraelsen)
+* Infrastructure
+  * Improved gradient check (@steven-varga)
+  * Fix temp file issue for unit-test on Windows
+  * Fix XavierInitializer scale (@adambrewster)
+  * Option to specify GPU device
+* Network
+  * Index2Onehot layer, MemoryOutputLayer
+  * SoftmaxLayer now can do backward
+
 ## v0.0.7 2015.02.27
 
 * Infrastructure
