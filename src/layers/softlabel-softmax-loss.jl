@@ -31,7 +31,6 @@ function setup(backend::Backend, layer::SoftlabelSoftmaxLossLayer, inputs::Vecto
   @assert 1 <= op_dim <= tensor_dim
   @assert op_dim != tensor_dim # the last dimension is the mini-batch dimension
 
-  weights = zeros(data_type, size(inputs[1]))
   softmax_layer = SoftmaxLayer(bottoms=[:softmax_input], tops=[:softmax_output], dim=layer.dim)
   softmax = setup(backend, softmax_layer, Blob[inputs[1]], Blob[diffs[1]])
   state = SoftlabelSoftmaxLossLayerState(layer, zero(data_type), softmax, op_dim, nothing)

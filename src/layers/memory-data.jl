@@ -36,6 +36,10 @@ end
 
 function setup(backend::Backend, layer::MemoryDataLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   @assert length(inputs) == 0
+  for i = 2:length(layer.data)
+    @assert eltype(layer.data[i]) == eltype(layer.data[1])
+  end
+
   state = MemoryDataLayerState(backend, layer)
   return state
 end
