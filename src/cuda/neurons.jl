@@ -1,8 +1,8 @@
 function cuda_geometry(:: ActivationFunction, output :: Blob)
   len = length(output)
 
-  x_block = int(ceil(float64(len)/128));
-  return ((x_block,128), (len,))
+  x_block = int(ceil(float64(len)/512));
+  return ((x_block,512), (len,))
 end
 
 ############################################################
