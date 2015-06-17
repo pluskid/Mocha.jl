@@ -63,7 +63,7 @@ Next we define a convolution layer in a similar way:
 .. code-block:: julia
 
    conv_layer = ConvolutionLayer(name="conv1", n_filter=20, kernel=(5,5),
-       bottoms=[:data], tops=[:conv])
+       bottoms=[:data], tops=[:conv1])
 
 There are more parameters we specified here
 
@@ -93,7 +93,7 @@ There are more parameters we specified here
   This specifies a list of names for the output of the convolution
   layer. In this case, we are only taking one stream of input and
   after convolution, we output one stream of convolved data with the
-  name ``:conv``.
+  name ``:conv1``.
 
 Another convolution layer and pooling layer are defined similarly,
 with more filters this time:
@@ -101,9 +101,9 @@ with more filters this time:
 .. code-block:: julia
 
    pool_layer = PoolingLayer(name="pool1", kernel=(2,2), stride=(2,2),
-       bottoms=[:conv], tops=[:pool])
+       bottoms=[:conv1], tops=[:pool1])
    conv2_layer = ConvolutionLayer(name="conv2", n_filter=50, kernel=(5,5),
-       bottoms=[:pool], tops=[:conv2])
+       bottoms=[:pool1], tops=[:conv2])
    pool2_layer = PoolingLayer(name="pool2", kernel=(2,2), stride=(2,2),
        bottoms=[:conv2], tops=[:pool2])
 
