@@ -9,6 +9,7 @@ export IdentityLayer, Index2OnehotLayer, MemoryOutputLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export SoftlabelSoftmaxLossLayer, WassersteinLossLayer
 export AccuracyLayer
+export RandomNormalLayer
 
 export setup, forward, backward, shutdown
 
@@ -205,6 +206,7 @@ include("layers/concat.jl")
 include("layers/random-mask.jl")
 include("layers/tied-inner-product.jl")
 include("layers/identity.jl")
+include("layers/random-normal.jl")
 
 #############################################################
 # Utility layers

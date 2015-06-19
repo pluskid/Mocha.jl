@@ -120,6 +120,11 @@ end
   l1_forward_double,
   l1_backward_float,
   l1_backward_double,
+
+  stdnormal_init,
+  stdnormal_alloc_size,
+  stdnormal_forward_float,
+  stdnormal_forward_double,
 )
 
 function shutdown(mocha :: MochaKernels)

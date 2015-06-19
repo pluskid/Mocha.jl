@@ -1,7 +1,7 @@
 export Blob
 export CPUBlob, NullBlob
 
-import Base: eltype, size, length, ndims, copy!, fill!, show
+import Base: eltype, size, length, ndims, copy!, fill!, show, randn!
 export       eltype, size, length, ndims, copy!, fill!, erase!, show
 export get_num, get_height, get_width, get_fea_size, to_array
 export make_blob, make_zero_blob, reshape_blob
@@ -82,6 +82,9 @@ end
 function erase!(dst :: Blob)
   fill!(dst, 0)
 end
+function randn!(dst :: Blob)
+  error("Not implemented (should fill dst with iid standard normal variates)")
+end
 
 ############################################################
 # A Dummy Blob type holding nothing
@@ -154,4 +157,13 @@ function copy!{T}(dst :: CPUBlob{T}, src :: CPUBlob{T})
 end
 function fill!{T}(dst :: CPUBlob{T}, src)
   fill!(dst.data, src)
+end
+function randn!{T}(dst :: CPUBlob{T})
+  randn!(dst.data)
+end
+
+function randn!(a::Array{Float32})
+    # TODO This is hideously inefficient - check status of Julia issue
+    # https://github.com/JuliaLang/julia/issues/9836
+    a[:] = float32(randn(size(a)))
 end
