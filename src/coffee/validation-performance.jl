@@ -22,13 +22,7 @@ function init(coffee::ValidationPerformance, ::Net)
   init(coffee.validation_net)
 end
 function enjoy(lounge::CoffeeLounge, coffee::ValidationPerformance, net::Net, state::SolverState)
-  epoch = get_epoch(coffee.validation_net)
-  while true
-    forward(coffee.validation_net)
-    if get_epoch(coffee.validation_net) > epoch
-      break
-    end
-  end
+  forward_epoch(coffee.validation_net)
 
   @info("")
   @info("## Performance on Validation Set after $(state.iter) iterations")

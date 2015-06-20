@@ -4,7 +4,7 @@
 @defstruct SplitLayer Layer (
   name :: String = "split",
   no_copy :: Bool = false,
-  (tops :: Vector{Symbol} = Symbol[], length(tops) > 1),
+  (tops :: Vector{Symbol} = Symbol[], length(tops) >= 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 1),
 )
 @characterize_layer(SplitLayer,
