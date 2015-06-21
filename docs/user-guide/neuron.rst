@@ -37,6 +37,18 @@ unless it is an identity neuron. Layers have an identity neuron by default [1]_.
 
       \frac{dy}{dx} = \frac{-e^{-x}}{\left(1+e^{-x}\right)^2} = (1-y)y
 
+.. class:: Neurons.Tanh
+
+   Tanh is a transformed version of Sigmoid, that takes values in :math:`\pm 1`
+   instead of the unit interval.
+   input with large absolute values and approximate 1 for large positive inputs.
+   The point-wise formula is :math:`y = (1-e^{-2x})/(1+e^{-2x})`. The point-wise
+   derivative is
+
+   .. math::
+
+      \frac{dy}{dx} = 4e^{2x}/(e^{2x} + 1)^2 = (1-y^2)
+
 .. [1] This is actually not true: not all layers in Mocha support neurons. For
    example, data layers currently does not have neurons, but this feature could
    be added by simply adding a neuron property to the data layer type. However,

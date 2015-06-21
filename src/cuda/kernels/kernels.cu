@@ -18,5 +18,6 @@
 
 #include "relu.impl"
 #include "sigmoid.impl"
+#include "tanh.impl"
 
 #include "l1.impl"

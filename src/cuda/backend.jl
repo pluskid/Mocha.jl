@@ -58,6 +58,10 @@ end
   sigmoid_forward_double,
   sigmoid_backward_float,
   sigmoid_backward_double,
+  tanh_forward_float,
+  tanh_forward_double,
+  tanh_backward_float,
+  tanh_backward_double,
   accuracy_forward_float,
   accuracy_forward_double,
   argmax_forward_float,
@@ -156,4 +160,3 @@ function shutdown(backend::GPUBackend)
   backend.initialized = false
   @info("CuDNN Backend shutdown finished!")
 end
-
