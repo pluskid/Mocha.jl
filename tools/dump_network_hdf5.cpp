@@ -14,7 +14,6 @@
 #include "caffe/util/io.hpp"
 #include "caffe/vision_layers.hpp"
 
-using namespace std;
 using namespace caffe;  // NOLINT(build/namespaces)
 
 void dump_weight_bias(hid_t &h5file, Layer<float> *layer, const string& layer_name, const string& weight_name);
