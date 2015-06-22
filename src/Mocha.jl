@@ -78,5 +78,6 @@ if Config.use_cuda
 end
 
 include("utils/gradient-checking.jl")
+include("utils/graphviz.jl")
 
 end # module
