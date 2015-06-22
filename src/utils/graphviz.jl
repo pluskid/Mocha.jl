@@ -1,3 +1,5 @@
+export net2dot
+
 # visualize a net with GraphViz, by outputing dot description file
 function net2dot(io::IO, net::Net)
   println(io, """digraph "$(net.name)" {""")
