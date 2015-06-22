@@ -134,6 +134,13 @@ function forward_backward(net::Net, regu_coef :: FloatingPoint = 0.0)
   return obj_val
 end
 
+function forward_epoch(net::Net)
+  epoch = get_epoch(net)
+  while get_epoch(net) == epoch
+    forward(net)
+  end
+end
+
 function forward(net::Net, regu_coef :: FloatingPoint = 0.0)
   obj_val = 0.0
 
