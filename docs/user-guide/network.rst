@@ -158,7 +158,7 @@ example, during training, you want to have a *validation net* that shares
 parameters with the *training net*, yet takes a different data layer as input
 data stream and computes the accuracy on the validation set. In this case,
 simply using *the same* ``Layer`` object when constructing both networks will be
-enough. See :doc:`<tutorial/mnist>` for a concrete example.
+enough. See :doc:`/tutorial/mnist` for a concrete example.
 
 If you want to have **different** layers in **the same** network to share
 parameters, you can just use the same ``param_key`` property in the layers you
@@ -234,8 +234,8 @@ following command
    run(`dot -Tpng net.dot` |> "net.png")
 
 will generate a visualization of the network architecture in ``net.png``. The
-following is a visualization of the network used in the :doc:`<tutorial/mnist>`
-example.
+following is a visualization of the network used in the :doc:`MNIST
+</tutorial/mnist>` example.
 
 .. image:: images/mnist-dot.*
 
