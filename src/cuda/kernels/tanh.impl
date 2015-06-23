@@ -1,0 +1,35 @@
+#define TANH_BOUNDS_AND_INDEX \
+  int idx = threadIdx.x + blockIdx.x * blockDim.x; \
+  if (idx >= len) \
+    return
+
+template <typename T>
+__device__ void tanh_forward(T *data, int len) {
+  TANH_BOUNDS_AND_INDEX;
+  //data[idx] = 1.0 / (1 + exp(-data[idx]));
+  data[idx] = tanh(data[idx]);
+}
+
+template <typename T>
+__device__ void tanh_backward(T *data, T *gradient, int len) {
+  TANH_BOUNDS_AND_INDEX;
+  gradient[idx] *= (1.0 - data[idx] * data[idx]);
+}
+
+extern "C" {
+  __global__ void tanh_forward_float(float *data, int len) {
+    tanh_forward(data, len);
+  }
+  __global__ void tanh_forward_double(double *data, int len) {
+    tanh_forward(data, len);
+  }
+
+  __global__ void tanh_backward_float(float *data, float *gradient, int len) {
+    tanh_backward(data, gradient, len);
+  }
+  __global__ void tanh_backward_double(double *data, double *gradient, int len) {
+    tanh_backward(data, gradient, len);
+  }
+}
+
+// vim: ft=cuda

@@ -61,3 +61,30 @@ function backward(backend :: GPUBackend, neuron :: Neurons.Sigmoid, output :: Bl
   CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, gradient.ptr.p, blob_dim...))
 end
 
+
+function forward(backend :: GPUBackend, neuron :: Neurons.Tanh, output :: Blob)
+  cuda_dim, blob_dim = cuda_geometry(neuron, output)
+  data_type = eltype(output)
+  if data_type == Float32
+    kernel = backend.mocha.tanh_forward_float
+  elseif data_type == Float64
+    kernel = backend.mocha.tanh_forward_double
+  else
+    error("Unsupported data type $data_type")
+  end
+  CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, blob_dim...))
+end
+
+function backward(backend :: GPUBackend, neuron :: Neurons.Tanh, output :: Blob, gradient :: Blob)
+  cuda_dim, blob_dim = cuda_geometry(neuron, output)
+  data_type = eltype(output)
+  if data_type == Float32
+    kernel = backend.mocha.tanh_backward_float
+  elseif data_type == Float64
+    kernel = backend.mocha.tanh_backward_double
+  else
+    error("Unsupported data type $data_type")
+  end
+  CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, gradient.ptr.p, blob_dim...))
+end
+
