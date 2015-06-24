@@ -77,14 +77,8 @@ dec_out_layer   = InnerProductLayer(name="dec-out", output_dim=N_OUT, neuron=Neu
                                     weight_init = GaussianInitializer(std=0.01),
                                     bottoms=[:dec1], tops=[:out])
 
-dec_split_layer = SplitLayer(name="dec-split", bottoms=[:out], tops=[:dec_out1, :dec_out2])
 
-
-re_out_layer    = ConcatLayer(name="reshape-out", bottoms=[:dec_out1, :dec_out2], tops=[:out_reshape])
-#re_out_layer    = ReshapeLayer(name="reshape-out", shape=(784,1), bottoms=[:out], tops=[:out_reshape])
-
-re_data_layer   = ReshapeLayer(name="reshape-data", shape=(784,1), bottoms=[:data], tops=[:data_reshape])
-loss_layer      = SoftmaxLossLayer(name="loss", bottoms=[:out_reshape, :data_reshape])
+bce_loss_layer  = BinaryCrossEntropyLossLayer(name="bce-loss", bottoms=[:out, :data])
 
 kl_loss_layer   = GaussianKLLossLayer(name="kl-loss", bottoms=[:z_mu_2, :z_sigma_2])
 
@@ -96,7 +90,7 @@ enc_layers = [enc1_layer, enc_split_layer, enc_mu_layer, enc_sigma_layer, zm_spl
 z_layers = [eps_layer, z_noise_layer, z_layer]
 dec_layers = [dec1_layer, dec_out_layer]
 common_layers = [enc_layers, z_layers, dec_layers]
-loss_layers = [dec_split_layer, re_out_layer, re_data_layer, loss_layer, kl_loss_layer]
+loss_layers = [bce_loss_layer, kl_loss_layer]
 # put training net together, note that the correct ordering will automatically be established by the constructor
 net = Net("MNIST-VAE-train", backend, [data_layer, common_layers..., loss_layers...])
 

@@ -31,6 +31,7 @@ include("layers/softmax-loss.jl")
 include("layers/softlabel-softmax-loss.jl")
 include("layers/wasserstein-loss.jl")
 include("layers/binary-cross-entropy-loss.jl")
+include("layers/gaussian-kl-loss.jl")
 
 #############################################################
 # Statistics Layers

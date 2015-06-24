@@ -36,29 +36,30 @@ function forward(backend::CPUBackend, state::BinaryCrossEntropyLossLayerState, i
 end
 
 function backward(backend::CPUBackend, state::BinaryCrossEntropyLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-    diff = diffs[1]
-    if isa(diff, CPUBlob)
+  diff = diffs[1]
+  if isa(diff, CPUBlob)
 
-        # Diffs is df/dloss
-        # we want to multiply this by dloss/dpred and dl
+    # Diffs is df/dloss
+    # we want to multiply this by dloss/dpred and dl
 
-        pred  = inputs[1].data
-        label = inputs[2].data
-        # l = -w sum_i log(p_i) y_i + (log(1-p_i)(1-y_i)
-        # dl/dp_i = -w ( y_i/p_i - ((1-y_i)(1-p_i) )
-        # dl/dy_i = -w ( log(p_i) - (log(1-p_i) ) = -w log(p_i/(1-p_i))
+    label = inputs[2].data
+    pred  = reshape(inputs[1].data, size(label))
 
-        n = length(pred)
-        a = convert(eltype(pred), -state.layer.weight/get_num(inputs[1]))
+    # l = -w sum_i log(p_i) y_i + (log(1-p_i)(1-y_i)
+    # dl/dp_i = -w ( y_i/p_i - ((1-y_i)(1-p_i) )
+    # dl/dy_i = -w ( log(p_i) - (log(1-p_i) ) = -w log(p_i/(1-p_i))
 
-        erase!(diff) # is this correct? square-loss does it - should we allow for any incoming diff?
-        dl_dpred = (label ./ pred) - ((1-label) ./ (1-pred)) # dloss/d?
-        BLAS.axpy!(n, a, dl_dpred, 1, diff.data, 1)
-    end
-    diff = diffs[2]
-    if isa(diff, CPUBlob)
-        dl_dlabel = log(pred ./ (1-pred))
-        erase!(diff) # is this correct? square-loss does it
-        BLAS.axpy!(n, a, dl_dlabel, 1, diff.data, 1)
-    end
+    n = length(pred)
+    a = convert(eltype(pred), -state.layer.weight/get_num(inputs[1]))
+
+    erase!(diff) # is this correct? square-loss does it - should we allow for any incoming diff?
+    dl_dpred = (label ./ pred) - ((1-label) ./ (1-pred)) # dloss/d?
+    BLAS.axpy!(n, a, dl_dpred, 1, diff.data, 1)
+  end
+  diff = diffs[2]
+  if isa(diff, CPUBlob)
+    dl_dlabel = log(pred ./ (1-pred))
+    erase!(diff) # is this correct? square-loss does it
+    BLAS.axpy!(n, a, dl_dlabel, 1, diff.data, 1)
+  end
 end

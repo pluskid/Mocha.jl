@@ -41,25 +41,27 @@ function forward(backend::CPUBackend, state::GaussianKLLossLayerState, inputs::V
 
   data_type = eltype(mu)
   n = length(mu) # length or num?
+  num = get_num(mu)
   #@assert length(sigma) == n
-  state.loss = -0.5(n * log2π  + sum(mu.data.^2 + sigma.data.^2)) * state.layer.weight
-
+  state.loss = -0.5(n * log2π  + sum(mu.data.^2 + sigma.data.^2)) * -state.layer.weight / num
+#    @info("KL fwd: got μ=$(mu.data), σ=$(sigma.data), loss = $(state.loss)")
 end
 
-function backward(backend::Backend, state::GaussianKLLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  #  Common to GPU and CPU, uses only blob functions
+function backward(backend::CPUBackend, state::GaussianKLLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+  num = get_num(inputs[1])
   diff = diffs[1]
-    #diff = df/dmu[i]
-  if isa(diff, Blob)
-    mu    = inputs[1]
-    copy!(diff, -mu*state.layer.weight)
+  #diff = df/dmu[i]
+
+  if isa(diff, CPUBlob)
+    mu    = inputs[1].data
+    copy!(diff, mu*state.layer.weight/num)
   end
 
   diff = diffs[2]
-    #diff = df/dsigma[i]
-  if isa(diff, Blob)
-    sigma = inputs[2]
-    copy!(diff, -sigma*state.layer.weight)
+  #diff = df/dsigma[i]
+  if isa(diff, CPUBlob)
+    sigma = inputs[2].data
+    copy!(diff, sigma*state.layer.weight/num)
   end
 
 end
