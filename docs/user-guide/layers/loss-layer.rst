@@ -181,3 +181,27 @@ Loss Layers
       Should be a vector containing two symbols. The first one specifies the
       name for the prediction :math:`\hat{\mathbf{y}}`, and the second one
       specifies the name for the ground-truth :math:`\mathbf{y}`.
+
+.. class:: BinaryCrossEntropyLossLayer
+
+   A simpler alternative to :class:`MultinomialLogisticLossLayer` for the
+   special case of binary classification.
+
+   .. math::
+
+      -\frac{1}{N}\sum_{i=1}^N \log(p_i)y_i + \log(1-p_i)(1-y_i)
+
+   Here :math:`N` is the batch-size, :math:`\mathbf{y}_i` is the ground-truth
+   label of the :math:`i`-th sample, and :math:``p_i`` is the corresponding
+   prediction.
+
+   .. attribute:: weight
+
+      Default ``1.0``. Weight of this loss function. Could be useful when
+      combining multiple loss functions in a network.
+
+   .. attribute:: bottoms
+
+      Should be a vector containing two symbols. The first one specifies the
+      name for the prediction :math:`\hat{\mathbf{y}}`, and the second one
+      specifies the name for the binary ground-truth labels :math:`\mathbf{p}`.

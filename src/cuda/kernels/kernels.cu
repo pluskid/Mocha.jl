@@ -10,6 +10,7 @@
 
 #include "logistic_loss.impl"
 #include "softmax_loss.impl"
+#include "binary_cross_entropy_loss.impl"
 #include "accuracy.impl"
 #include "channel_pooling.impl"
 #include "dropout.impl"

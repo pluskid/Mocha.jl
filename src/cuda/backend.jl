@@ -48,6 +48,10 @@ end
 @defkernels(
   logistic_loss_forward_float,
   logistic_loss_forward_double,
+  binary_cross_entropy_loss_forward_float,
+  binary_cross_entropy_loss_forward_double,
+  binary_cross_entropy_loss_backward_float,
+  binary_cross_entropy_loss_backward_double,
   softmax_loss_backward_float,
   softmax_loss_backward_double,
   relu_forward_float,

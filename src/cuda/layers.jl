@@ -30,10 +30,9 @@ include("layers/multinomial-logistic-loss.jl")
 include("layers/softmax-loss.jl")
 include("layers/softlabel-softmax-loss.jl")
 include("layers/wasserstein-loss.jl")
+include("layers/binary-cross-entropy-loss.jl")
 
 #############################################################
 # Statistics Layers
 #############################################################
 include("layers/accuracy.jl")
-
-
