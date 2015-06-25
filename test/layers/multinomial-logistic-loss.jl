@@ -66,9 +66,9 @@ function test_multinomial_logistic_loss_layer(backend::Backend, tensor_dim, clas
   for i = 1:dim_pre
     for j = 1:dim_post
       if isempty(weights)
-        expected_loss += -log(prob[i, int(label[i,1,j])+1, j])
+        expected_loss += -log(prob[i, round(Int64, label[i,1,j])+1, j])
       else
-        idx = int(label[i,1,j])+1
+        idx = round(Int64, label[i,1,j])+1
         expected_loss += -log(prob[i,idx,j]) * weights[i,idx,j]
       end
     end

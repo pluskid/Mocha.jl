@@ -67,7 +67,7 @@ function forward(backend::CPUBackend, state::AccuracyLayerState, inputs::Vector{
     end
   end
 
-  state.accuracy = float64(state.accuracy * state.n_accum + accuracy) / (state.n_accum + length(label))
+  state.accuracy = Float64(state.accuracy * state.n_accum + accuracy) / (state.n_accum + length(label))
   state.n_accum += length(label)
 end
 
