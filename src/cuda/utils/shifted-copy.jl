@@ -15,9 +15,9 @@ function copy_to_shifted!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
   dim_z  = prod(dims[shift_dim+1:end])
   @assert dim_z == prod(dims2[shift_dim+1:end])
 
-  x_block = int(ceil(float(dim_x)/CUDA.THREADS_PER_BLOCK_X))
-  y_block = int(ceil(float(dim_y)/CUDA.THREADS_PER_BLOCK_Y))
-  z_block = int(ceil(float(dim_z)/CUDA.THREADS_PER_BLOCK_Z))
+  x_block = round(Int64, ceil(float(dim_x)/CUDA.THREADS_PER_BLOCK_X))
+  y_block = round(Int64, ceil(float(dim_y)/CUDA.THREADS_PER_BLOCK_Y))
+  z_block = round(Int64, ceil(float(dim_z)/CUDA.THREADS_PER_BLOCK_Z))
 
   if T == Float32
     kernel = backend.mocha.copy_to_shifted_float
@@ -47,9 +47,9 @@ function copy_from_shifted!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
   dim_z  = prod(dims[shift_dim+1:end])
   @assert dim_z == prod(dims2[shift_dim+1:end])
 
-  x_block = int(ceil(float(dim_x)/CUDA.THREADS_PER_BLOCK_X))
-  y_block = int(ceil(float(dim_y)/CUDA.THREADS_PER_BLOCK_Y))
-  z_block = int(ceil(float(dim_z)/CUDA.THREADS_PER_BLOCK_Z))
+  x_block = round(Int64, ceil(float(dim_x)/CUDA.THREADS_PER_BLOCK_X))
+  y_block = round(Int64, ceil(float(dim_y)/CUDA.THREADS_PER_BLOCK_Y))
+  z_block = round(Int64, ceil(float(dim_z)/CUDA.THREADS_PER_BLOCK_Z))
 
   if T == Float32
     kernel = backend.mocha.copy_from_shifted_float

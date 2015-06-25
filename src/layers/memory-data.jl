@@ -20,7 +20,7 @@ type MemoryDataLayerState <: LayerState
   MemoryDataLayerState(backend::Backend, layer::MemoryDataLayer) = begin
     blobs = Array(Blob, length(layer.tops))
     trans = Array(Vector{DataTransformerState}, length(layer.tops))
-    transformers = convert(Vector{(Symbol, DataTransformerType)}, layer.transformers)
+    transformers = convert(Vector{@compat(Tuple{Symbol, DataTransformerType})}, layer.transformers)
     for i = 1:length(blobs)
       dims = tuple(size(layer.data[i])[1:end-1]..., layer.batch_size)
       idxs = map(x -> 1:x, dims)

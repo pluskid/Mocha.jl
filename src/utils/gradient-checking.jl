@@ -46,7 +46,7 @@ function unroll_parameters( model::Net )
             for m in model.states[l].parameters
                 θ = m.blob.data
                 size =  length(θ)
-                theta = [ theta, reshape(θ, size, 1)]
+                theta = [ theta; reshape(θ, size, 1)]
             end
         end
     end
@@ -62,7 +62,7 @@ function unroll_gradients( model::Net )
             for m in model.states[l].parameters
                 θ = m.gradient.data
                 size =  length(θ)
-                theta = [ theta, reshape(θ, size, 1)]
+                theta = [ theta; reshape(θ, size, 1)]
             end
         end
     end

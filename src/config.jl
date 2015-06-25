@@ -1,8 +1,7 @@
 export Config
 module Config
-import ..info
 
-info("Configuring Mocha...")
+println("Configuring Mocha...")
 const use_cuda_key = "MOCHA_USE_CUDA"
 const cuda_dev_key = "MOCHA_GPU_DEVICE"
 const use_native_extension_key = "MOCHA_USE_NATIVE_EXT"
@@ -19,20 +18,20 @@ else
 end
 
 if haskey(ENV, use_cuda_key) && lowercase(ENV[use_cuda_key]) != "false"
-  info(" * CUDA       enabled [DEV=$cuda_dev_id] ($use_cuda_key environment variable detected)")
+  println(" * CUDA       enabled [DEV=$cuda_dev_id] ($use_cuda_key environment variable detected)")
   const use_cuda = true
 else
-  info(" * CUDA       disabled by default")
+  println(" * CUDA       disabled by default")
   const use_cuda = false
 end
 
 if haskey(ENV, use_native_extension_key) && lowercase(ENV[use_native_extension_key]) != "false"
-  info(" * Native Ext enabled ($use_native_extension_key environment variable detected)")
+  println(" * Native Ext enabled ($use_native_extension_key environment variable detected)")
   const use_native_extension = true
 else
-  info(" * Native Ext disabled by default")
+  println(" * Native Ext disabled by default")
   const use_native_extension = false
 end
-info("Mocha configured, continue loading module...")
+println("Mocha configured, continue loading module...")
 
 end

@@ -39,8 +39,8 @@ macro cudnncall(fv, argtypes, args...)
   f = eval(fv)
   quote
     _curet = ccall( ($(Meta.quot(f)), "libcudnn"), Cint, $argtypes, $(args...)  )
-    if int(_curet) != CUDNN_STATUS_SUCCESS
-      throw(CuDNNError(int(_curet)))
+    if round(Int64, _curet) != CUDNN_STATUS_SUCCESS
+      throw(CuDNNError(round(Int64, _curet)))
     end
   end
 end

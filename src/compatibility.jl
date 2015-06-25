@@ -1,3 +1,5 @@
+using Compat
+
 if VERSION < v"0.3.3"
   function blasfunc(name)
     string(name)
@@ -7,3 +9,4 @@ else
     Base.blasfunc(name)
   end
 end
+

@@ -58,7 +58,7 @@ type HDF5DataLayerState <: LayerState
 
     state.blobs = Array(Blob, length(layer.tops))
     state.trans = Array(Vector{DataTransformerState}, length(layer.tops))
-    transformers = convert(Vector{(Symbol, DataTransformerType)}, layer.transformers)
+    transformers = convert(Vector{@compat(Tuple{Symbol, DataTransformerType})}, layer.transformers)
     for i = 1:length(state.blobs)
       dims = size(state.dsets[i])
 

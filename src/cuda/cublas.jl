@@ -37,8 +37,8 @@ macro cublascall(fv, argtypes, args...)
   f = eval(fv)
   quote
     _curet = ccall( ($(Meta.quot(f)), "libcublas"), Cint, $argtypes, $(args...)  )
-    if int(_curet) != CUBLAS_STATUS_SUCCESS
-      throw(CuBLASError(int(_curet)))
+    if round(Int64, _curet) != CUBLAS_STATUS_SUCCESS
+      throw(CuBLASError(round(Int64, _curet)))
     end
   end
 end

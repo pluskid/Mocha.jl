@@ -36,7 +36,7 @@ function apply_l2_cons!{T <: FloatingPoint}(backend::CPUBackend, blob::CPUBlob{T
     if norm > threshold
       scale_factor =  (1. / norm) * threshold
       offset = sizeof(T) * (i-1) * ninputs
-      BLAS.scal!(ninputs, convert(T, scale_factor), convert(Ptr{T}, param) + offset, 1)
+      BLAS.scal!(ninputs, convert(T, scale_factor), pointer(param) + offset, 1)
     end
   end
 end

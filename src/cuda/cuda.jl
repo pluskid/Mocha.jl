@@ -76,7 +76,7 @@ macro cucall(fv, argtypes, args...)
   quote
     _curet = ccall( ($(Meta.quot(f)), "libcuda"), Cint, $argtypes, $(args...) )
     if _curet != 0
-      throw(CuDriverError(int(_curet)))
+      throw(CuDriverError(round(Int64, _curet)))
     end
   end
 end
@@ -145,7 +145,7 @@ cubox(p::CuPtr) = cubox(p.p)
 
 function cualloc(T::Type, len::Integer)
   a = CUdeviceptr[0]
-  nbytes = int(len) * sizeof(T)
+  nbytes = round(Int64, len) * sizeof(T)
   @cucall(:cuMemAlloc_v2, (Ptr{CUdeviceptr}, Csize_t), a, nbytes)
   return CuPtr(a[1])
 end
@@ -225,7 +225,8 @@ get_dim_z(g::Int) = 1
 get_dim_z(g::(Int, Int)) = 1
 get_dim_z(g::(Int, Int, Int)) = g[3]
 
-typealias CuDim Union(Int, (Int, Int), (Int, Int, Int))
+using Compat
+typealias CuDim Union(Int, @compat(Tuple{Int, Int}), @compat(Tuple{Int, Int, Int}))
 
 # Stream management
 

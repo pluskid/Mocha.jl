@@ -1,18 +1,16 @@
 export Native
 module Native
-import ..info
-import ..critical
 
 const libname = "libmochaext.so"
 const libpath = abspath(joinpath(dirname(@__FILE__), "..", "deps", libname))
 try
-  info("Loading native extension $libname...")
-  const global library = dlopen(libpath)
+  println("Loading native extension $libname...")
+  const global library = Libdl.dlopen(libpath)
 catch y
-  critical("ERROR: Could not load native extension at $libpath.")
-  critical("To use native extension, run deps/build.jl to compile the native code.")
+  println("ERROR: Could not load native extension at $libpath.")
+  println("To use native extension, run deps/build.jl to compile the native code.")
   throw(y)
 end
-info("Native extension loaded")
+println("Native extension loaded")
 
 end # module Native
