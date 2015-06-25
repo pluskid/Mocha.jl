@@ -10,3 +10,8 @@ else
   end
 end
 
+if VERSION < v"0.4.0"
+  Libdl = Base
+else
+  Libdl = Base.Libdl
+end
