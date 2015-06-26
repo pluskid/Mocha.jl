@@ -19,7 +19,8 @@ const  CUDNN_STATUS_LICENSE_ERROR    = 10
 immutable CuDNNError <: Exception
   code :: Int
 end
-const cudnn_error_description = [
+using Compat
+const cudnn_error_description = @compat(Dict(
   CUDNN_STATUS_SUCCESS          => "Success",
   CUDNN_STATUS_NOT_INITIALIZED  => "Not initialized",
   CUDNN_STATUS_ALLOC_FAILED     => "Alloc failed",
@@ -31,7 +32,7 @@ const cudnn_error_description = [
   CUDNN_STATUS_EXECUTION_FAILED => "Execution failed",
   CUDNN_STATUS_NOT_SUPPORTED    => "Not supported",
   CUDNN_STATUS_LICENSE_ERROR    => "License error"
-]
+))
 import Base.show
 show(io::IO, error::CuDNNError) = print(io, cudnn_error_description[error.code])
 

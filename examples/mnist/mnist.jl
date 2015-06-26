@@ -1,4 +1,4 @@
-use_gpu = false
+use_gpu = true
 
 if use_gpu
   ENV["MOCHA_USE_CUDA"] = "true"

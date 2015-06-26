@@ -3,7 +3,8 @@ export CUDA
 module CUDA
 export CuPtr
 
-const driver_error_descriptions = (Int=>ASCIIString)[
+using Compat
+const driver_error_descriptions = @compat(Dict(
   0 => "Success",
   1 => "Invalid value",
   2 => "Out of memory",
@@ -61,7 +62,7 @@ const driver_error_descriptions = (Int=>ASCIIString)[
   800 => "Operation not permitted",
   801 => "Operation not supported",
   999 => "Unknown error"
-]
+))
 
 immutable CuDriverError <: Exception
   code::Int
@@ -182,7 +183,7 @@ end
 immutable CuModule
   handle::Ptr{Void}
 
-  function CuModule(filename::ASCIIString)
+  function CuModule(filename::String)
     a = Array(Ptr{Void}, 1)
     @cucall(:cuModuleLoad, (Ptr{Ptr{Void}}, Ptr{Cchar}), a, filename)
     new(a[1])
@@ -213,17 +214,18 @@ const THREADS_PER_BLOCK_X = 128
 const THREADS_PER_BLOCK_Y = 1
 const THREADS_PER_BLOCK_Z = 8
 
+using Compat
 get_dim_x(g::Int) = g
-get_dim_x(g::(Int, Int)) = g[1]
-get_dim_x(g::(Int, Int, Int)) = g[1]
+get_dim_x(g::@compat(Tuple{Int, Int})) = g[1]
+get_dim_x(g::@compat(Tuple{Int, Int, Int})) = g[1]
 
 get_dim_y(g::Int) = 1
-get_dim_y(g::(Int, Int)) = g[2]
-get_dim_y(g::(Int, Int, Int)) = g[2]
+get_dim_y(g::@compat(Tuple{Int, Int})) = g[2]
+get_dim_y(g::@compat(Tuple{Int, Int, Int})) = g[2]
 
 get_dim_z(g::Int) = 1
-get_dim_z(g::(Int, Int)) = 1
-get_dim_z(g::(Int, Int, Int)) = g[3]
+get_dim_z(g::@compat(Tuple{Int, Int})) = 1
+get_dim_z(g::@compat(Tuple{Int, Int, Int})) = g[3]
 
 using Compat
 typealias CuDim Union(Int, @compat(Tuple{Int, Int}), @compat(Tuple{Int, Int, Int}))
