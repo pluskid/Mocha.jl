@@ -93,23 +93,23 @@ end
 
 # (J,θ,▽) =
 function  hypothesis_and_gradient( model::Net )
-    θ = unroll_parameters(model)
-    # set_model_params!(model,θ)
-    # use closure to embedd params
-    function J( θᵢ )
-        update_θ!(model,θᵢ)           # update model params
-        forward( model )              # compute cost
-        return model.states[end].loss # which is stored in the last node or model state
-    end
+  θ = unroll_parameters(model)
+  # set_model_params!(model,θ)
+  # use closure to embedd params
+  function J( θᵢ )
+    update_θ!(model,θᵢ)           # update model params
+    forward( model )              # compute cost
+    return model.states[end].loss # which is stored in the last node or model state
+  end
 
-    function grad!(θᵢ,∇ᵢ)
-        update_θ!(model,θᵢ)           # update model parameters
-        backward(model)               # compute gradients
-        ∇ = unroll_gradients(model)   # retrieve them from model state
-        Base.copy!(∇ᵢ,∇)              # and update them
-    end
+  function grad!(θᵢ,∇ᵢ)
+    update_θ!(model,θᵢ)           # update model parameters
+    backward(model)               # compute gradients
+    ∇ = unroll_gradients(model)   # retrieve them from model state
+    Base.copy!(∇ᵢ,∇)              # and update them
+  end
 
-    return (J,θ,grad!)
+  return (J,θ,grad!)
 end
 
 
@@ -118,22 +118,21 @@ end
 # J cost function
 # g! computes and updates the gradient of the model given θ model params
 function compute_finite_difference( J::Function, g!::Function, θ::Vector{Float64}; ε = 1e-6, digit=8 )
+  ∇ᵋ = similar(θ);  # gradient/slope with 2ε wiggle room
+  ∇  = similar(θ);  # gradient/slope at midpoint
+  # compute C cost and ∇ gradient at mid point
+  C = J(θ);  	 g!(θ,∇);
 
-    ∇ᵋ = similar(θ);  # gradient/slope with 2ε wiggle room
-    ∇  = similar(θ);  # gradient/slope at midpoint
-    # compute C cost and ∇ gradient at mid point
-    C = J(θ);  	 g!(θ,∇);
+  ## define the two sided derivative
+  θ⁺ = similar(θ); θ⁻ = similar(θ);
 
-    ## define the two sided derivative
-	θ⁺ = similar(θ); θ⁻ = similar(θ);
-
-	# iterate through cost function and calculate slope
-	for i=1:length(θ)
-	    Base.copy!(θ⁺,θ);  θ⁺[i] = θ⁺[i] + ε;
-		Base.copy!(θ⁻,θ);  θ⁻[i] = θ⁻[i] - ε;
-		∇ᵋ[i] = ( J(θ⁺) - J(θ⁻) ) / 2ε
-	end
-	return (∇ᵋ,∇)
+  # iterate through cost function and calculate slope
+  for i=1:length(θ)
+    Base.copy!(θ⁺,θ);  θ⁺[i] = θ⁺[i] + ε;
+    Base.copy!(θ⁻,θ);  θ⁻[i] = θ⁻[i] - ε;
+    ∇ᵋ[i] = ( J(θ⁺) - J(θ⁻) ) / 2ε
+  end
+  return (∇ᵋ,∇)
 end
 
 # ############################################################
@@ -147,11 +146,11 @@ end
 function gradient_check(model::Net, epsilon::Float64, digit::Int64, visual::Bool)
     # create objective that computes grad( θ ), and cost( θ )
     (J,θ, grad) = hypothesis_and_gradient( model::Net )
-    ∇ᵋ,∇ = compute_finite_difference( J,grad, θ )
+    ∇ᵋ,∇ = compute_finite_difference( J, grad, θ )
 
-	# do actual comparison with `digit` numerical percision
-	# ∇⁺ = round(∇⁺, 4); 	∇ = round(∇,4)
-    idx = round( abs(∇ᵋ - ∇), digit) .!= 0
+    # do actual comparison with `digit` numerical percision
+    # ∇⁺ = round(∇⁺, 4); 	∇ = round(∇, 4)
+    idx = round( abs(∇ᵋ - ∇), digit ) .!= 0
     if visual
         δ = Array(Char,length(idx));  fill!(δ,'.')
         δ[idx] = 'x'
