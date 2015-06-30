@@ -120,7 +120,7 @@ requirements:
 ``has_neuron``
   The ``Layer`` object should have a property called ``neuron`` of type
   :class:`ActivationFunction`.
-``can_db_bp``
+``can_do_bp``
   Should be true if the layer has the ability to do back propagation.
 ``is_inplace``
   An inplace ``Layer`` object should have no ``tops`` property because the
