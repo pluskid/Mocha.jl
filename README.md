@@ -96,5 +96,5 @@ shutdown(backend)
 
 ## Documentation
 
-The Mocha documentation is hosted on [readthedocs.org](http://mochajl.readthedocs.org/).
+The Mocha documentation is hosted at [readthedocs.org](http://mochajl.readthedocs.org/).
 
