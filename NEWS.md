@@ -1,5 +1,13 @@
 # News for Mocha Development
 
+## v0.0.9 2015.07.20
+
+* Infrastructure
+  * Add JLD.jl in REQUIREMENT as it becomes an independent package
+  * Fix a Julia v0.4-dev compatability
+* Interface
+  * GraphViz visualization for network architecture
+
 ## v0.0.8 2015.05.27
 
 * Interface
