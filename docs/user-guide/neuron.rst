@@ -25,6 +25,16 @@ unless it is an identity neuron. Layers have an identity neuron by default [1]_.
       :math:`[0,1]`. Any value in that interval can be taken as
       a *subderivative*, and can be used in SGD if we generalize from gradient
       descent to *subgradient* descent. In the implementation, we choose the subgradient at :math:`x==0` to be 0.
+      
+.. class:: Neurons.LReLU
+
+   Leaky Rectified Linear Unit. A Leaky ReLU can help fix the "dying ReLU" problem. ReLU's
+   can "die" if a large enough gradient changes the weights such that the neuron never activates
+   on new data.
+   
+   .. math::
+
+      \frac{dy}{dx} = \begin{cases}1 & x > 0 \\ 0.01x & x \leq 0\end{cases}
 
 .. class:: Neurons.Sigmoid
 
