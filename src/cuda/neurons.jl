@@ -34,6 +34,35 @@ function backward(backend :: GPUBackend, neuron :: Neurons.ReLU, output :: Blob,
   CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, gradient.ptr.p, blob_dim...))
 end
 
+############################################################
+# Leaky Rectified-Linear
+############################################################
+function forward(backend :: GPUBackend, neuron :: Neurons.LReLU, output :: Blob)
+  cuda_dim, blob_dim = cuda_geometry(neuron, output)
+  data_type = eltype(output)
+  if data_type == Float32
+    kernel = backend.mocha.lrelu_forward_float
+  elseif data_type == Float64
+    kernel = backend.mocha.lrelu_forward_double
+  else
+    error("Unsupported data type $data_type")
+  end
+  CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, blob_dim...))
+end
+
+function backward(backend :: GPUBackend, neuron :: Neurons.LReLU, output :: Blob, gradient :: Blob)
+  cuda_dim, blob_dim = cuda_geometry(neuron, output)
+  data_type = eltype(output)
+  if data_type == Float32
+    kernel = backend.mocha.lrelu_backward_float
+  elseif data_type == Float64
+    kernel = backend.mocha.lrelu_backward_double
+  else
+    error("Unsupported data type $data_type")
+  end
+  CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, gradient.ptr.p, blob_dim...))
+end
+
 
 function forward(backend :: GPUBackend, neuron :: Neurons.Sigmoid, output :: Blob)
   cuda_dim, blob_dim = cuda_geometry(neuron, output)
