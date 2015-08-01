@@ -1,5 +1,5 @@
 export Net
-export init, destroy, forward, backward, forward_backward, get_epoch, check_bp_topology
+export init, destroy, forward, forward_epoch, backward, forward_backward, get_epoch, check_bp_topology
 export get_layer, get_layer_state, freeze!, unfreeze!, freeze_all!, unfreeze_all!
 export dump_statistics, reset_statistics
 
