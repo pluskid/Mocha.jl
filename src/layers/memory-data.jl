@@ -3,6 +3,7 @@
   (tops :: Vector{Symbol} = Symbol[:data,:label], length(tops) > 0),
   (batch_size :: Int = 0, batch_size > 0),
   (data :: Vector{Array} = Array[], length(data) == length(tops)),
+  shuffle :: Bool = false,
   transformers :: Vector = [],
 )
 @characterize_layer(MemoryDataLayer,
@@ -16,6 +17,7 @@ type MemoryDataLayerState <: LayerState
   trans :: Vector{Vector{DataTransformerState}}
 
   curr_idx :: Int
+  shuffle_idx :: Vector{Int}
 
   MemoryDataLayerState(backend::Backend, layer::MemoryDataLayer) = begin
     blobs = Array(Blob, length(layer.tops))
@@ -30,7 +32,13 @@ type MemoryDataLayerState <: LayerState
           for (k,t) in filter(kt -> kt[1] == layer.tops[i], transformers)]
     end
 
-    new(layer, blobs, 0, trans, 1)
+    if layer.shuffle
+      shuffle_idx = randperm(size(layer.data[1])[end])
+    else
+      shuffle_idx = Int[]
+    end
+
+    new(layer, blobs, 0, trans, 1, shuffle_idx)
   end
 end
 
@@ -55,13 +63,21 @@ function forward(backend::Backend, state::MemoryDataLayerState, inputs::Vector{B
     if n_remain == 0
       state.curr_idx = 1
       n_remain = size(state.layer.data[1])[end]
+
+      if state.layer.shuffle
+        state.shuffle_idx = randperm(size(state.layer.data[1])[end])
+      end
     end
 
     n1 = min(state.layer.batch_size - n_done, n_remain)
     for i = 1:length(state.blobs)
       dset = state.layer.data[i]
       idx = map(x -> 1:x, size(state.blobs[i])[1:end-1])
-      the_data = dset[idx..., state.curr_idx:state.curr_idx+n1-1]
+      if state.layer.shuffle
+        the_data = dset[idx..., state.shuffle_idx[state.curr_idx:state.curr_idx+n1-1]]
+      else
+        the_data = dset[idx..., state.curr_idx:state.curr_idx+n1-1]
+      end
       set_blob_data(the_data, state.blobs[i], n_done+1)
     end
     state.curr_idx += n1
