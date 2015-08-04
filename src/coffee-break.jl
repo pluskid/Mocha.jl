@@ -1,6 +1,6 @@
 export CoffeeBreak, Coffee, CoffeeLounge
 export init, enjoy, destroy
-export CoffeeLounge, add_coffee_break, check_coffee_break, setup
+export add_coffee_break, check_coffee_break, setup
 export update_statistics, get_statistics, save_statistics, shutdown
 
 abstract Coffee
