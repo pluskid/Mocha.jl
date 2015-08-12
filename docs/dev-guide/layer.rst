@@ -156,7 +156,7 @@ The life cycle of a layer is
    call ``setup_layer`` on each ``Layer`` to construct the corresponding
    ``LayerState``.
 3. During training, the solver use a loop to call the ``forward`` and ``backward``
-   funcitons of the ``Net``. The ``Net`` will then call ``forward`` and ``backward`` of
+   functions of the ``Net``. The ``Net`` will then call ``forward`` and ``backward`` of
    each layer in a proper order.
 4. The user destroys the ``Net``, which will call the ``shutdown`` function of
    each layer.
