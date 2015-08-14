@@ -97,22 +97,25 @@ Learning Rate Policy
 
 .. class:: LRPolicy.DecayOnValidation
 
-   This policy starts with a base learning rate. After each time the performance
+   This policy starts with a base learning rate. Each time the performance
    on a validation set is computed, the policy will scale the learning rate down
-   by a given factor if the validation performance drops, it will also ask the
-   solver to load the latest saved snapshot and restart from there.
+   by a given factor if the validation performance is poorer compared to the one of the 
+   last snapshot. In this case it also asks the solver to load the latest saved snapshot
+   and restart from there.
 
    Note in order for this policy to function properly, you need to set up both
    :class:`Snapshot` coffee break and :class:`ValidationPerformance` coffee
    break. The policy works by registering a listener on the
    :class:`ValidationPerformance` coffee break. Whenever the performance is
    computed on a validation set, the listener is notified, and it will compare
-   the performance with the previous one on records. If the performance drops,
+   the performance with the previous one on records. If the performance decays,
    it will ask the solver to load the previously saved snapshot (saved by the
-   :class:`Snapshot` coffee break), and then scale the learning rate down.
+   :class:`Snapshot` coffee break), and then scale the learning rate down. Per default 
+   `LRPolicy.DecayOnValidation` considers a lower performance statistic as better, 
+   however this can be changed by setting the optional argument `higher_better` to `false`.
 
    A typical setup is to save one snapshot every epoch, and also check the
-   performance on the validation set every epoch. So if the performance drops,
+   performance on the validation set every epoch. So if the performance decays,
    the learning rate is decreased, and the training will restart from the last
    (good) epoch.
 
