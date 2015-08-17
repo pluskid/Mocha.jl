@@ -41,7 +41,8 @@ function decay_on_validation_listener(policy, key::String, coffee_lounge::Coffee
   stats = get_statistics(coffee_lounge, key)
   index = sort(collect(keys(stats)))
   if length(index) > 1
-    if stats[index[end]] < stats[index[end-1]]
+    if (policy.higher_better && stats[index[end]] < stats[index[end-1]]) ||
+      (!policy.higher_better && stats[index[end]] > stats[index[end-1]])
       # performance drop
       Mocha.info(@sprintf("lr decay %e -> %e", policy.curr_lr, policy.curr_lr*policy.gamma))
       policy.curr_lr *= policy.gamma
@@ -60,14 +61,15 @@ end
 type DecayOnValidation <: LearningRatePolicy
   gamma       :: FloatingPoint
 
-  key         :: String
-  curr_lr     :: FloatingPoint
-  min_lr      :: FloatingPoint
-  listener    :: Function
-  solver      :: Any
-  initialized :: Bool
+  key           :: String
+  curr_lr       :: FloatingPoint
+  min_lr        :: FloatingPoint
+  listener      :: Function
+  solver        :: Any
+  initialized   :: Bool
+  higher_better :: Bool # set to false if performance score is the lower the better
 
-  DecayOnValidation(base_lr, key, gamma=0.5, min_lr=1e-8) = begin
+  DecayOnValidation(base_lr, key, gamma=0.5, min_lr=1e-8; higher_better=true) = begin
     policy = new(gamma, key, base_lr, min_lr)
     policy.solver = nothing
     policy.listener = (coffee_lounge,net,state) -> begin
@@ -78,6 +80,7 @@ type DecayOnValidation <: LearningRatePolicy
       decay_on_validation_listener(policy, key, coffee_lounge, net, state)
     end
     policy.initialized = false
+    policy.higher_better = higher_better
 
     policy
   end
