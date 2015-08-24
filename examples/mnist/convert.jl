@@ -1,11 +1,12 @@
 # convert binary into HDF5 data
 
 using HDF5
+using Compat
 
 srand(12345678)
 
-datasets = ["train" => ["train-labels-idx1-ubyte","train-images-idx3-ubyte"],
-            "test" => ["t10k-labels-idx1-ubyte","t10k-images-idx3-ubyte"]]
+datasets = @compat(Dict("train" => ["train-labels-idx1-ubyte","train-images-idx3-ubyte"],
+            "test" => ["t10k-labels-idx1-ubyte","t10k-images-idx3-ubyte"]))
 
 for key in keys(datasets)
   label_fn, data_fn = datasets[key]
@@ -14,17 +15,17 @@ for key in keys(datasets)
 
   label_header = read(label_f, Int32, 2)
   @assert ntoh(label_header[1]) == 2049
-  n_label = int(ntoh(label_header[2]))
+  n_label = @compat(Int(ntoh(label_header[2])))
   data_header = read(data_f, Int32, 4)
   @assert ntoh(data_header[1]) == 2051
-  n_data = int(ntoh(data_header[2]))
+  n_data = @compat(Int(ntoh(data_header[2])))
   @assert n_label == n_data
-  h = int(ntoh(data_header[3]))
-  w = int(ntoh(data_header[4]))
+  h = @compat(Int(ntoh(data_header[3])))
+  w = @compat(Int(ntoh(data_header[4])))
 
   n_batch = 1
   @assert n_data % n_batch == 0
-  batch_size = int(n_data / n_batch)
+  batch_size = @compat(Int(n_data / n_batch))
 
   println("Exporting $n_data digits of size $h x $w")
 
