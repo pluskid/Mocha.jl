@@ -252,6 +252,15 @@ Net(name::String, backend::Backend, layers :: Vector{Layer}) = begin
   return Net(name, backend, layers, states, blobs_forward, blobs_backward, data_layers, output_blobs, diff_blobs)
 end
 
+function is_recurrent(layers :: Vector{Layer})
+  for i=1:n
+    if layers[i].recurrent
+      return true
+    end
+  end
+  return false
+end
+
 function topological_sort(layers :: Vector{Layer})
   n = length(layers)
 
