@@ -13,7 +13,7 @@ function test_hdf5_output_layer(backend::Backend, T, eps)
   input = rand(T, dims)
   input_blob = make_blob(backend, input)
 
-  output_fn = string(tempname(), ".hdf5")
+  output_fn = string(Mocha.temp_filename(), ".hdf5")
   open(output_fn, "w") do file
     # create an empty file
   end

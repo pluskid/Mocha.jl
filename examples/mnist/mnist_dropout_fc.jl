@@ -37,7 +37,7 @@ using Mocha
 # fix the random seed to make results reproducable
 srand(12345678)
 
-data_layer  = HDF5DataLayer(name="train-data", source="data/train.txt", batch_size=100)
+data_layer  = AsyncHDF5DataLayer(name="train-data", shuffle=true, source="data/train.txt", batch_size=100)
 # each fully connected layer uses a ReLU activation and a constraint on the L2 norm of the weights
 fc1_layer   = InnerProductLayer(name="fc1", output_dim=1200, neuron=Neurons.ReLU(),
                                 weight_init = GaussianInitializer(std=0.01),
@@ -88,7 +88,7 @@ add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
 add_coffee_break(solver, Snapshot(base_dir), every_n_iter=5000)
 
 # show performance on test data every 600 iterations (one epoch)
-data_layer_test = HDF5DataLayer(name="test-data", source="data/test.txt", batch_size=100)
+data_layer_test = AsyncHDF5DataLayer(name="test-data", source="data/test.txt", batch_size=100)
 acc_layer = AccuracyLayer(name="test-accuracy", bottoms=[:out, :label], report_error=true)
 test_net = Net("MNIST-test", backend, [data_layer_test, common_layers..., acc_layer])
 add_coffee_break(solver, ValidationPerformance(test_net), every_n_iter=600)

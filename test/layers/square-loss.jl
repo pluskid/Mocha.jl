@@ -20,7 +20,7 @@ function test_square_loss_layer(backend::Backend, T, eps)
   copy!(pred_blob, preds)
   copy!(label_blob, labels)
   inputs = Blob[pred_blob, label_blob]
-  diffs = Blob[diff_blob]
+  diffs = Blob[diff_blob, NullBlob()]
 
   state  = setup(backend, layer, inputs, diffs)
 

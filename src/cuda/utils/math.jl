@@ -4,7 +4,7 @@ using ..Mocha
 
 const THREADS_PER_BLOCK = 128
 function cuda_geometry(len::Int)
-  x_block = int(ceil(float64(len)/THREADS_PER_BLOCK))
+  x_block = round(Int64, ceil(float64(len)/THREADS_PER_BLOCK))
   return (x_block, THREADS_PER_BLOCK)
 end
 
@@ -30,6 +30,16 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
       cuda_dim = cuda_geometry(len)
       kernel = backend.mocha.$(symbol("add_scal_$ctype"))
       CUDA.launch(kernel, cuda_dim..., (X,Y,len))
+    end
+  end
+
+  # define log!
+  @eval begin
+    function log!(backend::GPUBackend, ::Type{$dtype}, X, len::Int)
+      X = convert(Ptr{Void}, X)
+      cuda_dim = cuda_geometry(len)
+      kernel = backend.mocha.$(symbol("elem_log_$ctype"))
+      CUDA.launch(kernel, cuda_dim..., (X,len))
     end
   end
 
@@ -63,6 +73,9 @@ function mul_scal!{T}(backend::GPUBackend, X::CuTensorBlob{T}, Y)
   Y = convert(T, Y)
   len = length(X)
   mul_scal!(backend, T, X.ptr.p, Y, len)
+end
+function log!{T}(backend::GPUBackend, X::CuTensorBlob{T})
+  log!(backend, T, X.ptr.p, length(X))
 end
 
 for (postfix, dt1, dt2) in [(:fi, Float32, Int), (:di, Float64, Int),

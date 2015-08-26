@@ -15,6 +15,13 @@ function mkdir_p(path::String)
   mkdir(path)
 end
 
+# add this function since the built-in tempname() function is not
+# working properly on Windows. See https://github.com/JuliaLang/julia/issues/9053
+function temp_filename()
+  tmp_dir = tempdir()
+  joinpath(tmp_dir, "Mocha-$(getpid())-$(randstring(32))")
+end
+
 function glob(path::String, pattern::Regex; sort_by :: Symbol = :none)
   list = filter(x -> ismatch(pattern, x), readdir(path))
   if sort_by == :none

@@ -18,4 +18,4 @@ test-gpu:
 	bash -c "MOCHA_USE_CUDA=true $(julia_cmd) runtests.jl"
 
 test-srun:
-	$(srun_cmd) bash -c "$(julia_cmd) runtests.jl"
+	$(srun_cmd) bash -c "MOCHA_USE_CUDA=true $(julia_cmd) runtests.jl"

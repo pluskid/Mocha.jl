@@ -1,7 +1,7 @@
 export Net
-export init, destroy, forward, backward, forward_backward, get_epoch, check_bp_topology
+export init, destroy, forward, forward_epoch, backward, forward_backward, get_epoch, check_bp_topology
 export get_layer, get_layer_state, freeze!, unfreeze!, freeze_all!, unfreeze_all!
-export show_statistics, reset_statistics
+export dump_statistics, reset_statistics
 
 type Net{T <: Backend}
   name           :: String
@@ -61,12 +61,16 @@ end
 function freeze!(net::Net) end
 function freeze!(net::Net, idx::Int...)
   for i in idx
-    freeze!(get_layer_state(net, i))
+    layer_state = get_layer_state(net, i)
+    @info("Freezing layer $(layer_state.layer.name) in network $(net.name)...")
+    freeze!(layer_state)
   end
 end
 function freeze!(net::Net, names::String...)
   for name in names
-    freeze!(get_layer_state(net, name))
+    layer_state = get_layer_state(net, name)
+    @info("Freezing layer $(layer_state.layer.name) in network $(net.name)...")
+    freeze!(layer_state)
   end
 end
 
@@ -128,6 +132,13 @@ function forward_backward(net::Net, regu_coef :: FloatingPoint = 0.0)
   obj_val = forward(net, regu_coef)
   backward(net, regu_coef)
   return obj_val
+end
+
+function forward_epoch(net::Net)
+  epoch = get_epoch(net)
+  while get_epoch(net) == epoch
+    forward(net)
+  end
 end
 
 function forward(net::Net, regu_coef :: FloatingPoint = 0.0)
@@ -200,7 +211,7 @@ Net(name::String, backend::Backend, layers :: Vector{Layer}) = begin
   for i = 1:n
     layer = layers[i]
     # record if layers has any dependency
-    if :bottoms ∈ names(layer)
+    if :bottoms ∈ fieldnames(layer)
       blob_fwd = Blob[output_blobs[x] for x in layer.bottoms]
       blob_bwd = Blob[diff_blobs[x] for x in layer.bottoms]
     else
@@ -239,6 +250,15 @@ Net(name::String, backend::Backend, layers :: Vector{Layer}) = begin
 
   @info("Network constructed!")
   return Net(name, backend, layers, states, blobs_forward, blobs_backward, data_layers, output_blobs, diff_blobs)
+end
+
+function is_recurrent(layers :: Vector{Layer})
+  for i=1:n
+    if layers[i].recurrent
+      return true
+    end
+  end
+  return false
 end
 
 function topological_sort(layers :: Vector{Layer})
@@ -293,7 +313,7 @@ function topological_sort(layers :: Vector{Layer})
     # inplace layers should always be put first
     idx_inplace = filter(i -> is_inplace(layers[i]), idx)
     idx_normal  = filter(i -> !is_inplace(layers[i]), idx)
-    idx = [idx_inplace, idx_normal]
+    idx = [idx_inplace; idx_normal]
 
     push!(index, idx...)
     graph[idx,:] = 2 # make sure we don't select those again

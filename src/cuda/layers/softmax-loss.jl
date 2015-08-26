@@ -7,7 +7,7 @@ function backward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vec
     spatial_dim, channels, num = split_dims(diff, state.logistic.op_dim)
     prob_dim = channels
 
-    x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X))
+    x_block = round(Int64, ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X))
     y_block = spatial_dim
 
     if isa(state.logistic.weights_blob, NullBlob)
@@ -25,7 +25,7 @@ function backward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vec
     end
     CUDA.launch(kernel, (x_block, y_block), (CUDA.THREADS_PER_BLOCK_X, 1),
         (diff.ptr.p, inputs[2].ptr.p, weights, num, spatial_dim, prob_dim))
-    CuBLAS.scal(backend.cublas_ctx, length(diff), convert(data_type, 1.0/(spatial_dim*num)),
+    CuBLAS.scal(backend.cublas_ctx, length(diff), convert(data_type, state.layer.weight/(spatial_dim*num)),
         diff.ptr, 1)
   end
 end

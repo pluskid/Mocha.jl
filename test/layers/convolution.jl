@@ -8,7 +8,7 @@ function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, p
   n_filter = 12
 
   input_dims = (input_w, input_h, input_chann, input_num)
-  filter_dims = (filter_w, filter_h, int(input_chann/n_group), n_filter)
+  filter_dims = (filter_w, filter_h, round(Int64, input_chann/n_group), n_filter)
   bias_dims = (1, 1, n_filter, 1)
 
   layer = ConvolutionLayer(name="conv", kernel=(filter_w, filter_h), stride=(stride_w, stride_h),
@@ -86,8 +86,8 @@ end
 function convolution_forward(state, filter::Array, bias::Array, input::Array)
   width, height, channel, num = size(input)
   n_group = state.layer.n_group
-  o_g = int(state.layer.n_filter / n_group)
-  k_g = int(channel / n_group)
+  o_g = round(Int64, state.layer.n_filter / n_group)
+  k_g = round(Int64, channel / n_group)
 
   output = Array(eltype(input), size(state.blobs[1]))
   output[:] = 0
@@ -137,8 +137,8 @@ function convolution_backward(state, filter::Array, bias::Array, input::Array, t
 
   width, height, channels, num = size(input)
   n_group = state.layer.n_group
-  o_g = int(state.layer.n_filter / n_group)
-  k_g = int(channels / n_group)
+  o_g = round(Int64, state.layer.n_filter / n_group)
+  k_g = round(Int64, channels / n_group)
 
   # ∇bias
   for n = 1:num
@@ -184,7 +184,11 @@ function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, p
 end
 function test_convolution_layer(backend::Backend, n_input, T, eps)
   test_convolution_layer(backend, 2, 3, 4, 2, 2, 1, 2, n_input, T, eps)
-  test_convolution_layer(backend, 1, 1, 1, 0, 0, 1, 1, n_input, T, eps)
+  #XXX: temporarily disable this test for GPU of a bug in cuDNN v2 RC2
+  # see https://devtalk.nvidia.com/default/topic/806940/gpu-accelerated-libraries/cudnn-1x1-filter-convolutions
+  #if !test_gpu
+    test_convolution_layer(backend, 1, 1, 1, 0, 0, 1, 1, n_input, T, eps)
+  #end
 end
 
 function test_convolution_layer(backend::Backend)

@@ -1,5 +1,39 @@
 # News for Mocha Development
 
+## v0.0.9 2015.07.20
+
+* Infrastructure
+  * Add JLD.jl in REQUIREMENT as it becomes an independent package
+  * Fix a Julia v0.4-dev compatability
+* Interface
+  * GraphViz visualization for network architecture
+
+## v0.0.8 2015.05.27
+
+* Interface
+  * Option to display other information for training summary (@bisraelsen)
+* Infrastructure
+  * Improved gradient check (@steven-varga)
+  * Fix temp file issue for unit-test on Windows
+  * Fix XavierInitializer scale (@adambrewster)
+  * Option to specify GPU device
+* Network
+  * Index2Onehot layer, MemoryOutputLayer
+  * SoftmaxLayer now can do backward
+
+## v0.0.7 2015.02.27
+
+* Infrastructure
+  * Boltzmann.jl now supports DBN pre-training for Mocha.jl
+  * Clearer Nesterov solver (@the-moliver)
+  * Staged momentum policy
+  * Learning rate policy to decay dynamically based on performance on validation set
+* Network
+  * Async HDF5 data layer: faster and with chunking to support fast data shuffling
+  * Softlabel-softmax-loss layer allows training with posterior (instead of hard labels) as labels
+  * Weight loss layers to combine multiple loss functions in one network
+  * Square loss layer is now capable of propagating gradients to both sides
+
 ## v0.0.6 2014.12.31
 
 * Infrastructure

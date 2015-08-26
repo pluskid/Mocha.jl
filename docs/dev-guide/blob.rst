@@ -1,9 +1,9 @@
 Blob
 ====
 
-Blob is the fundamental data representation in Mocha. It is used as both data
+A blob is the fundamental data representation in Mocha. It is used for both data
 (e.g. mini-batch of data samples) and parameters (e.g. filters of a convolution
-layer). Conceptually, a blob is a N-dimensional tensor.
+layer). Conceptually, a blob is an N-dimensional tensor.
 
 For example, in vision, a data blob is usually a 4D-tensor. Following the vision
 (and Caffe) convention, the four dimensions are called *width*, *height*,
@@ -13,10 +13,10 @@ changing dimension is *num*.
 .. note::
 
    The memory layout of a blob in Mocha is compatible with Caffe's blob. So
-   a blob (e.g. layer parameters) in Mocha can be saved to HDF5 and load it from
+   a blob (e.g. layer parameters) in Mocha can be saved to HDF5 and loaded from
    Caffe without doing any dimension permutation, and vise versa. However, since
-   Julia use column-major convention for tensor and matrix, and Caffe use
-   row-major convention, in Mocha API, the order of the four dimensions is
+   Julia uses the column-major convention for tensor and matrix data, and Caffe uses
+   the row-major convention, in Mocha API, the order of the four dimensions is
    width, height, channels, and num, while in Caffe API, it is num, channels,
    height, width.
 
@@ -32,7 +32,7 @@ A backend-dependent blob can be created with the following function:
 .. function::
    make_blob(backend, data_type, dims)
 
-   ``dims`` is a ``NTuple``, specifying the dimensions of the blob to be
+   ``dims`` is an ``NTuple``, specifying the dimensions of the blob to be
    created. Currently ``data_type`` should be either ``Float32`` or ``Float64``.
 
 Several helper functions are also provided:
@@ -43,12 +43,12 @@ Several helper functions are also provided:
 
 .. function:: make_blob(backend, array)
 
-   ``array`` is a Julia ``AbstractArray``. This makes a blob with the same data
-   type and shape as ``array`` and initialize the blob contents with ``array``.
+   ``array`` is a Julia ``AbstractArray``. This creates a blob with the same data
+   type and shape as ``array`` and initializes the blob contents with ``array``.
 
 .. function:: make_zero_blob(backend, data_type, dims)
 
-   Create a blob and initialize with zeros.
+   Create a blob and initialize it with zeros.
 
 .. function:: reshape_blob(backend, blob, new_dims)
 
@@ -56,17 +56,20 @@ Several helper functions are also provided:
    The behavior is the same as Julia's ``reshape`` function on an array: the new
    blob shares data with the existing one.
 
-The resources of a blob could be released by calling
 
 .. function:: destroy(blob)
 
-Note the resources need to be released explicitly. A Julia blob object being
-GC-ed does not release the underlying resource automatically.
+    Release the resources of a blob.
+
+.. note::
+
+    The resources need to be released explicitly. A Julia blob object being
+    GC-ed does not release the underlying resource automatically.
 
 Accessing Properties of a Blob
 ------------------------------
 
-The blob implements some simple API for a Julia array:
+The blob implements a simple API similar to a Julia array:
 
 .. function:: eltype(blob)
 
@@ -78,14 +81,14 @@ The blob implements some simple API for a Julia array:
 
 .. function:: size(blob)
 
-   Get the shape of the blob. The return value is a ``NTuple``.
+   Get the shape of the blob. The return value is an ``NTuple``.
 
 .. function:: size(blob, dim)
 
-   Get the size at a particular dimension. ``dim`` could be negative. For
+   Get the size along a particular dimension. ``dim`` can be negative. For
    example, ``size(blob, -1)`` is the same as ``size(blob)[end]``. For
    convenience, if ``dim`` exceeds ``ndims(blob)``, the function returns ``1``
-   instead of firing an error.
+   instead of raising an error.
 
 .. function:: length(blob)
 
@@ -108,24 +111,24 @@ The blob implements some simple API for a Julia array:
    The the *feature size* in a blob, which is the same as
    ``prod(size(blob)[1:end-1])``.
 
-The wrappers ``get_chann`` is removed from ``v0.0.5`` when Mocha upgrade from
-4D-tensor to general ND-tensor, because the channel dimension is usually
+The wrapper ``get_chann`` was removed when Mocha upgraded from
+4D-tensors to general ND-tensors, because the channel dimension is usually
 ambiguous for general ND-tensors.
 
 Accessing Data of a Blob
 ------------------------
 
-Because accessing GPU memory is costly, a blob does not has interface to do
-element-wise accessing. The data could either be manipulated in
-a backend-dependent manner, relying on the underlying implementation details; or
-in a backend-independent way by copying the contents back and to a Julia array.
+Because accessing GPU memory is costly, a blob does not have an interface to do
+element-wise accessing. The data can be either manipulated in
+a backend-dependent manner, relying on the underlying implementation details, or
+in a backend-independent way by copying the contents from and to a Julia array.
 
 .. function:: copy!(dst, src)
 
-   Copy the contents of ``src`` to ``dst``. ``src`` and ``dst`` could be either
+   Copy the contents of ``src`` to ``dst``. ``src`` and ``dst`` can be either
    a blob or a Julia array.
 
-The following utilities could be used to initialize the contents of a blob
+The following utilities can be used to initialize the contents of a blob
 
 .. function:: fill!(blob, value)
 

@@ -1,5 +1,5 @@
 examples/mnist/data
-examples/mnist/snapshots
+examples/mnist/snapshots*
 
 examples/cifar10/data
 examples/cifar10/snapshots
@@ -20,3 +20,5 @@ src/cuda/kernels/*
 !src/cuda/kernels/*.cu
 !src/cuda/kernels/*.impl
 !src/cuda/kernels/Makefile
+
+*.swp

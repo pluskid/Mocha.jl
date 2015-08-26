@@ -1,8 +1,8 @@
 module Mocha
 
+include("compatibility.jl")
 include("logging.jl")
 include("config.jl")
-include("compatibility.jl")
 
 if Config.use_native_extension
   include("native.jl")
@@ -76,5 +76,8 @@ include("solvers.jl")
 if Config.use_cuda
   include("cuda/solvers.jl")
 end
+
+include("utils/gradient-checking.jl")
+include("utils/graphviz.jl")
 
 end # module

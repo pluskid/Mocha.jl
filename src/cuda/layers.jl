@@ -19,6 +19,7 @@ include("layers/argmax.jl")
 include("layers/crop.jl")
 include("layers/concat.jl")
 include("layers/tied-inner-product.jl")
+include("layers/index2onehot.jl")
 
 #############################################################
 # Loss Layers
@@ -26,6 +27,8 @@ include("layers/tied-inner-product.jl")
 include("layers/square-loss.jl")
 include("layers/multinomial-logistic-loss.jl")
 include("layers/softmax-loss.jl")
+include("layers/softlabel-softmax-loss.jl")
+include("layers/wasserstein-loss.jl")
 
 #############################################################
 # Statistics Layers

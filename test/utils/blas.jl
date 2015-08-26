@@ -23,9 +23,9 @@ function test_raw_blas(T)
   C2 = A2[:, K+1:2K] * B2[:, 2K+1:3K]'
   C = rand(T, M, 2N)
   RawBLAS.gemm!('N', 'T', M, N, K, convert(T, 1.0),
-      convert(Ptr{T},A2) + M*K*sizeof(T), M,
-      convert(Ptr{T},B2) + 2N*K*sizeof(T), N,
-      convert(T,0.0), convert(Ptr{T},C) + M*N*sizeof(T), M)
+      pointer(A2) + M*K*sizeof(T), M,
+      pointer(B2) + 2N*K*sizeof(T), N,
+      convert(T,0.0), pointer(C) + M*N*sizeof(T), M)
   @test all(abs(C2 - C[1:M,N+1:2N]) .< eps)
 end
 

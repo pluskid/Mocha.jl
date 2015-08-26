@@ -54,14 +54,24 @@ end
   relu_forward_double,
   relu_backward_float,
   relu_backward_double,
+  lrelu_forward_float,
+  lrelu_forward_double,
+  lrelu_backward_float,
+  lrelu_backward_double,
   sigmoid_forward_float,
   sigmoid_forward_double,
   sigmoid_backward_float,
   sigmoid_backward_double,
+  tanh_forward_float,
+  tanh_forward_double,
+  tanh_backward_float,
+  tanh_backward_double,
   accuracy_forward_float,
   accuracy_forward_double,
   argmax_forward_float,
   argmax_forward_double,
+  index2onehot_forward_float,
+  index2onehot_forward_double,
 
   add_scal_float,
   add_scal_double,
@@ -81,6 +91,8 @@ end
   elem_pow_di,
   elem_pow_ff,
   elem_pow_dd,
+  elem_log_double,
+  elem_log_float,
 
   max_channel_pooling_forward_float,
   max_channel_pooling_forward_double,
@@ -131,7 +143,7 @@ function init(backend::GPUBackend)
 
   @info("Initializing CuDNN backend...")
   CUDA.init()
-  dev = CUDA.CuDevice(0)
+  dev = CUDA.CuDevice(Config.cuda_dev_id)
   backend.cu_ctx = CUDA.create_context(dev)
   backend.cublas_ctx = CuBLAS.create()
   backend.cudnn_ctx = CuDNN.create()
@@ -152,4 +164,3 @@ function shutdown(backend::GPUBackend)
   backend.initialized = false
   @info("CuDNN Backend shutdown finished!")
 end
-

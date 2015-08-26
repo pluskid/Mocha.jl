@@ -1,7 +1,7 @@
-export CoffeeBreak
+export CoffeeBreak, Coffee, CoffeeLounge
 export init, enjoy, destroy
-export CoffeeLounge, add_coffee_break, check_coffee_break, setup, update_statistics
-export save_statistics, shutdown
+export add_coffee_break, check_coffee_break, setup
+export update_statistics, get_statistics, save_statistics, shutdown
 
 abstract Coffee
 function init(::Coffee, ::Net) end
@@ -75,11 +75,22 @@ function setup(lounge::CoffeeLounge, state::SolverState, net::Net)
   end
 end
 
+function update_statistics(dummy::Nothing, key::String, val::StatisticsValue)
+  # dummy function used when you do not want to record statistics
+end
 function update_statistics(lounge::CoffeeLounge, key::String, val::StatisticsValue)
   dict = get(lounge.statistics, key, StatisticsRecords())
   dict[lounge.curr_iter] = val
   lounge.statistics[key] = dict
   lounge.stats_modified = true
+end
+
+function get_statistics(lounge::CoffeeLounge, key::String)
+  if haskey(lounge.statistics, key)
+    lounge.statistics[key]
+  else
+    StatisticsRecords()
+  end
 end
 
 function save_statistics(lounge::CoffeeLounge)

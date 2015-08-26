@@ -3,6 +3,7 @@
 ############################################################
 @defstruct SoftmaxLossLayer Layer (
   name :: String = "softmax-loss",
+  (weight :: FloatingPoint = 1.0, weight >= 0),
   weights :: Array = [],
   normalize:: Symbol = :local,
   (dim :: Int = -2, dim != 0),
@@ -43,7 +44,7 @@ end
 function forward(backend::Backend, state::SoftmaxLossLayerState, inputs::Vector{Blob})
   forward(backend, state.softmax, Blob[inputs[1]])
   forward(backend, state.logistic, Blob[state.softmax.blobs[1], inputs[2]])
-  state.loss = state.logistic.loss
+  state.loss = state.logistic.loss * state.layer.weight
 end
 
 function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
@@ -55,7 +56,7 @@ function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vec
 
     idx_all = map(1:length(dims)) do i
       if i == state.logistic.op_dim
-        int(label) + 1
+        round(Int64, label) + 1
       else
         dim = dims[i]
         reshape(1:dim, [j == i? dim : 1 for j = 1:length(dims)]...)
@@ -65,22 +66,18 @@ function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vec
     if isa(state.logistic.weights_blob, NullBlob)
       copy!(diff, state.softmax.blobs[1])
     else
-      idx_num_dumb = reshape([1], ones(Int, length(dims))...)
       copy!(diff, state.softmax.blobs[1].data .*
-          broadcast_getindex(state.logistic.weights_blob.data, idx_all[1:end-1]..., idx_num_dumb))
+          broadcast_getindex(state.logistic.weights_blob.data, idx_all...))
     end
 
     diff_data = reshape(diff.data, dims)
     if isa(state.logistic.weights_blob, NullBlob)
       broadcast_setindex!(diff_data, broadcast_getindex(diff_data, idx_all...)-1, idx_all...)
     else
-      # NOTE: here we rely on the fact that op_dim == length(dims)-1, this requirement
-      # is enforced in MultinomialLogisticLossLayer when weights are provided
       broadcast_setindex!(diff_data, broadcast_getindex(diff_data, idx_all...) .-
-          broadcast_getindex(state.logistic.weights_blob.data, idx_all[1:end-1]...,idx_num_dumb),
-          idx_all...)
+          broadcast_getindex(state.logistic.weights_blob.data, idx_all...), idx_all...)
     end
-    Vec.mul_scal!(diff.data, dims[state.logistic.op_dim]/prod(dims))
+    Vec.mul_scal!(diff.data, state.layer.weight * dims[state.logistic.op_dim]/prod(dims))
   end
 end
 

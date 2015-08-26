@@ -12,7 +12,8 @@
   bias_cons :: Constraint = NoCons(),
   weight_lr :: FloatingPoint = 1.0,
   bias_lr :: FloatingPoint = 2.0,
-  neuron :: ActivationFunction = Neurons.Identity()
+  neuron :: ActivationFunction = Neurons.Identity(),
+  recurrent :: Bool = false;
 )
 @characterize_layer(InnerProductLayer,
   can_do_bp  => true,

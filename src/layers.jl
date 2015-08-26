@@ -1,12 +1,13 @@
 export LayerState
 
-export HDF5DataLayer, MemoryDataLayer
+export HDF5DataLayer, MemoryDataLayer, AsyncHDF5DataLayer
 export InnerProductLayer, ConvolutionLayer, PoolingLayer, SoftmaxLayer
 export PowerLayer, SplitLayer, ElementWiseLayer, ChannelPoolingLayer
 export LRNLayer, DropoutLayer, ReshapeLayer, ArgmaxLayer, HDF5OutputLayer
 export CropLayer, ConcatLayer, RandomMaskLayer, TiedInnerProductLayer
-export IdentityLayer
+export IdentityLayer, Index2OnehotLayer, MemoryOutputLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
+export SoftlabelSoftmaxLossLayer, WassersteinLossLayer
 export AccuracyLayer
 
 export setup, forward, backward, shutdown
@@ -183,6 +184,7 @@ end
 #############################################################
 include("layers/hdf5-data.jl")
 include("layers/memory-data.jl")
+include("layers/async-hdf5-data.jl")
 
 #############################################################
 # General Computation Layers
@@ -209,6 +211,8 @@ include("layers/identity.jl")
 #############################################################
 include("layers/argmax.jl")
 include("layers/hdf5-output.jl")
+include("layers/index2onehot.jl")
+include("layers/memory-output.jl")
 
 #############################################################
 # Loss Layers
@@ -216,6 +220,8 @@ include("layers/hdf5-output.jl")
 include("layers/square-loss.jl")
 include("layers/multinomial-logistic-loss.jl")
 include("layers/softmax-loss.jl")
+include("layers/softlabel-softmax-loss.jl")
+include("layers/wasserstein-loss.jl")
 
 #############################################################
 # Statistics Layers

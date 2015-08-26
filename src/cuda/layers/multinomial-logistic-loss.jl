@@ -6,7 +6,7 @@ function forward(backend::GPUBackend, state::MultinomialLogisticLossLayerState, 
   spatial_dim, channels, num = split_dims(pred, state.op_dim)
   prob_dim = channels
 
-  x_block = int(ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X))
+  x_block = round(Int64, ceil(convert(Float64, num)/CUDA.THREADS_PER_BLOCK_X))
   y_block = spatial_dim
 
   loss_blob = make_zero_blob(backend, Float32, 1, 1, 1, 1)
@@ -30,6 +30,7 @@ function forward(backend::GPUBackend, state::MultinomialLogisticLossLayerState, 
 
   loss = Float32[0]
   copy!(loss, loss_blob)
-  state.loss = loss[1] / (spatial_dim * num)
+  state.loss = state.layer.weight * loss[1] / (spatial_dim * num)
+  destroy(loss_blob)
 end
 

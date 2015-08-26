@@ -35,8 +35,16 @@ end
 type ReLU <: ActivationFunction
 end
 
+# Leaky Rectified-Linear: LReLU(x) = x > 0 ? x : 0.01x 
+type LReLU <: ActivationFunction
+end
+
 # Sigmoid: Sigmoid(x) = 1 / (1 + exp(-x))
 type Sigmoid <: ActivationFunction
+end
+
+# Sigmoid: Tanh(x) = (1 + exp(-2x)) / (1 + exp(-2x))
+type Tanh <: ActivationFunction
 end
 end # module Neurons
 
@@ -65,6 +73,20 @@ function backward(backend :: CPUBackend, neuron :: Neurons.ReLU, output :: Blob,
 end
 
 ############################################################
+# Leaky Rectified-Linear
+############################################################
+function forward(backend :: CPUBackend, neuron :: Neurons.LReLU, output :: Blob)
+  @simd for i = 1:length(output.data)
+    @inbounds output.data[i] = output.data[i] > 0 ? output.data[i] : 0.01 * output.data[i] 
+  end
+end
+function backward(backend :: CPUBackend, neuron :: Neurons.LReLU, output :: Blob, gradient :: Blob)
+  @simd for i = 1:length(output.data)
+    @inbounds gradient.data[i] *= ((output.data[i] > 0) + 0.01 * (output.data[i] <= 0))
+  end
+end
+
+############################################################
 # Sigmoid
 ############################################################
 function forward(backend :: CPUBackend, neuron :: Neurons.Sigmoid, output :: Blob)
@@ -77,5 +99,22 @@ function backward(backend :: CPUBackend, neuron :: Neurons.Sigmoid, output :: Bl
   len = length(output)
   @simd for i = 1:len
     @inbounds gradient.data[i] *= output.data[i] * (1-output.data[i])
+  end
+end
+
+
+############################################################
+# Tanh
+############################################################
+function forward(backend :: CPUBackend, neuron :: Neurons.Tanh, output :: Blob)
+  len = length(output)
+  @simd for i = 1:len
+    @inbounds output.data[i] = tanh(output.data[i])
+  end
+end
+function backward(backend :: CPUBackend, neuron :: Neurons.Tanh, output :: Blob, gradient :: Blob)
+  len = length(output)
+  @simd for i = 1:len
+    @inbounds gradient.data[i] *= (1 - output.data[i] * output.data[i])
   end
 end

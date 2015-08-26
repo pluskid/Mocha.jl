@@ -1,7 +1,7 @@
 using HDF5
 
-function test_hdf5_data_layer(backend::Backend, T, eps)
-  println("-- Testing HDF5 Data Layer on $(typeof(backend)){$T}...")
+function test_hdf5_data_layer(backend::Backend, async, T, eps)
+  println("-- Testing $(async ? "(Async)" : "") HDF5 Data Layer on $(typeof(backend)){$T}...")
 
   ############################################################
   # Prepare Data for Testing
@@ -12,7 +12,7 @@ function test_hdf5_data_layer(backend::Backend, T, eps)
   println("    > $data_dim")
 
   data_all = [rand(T, data_dim..., x) for x in [5 1 2]]
-  h5fn_all = [string(tempname(), ".hdf5") for x in 1:length(data_all)]
+  h5fn_all = [string(Mocha.temp_filename(), ".hdf5") for x in 1:length(data_all)]
 
   for i = 1:length(data_all)
     h5 = h5open(h5fn_all[i], "w")
@@ -20,7 +20,7 @@ function test_hdf5_data_layer(backend::Backend, T, eps)
     close(h5)
   end
 
-  source_fn = string(tempname(), ".txt")
+  source_fn = string(Mocha.temp_filename(), ".txt")
   open(source_fn, "w") do s
     for fn in h5fn_all
       println(s, fn)
@@ -32,8 +32,13 @@ function test_hdf5_data_layer(backend::Backend, T, eps)
   ############################################################
 
   scale = rand()
-  layer = HDF5DataLayer(source = source_fn, tops = [:data], batch_size=batch_size,
-      transformers=[(:data, DataTransformers.Scale(scale))])
+  if async
+    layer = AsyncHDF5DataLayer(source = source_fn, tops = [:data], batch_size=batch_size, chunk_size=4,
+        transformers=[(:data, DataTransformers.Scale(scale))])
+  else
+    layer = HDF5DataLayer(source = source_fn, tops = [:data], batch_size=batch_size,
+        transformers=[(:data, DataTransformers.Scale(scale))])
+  end
   state = setup(backend, layer, Blob[], Blob[])
   @test state.epoch == 0
 
@@ -56,12 +61,22 @@ function test_hdf5_data_layer(backend::Backend, T, eps)
   shutdown(backend, state)
   rm(source_fn)
   for fn in h5fn_all
-    rm(fn)
+    # workaround for issue #58
+    try
+      rm(fn)
+    catch e
+      println(e)
+    end
   end
 end
 
-function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
-  println("-- Testing HDF5 Data Layer (shuffle,n=$n,b=$batch_size) on $(typeof(backend)){$T}...")
+function test_hdf5_data_layer(backend::Backend, T, eps)
+  test_hdf5_data_layer(backend, false, T, eps)
+  test_hdf5_data_layer(backend, true, T, eps)
+end
+
+function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, async, n, T)
+  println("-- Testing $(async ? "(Async)" : "") HDF5 Data Layer (shuffle,n=$n,b=$batch_size) on $(typeof(backend)){$T}...")
 
   # To test random shuffling, we generate a dataset containing integer 1:n.
   # Then we run HDF5 layer n times forward, and collect all the output data.
@@ -69,17 +84,21 @@ function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
   # is the batch size.
 
   data = reshape(convert(Array{T}, collect(1:n)), 1, 1, 1, n)
-  h5fn = string(tempname(), ".hdf5")
+  h5fn = string(Mocha.temp_filename(), ".hdf5")
   h5open(h5fn, "w") do file
     file["data"] = data
   end
 
-  source_fn = string(tempname(), ".txt")
+  source_fn = string(Mocha.temp_filename(), ".txt")
   open(source_fn, "w") do file
     println(file, h5fn)
   end
 
-  layer = HDF5DataLayer(source=source_fn, tops=[:data], batch_size=batch_size, shuffle=true)
+  if async
+    layer = AsyncHDF5DataLayer(source=source_fn, tops=[:data], batch_size=batch_size, shuffle=true, chunk_size=2)
+  else
+    layer = HDF5DataLayer(source=source_fn, tops=[:data], batch_size=batch_size, shuffle=true)
+  end
   state = setup(backend, layer, Blob[], Blob[])
 
   data_got_all = Int[]
@@ -100,7 +119,18 @@ function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
 
   shutdown(backend, state)
   rm(source_fn)
-  rm(h5fn)
+  try
+    rm(h5fn)
+  catch e
+    println(e)
+  end
+end
+function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
+  # do not run (non-async) HDF5 data layer shuffling on windows, because it is implemented
+  # with memmap, which is not working properly on Windows.
+  @windows? nothing : test_hdf5_data_layer_shuffle(backend, batch_size, false, n, T)
+
+  test_hdf5_data_layer_shuffle(backend, batch_size, true, n, T)
 end
 
 function test_hdf5_data_layer_shuffle(backend::Backend, T)

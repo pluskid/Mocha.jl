@@ -3,7 +3,8 @@ export CUDA
 module CUDA
 export CuPtr
 
-const driver_error_descriptions = (Int=>ASCIIString)[
+using Compat
+const driver_error_descriptions = @compat(Dict(
   0 => "Success",
   1 => "Invalid value",
   2 => "Out of memory",
@@ -61,7 +62,7 @@ const driver_error_descriptions = (Int=>ASCIIString)[
   800 => "Operation not permitted",
   801 => "Operation not supported",
   999 => "Unknown error"
-]
+))
 
 immutable CuDriverError <: Exception
   code::Int
@@ -76,7 +77,7 @@ macro cucall(fv, argtypes, args...)
   quote
     _curet = ccall( ($(Meta.quot(f)), "libcuda"), Cint, $argtypes, $(args...) )
     if _curet != 0
-      throw(CuDriverError(int(_curet)))
+      throw(CuDriverError(round(Int64, _curet)))
     end
   end
 end
@@ -145,7 +146,7 @@ cubox(p::CuPtr) = cubox(p.p)
 
 function cualloc(T::Type, len::Integer)
   a = CUdeviceptr[0]
-  nbytes = int(len) * sizeof(T)
+  nbytes = round(Int64, len) * sizeof(T)
   @cucall(:cuMemAlloc_v2, (Ptr{CUdeviceptr}, Csize_t), a, nbytes)
   return CuPtr(a[1])
 end
@@ -182,7 +183,7 @@ end
 immutable CuModule
   handle::Ptr{Void}
 
-  function CuModule(filename::ASCIIString)
+  function CuModule(filename::String)
     a = Array(Ptr{Void}, 1)
     @cucall(:cuModuleLoad, (Ptr{Ptr{Void}}, Ptr{Cchar}), a, filename)
     new(a[1])
@@ -213,19 +214,21 @@ const THREADS_PER_BLOCK_X = 128
 const THREADS_PER_BLOCK_Y = 1
 const THREADS_PER_BLOCK_Z = 8
 
+using Compat
 get_dim_x(g::Int) = g
-get_dim_x(g::(Int, Int)) = g[1]
-get_dim_x(g::(Int, Int, Int)) = g[1]
+get_dim_x(g::@compat(Tuple{Int, Int})) = g[1]
+get_dim_x(g::@compat(Tuple{Int, Int, Int})) = g[1]
 
 get_dim_y(g::Int) = 1
-get_dim_y(g::(Int, Int)) = g[2]
-get_dim_y(g::(Int, Int, Int)) = g[2]
+get_dim_y(g::@compat(Tuple{Int, Int})) = g[2]
+get_dim_y(g::@compat(Tuple{Int, Int, Int})) = g[2]
 
 get_dim_z(g::Int) = 1
-get_dim_z(g::(Int, Int)) = 1
-get_dim_z(g::(Int, Int, Int)) = g[3]
+get_dim_z(g::@compat(Tuple{Int, Int})) = 1
+get_dim_z(g::@compat(Tuple{Int, Int, Int})) = g[3]
 
-typealias CuDim Union(Int, (Int, Int), (Int, Int, Int))
+using Compat
+typealias CuDim Union(Int, @compat(Tuple{Int, Int}), @compat(Tuple{Int, Int, Int}))
 
 # Stream management
 

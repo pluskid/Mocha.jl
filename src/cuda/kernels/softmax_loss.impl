@@ -9,7 +9,7 @@ __device__ void softmax_loss_backward(T *prob, T *label, T *weights, int num, in
   prob[idx * (spatial_dim*prob_dim) + y*spatial_dim + idx_sp] -= 1;
 
   if (weights != NULL) {
-    T weight = weights[y*spatial_dim + idx_sp];
+    T weight = weights[idx * (spatial_dim*prob_dim) + y*spatial_dim + idx_sp];
     int idx_base = idx * (spatial_dim*prob_dim) + idx_sp;
     for (int i = 0; i < prob_dim; ++i) {
       prob[idx_base + i*spatial_dim] *= weight;

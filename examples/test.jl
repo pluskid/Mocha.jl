@@ -29,7 +29,7 @@ init(backend)
 
 data_layer = MemoryDataLayer(batch_size=500, data=Array[X,Y])
 weight_layer = InnerProductLayer(name="ip",output_dim=P, tops=[:pred], bottoms=[:data])
-loss_layer = SquareLossLayer(bottoms=[:pred, :label])
+loss_layer = SquareLossLayer(name="loss", bottoms=[:pred, :label])
 
 net = Net("TEST", backend, [loss_layer, weight_layer, data_layer])
 println(net)
@@ -52,5 +52,7 @@ copy!(learned_b, net.states[2].b)
 
 #println("$(learned_b)")
 #println("$(B)")
+
+Mocha.dump_statistics(solver.coffee_lounge, get_layer_state(net, "loss"), true)
 
 shutdown(backend)
