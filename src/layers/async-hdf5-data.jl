@@ -51,7 +51,7 @@ function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}
   dsets = [h5_file[string(x)] for x in layer.tops]
 
   # setup blob shapes and data transformers
-  transformers = convert(Vector{(Symbol, DataTransformerType)}, state.layer.transformers)
+  transformers = convert(Vector{@compat(Tuple{Symbol, DataTransformerType})}, state.layer.transformers)
   for i = 1:length(state.blobs)
     dims = size(dsets[i])
 

@@ -41,16 +41,17 @@ function decay_on_validation_listener(policy, key::String, coffee_lounge::Coffee
   stats = get_statistics(coffee_lounge, key)
   index = sort(collect(keys(stats)))
   if length(index) > 1
-    if stats[index[end]] < stats[index[end-1]]
+    if (policy.higher_better && stats[index[end]] < stats[index[end-1]]) ||
+      (!policy.higher_better && stats[index[end]] > stats[index[end-1]])
       # performance drop
-      info(@sprintf("lr decay %e -> %e", policy.curr_lr, policy.curr_lr*policy.gamma))
+      Mocha.info(@sprintf("lr decay %e -> %e", policy.curr_lr, policy.curr_lr*policy.gamma))
       policy.curr_lr *= policy.gamma
 
       # revert to a previously saved "good" snapshot
       if isa(policy.solver, Solver)
-        info("reverting to previous saved snapshot")
+        Mocha.info("reverting to previous saved snapshot")
         solver_state = load_snapshot(net, policy.solver.params.load_from, state)
-        info("snapshot at iteration $(solver_state.iter) loaded")
+        Mocha.info("snapshot at iteration $(solver_state.iter) loaded")
         copy_solver_state!(state, solver_state)
       end
     end
@@ -60,14 +61,15 @@ end
 type DecayOnValidation <: LearningRatePolicy
   gamma       :: FloatingPoint
 
-  key         :: String
-  curr_lr     :: FloatingPoint
-  min_lr      :: FloatingPoint
-  listener    :: Function
-  solver      :: Any
-  initialized :: Bool
+  key           :: String
+  curr_lr       :: FloatingPoint
+  min_lr        :: FloatingPoint
+  listener      :: Function
+  solver        :: Any
+  initialized   :: Bool
+  higher_better :: Bool # set to false if performance score is the lower the better
 
-  DecayOnValidation(base_lr, key, gamma=0.5, min_lr=1e-8) = begin
+  DecayOnValidation(base_lr, key, gamma=0.5, min_lr=1e-8; higher_better=true) = begin
     policy = new(gamma, key, base_lr, min_lr)
     policy.solver = nothing
     policy.listener = (coffee_lounge,net,state) -> begin
@@ -78,17 +80,19 @@ type DecayOnValidation <: LearningRatePolicy
       decay_on_validation_listener(policy, key, coffee_lounge, net, state)
     end
     policy.initialized = false
+    policy.higher_better = higher_better
 
     policy
   end
 end
 
+using Compat
 type Staged <: LearningRatePolicy
-  stages     :: Vector{(Int, LearningRatePolicy)}
+  stages     :: Vector{@compat(Tuple{Int, LearningRatePolicy})}
   curr_stage :: Int
 
   Staged(stages...) = begin
-    accum_stages = Array((Int, LearningRatePolicy), length(stages))
+    accum_stages = Array(@compat(Tuple{Int, LearningRatePolicy}), length(stages))
     accum_iter = 0
     for i = 1:length(stages)
       (n, lrp) = stages[i]
@@ -170,12 +174,13 @@ type Linear <: MomentumPolicy
   max_mom  :: FloatingPoint
 end
 
+using Compat
 type Staged <: MomentumPolicy
-  stages     :: Vector{(Int, MomentumPolicy)}
+  stages     :: Vector{@compat(Tuple{Int, MomentumPolicy})}
   curr_stage :: Int
 
   Staged(stages...) = begin
-    accum_stages = Array((Int, MomentumPolicy), length(stages))
+    accum_stages = Array(@compat(Tuple{Int, MomentumPolicy}), length(stages))
     accum_iter = 0
     for i = 1:length(stages)
       (n, mmp) = stages[i]

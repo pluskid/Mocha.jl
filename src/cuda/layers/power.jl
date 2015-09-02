@@ -30,7 +30,7 @@ function forward(backend::GPUBackend, state::PowerLayerState, inputs::Vector{Blo
         CuVec.mul!(backend, data_type, output.ptr.p, output.ptr.p, len)
       else
         CuVec.pow!(backend, data_type, output.ptr.p,
-            isinteger(state.layer.power) ? int(state.layer.power) : convert(data_type, state.layer.power),
+            isinteger(state.layer.power) ? round(Int64, state.layer.power) : convert(data_type, state.layer.power),
             len)
       end
     end

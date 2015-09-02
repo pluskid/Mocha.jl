@@ -1,4 +1,8 @@
 # A simple reference counting util
+
+# import this function in Base so that we do not have conflicting definition
+import Base.dec
+
 export RefCounter, inc, dec, ref
 
 type RefCounter

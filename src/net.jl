@@ -1,5 +1,5 @@
 export Net
-export init, destroy, forward, backward, forward_backward, get_epoch, check_bp_topology
+export init, destroy, forward, forward_epoch, backward, forward_backward, get_epoch, check_bp_topology
 export get_layer, get_layer_state, freeze!, unfreeze!, freeze_all!, unfreeze_all!
 export dump_statistics, reset_statistics
 
@@ -211,7 +211,7 @@ Net(name::String, backend::Backend, layers :: Vector{Layer}) = begin
   for i = 1:n
     layer = layers[i]
     # record if layers has any dependency
-    if :bottoms ∈ names(layer)
+    if :bottoms ∈ fieldnames(layer)
       blob_fwd = Blob[output_blobs[x] for x in layer.bottoms]
       blob_bwd = Blob[diff_blobs[x] for x in layer.bottoms]
     else
@@ -304,7 +304,7 @@ function topological_sort(layers :: Vector{Layer})
     # inplace layers should always be put first
     idx_inplace = filter(i -> is_inplace(layers[i]), idx)
     idx_normal  = filter(i -> !is_inplace(layers[i]), idx)
-    idx = [idx_inplace, idx_normal]
+    idx = [idx_inplace; idx_normal]
 
     push!(index, idx...)
     graph[idx,:] = 2 # make sure we don't select those again

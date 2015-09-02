@@ -51,14 +51,14 @@ type HDF5DataLayerState <: LayerState
       # we only use mmap when random shuffle is required, as mmap is slower
       # than sequential batch read. see hdf5-read benchmark.
       state.dsets = map(readmmap, state.dsets)
-      state.shuffle_idx = randperm(size(state.dsets[1],4))
+      state.shuffle_idx = randperm(size(state.dsets[1])[end])
     else
       state.shuffle_idx = Int[]
     end
 
     state.blobs = Array(Blob, length(layer.tops))
     state.trans = Array(Vector{DataTransformerState}, length(layer.tops))
-    transformers = convert(Vector{(Symbol, DataTransformerType)}, layer.transformers)
+    transformers = convert(Vector{@compat(Tuple{Symbol, DataTransformerType})}, layer.transformers)
     for i = 1:length(state.blobs)
       dims = size(state.dsets[i])
 
@@ -144,4 +144,3 @@ end
 
 function backward(backend::Backend, state::HDF5DataLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
-

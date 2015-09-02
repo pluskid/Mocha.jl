@@ -22,6 +22,7 @@ function init(coffee::ValidationPerformance, ::Net)
   init(coffee.validation_net)
 end
 function enjoy(lounge::CoffeeLounge, coffee::ValidationPerformance, net::Net, state::SolverState)
+  reset_statistics(coffee.validation_net)
   forward_epoch(coffee.validation_net)
 
   @info("")
@@ -30,8 +31,6 @@ function enjoy(lounge::CoffeeLounge, coffee::ValidationPerformance, net::Net, st
   dump_statistics(lounge, coffee.validation_net, show=true)
   @info("---------------------------------------------------------")
   @info("")
-
-  reset_statistics(coffee.validation_net)
 
   # notify listeners
   for listener in coffee.listeners

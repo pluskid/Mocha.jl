@@ -100,7 +100,7 @@ end
 # @characterize_layer(HDF5DataLayer,
 #     is_source => true,
 #     is_sink => false,
-#     back_propagate => false,
+#     can_do_bp => false,
 # )
 #############################################################
 macro characterize_layer(layer, properties...)

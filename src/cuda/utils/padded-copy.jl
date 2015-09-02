@@ -6,9 +6,9 @@ function dense2padded!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
     width, height, channels, num = size(src)
     chann_num = channels*num
 
-    x_block = int(ceil(float(chann_num)/CUDA.THREADS_PER_BLOCK_X))
-    y_block = int(ceil(float(width)/CUDA.THREADS_PER_BLOCK_Y))
-    z_block = int(ceil(float(height)/CUDA.THREADS_PER_BLOCK_Z))
+    x_block = round(Int64, ceil(float(chann_num)/CUDA.THREADS_PER_BLOCK_X))
+    y_block = round(Int64, ceil(float(width)/CUDA.THREADS_PER_BLOCK_Y))
+    z_block = round(Int64, ceil(float(height)/CUDA.THREADS_PER_BLOCK_Z))
 
     if T == Float32
       kernel = backend.mocha.dense_to_padded_float
@@ -29,9 +29,9 @@ function padded2dense!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
     width, height, channels, num = size(dst)
     chann_num = channels*num
 
-    x_block = int(ceil(float(chann_num)/CUDA.THREADS_PER_BLOCK_X))
-    y_block = int(ceil(float(width)/CUDA.THREADS_PER_BLOCK_Y))
-    z_block = int(ceil(float(height)/CUDA.THREADS_PER_BLOCK_Z))
+    x_block = round(Int64, ceil(float(chann_num)/CUDA.THREADS_PER_BLOCK_X))
+    y_block = round(Int64, ceil(float(width)/CUDA.THREADS_PER_BLOCK_Y))
+    z_block = round(Int64, ceil(float(height)/CUDA.THREADS_PER_BLOCK_Z))
 
     if T == Float32
       kernel = backend.mocha.padded_to_dense_float

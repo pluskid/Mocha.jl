@@ -17,6 +17,7 @@
 #include "index2onehot.impl"
 
 #include "relu.impl"
+#include "lrelu.impl"
 #include "sigmoid.impl"
 #include "tanh.impl"
 

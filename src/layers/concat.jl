@@ -41,7 +41,14 @@ function setup(backend::Backend, layer::ConcatLayer, inputs::Vector{Blob}, diffs
   data_type = eltype(inputs[1])
 
   blobs = Blob[make_blob(backend, data_type, my_dim)]
-  blobs_diff = Blob[make_blob(backend, data_type, my_dim)]
+  blobs_diff = map(diffs) do blob
+    if isa(blob, NullBlob)
+      NullBlob()
+    else
+      make_blob(backend, data_type, my_dim)
+    end
+  end
+
   return ConcatLayerState(layer, blobs, blobs_diff)
 end
 

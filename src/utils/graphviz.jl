@@ -14,7 +14,7 @@ function net2dot(io::IO, net::Net)
     layer_type = replace("$(typeof(layer))", r"Layer$", "")
     layer_name = layer.name
     neuron_name = ""
-    if in(:neuron, names(layer)) && !isa(layer.neuron, Neurons.Identity)
+    if in(:neuron, fieldnames(layer)) && !isa(layer.neuron, Neurons.Identity)
       neuron_name = "\\n($(typeof(layer.neuron)))"
     end
 
@@ -23,7 +23,7 @@ function net2dot(io::IO, net::Net)
     print(io, """{""")
 
     # top blobs
-    if in(:tops, names(layer))
+    if in(:tops, fieldnames(layer))
       print(io, """{""")
       for j = 1:length(layer.tops)
         if j != 1
@@ -38,7 +38,7 @@ function net2dot(io::IO, net::Net)
     print(io, """|""")
 
     # bottom blobs
-    if in(:bottoms, names(layer))
+    if in(:bottoms, fieldnames(layer))
       print(io, """{""")
       for j = 1:length(layer.bottoms)
         if j != 1
@@ -57,7 +57,7 @@ function net2dot(io::IO, net::Net)
   # Connect blobs
   top_maps = Dict{Symbol,String}()
   for i = 1:length(net.layers)
-    if in(:tops, names(net.layers[i]))
+    if in(:tops, fieldnames(net.layers[i]))
       for j = 1:length(net.layers[i].tops)
         top_maps[net.layers[i].tops[j]] = "layer$i:t$j"
       end
@@ -65,7 +65,7 @@ function net2dot(io::IO, net::Net)
   end
   for i = 1:length(net.layers)
     layer = net.layers[i]
-    if in(:bottoms, names(layer))
+    if in(:bottoms, fieldnames(layer))
       for j = 1:length(layer.bottoms)
         println(io, "$(top_maps[layer.bottoms[j]]) ->layer$i:b$j;")
       end

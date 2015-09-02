@@ -35,6 +35,10 @@ end
 type ReLU <: ActivationFunction
 end
 
+# Leaky Rectified-Linear: LReLU(x) = x > 0 ? x : 0.01x 
+type LReLU <: ActivationFunction
+end
+
 # Sigmoid: Sigmoid(x) = 1 / (1 + exp(-x))
 type Sigmoid <: ActivationFunction
 end
@@ -65,6 +69,20 @@ end
 function backward(backend :: CPUBackend, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
   @simd for i = 1:length(output.data)
     @inbounds gradient.data[i] *= (output.data[i] > 0)
+  end
+end
+
+############################################################
+# Leaky Rectified-Linear
+############################################################
+function forward(backend :: CPUBackend, neuron :: Neurons.LReLU, output :: Blob)
+  @simd for i = 1:length(output.data)
+    @inbounds output.data[i] = output.data[i] > 0 ? output.data[i] : 0.01 * output.data[i] 
+  end
+end
+function backward(backend :: CPUBackend, neuron :: Neurons.LReLU, output :: Blob, gradient :: Blob)
+  @simd for i = 1:length(output.data)
+    @inbounds gradient.data[i] *= ((output.data[i] > 0) + 0.01 * (output.data[i] <= 0))
   end
 end
 

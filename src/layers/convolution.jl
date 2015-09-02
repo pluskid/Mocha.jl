@@ -185,15 +185,15 @@ function forward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vect
 
     for n = 1:num
       if isa(state.etc.col_buffer, NullBlob)
-        col_buffer = convert(Ptr{dtype}, input.data) + img_offset * (n-1)
+        col_buffer = pointer(input.data) + img_offset * (n-1)
       else
         col_buffer = state.etc.col_buffer.data
         im2col(input.data, n, col_buffer,
             width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
-        col_buffer = convert(Ptr{dtype}, col_buffer)
+        col_buffer = pointer(col_buffer)
       end
 
-      output_ptr = convert(Ptr{dtype}, output.data) + top_img_offset * (n-1)
+      output_ptr = pointer(output.data) + top_img_offset * (n-1)
       for g = 1:state.layer.n_group
         RawBLAS.gemm!('N', 'N', state.etc.M, state.etc.N, state.etc.K, convert(dtype, 1),
             col_buffer + col_offset * (g-1),
@@ -222,7 +222,7 @@ function backward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vec
 
     if !state.frozen
       for n = 1:num
-        top_diff_ptr = convert(Ptr{dtype}, top_diff.data) + top_img_offset * (n-1)
+        top_diff_ptr = pointer(top_diff.data) + top_img_offset * (n-1)
 
         #----------------------------------------------
         # bias gradient
@@ -232,12 +232,12 @@ function backward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vec
         #----------------------------------------------
         # filter gradient
         if isa(state.etc.col_buffer, NullBlob)
-          col_buffer = convert(Ptr{dtype}, input.data) + img_offset * (n-1)
+          col_buffer = pointer(input.data) + img_offset * (n-1)
         else
           col_buffer = state.etc.col_buffer.data
           im2col(input.data, n, col_buffer,
               width, height, channels, state.layer.kernel, state.layer.pad, state.layer.stride)
-          col_buffer = convert(Ptr{dtype}, col_buffer)
+          col_buffer = pointer(col_buffer)
         end
         for g = 1:state.layer.n_group
           RawBLAS.gemm!('T', 'N', state.etc.K, state.etc.N, state.etc.M, convert(dtype, 1),
@@ -253,17 +253,17 @@ function backward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vec
     if isa(diffs[i], CPUBlob)
       diff = diffs[i]
       for n = 1:num
-        top_diff_ptr = convert(Ptr{dtype}, top_diff.data) + top_img_offset * (n-1)
+        top_diff_ptr = pointer(top_diff.data) + top_img_offset * (n-1)
         if isa(state.etc.col_buffer, NullBlob)
-          col_buffer = convert(Ptr{dtype}, diff.data) + img_offset * (n-1)
+          col_buffer = pointer(diff.data) + img_offset * (n-1)
         else
-          col_buffer = convert(Ptr{dtype}, state.etc.col_buffer.data)
+          col_buffer = pointer(state.etc.col_buffer.data)
         end
 
         for g = 1:state.layer.n_group
           RawBLAS.gemm!('N', 'T', state.etc.M, state.etc.K, state.etc.N, convert(dtype, 1),
               top_diff_ptr + top_offset * (g-1),
-              convert(Ptr{dtype}, state.filter.data) + weight_offset * (g-1),
+              pointer(state.filter.data) + weight_offset * (g-1),
               convert(dtype, 0), col_buffer + col_offset * (g-1))
         end
         if !(isa(state.etc.col_buffer, NullBlob))

@@ -34,7 +34,7 @@ function test_accuracy_layer(backend::Backend, tensor_dim, T)
   for i = 1:dim_pre
     for j = 1:dim_post
       pred = canonical_input[i,:,j]
-      if indmax(pred) == int(canonical_label[i,1,j])+1
+      if indmax(pred) == round(Int64, canonical_label[i,1,j])+1
         expected_acc += 1
       end
     end

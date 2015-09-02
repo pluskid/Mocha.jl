@@ -87,9 +87,13 @@ function forward(backend::CPUBackend, state::MultinomialLogisticLossLayerState, 
   label_dim = [i == state.op_dim ? 1 : dims[i] for i = 1:length(dims)]
   label = reshape(label, label_dim...)
 
+  # make sure that the labels are in [0..(n_class-1)]
+  n_class = size(pred, state.op_dim)
+  @assert all(0 .<= label .< n_class) "labels should be index in [0, n_class-1]"
+
   idx_all = map(1:length(dims)) do i
     if i == state.op_dim
-      int(label) + 1
+      round(Int64, label) + 1
     else
       dim = dims[i]
       reshape(1:dim, [j == i? dim : 1 for j = 1:length(dims)]...)
