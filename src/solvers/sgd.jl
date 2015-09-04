@@ -5,7 +5,7 @@ immutable SGD <: Solver
   SGD(params::SolverParameters) = new(params, CoffeeLounge())
 end
 
-type SGDInternalState <: SolverInternelState
+type SGDInternalState <: SolverInternalState
   param_states  :: Vector{LayerState}
   param_history :: Vector{Vector{Blob}}
   last_momentum :: Float64
@@ -56,4 +56,3 @@ function update_parameters(net::Net{CPUBackend}, solver::SGD, learning_rate, mom
   # param_blob += hist_blob
   BLAS.axpy!(length(hist_blob), convert(data_type, 1), pointer(hist_blob.data), 1, pointer(param_blob.data), 1)
 end
-

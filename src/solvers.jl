@@ -295,15 +295,15 @@ end
 ############################################################
 # Solver API
 ############################################################
-abstract SolverInternelState
+abstract SolverInternalState
 
 function setup(solver::Solver, net::Net, state::SolverState)
-  error("Not implemented, should return a SolverInternelState")
+  error("Not implemented, should return a SolverInternalState")
 end
-function update(solver::Solver, net::Net, i_state::SolverInternelState, state::SolverState)
+function update(solver::Solver, net::Net, i_state::SolverInternalState, state::SolverState)
   error("Not implemented, should do one iteration of update")
 end
-function shutdown(solver::Solver, i_state::SolverInternelState)
+function shutdown(solver::Solver, i_state::SolverInternalState)
   error("Not implemented, should shutdown the solver")
 end
 

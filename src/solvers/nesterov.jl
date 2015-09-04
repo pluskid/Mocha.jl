@@ -11,7 +11,7 @@ immutable Nesterov <: Solver
   Nesterov(params::SolverParameters) = new(params, CoffeeLounge())
 end
 
-type NesterovInternalState <: SolverInternelState
+type NesterovInternalState <: SolverInternalState
   param_states  :: Vector{LayerState}
   param_history :: Vector{Vector{Blob}}
   last_momentum :: Float64
@@ -67,4 +67,3 @@ function update_parameters(net::Net{CPUBackend}, solver::Nesterov, learning_rate
   # param_blob += (1+momentum) * hist_blob (update with vt)
   BLAS.axpy!(length(hist_blob), convert(data_type, 1 + momentum), hist_blob.data, 1, param_blob.data, 1)
 end
-
