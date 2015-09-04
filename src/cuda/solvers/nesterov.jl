@@ -1,4 +1,4 @@
-function update_parameters(net::Net{GPUBackend}, solver::Nesterov, learning_rate,
+function update_parameters!(net::Net{GPUBackend}, method::Nesterov, learning_rate,
     last_momentum, momentum, param_blob, hist_blob, gradient, data_type)
 
   # param_blob += -last_momentum* hist_blob (update with vt-1)

@@ -70,9 +70,16 @@ end
 include("layers/pooling/channel-pooling.jl")
 
 include("net.jl")
-include("coffee-break.jl")
+
 
 include("solvers.jl")
+include("coffee-break.jl")
+include("solvers/sgd-common.jl") # for SGD and Nesterov
+include("solvers/policies.jl")
+include("solvers/sgd.jl")
+include("solvers/nesterov.jl")
+include("solvers/adam.jl")
+
 if Config.use_cuda
   include("cuda/solvers.jl")
 end
