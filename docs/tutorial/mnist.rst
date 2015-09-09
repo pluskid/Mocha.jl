@@ -185,12 +185,12 @@ deep network.
 .. code-block:: julia
 
    exp_dir = "snapshots"
-
-   params = SolverParameters(max_iter=10000, regu_coef=0.0005,
+   method = SGD()
+   params = make_solver_parameters(method, max_iter=10000, regu_coef=0.0005,
        mom_policy=MomPolicy.Fixed(0.9),
        lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75),
        load_from=exp_dir)
-   solver = SGD(params)
+   solver = Solver(method, params)
 
 The behavior of the solver is specified in the following parameters
 
@@ -388,5 +388,3 @@ initializations. The objective function values shown here are also slightly
 different to Caffe's, as until recently, Mocha counts regularizers in the
 forward stage and adds them into the objective functions. This behavior is removed
 in more recent versions of Mocha to avoid unnecessary computations.
-
-

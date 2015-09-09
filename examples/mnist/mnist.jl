@@ -28,11 +28,12 @@ net = Net("MNIST-train", backend, [data_layer, common_layers..., loss_layer])
 
 exp_dir = "snapshots$(use_gpu ? "-gpu" : "-cpu")"
 
-params = SolverParameters(max_iter=10000, regu_coef=0.0005,
-    mom_policy=MomPolicy.Fixed(0.9),
-    lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75),
-    load_from=exp_dir)
-solver = SGD(params)
+method = SGD()
+params = make_solver_parameters(method, max_iter=10000, regu_coef=0.0005,
+                                mom_policy=MomPolicy.Fixed(0.9),
+                                lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75),
+                                load_from=exp_dir)
+solver = Solver(method, params)
 
 setup_coffee_lounge(solver, save_into="$exp_dir/statistics.jld", every_n_iter=1000)
 

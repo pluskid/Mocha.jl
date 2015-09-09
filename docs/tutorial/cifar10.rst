@@ -242,10 +242,11 @@ a staged learning policy that makes this easier:
      (5000, LRPolicy.Fixed(0.0001)),
      (5000, LRPolicy.Fixed(0.00001)),
    )
-   solver_params = SolverParameters(max_iter=70000,
+   method = SGD()
+   solver_params = make_solver_parameters(method, max_iter=70000,
        regu_coef=0.004, momentum=0.9, lr_policy=lr_policy,
        load_from="snapshots")
-   solver = SGD(solver_params)
+   solver = Solver(method, solver_params)
 
 The other parameters like regularization coefficient and momentum are directly
 translated from Caffe's solver configuration. Progress reporting and automatic
@@ -416,4 +417,3 @@ It takes only 5~6 seconds to finish every 200 iterations on the
    22-Nov 15:05:27:INFO:root:
    22-Nov 15:05:33:INFO:root:050200 :: TRAIN obj-val = 0.61519235
    22-Nov 15:05:38:INFO:root:050400 :: TRAIN obj-val = 0.57314044
-

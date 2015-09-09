@@ -64,9 +64,10 @@ if test_wasserstein
   common_layers = [common_layers..., softmax_layer]
 end
 net = Net("Training", backend, [data_layer, common_layers..., loss_layer])
-params = SolverParameters(max_iter=10000,
-    lr_policy=LRPolicy.Fixed(0.01), mom_policy=MomPolicy.Fixed(0.9))
-solver = SGD(params)
+method = SGD()
+params = make_solver_parameters(method, max_iter=10000,
+                                lr_policy=LRPolicy.Fixed(0.01), mom_policy=MomPolicy.Fixed(0.9))
+solver = Solver(method, params)
 add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
 
 # for simplicity, we just use the training data as test...

@@ -17,7 +17,7 @@ end
 
 const SOLVER_STATE_KEY = "solver_state"
 
-function enjoy(lounge::CoffeeLounge, coffee::Snapshot, net::Net, state::SolverState)
+function enjoy{T<:InternalSolverState}(lounge::CoffeeLounge, coffee::Snapshot, net::Net, state::SolverState{T})
   fn = @sprintf("snapshot-%06d.jld", state.iter)
   @info("Saving snapshot to $fn...")
   path = joinpath(coffee.dir, fn)
@@ -27,6 +27,6 @@ function enjoy(lounge::CoffeeLounge, coffee::Snapshot, net::Net, state::SolverSt
 
   jldopen(path, "w") do file
     save_network(file, net)
-    write(file, SOLVER_STATE_KEY, state)
+    write(file, SOLVER_STATE_KEY, snapshot(state))
   end
 end

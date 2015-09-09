@@ -16,6 +16,21 @@ type CoffeeBreak
   every_n_epoch :: Int
 end
 
+
+############################################################
+# Coffee break utilities
+############################################################
+#-- This function is to be called by the end-user
+function setup_coffee_lounge(solver::Solver; save_into::String="", every_n_iter::Int=1, file_exists=:merge)
+  solver.coffee_lounge.filename=save_into
+  solver.coffee_lounge.save_every_n_iter=every_n_iter
+  solver.coffee_lounge.file_exists=file_exists
+end
+
+function add_coffee_break(solver::Solver, coffee::Coffee; kw...)
+  add_coffee_break(solver.coffee_lounge, coffee; kw...)
+end
+
 ################################################################################
 # Coffee Lounge
 ################################################################################
@@ -78,6 +93,7 @@ end
 function update_statistics(dummy::Nothing, key::String, val::StatisticsValue)
   # dummy function used when you do not want to record statistics
 end
+
 function update_statistics(lounge::CoffeeLounge, key::String, val::StatisticsValue)
   dict = get(lounge.statistics, key, StatisticsRecords())
   dict[lounge.curr_iter] = val

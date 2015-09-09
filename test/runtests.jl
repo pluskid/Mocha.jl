@@ -27,6 +27,11 @@ function test_dir(dir)
   end
 end
 
+############################################################
+# Solvers
+############################################################
+include("solvers/test-adam-solver.jl")
+include("solvers/test-sgd-solver.jl")
 
 ############################################################
 # Network

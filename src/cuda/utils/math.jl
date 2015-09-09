@@ -87,7 +87,11 @@ for (postfix, dt1, dt2) in [(:fi, Float32, Int), (:di, Float64, Int),
       kernel = backend.mocha.$(symbol("elem_pow_$postfix"))
       CUDA.launch(kernel, cuda_dim..., (X,Y,len))
     end
+    function pow!{T}(backend::GPUBackend, X::CuTensorBlob{T}, Y::$dt2)
+      pow!(backend, T, X.ptr.p, Y, length(X))
+    end
   end
 end
+
 
 end # module cuVec
