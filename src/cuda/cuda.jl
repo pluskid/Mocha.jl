@@ -3,6 +3,16 @@ export CUDA
 module CUDA
 export CuPtr
 
+@osx_only begin
+  const libcuda = "libcuda"
+end
+@linux_only begin
+  const libcuda = "libcuda"
+end
+@windows_only begin
+  const libcuda = "nvcuda.dll"
+end
+
 using Compat
 const driver_error_descriptions = @compat(Dict(
   0 => "Success",
@@ -75,7 +85,7 @@ macro cucall(fv, argtypes, args...)
   f = eval(fv)
   args = map(esc, args)
   quote
-    _curet = ccall( ($(Meta.quot(f)), "libcuda"), Cint, $argtypes, $(args...) )
+    _curet = ccall( ($(Meta.quot(f)), $libcuda), Cint, $argtypes, $(args...) )
     if _curet != 0
       throw(CuDriverError(round(Int64, _curet)))
     end
