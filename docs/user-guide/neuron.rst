@@ -34,7 +34,7 @@ unless it is an identity neuron. Layers have an identity neuron by default [1]_.
    
    .. math::
 
-      \frac{dy}{dx} = \begin{cases}1 & x > 0 \\ 0.01x & x \leq 0\end{cases}
+      \frac{dy}{dx} = \begin{cases}1 & x > 0 \\ 0.01 & x \leq 0\end{cases}
 
 .. class:: Neurons.Sigmoid
 
