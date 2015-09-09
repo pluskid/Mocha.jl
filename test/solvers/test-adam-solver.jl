@@ -34,7 +34,7 @@ function test_adam_solver(backend)
                                     beta1=0.9,
                                     beta2=0.999,
                                     epsilon=1e-8,
-                                    max_iterations=2)
+                                    max_iter=2)
     solver = Solver(adam, params)
     solve(solver, net)
     destroy(net)

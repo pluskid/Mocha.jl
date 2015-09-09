@@ -33,7 +33,7 @@ function test_sgd_solver(backend)
     # Make a Solver with max iterations 2
     sgd = SGD()
     params = make_solver_parameters(sgd,
-                                    max_iterations=2,
+                                    max_iter=2,
                                     mom_policy=MomPolicy.Fixed(0.9),
                                     lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75),
                                     load_from="")

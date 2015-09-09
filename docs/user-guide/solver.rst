@@ -5,28 +5,35 @@ Mocha contains general purpose stochastic (sub-)gradient based solvers that
 can be used to train deep neural networks as well as traditional shallow
 machine learning models.
 
-A solver is constructed by specifying general *solver parameters* that
-characterize *learning rate*, *momentum*, and *stop conditions*, etc. and an
-*algorithm* that characterizes how the parameters are updated in each solver
-iteration. The following is an example taken from the :doc:`MNIST tutorial
-</tutorial/mnist>`.
+A solver is constructed by specifying a dictionary of *solver parameters* that
+provide necessary configuration: both general settings like *stop conditions*,
+and parameters specific to a particular algorithm such as  *momentum policy*.
+
+You then instantiate the *algorithm* that characterizes how the parameters are
+updated in each solver iteration. The following is an example taken from the
+:doc:`MNIST tutorial </tutorial/mnist>`.
 
 .. code-block:: julia
 
-   params = SolverParameters(max_iter=10000, regu_coef=0.0005,
+   method = SGD()
+   params = make_solver_parameters(method, max_iter=10000, regu_coef=0.0005,
        mom_policy=MomPolicy.Fixed(0.9),
        lr_policy=LRPolicy.Inv(0.01, 0.0001, 0.75),
        load_from=exp_dir)
-   solver = SGD(params)
+   solver = Solver(method, params)
 
 Moreover, it is usually desired to do some short breaks during training
 iterations, for example, to print training progress or to save a snapshot of the
-trained model to the disk. In Mocha, this is called *coffee breaks* for solvers.
+trained model to the disk. In Mocha, these are called *coffee breaks* for solvers.
 
 General Solver Parameters
 -------------------------
 
-.. class:: SolverParameters
+A instance of :class:`SolverParameters` is just a :class:`Dictionary` with :class:`Symbol`
+keys. The ``make_solver_parameters`` function helps to construct this, providing default
+values suitable for the solver method.
+
+Some parameters apply to all methods:
 
    .. attribute:: max_iter
 
@@ -36,15 +43,6 @@ General Solver Parameters
 
       Global regularization coefficient. Used as a global scaling factor for the
       local regularization coefficient of each trainable parameter.
-
-   .. attribute:: lr_policy
-
-      Policy for learning rate. Note that this is also a global scaling factor, as
-      each trainable parameter also has a local learning rate.
-
-   .. attribute:: mom_policy
-
-      Policy for momentum.
 
    .. attribute:: load_from
 
@@ -64,6 +62,61 @@ General Solver Parameters
         specific (maybe smaller) dataset. You can also load HDF5 models
         :doc:`exported from external deep learning tools
         </user-guide/tools/import-caffe-model>`.
+
+Solver Algorithms
+-----------------
+
+The different solver methods are listed below, together with the ``SolverParameters`` arguments particular to them.
+
+.. class:: SGD
+
+   Stochastic Gradient Descent with momentum.
+
+   .. attribute:: lr_policy
+
+      Policy for learning rate. Note that this is also a global scaling factor, as
+      each trainable parameter also has a local learning rate.
+
+   .. attribute:: mom_policy
+
+      Policy for momentum.
+
+
+.. class:: Nesterov
+
+   Stochastic Nesterov accelerated gradient method.
+
+   .. attribute:: lr_policy
+
+      Policy for learning rate, as for SGD.
+
+   .. attribute:: mom_policy
+
+      Policy for momentum, as for SGD.
+
+.. class:: Adam
+
+   As described in `Adam: A Method for Stochastic Optimization <http://arxiv.org/abs/1412.6980>`_.
+
+   (N.B. The Adam solver sets effective learning rates for each parameter individually, so the
+   layer local learning rates are ignored in this case.)
+
+   .. attribute:: alpha
+
+      Step size, defaults to 0.001 - this is approximately the largest step any parameter can take in a single iteration.
+
+   .. attribute:: beta1
+
+      Exponential decay factor for 1st order moment estimates, 0<=beta1<1, default 0.9
+
+   .. attribute:: beta2
+
+      Exponential decay factor for 2nd order moment estimates, 0<=beta1<1, default 0.999
+
+   .. attribute:: epsilon
+
+      Affects scaling of the parameter updates for numerical conditioning, default 1-1e-8
+
 
 Learning Rate Policy
 ~~~~~~~~~~~~~~~~~~~~
@@ -99,7 +152,7 @@ Learning Rate Policy
 
    This policy starts with a base learning rate. Each time the performance
    on a validation set is computed, the policy will scale the learning rate down
-   by a given factor if the validation performance is poorer compared to the one of the 
+   by a given factor if the validation performance is poorer compared to the one of the
    last snapshot. In this case it also asks the solver to load the latest saved snapshot
    and restart from there.
 
@@ -110,8 +163,8 @@ Learning Rate Policy
    computed on a validation set, the listener is notified, and it will compare
    the performance with the previous one on records. If the performance decays,
    it will ask the solver to load the previously saved snapshot (saved by the
-   :class:`Snapshot` coffee break), and then scale the learning rate down. Per default 
-   `LRPolicy.DecayOnValidation` considers a lower performance statistic as better, 
+   :class:`Snapshot` coffee break), and then scale the learning rate down. Per default
+   `LRPolicy.DecayOnValidation` considers a lower performance statistic as better,
    however this can be changed by setting the optional argument `higher_better` to `false`.
 
    A typical setup is to save one snapshot every epoch, and also check the
@@ -155,16 +208,6 @@ Momentum Policy
    Stages are specified by number of training iterations. See
    :class:`LRPolicy.Staged`.
 
-Solver Algorithms
------------------
-
-.. class:: SGD
-
-   Stochastic Gradient Descent with momentum.
-
-.. class:: Nesterov
-
-   Stochastic Nesterov accelerated gradient method.
 
 Solver Coffee Breaks
 --------------------
@@ -232,17 +275,9 @@ Built-in Coffee Breaks
    iteration is reported by default. You can also call the function with the following
    named parameters in order to customize the output:
 
-   .. attribute:: show_iter(=true)
-   Shows the current iteration number.
+   .. attribute:: statistic_names
+   A vector of statistic names to print when summarizing the state, e.g. ``[:iter, :obj_val, :learning_rate]``.  The available statistics will depend on the solver method in use.
 
-   .. attribute:: show_obj_val(=true)
-   Shows the current value of the objective function.
-
-   .. attribute:: show_lr(=false)
-   Shows the current value of the learning rate.
-
-   .. attribute:: show_mom(=false)
-   Shows the current momentum.
 
    Here are a few examples of usage:
 
@@ -250,15 +285,15 @@ Built-in Coffee Breaks
 
       #same as original functionality, shows iteration and obj_val by defualt
       TrainingSummary()
-   
+
       #will only show objective function value
-      TrainingSummary(show_iter=false)
+      TrainingSummary([:iter])
 
       #shows iteration, obj_val, learning_rate, and momentum
-      TrainingSummary(show_lr=true,show_mom=true)
+      TrainingSummary([:iter, :obj_val, :learning_rate, :momentum])
 
    Note that the training summary at iteration 0 shows the results before training starts.
-   Also, any values that are shown with this method will also be added to the lounge 
+   Also, any values that are shown with this method will also be added to the lounge
    using the `update_statistics()` function.
 
 .. class:: Snapshot
@@ -275,5 +310,3 @@ Built-in Coffee Breaks
    network that shares parameters with the training network and provides access to
    the validation dataset. See :doc:`the MNIST tutorial </tutorial/mnist>` for
    a concrete example.
-
-

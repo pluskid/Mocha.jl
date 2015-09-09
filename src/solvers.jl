@@ -33,7 +33,7 @@ abstract SolverStateSnapshot # Just the serializable part of the solver state, f
 
 
 function make_solver_parameters(;kwargs...)
-    merge([:max_iterations => Inf,
+    merge([:max_iter => Inf,
            :regu_coef => 0.0005,
            :load_from => ""],
           SolverParameters(kwargs))
@@ -152,7 +152,7 @@ function load_snapshot(net::Net, path::String="", state=nothing)
 end
 
 function stop_condition_satisfied(solver::Solver, state::SolverState, net::Net)
-  if state.iter >= solver.params[:max_iterations]
+  if state.iter >= solver.params[:max_iter]
     return true
   end
   return false

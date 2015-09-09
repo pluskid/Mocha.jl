@@ -73,11 +73,12 @@ base_dir = "snapshots_dropout_fc"
 # and let the momentum increase linearly from 0.5 to 0.9 over 500 epochs
 # which is equivalent to an increase step of 0.0008
 # training is done for 2000 epochs
-params = SolverParameters(max_iter=600*2000, regu_coef=0.0,
+method = SGD()
+params = make_solver_parameters(method, max_iter=600*2000, regu_coef=0.0,
                           mom_policy=MomPolicy.Linear(0.5, 0.0008, 600, 0.9),
                           lr_policy=LRPolicy.Step(0.1, 0.998, 600),
                           load_from=base_dir)
-solver = SGD(params)
+solver = Solver(method, params)
 
 setup_coffee_lounge(solver, save_into="$base_dir/statistics.jld", every_n_iter=5000)
 
