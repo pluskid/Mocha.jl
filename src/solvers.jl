@@ -24,10 +24,11 @@ end
 type SolverState{T<:InternalSolverState}
   iter               :: Int
   obj_val            :: Float64
+  losses             :: Dict
   internal           :: T
 end
 
-SolverState{T<:InternalSolverState}(internal::T) = SolverState{T}(0, Inf, internal)
+SolverState{T<:InternalSolverState}(internal::T) = SolverState{T}(0, Inf, Dict(), internal)
 
 abstract SolverStateSnapshot # Just the serializable part of the solver state, for snapshot files
 
@@ -54,12 +55,17 @@ end
 #  API functions to be implemented by each solver instance
 ############################################################
 
-# List the available statistics that can be tracked in the CoffeeLounge
-list_statistics(method::SolverMethod) = ["obj_val", "iter"]
+function get_statistic(state::SolverState, name::String)
+  if haskey(state.losses, name)
+    return state.losses[name]
+  else
+    return NaN
+  end
+end
 
-function get_statistic(state::SolverState, name)
+function get_statistic(state::SolverState, name::Symbol)
     if name in [:obj_val, :iter]
-        @eval $(quot(state)).$name
+      @eval $(quot(state)).$name
     else
         @eval $(quot(state.internal)).$name
     end
@@ -208,6 +214,14 @@ function do_solve_loop(solver::Solver, net::Net, state::SolverState)
     end
 
     state.obj_val = forward(net, solver.params[:regu_coef])
+
+    state.losses = Dict()
+    for i = 1:length(net.layers)
+      if has_loss(net.layers[i])
+        state.losses[net.layers[i].name] = net.states[i].loss
+      end
+    end
+
     check_coffee_break(solver.coffee_lounge, state, net)
 
     if stop_condition_satisfied(solver, state, net)

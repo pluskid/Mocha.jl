@@ -1,7 +1,7 @@
 export TrainingSummary
 
 type TrainingSummary <: Coffee
-  statistic_names :: Vector{Symbol}
+  statistic_names :: Vector{Any}
 
   #Default Constructor
   TrainingSummary(statistic_names...) = begin

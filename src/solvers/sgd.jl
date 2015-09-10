@@ -30,8 +30,6 @@ end
 #  API functions to be implemented by each solver instance
 ############################################################
 
-list_statistics(method::SGD) = ["obj_val", "iter", "learning_rate", "momentum"]
-
 function snapshot(state::SolverState{SGDSolverState})
     SGDSolverSnapshot(state.iter, state.obj_val,
                       state.internal.learning_rate, state.internal.momentum)
@@ -40,6 +38,7 @@ end
 solver_state(net::Net, snapshot::SGDSolverSnapshot) = begin
     SolverState{SGDSolverState}(snapshot.iteration,
                                 snapshot.obj_val,
+                                Dict(),
                                 SGDSolverState(net, snapshot.learning_rate, snapshot.momentum))
 end
 
