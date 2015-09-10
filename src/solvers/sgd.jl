@@ -68,6 +68,9 @@ function shutdown(state::SolverState{SGDSolverState})
 end
 
 function update(solver::Solver{SGD}, net::Net, state::SolverState{SGDSolverState})
+  solver_state.internal.learning_rate = get_learning_rate(solver.params[:lr_policy], solver_state)
+  solver_state.internal.momentum = get_momentum(solver.params[:mom_policy], solver_state)
+
   for i = 1:length(state.internal.param_states)
     layer_state   = state.internal.param_states[i]
     history = state.internal.param_history[i]
