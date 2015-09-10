@@ -4,7 +4,7 @@ immutable Adam <: SolverMethod
 end
 
 function make_solver_parameters(solver::Adam; kwargs...)
-  p = make_solver_parameters(stepsize=0.001,
+  p = make_solver_parameters(lr_policy=LRPolicy.Inv(0.003, 0.0001, 0.5),
                              beta1=0.9,
                              beta2=0.999,
                              epsilon=1e-8)
@@ -13,7 +13,7 @@ end
 
 
 validate_parameters(solver::Adam, params::SolverParameters) = begin
-    validate_parameters(params, :stepsize, :beta1, :beta2, :epsilon)
+    validate_parameters(params, :lr_policy, :beta1, :beta2, :epsilon)
 end
 
 type AdamSolverState <: InternalSolverState
@@ -21,25 +21,59 @@ type AdamSolverState <: InternalSolverState
   grad_1st_moment_est :: Vector{Vector{Blob}} # Exponentially weighted moving average - biased estimate of 1st moment of gradient
   grad_2nd_moment_est :: Vector{Vector{Blob}} # Exponentially weighted moving average - biased estimate of raw 2nd moment of gradient
   t                   :: Float64  # timestep since estimates initialized
+  learning_rate       :: Float64
 end
 
 type AdamSolverStateSnapshot <: SolverStateSnapshot
-    iteration::Int
-    obj_val::Float64
+    iter                :: Int
+    obj_val             :: Float64
+    grad_1st_moment_est :: Vector{Vector{Array}}
+    grad_2nd_moment_est :: Vector{Vector{Array}}
+    t                   :: Float64  # timestep since estimates initialized
+    learning_rate       :: Float64
 end
 
-snapshot(state::SolverState{AdamSolverState}) = AdamSolverStateSnapshot(state.iter, state.obj_val)
+function blobs_clone(blobs::Vector{Vector{Blob}})
+    out = Array(Vector{Array}, length(blobs))
+    for (i, vecblobs) in enumerate(blobs)
+        out[i] = [Array(eltype(b), size(b)) for b in vecblobs]
+        for (dst, b) in zip(out[i], vecblobs)
+            copy!(dst, b)
+        end
+    end
+    return out
+end
 
-solver_state(net::Net, snapshot::AdamSolverStateSnapshot) = begin
-    solver_state(iteration, obj_val,
-                 AdamSolverState(net))
+snapshot(state::SolverState{AdamSolverState}) = begin
+    AdamSolverStateSnapshot(state.iter, state.obj_val,
+                            blobs_clone(state.internal.grad_1st_moment_est),
+                            blobs_clone(state.internal.grad_2nd_moment_est),
+                            state.internal.t,
+                            state.internal.learning_rate)
+end
+
+function solver_state(net::Net, snapshot::AdamSolverStateSnapshot)
+    i_state = AdamSolverState(snapshot.learning_rate, net)
+    for i in 1:length(i_state.param_states)
+        for (dst, src) in zip(i_state.grad_1st_moment_est[i],
+                              snapshot.grad_1st_moment_est[i])
+            copy!(dst, src)
+        end
+        for (dst, src) in zip(i_state.grad_2nd_moment_est[i],
+                              snapshot.grad_2nd_moment_est[i])
+            copy!(dst, src)
+        end
+    end
+    i_state.t = snapshot.t
+    SolverState(snapshot.iter, snapshot.obj_val, i_state)
 end
 
 function solver_state(method::Adam, net::Net, params::SolverParameters)
-    SolverState(AdamSolverState(net))
+    learning_rate = get_learning_rate(params[:lr_policy])
+    SolverState(AdamSolverState(learning_rate, net))
 end
 
-AdamSolverState(net::Net) = begin
+AdamSolverState(learning_rate::Float64, net::Net) = begin
     param_states = updatable_layer_states(net)
 
     grad_1st_moment_est = Array(Vector{Blob}, length(param_states))
@@ -51,7 +85,7 @@ AdamSolverState(net::Net) = begin
         grad_2nd_moment_est[i] = [make_zero_blob(net.backend, eltype(x.blob),size(x.blob)...) for x in layerstate.parameters]
     end
 
-    return AdamSolverState(param_states, grad_1st_moment_est, grad_2nd_moment_est, 0)
+    return AdamSolverState(param_states, grad_1st_moment_est, grad_2nd_moment_est, 0, learning_rate)
 end
 
 
@@ -63,6 +97,7 @@ end
 
 function update(solver::Solver{Adam}, net::Net, state::SolverState{AdamSolverState})
   state.internal.t += 1
+  state.internal.learning_rate = get_learning_rate(solver.params[:lr_policy], state)
   for i = 1:length(state.internal.param_states)
     layer_state   = state.internal.param_states[i]
     m       = state.internal.grad_1st_moment_est[i]
@@ -73,7 +108,7 @@ function update(solver::Solver{Adam}, net::Net, state::SolverState{AdamSolverSta
       # N.B. we are ignoring the parameter-specific learning rate multipliers
       # since they ought to adapt automatically.
       update_parameters!(net, solver.method,
-                         solver.params[:stepsize],
+                         state.internal.learning_rate,
                          solver.params[:epsilon],
                          solver.params[:beta1],
                          solver.params[:beta2],
@@ -83,7 +118,6 @@ function update(solver::Solver{Adam}, net::Net, state::SolverState{AdamSolverSta
                          state.internal.t, data_type)
     end
   end
-
 end
 
 function update_parameters!(net::Net{CPUBackend}, method::Adam,
