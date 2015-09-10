@@ -24,18 +24,18 @@ type AdamSolverState <: InternalSolverState
 end
 
 type AdamSolverStateSnapshot <: SolverStateSnapshot
-    iteration::Int
+    iter::Int
     obj_val::Float64
 end
 
 snapshot(state::SolverState{AdamSolverState}) = AdamSolverStateSnapshot(state.iter, state.obj_val)
 
-solver_state(net::Net, snapshot::AdamSolverStateSnapshot) = begin
-    solver_state(iteration, obj_val,
-                 AdamSolverState(net))
+function solver_state(net::Net, snapshot::AdamSolverStateSnapshot)
+    SolverState(snapshot.iter, snapshot.obj_val, AdamSolverState(net))
 end
 
 function solver_state(method::Adam, net::Net, params::SolverParameters)
+    # No special state is serialized for Adam so params are ignored
     SolverState(AdamSolverState(net))
 end
 
