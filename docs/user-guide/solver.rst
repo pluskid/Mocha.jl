@@ -115,7 +115,7 @@ The different solver methods are listed below, together with the ``SolverParamet
 
    .. attribute:: epsilon
 
-      Affects scaling of the parameter updates for numerical conditioning, default 1-1e-8
+      Affects scaling of the parameter updates for numerical conditioning, default 1e-8
 
 
 Learning Rate Policy
