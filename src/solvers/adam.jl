@@ -65,7 +65,7 @@ function solver_state(net::Net, snapshot::AdamSolverStateSnapshot)
         end
     end
     i_state.t = snapshot.t
-    SolverState(snapshot.iter, snapshot.obj_val, i_state)
+    SolverState(snapshot.iter, snapshot.obj_val, Dict(), i_state)
 end
 
 function solver_state(method::Adam, net::Net, params::SolverParameters)

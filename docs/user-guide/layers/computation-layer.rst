@@ -23,7 +23,7 @@ Computation Layers
 
    1D pooling over any specified dimension. This layer is called channel pooling layer
    because it was designed to pool over the pre-defined *channel* dimension back when Mocha could
-   only handle 4D tensors. For the new, general ND-tensors the dimension to be pooled 
+   only handle 4D tensors. For the new, general ND-tensors the dimension to be pooled
    over can be freely specified by the user.
 
    .. attribute:: channel_dim
@@ -575,3 +575,24 @@ Computation Layers
       should be the same, but they can potentially have different batch sizes
       (the last dimension).
 
+
+.. class:: RandomNormalLayer
+
+    This is a source layer which outputs standard Gaussian random noise.
+
+   .. attribute:: tops
+
+      List of symbols, specifying the names of the noise blobs to produce.
+
+   .. attribute:: output_dims
+
+      List of integers giving the dimensions of the output noise blobs.
+
+   .. attribute:: batch_sizes
+
+      List of integers the same length as ``tops``, giving the number of vectors
+      to output in each batch.
+
+   .. attribute:: eltype
+
+      Default ``Float32``.

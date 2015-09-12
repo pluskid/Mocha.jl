@@ -1,0 +1,33 @@
+#define STDNORMAL_BOUNDS_AND_INDEX			\
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;	\
+  if (idx >= len)					\
+    return
+
+extern "C" {
+  __global__ void stdnormal_init ( curandState * state, unsigned long seed )
+  {
+
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    curand_init ( seed, idx, 0, &state[idx] );
+  }
+
+  __global__ void stdnormal_alloc_size(double *psize) {
+    *psize = (double)sizeof(curandState);
+  }
+
+  __global__ void stdnormal_forward_double(curandState* state, double *data, int len) {
+    STDNORMAL_BOUNDS_AND_INDEX;
+
+    data[idx] = curand_normal_double( state + idx );
+  }
+
+  __global__ void stdnormal_forward_float(curandState* state, float *data, int len) {
+    STDNORMAL_BOUNDS_AND_INDEX;
+
+    data[idx] = curand_normal( state + idx ); 
+  }
+
+
+}
+
+// vim: ft=cuda

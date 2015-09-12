@@ -20,6 +20,7 @@ include("layers/crop.jl")
 include("layers/concat.jl")
 include("layers/tied-inner-product.jl")
 include("layers/index2onehot.jl")
+include("layers/random-normal.jl")
 
 #############################################################
 # Loss Layers
@@ -29,10 +30,10 @@ include("layers/multinomial-logistic-loss.jl")
 include("layers/softmax-loss.jl")
 include("layers/softlabel-softmax-loss.jl")
 include("layers/wasserstein-loss.jl")
+include("layers/binary-cross-entropy-loss.jl")
+include("layers/gaussian-kl-loss.jl")
 
 #############################################################
 # Statistics Layers
 #############################################################
 include("layers/accuracy.jl")
-
-
