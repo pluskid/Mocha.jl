@@ -38,17 +38,25 @@ show(io::IO, error::CuDNNError) = print(io, cudnn_error_description[error.code])
 
 @windows? (
 begin
+  if VERSION < v"0.4-"
+    const libcudnn = find_library(["cudnn64_65.dll"], [""])
+  else
     const libcudnn = Libdl.find_library(["cudnn64_65.dll"], [""])
+  end
 end
 : # linux or mac
 begin
+  if VERSION < v"0.4-"
+    const libcudnn = find_library(["libcudnn"], [""])
+  else
     const libcudnn = Libdl.find_library(["libcudnn"], [""])
+  end
 end)
 
 macro cudnncall(fv, argtypes, args...)
   f = eval(fv)
   quote
-    _curet = ccall( ($(Meta.quot(f)), libcudnn), Cint, $argtypes, $(args...)  )
+    _curet = ccall( ($(Meta.quot(f)), $libcudnn), Cint, $argtypes, $(args...)  )
     if round(Int64, _curet) != CUDNN_STATUS_SUCCESS
       throw(CuDNNError(round(Int64, _curet)))
     end
