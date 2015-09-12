@@ -3,15 +3,14 @@ export CUDA
 module CUDA
 export CuPtr
 
-@osx_only begin
-  const libcuda = "libcuda"
+@windows? (
+begin
+    const libcuda = Libdl.find_library(["nvcuda.dll"], [""])
 end
-@linux_only begin
-  const libcuda = "libcuda"
-end
-@windows_only begin
-  const libcuda = "nvcuda.dll"
-end
+: # linux or mac
+begin
+    const libcuda = Libdl.find_library(["libcuda"], [""])
+end)
 
 using Compat
 const driver_error_descriptions = @compat(Dict(
