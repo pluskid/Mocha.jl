@@ -34,10 +34,19 @@ const cublas_error_description = @compat(Dict(
 import Base.show
 show(io::IO, error::CuBLASError) = print(io, cublas_error_description[error.code])
 
+@windows? (
+begin
+    const libcublas = Libdl.find_library(["cublas64_70.dll"], [""])
+end
+: # linux or mac
+begin
+    const libcublas = Libdl.find_library(["libcublas"], [""])
+end)
+
 macro cublascall(fv, argtypes, args...)
   f = eval(fv)
   quote
-    _curet = ccall( ($(Meta.quot(f)), "libcublas"), Cint, $argtypes, $(args...)  )
+    _curet = ccall( ($(Meta.quot(f)), libcublas), Cint, $argtypes, $(args...)  )
     if round(Int64, _curet) != CUBLAS_STATUS_SUCCESS
       throw(CuBLASError(round(Int64, _curet)))
     end
