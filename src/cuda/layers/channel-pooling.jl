@@ -147,9 +147,9 @@ end
 
 
 function cuda_geometry_max_chann_pool(sp_dim::Int, num::Int)
-  x_block = round(Int64, ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X));
+  x_block = round(Int64, ceil(Float64(num)/CUDA.THREADS_PER_BLOCK_X));
   y_block = 1;
-  z_block = round(Int64, ceil(float64(sp_dim)/CUDA.THREADS_PER_BLOCK_Z));
+  z_block = round(Int64, ceil(Float64(sp_dim)/CUDA.THREADS_PER_BLOCK_Z));
   return ((x_block,y_block,z_block),
           (CUDA.THREADS_PER_BLOCK_X,1,CUDA.THREADS_PER_BLOCK_Z))
 

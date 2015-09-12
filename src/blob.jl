@@ -165,5 +165,5 @@ end
 function randn!(a::Array{Float32})
     # TODO This is hideously inefficient - check status of Julia issue
     # https://github.com/JuliaLang/julia/issues/9836
-    a[:] = float32(randn(size(a)))
+    a[:] = map(Float32, randn(size(a)))
 end

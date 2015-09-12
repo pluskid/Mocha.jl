@@ -6,7 +6,7 @@ function forward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, i
   num = get_num(pred)
   dim = length(pred)
 
-  x_block = int(ceil(float64(dim)/CUDA.THREADS_PER_BLOCK_X))
+  x_block = int(ceil(Float64(dim)/CUDA.THREADS_PER_BLOCK_X))
 
   loss_blob = make_zero_blob(backend, Float32, 1, 1, 1, 1)
 
@@ -39,7 +39,7 @@ function backward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, 
   num = get_num(pred)
   dim = length(pred)
 
-  x_block = int(ceil(float64(dim)/CUDA.THREADS_PER_BLOCK_X))
+  x_block = int(ceil(Float64(dim)/CUDA.THREADS_PER_BLOCK_X))
 
   if data_type == Float32
     kernel = backend.mocha.binary_cross_entropy_loss_backward_float

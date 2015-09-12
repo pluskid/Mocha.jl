@@ -6,8 +6,8 @@ function forward(backend::GPUBackend, state::ArgmaxLayerState, inputs::Vector{Bl
     spatial_dim, channels, num = split_dims(input, state.dims[i])
     data_type = eltype(input)
 
-    x_block = round(Int64, ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X));
-    y_block = round(Int64, ceil(float64(spatial_dim)/CUDA.THREADS_PER_BLOCK_Y));
+    x_block = round(Int64, ceil(Float64(num)/CUDA.THREADS_PER_BLOCK_X));
+    y_block = round(Int64, ceil(Float64(spatial_dim)/CUDA.THREADS_PER_BLOCK_Y));
 
     if data_type == Float32
       kernel = backend.mocha.argmax_forward_float
