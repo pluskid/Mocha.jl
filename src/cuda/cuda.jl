@@ -5,11 +5,19 @@ export CuPtr
 
 @windows? (
 begin
+  if VERSION < v"0.4-"
+    const libcuda = find_library(["nvcuda.dll"], [""])
+  else
     const libcuda = Libdl.find_library(["nvcuda.dll"], [""])
+  end
 end
 : # linux or mac
 begin
+  if VERSION < v"0.4-"
+    const libcuda = find_library(["libcuda"], [""])
+  else
     const libcuda = Libdl.find_library(["libcuda"], [""])
+  end
 end)
 
 using Compat
