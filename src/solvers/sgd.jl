@@ -5,9 +5,9 @@ end
 
 validate_parameters(method::SGD, params::SolverParameters) = validate_parameters(params, :lr_policy, :mom_policy)
 make_solver_parameters(method::SGD; kwargs...) = merge(make_solver_parameters(),
-                                                       [:lr_policy => LRPolicy.Fixed(0.01),
+                                                       Dict(:lr_policy => LRPolicy.Fixed(0.01),
                                                         :mom_policy => MomPolicy.Fixed(0.),
-                                                        ],
+                                                        ),
                                                        SolverParameters(kwargs))
 
 type SGDSolverState <: InternalSolverState
