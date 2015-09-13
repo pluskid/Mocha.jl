@@ -6,7 +6,7 @@ function forward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, i
   num = get_num(pred)
   dim = length(pred)
 
-  x_block = int(ceil(float64(dim)/CUDA.THREADS_PER_BLOCK_X))
+  x_block = int(ceil(convert(Float64, dim)/CUDA.THREADS_PER_BLOCK_X))
 
   loss_blob = make_zero_blob(backend, Float32, 1, 1, 1, 1)
 
@@ -39,7 +39,7 @@ function backward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, 
   num = get_num(pred)
   dim = length(pred)
 
-  x_block = int(ceil(float64(dim)/CUDA.THREADS_PER_BLOCK_X))
+  x_block = int(ceil(convert(Float64, dim)/CUDA.THREADS_PER_BLOCK_X))
 
   if data_type == Float32
     kernel = backend.mocha.binary_cross_entropy_loss_backward_float
@@ -49,7 +49,7 @@ function backward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, 
     error("Unsupported data type $data_type")
   end
 
-  null_ptr = convert(Ptr{data_type}, 0)
+  null_ptr = Compat.unsafe_convert(Ptr{data_type}, 0)
   grad_pred =  isa(diffs[1], CuTensorBlob) ? diffs[1].ptr.p : null_ptr
   grad_label = isa(diffs[2], CuTensorBlob) ? diffs[2].ptr.p : null_ptr
 

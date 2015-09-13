@@ -7,11 +7,11 @@ function backward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vec
     spatial_dim, channels, num = split_dims(diff, state.logistic.op_dim)
     prob_dim = channels
 
-    x_block = round(Int64, ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X))
+    x_block = round(Int64, ceil(convert(Float64, num)/CUDA.THREADS_PER_BLOCK_X))
     y_block = spatial_dim
 
     if isa(state.logistic.weights_blob, NullBlob)
-      weights = convert(Ptr{data_type}, 0)
+      weights = Compat.unsafe_convert(Ptr{data_type}, 0)
     else
       weights = state.logistic.weights_blob.ptr.p
     end

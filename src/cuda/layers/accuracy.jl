@@ -15,8 +15,8 @@ function forward(backend::GPUBackend, state::AccuracyLayerState, inputs::Vector{
   spatial_dim, pred_dim, num = split_dims(pred, state.op_dim)
   data_type = eltype(pred)
 
-  x_block = round(Int64, ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X));
-  y_block = round(Int64, ceil(float64(spatial_dim)/CUDA.THREADS_PER_BLOCK_Y));
+  x_block = round(Int64, ceil(convert(Float64, num)/CUDA.THREADS_PER_BLOCK_X));
+  y_block = round(Int64, ceil(convert(Float64, spatial_dim)/CUDA.THREADS_PER_BLOCK_Y));
 
   if data_type == Float32
     kernel = backend.mocha.accuracy_forward_float
