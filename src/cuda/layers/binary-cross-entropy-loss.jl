@@ -49,7 +49,7 @@ function backward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, 
     error("Unsupported data type $data_type")
   end
 
-  null_ptr = convert(Ptr{data_type}, 0)
+  null_ptr = Compat.unsafe_convert(Ptr{data_type}, 0)
   grad_pred =  isa(diffs[1], CuTensorBlob) ? diffs[1].ptr.p : null_ptr
   grad_label = isa(diffs[2], CuTensorBlob) ? diffs[2].ptr.p : null_ptr
 

@@ -182,7 +182,7 @@ immutable CuStream
 end
 
 function null_stream()
-  CuStream(convert(Ptr{Void}, 0), true, 0)
+  CuStream(Compat.unsafe_convert(Ptr{Void}, 0), true, 0)
 end
 
 function destroy(s::CuStream)

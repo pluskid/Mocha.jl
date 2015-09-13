@@ -2,6 +2,8 @@ export CuVec
 module CuVec
 using ..Mocha
 
+using Compat
+
 const THREADS_PER_BLOCK = 128
 function cuda_geometry(len::Int)
   x_block = round(Int64, ceil(convert(Float64, len)/THREADS_PER_BLOCK))
@@ -13,8 +15,8 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
   for name in [:add, :sub, :mul, :div, :div2]
     @eval begin
       function $(symbol("$(name)!"))(backend::GPUBackend, ::Type{$dtype}, X, Y, len::Int)
-        X = convert(Ptr{Void},X)
-        Y = convert(Ptr{Void},Y)
+        X = Compat.unsafe_convert(Ptr{Void},X)
+        Y = Compat.unsafe_convert(Ptr{Void},Y)
         cuda_dim = cuda_geometry(len)
         kernel = backend.mocha.$(symbol("elem_$(name)_$ctype"))
         CUDA.launch(kernel, cuda_dim..., (X, Y, len))
@@ -25,7 +27,7 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
   # define add_scal!
   @eval begin
     function add_scal!(backend::GPUBackend, ::Type{$dtype}, X, Y, len::Int)
-      X = convert(Ptr{Void}, X)
+      X = Compat.unsafe_convert(Ptr{Void}, X)
       Y = convert($dtype, Y)
       cuda_dim = cuda_geometry(len)
       kernel = backend.mocha.$(symbol("add_scal_$ctype"))
@@ -36,7 +38,7 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
   # define log!
   @eval begin
     function log!(backend::GPUBackend, ::Type{$dtype}, X, len::Int)
-      X = convert(Ptr{Void}, X)
+      X = Compat.unsafe_convert(Ptr{Void}, X)
       cuda_dim = cuda_geometry(len)
       kernel = backend.mocha.$(symbol("elem_log_$ctype"))
       CUDA.launch(kernel, cuda_dim..., (X,len))
@@ -46,7 +48,7 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
   # define mul_scal!
   @eval begin
     function mul_scal!(backend::GPUBackend, ::Type{$dtype}, X, Y, len::Int)
-      X = convert(Ptr{Void}, X)
+      X = Compat.unsafe_convert(Ptr{Void}, X)
       Y = convert($dtype, Y)
       cuda_dim = cuda_geometry(len)
       kernel = backend.mocha.$(symbol("mul_scal_$ctype"))
@@ -82,7 +84,7 @@ for (postfix, dt1, dt2) in [(:fi, Float32, Int), (:di, Float64, Int),
                             (:ff, Float32, Float32), (:dd, Float64, Float64)]
   @eval begin
     function pow!(backend::GPUBackend, ::Type{$dt1}, X, Y::$dt2, len::Int)
-      X = convert(Ptr{Void}, X)
+      X = Compat.unsafe_convert(Ptr{Void}, X)
       cuda_dim = cuda_geometry(len)
       kernel = backend.mocha.$(symbol("elem_pow_$postfix"))
       CUDA.launch(kernel, cuda_dim..., (X,Y,len))
