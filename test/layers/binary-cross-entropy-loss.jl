@@ -33,9 +33,7 @@ function test_binary_crossentropy_loss_layer(backend::Backend, tensor_dim, T, ep
   expected_loss /= dims[end]
   expected_loss *= weight
 
-  #expected_loss /= prod(dims) / dims[op_dim]
-
-  @test -eps < state.loss - expected_loss < eps
+  @test -eps < 1 - state.loss/expected_loss < eps
 
   diff_blob2  = make_blob(backend, prob)
   diff_blob1  = make_blob(backend, prob)
@@ -45,16 +43,18 @@ function test_binary_crossentropy_loss_layer(backend::Backend, tensor_dim, T, ep
   diff = similar(grad_pred)
 
   copy!(diff, diffs[1])
-  @test all(-eps .< grad_pred - diff .< eps)
 
+  @test all(-eps .< 1 - grad_pred./diff .< eps)
 
-    grad_label = -weight * log(prob./(1-prob)) / dims[end]
+  grad_label = -weight * log(prob./(1-prob)) / dims[end]
   diff = similar(grad_pred)
   copy!(diff, diffs[2])
+
   @test all(-eps .< grad_label - diff .< eps)
 
   shutdown(backend, state)
 end
+
 function test_binary_crossentropy_loss_layer(backend::Backend, T, eps)
   for i in [2,4,5]
       test_binary_crossentropy_loss_layer(backend, i, T, eps)
@@ -62,8 +62,8 @@ function test_binary_crossentropy_loss_layer(backend::Backend, T, eps)
 end
 
 function test_binary_crossentropy_loss_layer(backend::Backend)
-  test_binary_crossentropy_loss_layer(backend, Float32, 1e-2)
-  test_binary_crossentropy_loss_layer(backend, Float64, 1e-5)
+  test_binary_crossentropy_loss_layer(backend, Float32, 1e-5)
+  test_binary_crossentropy_loss_layer(backend, Float64, 1e-6)
 end
 
 if test_cpu
