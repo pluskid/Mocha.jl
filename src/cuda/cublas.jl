@@ -37,9 +37,9 @@ show(io::IO, error::CuBLASError) = print(io, cublas_error_description[error.code
 @windows? (
 begin
   if VERSION < v"0.4-"
-    const libcublas = find_library(["cublas64_70.dll"], [""])
+    const libcublas = find_library(["cublas64_70.dll", "cublas64_65.dll", "cublas32_70.dll", "cublas32_65.dll"], [""])
   else
-    const libcublas = Libdl.find_library(["cublas64_70.dll"], [""])
+    const libcublas = Libdl.find_library(["cublas64_70.dll", "cublas64_65.dll", "cublas32_70.dll", "cublas32_65.dll"], [""])
   end
 end
 : # linux or mac
