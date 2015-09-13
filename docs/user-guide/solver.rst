@@ -101,9 +101,11 @@ The different solver methods are listed below, together with the ``SolverParamet
    (N.B. The Adam solver sets effective learning rates for each parameter individually, so the
    layer local learning rates are ignored in this case.)
 
-   .. attribute:: alpha
+   .. attribute:: lr_policy
 
-      Step size, defaults to 0.001 - this is approximately the largest step any parameter can take in a single iteration.
+      Policy for learning rate, as for SGD.  While the relative learning rates are set
+      adaptively per parameter, the learning rate still limits the maximum step for each
+      parameter.  Accordingly a fine-tuning schedule can be useful, as for other methods.
 
    .. attribute:: beta1
 
