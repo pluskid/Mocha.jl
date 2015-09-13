@@ -34,9 +34,10 @@ abstract SolverStateSnapshot # Just the serializable part of the solver state, f
 
 
 function make_solver_parameters(;kwargs...)
-    merge(Dict(:max_iter => Inf,
+    localDict = @compat Dict(:max_iter => Inf,
            :regu_coef => 0.0005,
-           :load_from => ""),
+           :load_from => "")
+	merge(localDict,
           SolverParameters(kwargs))
 end
 

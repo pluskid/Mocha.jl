@@ -3,11 +3,11 @@ export SGD
 immutable SGD <: SolverMethod
 end
 
+const defaultDict = @compat Dict(:lr_policy => LRPolicy.Fixed(0.01), :mom_policy => MomPolicy.Fixed(0.))
+
 validate_parameters(method::SGD, params::SolverParameters) = validate_parameters(params, :lr_policy, :mom_policy)
 make_solver_parameters(method::SGD; kwargs...) = merge(make_solver_parameters(),
-                                                       Dict(:lr_policy => LRPolicy.Fixed(0.01),
-                                                        :mom_policy => MomPolicy.Fixed(0.),
-                                                        ),
+                                                       defaultDict,
                                                        SolverParameters(kwargs))
 
 type SGDSolverState <: InternalSolverState
