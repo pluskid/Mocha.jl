@@ -1,5 +1,3 @@
-using Compat
-
 function setup_etc(backend::GPUBackend, layer::ChannelPoolingLayer, inputs, blobs)
   if isa(layer.pooling, Pooling.Max)
     masks = Array(CuPtr, length(inputs))
@@ -85,9 +83,9 @@ function cuda_mean_channel_pooling_forward{T}(backend::GPUBackend, input::CuTens
   output_fea_dim = spatial_dim * pooled_chann
 
   for n = 1:num
-    input_ptr = Compat.unsafe_convert(Ptr{T}, input.ptr.p + fea_dim*(n-1))
-    output_ptr = Compat.unsafe_convert(Ptr{T}, output.ptr.p + output_fea_dim*(n-1))
-    integral_ptr = Compat.unsafe_convert(Ptr{T}, integral.p)
+    input_ptr = convert(Ptr{T}, input.ptr.p + fea_dim*(n-1))
+    output_ptr = convert(Ptr{T}, output.ptr.p + output_fea_dim*(n-1))
+    integral_ptr = convert(Ptr{T}, integral.p)
 
     # compute integral image
     CuBLAS.copy(backend.cublas_ctx, T, spatial_dim_T, input_ptr, 1, integral_ptr, 1)
@@ -130,8 +128,8 @@ function cuda_mean_channel_pooling_backward{T}(backend::GPUBackend, input::CuTen
   output_fea_dim = spatial_dim * pooled_chann
 
   for n = 1:num
-    input_ptr = Compat.unsafe_convert(Ptr{T}, input.ptr.p + fea_dim*(n-1))
-    output_ptr = Compat.unsafe_convert(Ptr{T}, output.ptr.p + output_fea_dim*(n-1))
+    input_ptr = convert(Ptr{T}, input.ptr.p + fea_dim*(n-1))
+    output_ptr = convert(Ptr{T}, output.ptr.p + output_fea_dim*(n-1))
 
     for pc = 1:pooled_chann
       cstart = (pc-1)*layer.stride - layer.pad[1] + 1
