@@ -39,9 +39,9 @@ show(io::IO, error::CuDNNError) = print(io, cudnn_error_description[error.code])
 @windows? (
 begin
   if VERSION < v"0.4-"
-    const libcudnn = find_library(["cudnn64_65.dll"], [""])
+    const libcudnn = find_library(["cudnn64_70.dll", "cudnn64_65.dll", "cudnn32_70.dll", "cudnn32_65.dll"], [""])
   else
-    const libcudnn = Libdl.find_library(["cudnn64_65.dll"], [""])
+    const libcudnn = Libdl.find_library(["cudnn64_70.dll", "cudnn64_65.dll", "cudnn32_70.dll", "cudnn32_65.dll"], [""])
   end
 end
 : # linux or mac
