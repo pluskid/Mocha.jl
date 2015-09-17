@@ -20,7 +20,7 @@ function forward(backend::GPUBackend, state::MultinomialLogisticLossLayerState, 
   end
 
   if isa(state.weights_blob, NullBlob)
-    weights = Compat.unsafe_convert(Ptr{data_type}, 0)
+    weights = convert(Ptr{data_type}, 0)
   else
     weights = state.weights_blob.ptr.p
   end

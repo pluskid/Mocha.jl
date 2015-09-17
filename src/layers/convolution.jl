@@ -197,7 +197,7 @@ function forward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vect
       for g = 1:state.layer.n_group
         RawBLAS.gemm!('N', 'N', state.etc.M, state.etc.N, state.etc.K, convert(dtype, 1),
             col_buffer + col_offset * (g-1),
-            Compat.unsafe_convert(Ptr{dtype}, pointer(state.filter.data)) + weight_offset * (g-1),
+            convert(Ptr{dtype}, pointer(state.filter.data)) + weight_offset * (g-1),
             convert(dtype, 0), output_ptr + top_offset * (g-1))
       end
       RawBLAS.gemm!('N', 'N', state.etc.M, state.layer.n_filter, 1, convert(dtype, 1),
@@ -243,7 +243,7 @@ function backward(backend::CPUBackend, state::ConvolutionLayerState, inputs::Vec
           RawBLAS.gemm!('T', 'N', state.etc.K, state.etc.N, state.etc.M, convert(dtype, 1),
               col_buffer + col_offset * (g-1),
               top_diff_ptr + top_offset * (g-1), convert(dtype, 1),
-              Compat.unsafe_convert(Ptr{dtype}, pointer(state.∇filter.data)) + weight_offset * (g-1))
+              convert(Ptr{dtype}, pointer(state.∇filter.data)) + weight_offset * (g-1))
         end
       end
     end

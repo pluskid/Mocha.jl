@@ -128,8 +128,8 @@ function cuda_mean_channel_pooling_backward{T}(backend::GPUBackend, input::CuTen
   output_fea_dim = spatial_dim * pooled_chann
 
   for n = 1:num
-    input_ptr = convert(Ptr{T}, input.ptr.p + fea_dim*(n-1))
-    output_ptr = convert(Ptr{T}, output.ptr.p + output_fea_dim*(n-1))
+    input_ptr = convert(Ptr{T}, input.ptr.p) + fea_dim*(n-1)
+    output_ptr = convert(Ptr{T}, output.ptr.p) + output_fea_dim*(n-1)
 
     for pc = 1:pooled_chann
       cstart = (pc-1)*layer.stride - layer.pad[1] + 1
