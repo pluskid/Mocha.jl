@@ -95,7 +95,7 @@ end
 function set_vector{T}(src::Array{T}, incx::Int, dest::CuPtr, incy::Int)
   elem_size = sizeof(T)
   n = length(src)
-  src_buf = Compat.unsafe_convert(Ptr{Void}, pointer(src))
+  src_buf = convert(Ptr{Void}, pointer(src))
   set_vector(n, elem_size, src_buf, incx, dest, incy)
 end
 set_vector{T}(src::Array{T}, dest::CuPtr) = set_vector(src, 1, dest, 1)
@@ -110,7 +110,7 @@ end
 function get_vector{T}(src::CuPtr, incx::Int, dest::Array{T}, incy::Int)
   elem_size = sizeof(T)
   n = length(dest)
-  dest_buf = Compat.unsafe_convert(Ptr{Void}, pointer(dest))
+  dest_buf = convert(Ptr{Void}, pointer(dest))
   get_vector(n, elem_size, src, incx, dest_buf, incy)
 end
 get_vector{T}(src::CuPtr, dest::Array{T}) = get_vector(src, 1, dest, 1)

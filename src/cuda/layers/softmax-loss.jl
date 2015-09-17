@@ -11,7 +11,7 @@ function backward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vec
     y_block = spatial_dim
 
     if isa(state.logistic.weights_blob, NullBlob)
-      weights = Compat.unsafe_convert(Ptr{data_type}, 0)
+      weights = convert(Ptr{data_type}, 0)
     else
       weights = state.logistic.weights_blob.ptr.p
     end
