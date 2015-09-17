@@ -7,8 +7,6 @@
 # to the standard Gaussian N(0,I).
 ############################################################
 
-using Devectorize
-
 @defstruct GaussianKLLossLayer Layer (
                                       name :: String = "gauss-kl-loss",
                                       (weight :: FloatingPoint = 1.0, weight >= 0),
@@ -95,7 +93,7 @@ function backward(backend::CPUBackend, state::GaussianKLLossLayerState,
 
   if isa(diffs[2], CPUBlob)
     sigma_diffs = diffs[2].data
-    @devec sigma_diffs[:] = sigma - (1 ./ sigma)
+    sigma_diffs[:] = sigma - (1 ./ sigma)
     diffs[2].data[:] *= state.layer.weight / n
   end
 end
