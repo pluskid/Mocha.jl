@@ -60,6 +60,7 @@ end
 include("neurons/relu.jl")
 include("neurons/sigmoid.jl")
 include("neurons/tanh.jl")
+include("neurons/exponential.jl")
 
 ############################################################
 # Regularizers

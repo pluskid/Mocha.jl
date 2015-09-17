@@ -59,6 +59,15 @@ unless it is an identity neuron. Layers have an identity neuron by default [1]_.
 
       \frac{dy}{dx} = 4e^{2x}/(e^{2x} + 1)^2 = (1-y^2)
 
+.. class:: Neurons.Exponential
+
+   The exponential function.
+
+   .. math::
+
+      y = exp(x)
+
+
 .. [1] This is actually not true: not all layers in Mocha support neurons. For
    example, data layers currently does not have neurons, but this feature could
    be added by simply adding a neuron property to the data layer type. However,

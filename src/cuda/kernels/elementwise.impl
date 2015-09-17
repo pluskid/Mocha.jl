@@ -44,6 +44,19 @@ __device__ void elem_log(T *X, int len) {
   X[idx] = log(X[idx] > 1e-20 ? X[idx] : 1e-20);
 }
 
+template <typename T>
+__device__ void elem_exp(T *X, int len) {
+  ELEMWISE_BOUNDS_AND_INDEX;
+  X[idx] = exp(X[idx]);
+}
+
+template <typename T>
+__device__ void elem___expf(T *X, int len) {
+  ELEMWISE_BOUNDS_AND_INDEX;
+  X[idx] = __expf(X[idx]);
+}
+
+
 #define DEF_ELEMWISE_API(NAME) \
   __global__ void elem_ ## NAME ## _float(float *X, float *Y, int len) { \
     elem_##NAME(X, Y, len); \
@@ -94,6 +107,14 @@ __global__ void elem_log_double(double *X, int len) {
 __global__ void elem_log_float(float *X, int len) {
   elem_log(X, len);
 }
+
+__global__ void elem_exp_double(double *X, int len) {
+  elem_exp(X, len);
+}
+__global__ void elem_exp_float(float *X, int len) {
+  elem___expf(X, len);
+}
+
 
 } // extern "C"
 

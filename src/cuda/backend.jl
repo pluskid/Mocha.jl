@@ -97,6 +97,8 @@ end
   elem_pow_dd,
   elem_log_double,
   elem_log_float,
+  elem_exp_double,
+  elem_exp_float,
 
   max_channel_pooling_forward_float,
   max_channel_pooling_forward_double,

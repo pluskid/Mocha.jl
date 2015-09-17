@@ -1,5 +1,5 @@
 function test_gaussian_kl_loss_layer(backend::Backend, T, eps)
-  println("-- Testing GaussianKLLoss on $(typeof(backend)){$T}...")
+  println("-- Testing GaussianKLLossLayer on $(typeof(backend)){$T}...")
 
   ############################################################
   # Prepare Data for Testing
@@ -13,7 +13,7 @@ function test_gaussian_kl_loss_layer(backend::Backend, T, eps)
   ############################################################
   # Setup
   ############################################################
-  weight = 1.0 #rand()
+  weight = 1.1
   layer  = GaussianKLLossLayer(; bottoms=[:predictions, :labels], weight=weight)
   mu_blob  = make_blob(backend, T, dims)
   sigma_blob = make_blob(backend, T, dims)
@@ -31,20 +31,20 @@ function test_gaussian_kl_loss_layer(backend::Backend, T, eps)
   forward(backend, state, inputs)
 
   n = length(mu_blob)
-  loss = -0.5n*log(2π) - 0.5sum(mus.^2 + sigmas.^2)
-  loss *= -weight/get_num(mu_blob)
+  loss = 0.5(sum(mus.^2 + sigmas.^2 - 2log(sigmas)) - n)
+  loss *= weight/get_num(mu_blob)
   @test -eps < loss-state.loss < eps
 
 
   backward(backend, state, inputs, diffs)
-  grad = -mus
-  grad *= -weight/get_num(mu_blob)
+  grad = mus
+  grad *= weight/get_num(mu_blob)
   diff = similar(grad)
   copy!(diff, diffs[1])
   @test all(-eps .< grad - diff .< eps)
 
-  grad = -sigmas
-  grad *= -weight/get_num(mu_blob)
+  grad = sigmas - 1./sigmas
+  grad *= weight/get_num(mu_blob)
   diff = similar(grad)
   copy!(diff, diffs[2])
   @test all(-eps .< grad - diff .< eps)
