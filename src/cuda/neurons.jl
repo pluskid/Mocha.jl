@@ -117,3 +117,13 @@ function backward(backend :: GPUBackend, neuron :: Neurons.Tanh, output :: Blob,
   CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, gradient.ptr.p, blob_dim...))
 end
 
+
+## Exponential
+
+function forward(backend :: GPUBackend, neuron :: Neurons.Exponential, output :: Blob)
+  CuVec.exp!(backend, output)
+end
+
+function backward(backend :: GPUBackend, neuron :: Neurons.Exponential, output :: Blob, gradient :: Blob)
+  CuVec.mul!(backend, gradient, output)
+end
