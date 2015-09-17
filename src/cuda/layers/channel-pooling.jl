@@ -85,7 +85,6 @@ function cuda_mean_channel_pooling_forward{T}(backend::GPUBackend, input::CuTens
   for n = 1:num
     input_ptr = convert(Ptr{T}, input.ptr.p + fea_dim*(n-1))
     output_ptr = convert(Ptr{T}, output.ptr.p + output_fea_dim*(n-1))
-
     integral_ptr = convert(Ptr{T}, integral.p)
 
     # compute integral image
