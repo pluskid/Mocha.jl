@@ -5,7 +5,7 @@ function setup(backend::GPUBackend, layer::GaussianKLLossLayer, inputs::Vector{B
   fill!(aux_ones, 1.0)
   tmp = make_blob(backend, data_type, size(inputs[2])...)
   state = GaussianKLLossLayerState(layer, zero(data_type), zero(data_type), 0,
-                                   Dict(:aux_ones => aux_ones, :tmp => tmp))
+                                   @compat(Dict(:aux_ones => aux_ones, :tmp => tmp)))
   return state
 end
 
