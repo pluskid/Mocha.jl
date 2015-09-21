@@ -2,7 +2,7 @@
 # Power Layer
 ############################################################
 @defstruct PowerLayer Layer (
-  name :: String = "power",
+  name :: AbstractString = "power",
   (power :: Number = 1, isreal(power)),
   (scale :: Number = 1, isreal(scale)),
   (shift :: Number = 0, isreal(shift)),

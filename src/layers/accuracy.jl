@@ -1,5 +1,5 @@
 @defstruct AccuracyLayer Layer (
-  name :: String = "accuracy",
+  name :: AbstractString = "accuracy",
   report_error :: Bool = false,
   (dim :: Int = -2, dim != 0),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),

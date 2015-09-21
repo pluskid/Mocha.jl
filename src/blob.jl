@@ -125,7 +125,7 @@ end
 ############################################################
 # A Blob for CPU Computation
 ############################################################
-immutable CPUBlob{T <: FloatingPoint, N} <: Blob{T, N}
+immutable CPUBlob{T <: AbstractFloat, N} <: Blob{T, N}
   data :: AbstractArray{T, N}
 end
 CPUBlob{N}(t :: Type, dims::NTuple{N,Int}) = CPUBlob(Array(t, dims))
@@ -165,5 +165,5 @@ end
 function randn!(a::Array{Float32})
     # TODO This is hideously inefficient - check status of Julia issue
     # https://github.com/JuliaLang/julia/issues/9836
-    a[:] = float32(randn(size(a)))
+    @compat a[:] = map(Float32, randn(size(a)))
 end

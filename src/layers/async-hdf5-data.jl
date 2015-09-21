@@ -1,8 +1,8 @@
 using HDF5
 
 @defstruct AsyncHDF5DataLayer Layer (
-  name :: String = "hdf5-data",
-  (source :: String = "", source != ""),
+  name :: AbstractString = "hdf5-data",
+  (source :: AbstractString = "", source != ""),
   (batch_size :: Int = 0, batch_size > 0),
   (chunk_size :: Int = 2^20, chunk_size > 0),
   (tops :: Vector{Symbol} = Symbol[:data,:label], length(tops) > 0),
@@ -20,7 +20,7 @@ type AsyncHDF5DataLayerState <: LayerState
   epoch :: Int
   trans :: Vector{Vector{DataTransformerState}}
 
-  sources        :: Vector{String}
+  sources        :: Vector{AbstractString}
 
   io_task        :: Task
   stop_task      :: Bool

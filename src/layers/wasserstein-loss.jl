@@ -1,7 +1,7 @@
 @defstruct WassersteinLossLayer Layer (
-  name :: String = "wasserstein-loss",
+  name :: AbstractString = "wasserstein-loss",
   (M :: Matrix = [], !isempty(M)),
-  (lambda :: FloatingPoint = 0, lambda > 0),
+  (lambda :: AbstractFloat = 0, lambda > 0),
   (sinkhorn_iter :: Int = 50, sinkhorn_iter > 0),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2)
 )

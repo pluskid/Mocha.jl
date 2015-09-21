@@ -1,10 +1,10 @@
 using HDF5
 
 @defstruct HDF5OutputLayer Layer (
-  name :: String = "hdf5-output",
+  name :: AbstractString = "hdf5-output",
   (bottoms :: Vector{Symbol} = [], length(bottoms) > 0),
   (datasets :: Vector{Symbol} = Symbol[], length(datasets) == 0 || length(datasets) == length(bottoms)),
-  (filename :: String = "", !isempty(filename)),
+  (filename :: AbstractString = "", !isempty(filename)),
   force_overwrite :: Bool = false,
 )
 @characterize_layer(HDF5OutputLayer,

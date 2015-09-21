@@ -9,9 +9,9 @@
 # layer layout.
 ############################################################
 @defstruct DropoutLayer Layer (
-  name :: String = "dropout",
+  name :: AbstractString = "dropout",
   auto_scale :: Bool = true,
-  (ratio :: FloatingPoint = 0.5, 0 < ratio < 1),
+  (ratio :: AbstractFloat = 0.5, 0 < ratio < 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 1),
 )
 @characterize_layer(DropoutLayer,

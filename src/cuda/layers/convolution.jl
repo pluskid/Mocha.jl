@@ -42,7 +42,7 @@ function setup_etc(backend::GPUBackend, layer::ConvolutionLayer, dtype, width, h
   if workspace_size == 0
     workspace = CUDA.CuPtr()
   else
-    workspace = CUDA.cualloc(Uint8, workspace_size) # workspace_size is in bytes
+    workspace = CUDA.cualloc(UInt8, workspace_size) # workspace_size is in bytes
   end
 
   bottom_offset = div(channels,layer.n_group) * height * width * sizeof(dtype)

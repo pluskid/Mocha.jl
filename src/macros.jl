@@ -5,7 +5,7 @@
 #
 # @defstruct MyStruct Any (
 #   field1 :: Int = 0,
-#   (field2 :: String = "", !isempty(field2))
+#   (field2 :: AbstractString = "", !isempty(field2))
 # )
 #
 # where each field could be either

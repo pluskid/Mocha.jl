@@ -2,13 +2,13 @@ export Parameter
 export make_parameter, share_parameter
 
 type Parameter <: AbstractParameter
-  name          :: String
+  name          :: AbstractString
   blob          :: Blob
   gradient      :: Blob
   initializer   :: Initializer
   regularizer   :: Regularizer
   constraint    :: Constraint
-  learning_rate :: FloatingPoint # relative learning rate
+  learning_rate :: AbstractFloat # relative learning rate
 
   rc            :: RefCounter
 end
@@ -17,8 +17,8 @@ end
 Parameter(name,blob,gradient,initializer,regularizer,constraint,lr) =
     Parameter(name, blob, gradient, initializer, regularizer, constraint, lr, RefCounter(1))
 
-function make_parameter{N}(backend::Backend, name::String, data_type::Type, dims::NTuple{N,Int},
-    init::Initializer, regu::Regularizer, cons::Constraint, lr::FloatingPoint)
+function make_parameter{N}(backend::Backend, name::AbstractString, data_type::Type, dims::NTuple{N,Int},
+    init::Initializer, regu::Regularizer, cons::Constraint, lr::AbstractFloat)
 
   blob = make_blob(backend, data_type, dims)
   grad = make_blob(backend, data_type, dims)

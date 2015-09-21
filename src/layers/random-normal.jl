@@ -1,6 +1,6 @@
 
 @defstruct RandomNormalLayer Layer (
-  name :: String = "random-normal",
+  name :: AbstractString = "random-normal",
   (tops :: Vector{Symbol} = Symbol[], length(tops) > 0),
   (output_dims :: Vector{Int} = Int[], length(output_dims) >0),
   (eltype :: DataType = Float32),

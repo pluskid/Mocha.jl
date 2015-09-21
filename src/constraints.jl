@@ -4,13 +4,13 @@ export constrain!
 abstract Constraint
 
 immutable NoCons <: Constraint
-  threshold  :: FloatingPoint  # not used, just for consistent API
+  threshold  :: AbstractFloat  # not used, just for consistent API
   every_n_iter :: Int          # also not used
 end
 NoCons() = NoCons(0.0, 0)
 
 immutable L2Cons <: Constraint
-  threshold    :: FloatingPoint
+  threshold    :: AbstractFloat
   every_n_iter :: Int
 end
 L2Cons(threshold) = L2Cons(threshold, 1)
@@ -26,8 +26,8 @@ end
 # L2 norm constraint on the weights
 ############################################################
 
-function apply_l2_cons!{T <: FloatingPoint}(backend::CPUBackend, blob::CPUBlob{T},
-                                            threshold::FloatingPoint, ninputs::Int, nunits::Int)
+function apply_l2_cons!{T <: AbstractFloat}(backend::CPUBackend, blob::CPUBlob{T},
+                                            threshold::AbstractFloat, ninputs::Int, nunits::Int)
   param = reshape(blob.data, (ninputs, nunits))
   # we constrain each column vector
   for i = 1:nunits

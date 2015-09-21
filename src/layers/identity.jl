@@ -2,7 +2,7 @@
 # Identity Layer
 ############################################################
 @defstruct IdentityLayer Layer (
-  name :: String = "identity",
+  name :: AbstractString = "identity",
   (tops :: Vector{Symbol} = Symbol[], length(tops) > 0),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(tops)),
 )

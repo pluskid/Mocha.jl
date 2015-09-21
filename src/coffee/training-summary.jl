@@ -15,7 +15,7 @@ end
 
 
 function enjoy(lounge::CoffeeLounge, coffee::TrainingSummary, ::Net, state::SolverState)
-  summaries = String[]
+  summaries = AbstractString[]
 
   for statistic_name in coffee.statistic_names
     statval = get_statistic(state, statistic_name)

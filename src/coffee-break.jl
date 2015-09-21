@@ -21,7 +21,7 @@ end
 # Coffee break utilities
 ############################################################
 #-- This function is to be called by the end-user
-function setup_coffee_lounge(solver::Solver; save_into::String="", every_n_iter::Int=1, file_exists=:merge)
+function setup_coffee_lounge(solver::Solver; save_into::AbstractString="", every_n_iter::Int=1, file_exists=:merge)
   solver.coffee_lounge.filename=save_into
   solver.coffee_lounge.save_every_n_iter=every_n_iter
   solver.coffee_lounge.file_exists=file_exists
@@ -36,14 +36,14 @@ end
 ################################################################################
 using HDF5, JLD
 
-typealias StatisticsValue FloatingPoint
+typealias StatisticsValue AbstractFloat
 typealias StatisticsRecords Dict{Int, StatisticsValue}
 type CoffeeLounge
-  filename          :: String
+  filename          :: AbstractString
   save_every_n_iter :: Int
   file_exists       :: Symbol # :overwrite, :panic, :merge
 
-  statistics        :: Dict{String, StatisticsRecords}
+  statistics        :: Dict{AbstractString, StatisticsRecords}
   coffee_breaks     :: Vector{CoffeeBreak}
 
   stats_modified    :: Bool
@@ -52,7 +52,7 @@ type CoffeeLounge
 
   CoffeeLounge(;filename="", save_every_n_iter=1, file_exists=:merge) = begin
     lounge = new(filename, save_every_n_iter, file_exists)
-    lounge.statistics = Dict{String, StatisticsRecords}()
+    lounge.statistics = Dict{AbstractString, StatisticsRecords}()
     lounge.coffee_breaks = CoffeeBreak[]
     return lounge
   end
@@ -90,18 +90,18 @@ function setup(lounge::CoffeeLounge, state::SolverState, net::Net)
   end
 end
 
-function update_statistics(dummy::Nothing, key::String, val::StatisticsValue)
+function update_statistics(dummy, key::AbstractString, val::StatisticsValue)
   # dummy function used when you do not want to record statistics
 end
 
-function update_statistics(lounge::CoffeeLounge, key::String, val::StatisticsValue)
+function update_statistics(lounge::CoffeeLounge, key::AbstractString, val::StatisticsValue)
   dict = get(lounge.statistics, key, StatisticsRecords())
   dict[lounge.curr_iter] = val
   lounge.statistics[key] = dict
   lounge.stats_modified = true
 end
 
-function get_statistics(lounge::CoffeeLounge, key::String)
+function get_statistics(lounge::CoffeeLounge, key::AbstractString)
   if haskey(lounge.statistics, key)
     lounge.statistics[key]
   else

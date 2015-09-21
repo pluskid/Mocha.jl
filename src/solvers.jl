@@ -56,7 +56,7 @@ end
 #  API functions to be implemented by each solver instance
 ############################################################
 
-function get_statistic(state::SolverState, name::String)
+function get_statistic(state::SolverState, name::AbstractString)
   if haskey(state.losses, name)
     return state.losses[name]
   else
@@ -113,7 +113,7 @@ end
 ############################################################
 # General utilities that could be used by all solvers
 ############################################################
-function load_snapshot(net::Net, path::String="", state=nothing)
+function load_snapshot(net::Net, path::AbstractString="", state=nothing)
   if isempty(path)
     return state
   end

@@ -55,7 +55,7 @@ function net2dot(io::IO, net::Net)
 
   #------------------------------------------------------------
   # Connect blobs
-  top_maps = Dict{Symbol,String}()
+  top_maps = Dict{Symbol,AbstractString}()
   for i = 1:length(net.layers)
     if in(:tops, fieldnames(net.layers[i]))
       for j = 1:length(net.layers[i].tops)
