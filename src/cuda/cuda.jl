@@ -150,7 +150,7 @@ end
 ############################################################
 # Memory allocation
 ############################################################
-typealias CUdeviceptr Uint64
+typealias CUdeviceptr UInt64
 
 type CuPtr
   p::CUdeviceptr
@@ -200,7 +200,7 @@ end
 immutable CuModule
   handle::Ptr{Void}
 
-  function CuModule(filename::String)
+  function CuModule(filename::AbstractString)
     a = Array(Ptr{Void}, 1)
     @cucall(:cuModuleLoad, (Ptr{Ptr{Void}}, Ptr{Cchar}), a, filename)
     new(a[1])
@@ -245,7 +245,7 @@ get_dim_z(g::@compat(Tuple{Int, Int})) = 1
 get_dim_z(g::@compat(Tuple{Int, Int, Int})) = g[3]
 
 using Compat
-typealias CuDim Union(Int, @compat(Tuple{Int, Int}), @compat(Tuple{Int, Int, Int}))
+@compat typealias CuDim Union{Int, Tuple{Int, Int}, Tuple{Int, Int, Int}}
 
 # Stream management
 
@@ -276,4 +276,3 @@ function launch(f::CuFunction, grid::CuDim, block::CuDim, args::Tuple; shmem_byt
 end
 
 end # module CUDA
-

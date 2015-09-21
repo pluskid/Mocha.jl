@@ -11,7 +11,7 @@ end # module LRNMode
 # Local Response Normalization Layer
 ################################################################################
 @defstruct LRNLayer Layer (
-  name :: String = "lrn",
+  name :: AbstractString = "lrn",
   (kernel :: Int = 5, kernel > 0),
   (scale :: Number = 1, isreal(scale)),
   (shift :: Number = 1, isreal(shift)),

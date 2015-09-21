@@ -21,6 +21,7 @@ using DataFrames
 using Images
 using Color
 using HDF5
+using Compat
 
 ############################################################
 # Configuration
@@ -31,8 +32,8 @@ data_type       = Float32
 ############################################################
 # Converting dataset
 ############################################################
-datasets = Dict{String, HDF5File}()
-dsets_idx = Dict{String, Int}()
+datasets = Dict{AbstractString, HDF5File}()
+dsets_idx = Dict{AbstractString, Int}()
 
 df = readtable(image_list_file)
 for i = 1:size(df,1)

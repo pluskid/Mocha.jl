@@ -2,8 +2,8 @@
 # Softmax Loss
 ############################################################
 @defstruct SoftmaxLossLayer Layer (
-  name :: String = "softmax-loss",
-  (weight :: FloatingPoint = 1.0, weight >= 0),
+  name :: AbstractString = "softmax-loss",
+  (weight :: AbstractFloat = 1.0, weight >= 0),
   weights :: Array = [],
   normalize:: Symbol = :local,
   (dim :: Int = -2, dim != 0),

@@ -4,8 +4,8 @@
 # L(\hat{y},y) = 1/2N \sum_{i=1}^N (\hat{y}_i - y_i)^2
 ############################################################
 @defstruct SquareLossLayer Layer (
-  name :: String = "square-loss",
-  (weight :: FloatingPoint = 1.0, weight >= 0),
+  name :: AbstractString = "square-loss",
+  (weight :: AbstractFloat = 1.0, weight >= 0),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 @characterize_layer(SquareLossLayer,

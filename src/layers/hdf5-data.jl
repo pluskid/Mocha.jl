@@ -1,8 +1,8 @@
 using HDF5
 
 @defstruct HDF5DataLayer Layer (
-  name :: String = "hdf5-data",
-  (source :: String = "", source != ""),
+  name :: AbstractString = "hdf5-data",
+  (source :: AbstractString = "", source != ""),
   (batch_size :: Int = 0, batch_size > 0),
   (tops :: Vector{Symbol} = Symbol[:data,:label], length(tops) > 0),
   shuffle :: Bool = false,
@@ -19,7 +19,7 @@ type HDF5DataLayerState <: LayerState
   epoch :: Int
   trans :: Vector{Vector{DataTransformerState}}
 
-  sources        :: Vector{String}
+  sources        :: Vector{AbstractString}
   dsets          :: Vector{Any}
   curr_source    :: Int
   curr_hdf5_file :: HDF5File

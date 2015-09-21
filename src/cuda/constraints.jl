@@ -2,8 +2,8 @@
 # apply L2 constraint
 ############################################################
 
-function apply_l2_cons!{T <: FloatingPoint}(backend::GPUBackend, blob::CuTensorBlob{T},
-                                            coef::FloatingPoint, ninputs::Integer, nunits::Integer)
+function apply_l2_cons!{T <: AbstractFloat}(backend::GPUBackend, blob::CuTensorBlob{T},
+                                            coef::AbstractFloat, ninputs::Integer, nunits::Integer)
   # we allocate a bit of temporary memory here
   # we could instead also store this in the cons type
   # but that would double the memory footprint of a network

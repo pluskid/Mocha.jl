@@ -2,7 +2,7 @@
 # Softmax Layer
 ############################################################
 @defstruct SoftmaxLayer Layer (
-  name :: String = "softmax",
+  name :: AbstractString = "softmax",
   (dim :: Int = -2, dim != 0),
   (tops :: Vector{Symbol} = Symbol[], length(tops) > 0),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(tops))

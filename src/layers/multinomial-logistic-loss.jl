@@ -2,9 +2,9 @@
 # Multinomial Logistic Loss
 ############################################################
 @defstruct MultinomialLogisticLossLayer Layer (
-  name :: String = "multinomial-logistic-loss",
+  name :: AbstractString = "multinomial-logistic-loss",
   weights :: Array = [],
-  (weight :: FloatingPoint = 1.0, weight >= 0),
+  (weight :: AbstractFloat = 1.0, weight >= 0),
   (dim :: Int = -2, dim != 0),
   (normalize:: Symbol = :local, in(normalize,[:local,:global,:no])),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),

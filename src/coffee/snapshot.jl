@@ -3,7 +3,7 @@ using HDF5, JLD
 export Snapshot
 
 type Snapshot <: Coffee
-  dir :: String
+  dir :: AbstractString
 end
 
 function init(coffee::Snapshot, ::Net)

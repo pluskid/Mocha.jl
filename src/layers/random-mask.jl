@@ -1,6 +1,6 @@
 @defstruct RandomMaskLayer Layer (
-  name :: String = "random-mask",
-  (ratio :: FloatingPoint = 0.5, 0 < ratio < 1),
+  name :: AbstractString = "random-mask",
+  (ratio :: AbstractFloat = 0.5, 0 < ratio < 1),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) > 0)
 )
 @characterize_layer(RandomMaskLayer,

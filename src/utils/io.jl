@@ -3,7 +3,7 @@ export save_network, load_network
 ############################################################
 # General IO utilities
 ############################################################
-function mkdir_p(path::String)
+function mkdir_p(path::AbstractString)
   # I bet $5 this bad recursion is not a problem for our usages here
   if isempty(path) || isdir(path)
     return
@@ -22,7 +22,7 @@ function temp_filename()
   joinpath(tmp_dir, "Mocha-$(getpid())-$(randstring(32))")
 end
 
-function glob(path::String, pattern::Regex; sort_by :: Symbol = :none)
+function glob(path::AbstractString, pattern::Regex; sort_by :: Symbol = :none)
   list = filter(x -> ismatch(pattern, x), readdir(path))
   if sort_by == :none
     return list
@@ -44,7 +44,7 @@ using HDF5, JLD
 const NETWORK_SAVE_NAME = "params_all"
 
 function save_network(file::JLD.JldFile, net)
-  params_all = Dict{String, Vector{Array}}()
+  params_all = Dict{AbstractString, Vector{Array}}()
   for i = 1:length(net.layers)
     if has_param(net.layers[i])
       key = net.layers[i].name

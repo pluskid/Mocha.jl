@@ -1,6 +1,6 @@
 @defstruct SoftlabelSoftmaxLossLayer Layer (
-  name :: String = "softlabel-softmax-loss",
-  (weight :: FloatingPoint = 1.0, weight >= 0),
+  name :: AbstractString = "softlabel-softmax-loss",
+  (weight :: AbstractFloat = 1.0, weight >= 0),
   (dim :: Int = -2, dim != 0),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )

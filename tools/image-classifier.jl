@@ -1,6 +1,7 @@
 using Images # requires Package Images.jl
 using Color
 using Mocha
+using Compat
 
 type ImageClassifier
   net           :: Net
@@ -49,13 +50,13 @@ end
 # Interfaces
 ################################################################################
 #-- Classify a single image via filename
-function classify(classifier::ImageClassifier, filename::String)
+function classify(classifier::ImageClassifier, filename::AbstractString)
   results = classify(classifier, String[filename])
   return results[1]
 end
 
 #-- Classify a bunch of images via filename
-function classify{T<:String}(classifier::ImageClassifier, filenames::Vector{T})
+function classify{T<:AbstractString}(classifier::ImageClassifier, filenames::Vector{T})
   return classify(classifier, map(Images.imread, filenames))
 end
 

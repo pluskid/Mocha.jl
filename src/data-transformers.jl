@@ -6,15 +6,16 @@ abstract DataTransformerState
 
 module DataTransformers
 using ..Mocha
+using Compat
 
 immutable SubMean <: DataTransformerType
-  mean_file :: String
+  mean_file :: AbstractString
   mean_blob :: Blob
 end
 SubMean(;mean_file="", mean_blob=NullBlob()) = SubMean(mean_file, mean_blob)
 
 immutable Scale <: DataTransformerType
-  scale :: FloatingPoint
+  scale :: AbstractFloat
 end
 Scale(;scale=1.0) = Scale(scale)
 

@@ -9,7 +9,7 @@ function setup_etc(backend::GPUBackend, layer::DropoutLayer, inputs::Vector{Blob
   rnd_state_size = round(Int64, rnd_state_size[1])
 
   len = length(inputs[1])
-  cuda_rand_states = CUDA.cualloc(Uint8, rnd_state_size*len)
+  cuda_rand_states = CUDA.cualloc(UInt8, rnd_state_size*len)
   x_block = round(Int64, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
   CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X, (cuda_rand_states, len))
 

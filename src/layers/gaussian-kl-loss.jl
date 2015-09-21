@@ -8,8 +8,8 @@
 ############################################################
 
 @defstruct GaussianKLLossLayer Layer (
-                                      name :: String = "gauss-kl-loss",
-                                      (weight :: FloatingPoint = 1.0, weight >= 0),
+                                      name :: AbstractString = "gauss-kl-loss",
+                                      (weight :: AbstractFloat = 1.0, weight >= 0),
                                       (bottoms :: Vector{Symbol} = Symbol[:mu, :sigma], length(bottoms) == 2),
                                       )
 

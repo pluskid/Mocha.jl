@@ -13,7 +13,7 @@ function forward(backend::GPUBackend, state::CropLayerState, inputs::Vector{Blob
     w_off2 = size(input,1) - crop_size[1] - w_off
     h_off2 = size(input,2) - crop_size[2] - h_off
 
-    if state.layer.random_mirror && rand(Uint)%2 == 0
+    if state.layer.random_mirror && rand(UInt)%2 == 0
       mirror = true;
     else
       mirror = false;

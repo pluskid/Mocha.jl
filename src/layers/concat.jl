@@ -1,5 +1,5 @@
 @defstruct ConcatLayer Layer (
-  name :: String = "concat",
+  name :: AbstractString = "concat",
   (dim :: Int = 3, dim >= 1),
   (bottoms :: Vector{Symbol} = [], length(bottoms) >= 2),
   (tops :: Vector{Symbol} = [], length(tops) == 1)

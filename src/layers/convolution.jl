@@ -1,6 +1,6 @@
 @defstruct ConvolutionLayer Layer (
-  (name :: String = "", !isempty(name)),
-  param_key :: String = "",
+  (name :: AbstractString = "", !isempty(name)),
+  param_key :: AbstractString = "",
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) > 0),
   (tops :: Vector{Symbol} = Symbol[], length(tops) == length(bottoms)),
   (kernel :: NTuple{2,Int} = (1,1), all([kernel...] .> 0)),
@@ -15,8 +15,8 @@
   bias_regu :: Regularizer = NoRegu(),
   filter_cons :: Constraint = NoCons(),
   bias_cons :: Constraint = NoCons(),
-  filter_lr :: FloatingPoint = 1.0,
-  bias_lr :: FloatingPoint = 2.0,
+  filter_lr :: AbstractFloat = 1.0,
+  bias_lr :: AbstractFloat = 2.0,
 )
 @characterize_layer(ConvolutionLayer,
   has_param  => true,

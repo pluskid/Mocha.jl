@@ -41,8 +41,8 @@ function init(initializer::XavierInitializer, blob::Blob)
 end
 
 immutable GaussianInitializer <: Initializer
-  mean :: FloatingPoint
-  std  :: FloatingPoint
+  mean :: AbstractFloat
+  std  :: AbstractFloat
 end
 GaussianInitializer(;mean=0.0, std=1.0) = GaussianInitializer(mean, std)
 

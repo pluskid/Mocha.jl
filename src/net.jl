@@ -4,7 +4,7 @@ export get_layer, get_layer_state, freeze!, unfreeze!, freeze_all!, unfreeze_all
 export dump_statistics, reset_statistics
 
 type Net{T <: Backend}
-  name           :: String
+  name           :: AbstractString
   backend        :: T
 
   # all layers, sorted in topological order
@@ -42,19 +42,19 @@ end
 function get_layer(net::Net, idx::Int)
   net.layers[idx]
 end
-function get_layer_index(net::Net, name::String)
+function get_layer_index(net::Net, name::AbstractString)
   index = filter(i -> net.layers[i].name == name, 1:length(net.layers))
   @assert length(index) == 1
   index[1]
 end
-function get_layer(net::Net, name::String)
+function get_layer(net::Net, name::AbstractString)
   net.layers[get_layer_index(net, name)]
 end
 
 function get_layer_state(net::Net, idx::Int)
   net.states[idx]
 end
-function get_layer_state(net::Net, name::String)
+function get_layer_state(net::Net, name::AbstractString)
   net.states[get_layer_index(net, name)]
 end
 
@@ -66,7 +66,7 @@ function freeze!(net::Net, idx::Int...)
     freeze!(layer_state)
   end
 end
-function freeze!(net::Net, names::String...)
+function freeze!(net::Net, names::AbstractString...)
   for name in names
     layer_state = get_layer_state(net, name)
     @info("Freezing layer $(layer_state.layer.name) in network $(net.name)...")
@@ -80,7 +80,7 @@ function unfreeze!(net::Net, idx::Int...)
     unfreeze!(get_layer_state(net, i))
   end
 end
-function unfreeze!(net::Net, names::String...)
+function unfreeze!(net::Net, names::AbstractString...)
   for name in names
     unfreeze!(get_layer_state(net, name))
   end
@@ -128,7 +128,7 @@ function reset_statistics(net::Net)
   end
 end
 
-function forward_backward(net::Net, regu_coef :: FloatingPoint = 0.0)
+function forward_backward(net::Net, regu_coef :: AbstractFloat = 0.0)
   obj_val = forward(net, regu_coef)
   backward(net, regu_coef)
   return obj_val
@@ -141,7 +141,7 @@ function forward_epoch(net::Net)
   end
 end
 
-function forward(net::Net, regu_coef :: FloatingPoint = 0.0)
+function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
   obj_val = 0.0
 
   for i = 1:length(net.layers)
@@ -173,7 +173,7 @@ function forward(net::Net, regu_coef :: FloatingPoint = 0.0)
   return obj_val
 end
 
-function backward(net::Net, regu_coef :: FloatingPoint = 0.0)
+function backward(net::Net, regu_coef :: AbstractFloat = 0.0)
   for i = length(net.layers):-1:1
     if has_neuron(net.layers[i]) && !isa(net.layers[i].neuron, Neurons.Identity)
       state = net.states[i]
@@ -193,7 +193,7 @@ function backward(net::Net, regu_coef :: FloatingPoint = 0.0)
 end
 
 
-Net(name::String, backend::Backend, layers :: Vector{Layer}) = begin
+Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
   @info("Constructing net $name on $backend...")
   @info("Topological sorting $(length(layers)) layers...")
   layers = topological_sort(layers)

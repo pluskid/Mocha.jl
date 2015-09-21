@@ -2,7 +2,7 @@ export Backend, CPUBackend, AbstractGPUBackend
 export init, shutdown, registry_reset, registry_put
 
 abstract Backend
-typealias ParameterRegistry Dict{String, Vector{AbstractParameter}}
+typealias ParameterRegistry Dict{AbstractString, Vector{AbstractParameter}}
 
 import Base.show
 export show
@@ -19,7 +19,7 @@ function registry_reset(backend::Backend)
   end
   backend.param_registry = ParameterRegistry()
 end
-function registry_put(backend::Backend, key::String, params::Vector)
+function registry_put(backend::Backend, key::AbstractString, params::Vector)
   if haskey(backend.param_registry, key)
     map(destroy, backend.param_registry[key])
   end
@@ -28,7 +28,7 @@ function registry_put(backend::Backend, key::String, params::Vector)
   # network is destroyed, we still have valid access to those trained parameters
   backend.param_registry[key] = AbstractParameter[share_parameter(backend, p) for p in params]
 end
-function registry_get(backend::Backend, key::String)
+function registry_get(backend::Backend, key::AbstractString)
   return get(backend.param_registry, key, nothing)
 end
 

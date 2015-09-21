@@ -91,7 +91,7 @@ typealias FilterDescriptor Ptr{Void}
 
 const CUDNN_DATA_FLOAT = 0
 const CUDNN_DATA_DOUBLE = 1
-function cudnn_data_type{T<:FloatingPoint}(dtype::Type{T})
+function cudnn_data_type{T<:AbstractFloat}(dtype::Type{T})
   if dtype == Float32
     return CUDNN_DATA_FLOAT
   elseif dtype == Float64
@@ -119,13 +119,13 @@ function create_tensor4d_descriptor()
   return desc[1]
 end
 
-function set_tensor4d_descriptor{T<:FloatingPoint}(desc::Tensor4dDescriptor, dtype::Type{T}, dims :: NTuple{4, Int})
+function set_tensor4d_descriptor{T<:AbstractFloat}(desc::Tensor4dDescriptor, dtype::Type{T}, dims :: NTuple{4, Int})
   w,h,c,n = dims
   @cudnncall(:cudnnSetTensor4dDescriptor, (Tensor4dDescriptor, Cint, Cint, Cint, Cint, Cint, Cint),
              desc, CUDNN_TENSOR_NCHW, cudnn_data_type(dtype), n, c, h, w)
 end
 
-function set_tensor4d_descriptor{T<:FloatingPoint}(desc::Tensor4dDescriptor, dtype::Type{T},
+function set_tensor4d_descriptor{T<:AbstractFloat}(desc::Tensor4dDescriptor, dtype::Type{T},
                                                    dims :: NTuple{4, Int}, stride :: NTuple{4, Int})
   w, h, c, n = dims
   wStride, hStride, cStride, nStride = stride
@@ -173,7 +173,7 @@ const CUDNN_ADD_SAME_CHW    = 1
 const CUDNN_ADD_SAME_C      = 2 # add a tensor of size 1,c,1,1 to every corresponding point of n,c,h,w input
 const CUDNN_ADD_FULL_TENSOR = 3 # add 2 tensors with same n,c,h,w
 
-function add_tensor4d{T<:FloatingPoint}(handle::Handle, mode::Int, alpha::T,
+function add_tensor4d{T<:AbstractFloat}(handle::Handle, mode::Int, alpha::T,
                                         bias_desc::Tensor4dDescriptor, bias::CuPtr,
                                         beta::T,
                                         srcdst_desc::Tensor4dDescriptor, srcdst::CuPtr)
@@ -186,7 +186,7 @@ function add_tensor4d{T<:FloatingPoint}(handle::Handle, mode::Int, alpha::T,
             handle, mode, alpha_ptr, bias_desc, bias.p, beta_ptr, srcdst_desc, srcdst.p)
 end
 
-function set_tensor4d{T<:FloatingPoint}(handle::Handle, desc::Tensor4dDescriptor, data::CuPtr, val::T)
+function set_tensor4d{T<:AbstractFloat}(handle::Handle, desc::Tensor4dDescriptor, data::CuPtr, val::T)
   @assert typeof(val) == get_tensor4d_descriptor(desc)[0]
   val_ptr = T[val]
 
@@ -209,7 +209,7 @@ function create_filter_descriptor()
   @cudnncall(:cudnnCreateFilterDescriptor, (Ptr{FilterDescriptor},), desc)
   return desc[1]
 end
-function set_filter_descriptor{T<:FloatingPoint}(desc::FilterDescriptor, dtype::Type{T}, dims :: NTuple{4, Int})
+function set_filter_descriptor{T<:AbstractFloat}(desc::FilterDescriptor, dtype::Type{T}, dims :: NTuple{4, Int})
   w,h,c,k = dims
   @cudnncall(:cudnnSetFilter4dDescriptor, (FilterDescriptor, Cint, Cint, Cint, Cint, Cint),
              desc, cudnn_data_type(dtype), k, c, h, w)
@@ -323,7 +323,7 @@ function get_convolution_forward_workspace_size(handle::Handle, src_desc::Tensor
 end
 
 
-function convolution_forward{T<:FloatingPoint}(handle::Handle, alpha::T, src_desc::Tensor4dDescriptor, src::CuPtr,
+function convolution_forward{T<:AbstractFloat}(handle::Handle, alpha::T, src_desc::Tensor4dDescriptor, src::CuPtr,
     filter_desc::FilterDescriptor, filter::CuPtr, conv::ConvolutionDescriptor,
     dest_desc::Tensor4dDescriptor, dest::CuPtr, workspace::CuPtr, workspace_size, algo::Int,
                              beta::T)
@@ -341,14 +341,14 @@ function convolution_forward{T<:FloatingPoint}(handle::Handle, alpha::T, src_des
              dest_desc, dest.p)
 end
 
-function convolution_backward_bias{T<:FloatingPoint}(handle::Handle, alpha::T, src_desc::Tensor4dDescriptor, src::CuPtr,
+function convolution_backward_bias{T<:AbstractFloat}(handle::Handle, alpha::T, src_desc::Tensor4dDescriptor, src::CuPtr,
     beta::T, dest_desc::Tensor4dDescriptor, dest::CuPtr)
   alpha_ptr = T[alpha]
   beta_ptr = T[beta]
   @cudnncall(:cudnnConvolutionBackwardBias, (Handle, Ptr{Void}, Tensor4dDescriptor, Ptr{Void},
       Ptr{Void}, Tensor4dDescriptor, Ptr{Void}), handle, alpha_ptr, src_desc, src.p, beta_ptr, dest_desc, dest.p)
 end
-function convolution_backward_filter{T<:FloatingPoint}(handle::Handle, alpha::T, src_desc::Tensor4dDescriptor, src::CuPtr,
+function convolution_backward_filter{T<:AbstractFloat}(handle::Handle, alpha::T, src_desc::Tensor4dDescriptor, src::CuPtr,
     diff_desc::Tensor4dDescriptor, diff::CuPtr, conv::ConvolutionDescriptor,
     beta::T, grad_desc::FilterDescriptor, grad::CuPtr)
   alpha_ptr = T[alpha]
@@ -360,7 +360,7 @@ function convolution_backward_filter{T<:FloatingPoint}(handle::Handle, alpha::T,
              handle, alpha_ptr, src_desc, src.p, diff_desc, diff.p, conv, beta_ptr, grad_desc, grad.p)
 end
 
-function convolution_backward_data{T<:FloatingPoint}(handle::Handle, alpha::T, filter_desc::FilterDescriptor, filter::CuPtr,
+function convolution_backward_data{T<:AbstractFloat}(handle::Handle, alpha::T, filter_desc::FilterDescriptor, filter::CuPtr,
     diff_desc::Tensor4dDescriptor, diff::CuPtr, conv::ConvolutionDescriptor,
     beta::T, grad_desc::Tensor4dDescriptor, grad::CuPtr)
   alpha_ptr = T[alpha]
@@ -380,7 +380,7 @@ const CUDNN_SOFTMAX_ACCURATE = 1  # subtract max from every point to avoid overf
 const CUDNN_SOFTMAX_MODE_INSTANCE = 0 # compute the softmax over all C, H, W for each N
 const CUDNN_SOFTMAX_MODE_CHANNEL = 1  # compute the softmax over all C for each H, W, N
 
-function softmax_forward{T<:FloatingPoint}(handle::Handle, algorithm::Int, mode::Int,
+function softmax_forward{T<:AbstractFloat}(handle::Handle, algorithm::Int, mode::Int,
     alpha::T, src_desc::Tensor4dDescriptor, src::CuPtr, beta::T, dest_desc::Tensor4dDescriptor, dest::CuPtr)
   @assert CUDNN_SOFTMAX_FAST <= algorithm <= CUDNN_SOFTMAX_ACCURATE
   @assert CUDNN_SOFTMAX_MODE_INSTANCE <= mode <= CUDNN_SOFTMAX_MODE_CHANNEL
@@ -391,7 +391,7 @@ function softmax_forward{T<:FloatingPoint}(handle::Handle, algorithm::Int, mode:
              handle, algorithm, mode, alpha_ptr, src_desc, src.p, beta_ptr, dest_desc, dest.p)
 end
 
-function softmax_backward{T<:FloatingPoint}(handle::Handle, algorithm::Int, mode::Int,
+function softmax_backward{T<:AbstractFloat}(handle::Handle, algorithm::Int, mode::Int,
     alpha::T, src_desc::Tensor4dDescriptor, src::CuPtr, srcdiff_desc::Tensor4dDescriptor, srcdiff::CuPtr,
     beta::T, destdiff_desc::Tensor4dDescriptor, destdiff::CuPtr)
   @assert CUDNN_SOFTMAX_FAST <= algorithm <= CUDNN_SOFTMAX_ACCURATE
@@ -439,7 +439,7 @@ function destroy_pooling_descriotpr(desc::PoolingDescriptor)
   @cudnncall(:cudnnDestroyPoolingDescriptor, (PoolingDescriptor,), desc)
 end
 
-function pooling_forward{T<:FloatingPoint}(handle::Handle, pooling::PoolingDescriptor, alpha::T,
+function pooling_forward{T<:AbstractFloat}(handle::Handle, pooling::PoolingDescriptor, alpha::T,
                                            src_desc::Tensor4dDescriptor, src::CuPtr, beta::T,
                                            dest_desc::Tensor4dDescriptor, dest::CuPtr)
   alpha_ptr = T[alpha]
@@ -451,7 +451,7 @@ function pooling_forward{T<:FloatingPoint}(handle::Handle, pooling::PoolingDescr
              src_desc, src.p, beta_ptr,
              dest_desc, dest.p)
 end
-function pooling_backward{T<:FloatingPoint}(handle::Handle, pooling::PoolingDescriptor, alpha::T,
+function pooling_backward{T<:AbstractFloat}(handle::Handle, pooling::PoolingDescriptor, alpha::T,
     src_desc::Tensor4dDescriptor, src::CuPtr, srcdiff_desc::Tensor4dDescriptor, srcdiff::CuPtr,
     dest_desc::Tensor4dDescriptor, dest::CuPtr, beta::T, destdiff_desc::Tensor4dDescriptor, destdiff::CuPtr)
   alpha_ptr = T[alpha]

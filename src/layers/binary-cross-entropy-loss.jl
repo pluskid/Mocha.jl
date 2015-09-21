@@ -2,8 +2,8 @@
 # BinaryCrossEntropyLossLayer
 ############################################################
 @defstruct BinaryCrossEntropyLossLayer Layer (
-  name :: String = "binary-cross-entropy-loss",
-  (weight :: FloatingPoint = 1.0, weight >= 0),
+  name :: AbstractString = "binary-cross-entropy-loss",
+  (weight :: AbstractFloat = 1.0, weight >= 0),
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 @characterize_layer(BinaryCrossEntropyLossLayer,

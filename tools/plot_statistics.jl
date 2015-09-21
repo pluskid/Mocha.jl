@@ -1,5 +1,6 @@
 using HDF5, JLD
 using ArgParse
+using Compat
 
 function read_stats(fname)
   stats = jldopen(fname, "r") do file
@@ -43,7 +44,7 @@ s = ArgParseSettings()
 @add_arg_table s begin
   "--idx", "-i"
     help = "a list of indices seperated by , denoting the statistics that should be plotted"
-    arg_type = String
+    arg_type = AbstractString
     default = ""
   "--list", "-l"
     help = "list all available statistics for plotting"

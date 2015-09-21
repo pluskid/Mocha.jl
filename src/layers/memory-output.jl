@@ -1,7 +1,7 @@
 export reset_outputs
 
 @defstruct MemoryOutputLayer Layer (
-  name :: String = "memory-output",
+  name :: AbstractString = "memory-output",
   (bottoms :: Vector{Symbol} = [], length(bottoms) > 0)
 )
 @characterize_layer(MemoryOutputLayer,
