@@ -1,4 +1,5 @@
-julia_cmd := julia --color=yes --check-bounds
+JULIA?=julia
+julia_cmd := $(JULIA) --color=yes --check-bounds=yes
 srun_cmd := srun --pty -p gpu --gres=gpu:1 --mem=8000
 
 default:

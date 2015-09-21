@@ -288,6 +288,7 @@ const CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM = 0
 const CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMPT_GEMM = 1
 const CUDNN_CONVOLUTION_FWD_ALGO_GEMM = 2
 const CUDNN_CONVOLUTION_FWD_ALGO_DIRECT = 3
+const CUDNN_CONVOLUTION_FWD_ALGO_FFT = 4
 
 const CUDNN_CONVOLUTION_FWD_NO_WORKSPACE = 0
 const CUDNN_CONVOLUTION_FWD_PREFER_FASTEST = 1
@@ -304,7 +305,7 @@ function get_convolution_forward_algorithm(handle::Handle, src_desc::Tensor4dDes
                                                     Csize_t, Ptr{Int}),
       handle, src_desc, filter_desc, conv_desc, dest_desc, preference, mem_limit_bytes, algor)
   algor = algor[1]
-  @assert CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM <= algor <= CUDNN_CONVOLUTION_FWD_ALGO_DIRECT
+  @assert CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM <= algor <= CUDNN_CONVOLUTION_FWD_ALGO_FFT
   return algor
 end
 
@@ -312,7 +313,7 @@ function get_convolution_forward_workspace_size(handle::Handle, src_desc::Tensor
     filter_desc::FilterDescriptor, conv_desc::ConvolutionDescriptor, dest_desc::Tensor4dDescriptor,
     algor::Int)
 
-  @assert CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM <= algor <= CUDNN_CONVOLUTION_FWD_ALGO_DIRECT
+  @assert CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM <= algor <= CUDNN_CONVOLUTION_FWD_ALGO_FFT
   ws_size = Csize_t[0]
   @cudnncall(:cudnnGetConvolutionForwardWorkspaceSize, (Handle, Tensor4dDescriptor, FilterDescriptor,
                                                     ConvolutionDescriptor, Tensor4dDescriptor, Int, Ptr{Csize_t}),
@@ -329,7 +330,7 @@ function convolution_forward{T<:FloatingPoint}(handle::Handle, alpha::T, src_des
   #no workspace needed since we will use CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM
   alpha_ptr = T[alpha]
   beta_ptr = T[beta]
-  @assert CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM <= algo <= CUDNN_CONVOLUTION_FWD_ALGO_DIRECT
+  @assert CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM <= algo <= CUDNN_CONVOLUTION_FWD_ALGO_FFT
   @cudnncall(:cudnnConvolutionForward, (Handle, Ptr{Void}, Tensor4dDescriptor, Ptr{Void},
                                         FilterDescriptor, Ptr{Void}, ConvolutionDescriptor,
                                         Ptr{Void}, Ptr{Void}, Csize_t, Ptr{Void},
