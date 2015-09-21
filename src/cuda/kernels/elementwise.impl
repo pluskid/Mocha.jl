@@ -24,12 +24,30 @@ __device__ void mul_scal(T *array, T scal, int len) {
 DEF_ELEMWISE_OP(mul, *)
 DEF_ELEMWISE_OP(add, +)
 DEF_ELEMWISE_OP(sub, -)
-DEF_ELEMWISE_OP(div, /)
+
+template <typename T>
+__device__ void elem_div(T *X, T *Y, int len) {
+  ELEMWISE_BOUNDS_AND_INDEX;
+  if (abs(Y[idx]) < 1e-20) {
+    X[idx] = X[idx] / 1e-20;
+    if (Y[idx] < 0)
+      X[idx] = -X[idx];
+  } else {
+    X[idx] = X[idx] / Y[idx];
+  }
+}
 
 template <typename T>
 __device__ void elem_div2(T *X, T *Y, int len) {
   ELEMWISE_BOUNDS_AND_INDEX;
-  Y[idx] = X[idx] / Y[idx];
+  if (abs(Y[idx]) < 1e-20) {
+    if (Y[idx] < 0)
+      Y[idx] = X[idx] / -1e-20;
+    else
+      Y[idx] = X[idx] / 1e-20;
+  } else {
+    Y[idx] = X[idx] / Y[idx];
+  }
 }
 
 template <typename T1, typename T2>
