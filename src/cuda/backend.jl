@@ -48,6 +48,10 @@ end
 @defkernels(
   logistic_loss_forward_float,
   logistic_loss_forward_double,
+  binary_cross_entropy_loss_forward_float,
+  binary_cross_entropy_loss_forward_double,
+  binary_cross_entropy_loss_backward_float,
+  binary_cross_entropy_loss_backward_double,
   softmax_loss_backward_float,
   softmax_loss_backward_double,
   relu_forward_float,
@@ -93,6 +97,8 @@ end
   elem_pow_dd,
   elem_log_double,
   elem_log_float,
+  elem_exp_double,
+  elem_exp_float,
 
   max_channel_pooling_forward_float,
   max_channel_pooling_forward_double,
@@ -120,6 +126,11 @@ end
   l1_forward_double,
   l1_backward_float,
   l1_backward_double,
+
+  stdnormal_init,
+  stdnormal_alloc_size,
+  stdnormal_forward_float,
+  stdnormal_forward_double,
 )
 
 function shutdown(mocha :: MochaKernels)

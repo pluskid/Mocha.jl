@@ -43,9 +43,12 @@ function backward(backend::GPUBackend, state::PowerLayerState,
   data_type = eltype(inputs[1])
   pow_scale = convert(data_type,state.layer.power * state.layer.scale)
   for i = 1:length(inputs)
-    len = length(inputs[i])
-
     diff = diffs[i]
+    if isa(diff, NullBlob)
+      continue
+    end
+
+    len = length(inputs[i])
     if state.layer.power == 1 || state.layer.scale == 0
       # trivial case, derivative is constant
       fill!(diff, pow_scale)

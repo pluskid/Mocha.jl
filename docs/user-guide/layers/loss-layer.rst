@@ -181,3 +181,51 @@ Loss Layers
       Should be a vector containing two symbols. The first one specifies the
       name for the prediction :math:`\hat{\mathbf{y}}`, and the second one
       specifies the name for the ground-truth :math:`\mathbf{y}`.
+
+.. class:: BinaryCrossEntropyLossLayer
+
+   A simpler alternative to :class:`MultinomialLogisticLossLayer` for the
+   special case of binary classification.
+
+   .. math::
+
+      -\frac{1}{N}\sum_{i=1}^N \log(p_i)y_i + \log(1-p_i)(1-y_i)
+
+   Here :math:`N` is the batch-size, :math:`\mathbf{y}_i` is the ground-truth
+   label of the :math:`i`-th sample, and :math:``p_i`` is the corresponding
+   prediction.
+
+   .. attribute:: weight
+
+      Default ``1.0``. Weight of this loss function. Could be useful when
+      combining multiple loss functions in a network.
+
+   .. attribute:: bottoms
+
+      Should be a vector containing two symbols. The first one specifies the
+      name for the prediction :math:`\hat{\mathbf{y}}`, and the second one
+      specifies the name for the binary ground-truth labels :math:`\mathbf{p}`.
+
+.. class:: GaussianKLLossLayer
+
+    Given two inputs *mu* and *sigma* of the same size representing the means
+    and standard deviations of a diagonal multivariate Gaussian distribution, the
+    loss is the Kullback-Leibler divergence from that to the standard Gaussian of
+    the same dimension.
+
+    Used in variational autoencoders, as in `Kingma & Welling 2013 <http://arxiv.org/abs/1312.6114>`_, as a form of regularization.
+
+   .. math::
+      D_{KL}(\mathcal{N}(\mathbf{\mu}, \mathrm{diag}(\mathbf{\sigma})) \Vert \mathcal{N}(\mathbf{0}, \mathbf{I}) )
+      =  -\frac{1}{2}\left(\sum_{i=1}^N (\mu_i^2 + \sigma_i^2 - 2\log\sigma_i) - N\right)
+
+   .. attribute:: weight
+
+      Default ``1.0``. Weight of this loss function. Could be useful when
+      combining multiple loss functions in a network.
+
+   .. attribute:: bottoms
+
+      Should be a vector containing two symbols. The first one specifies the
+      name for the mean vector :math:`\mathbf{\mu}`, and the second one
+      the vector of standard deviations :math:`\mathbf{\sigma}`.

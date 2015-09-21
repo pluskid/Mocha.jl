@@ -10,7 +10,7 @@ function setup_etc(backend::GPUBackend, layer::DropoutLayer, inputs::Vector{Blob
 
   len = length(inputs[1])
   cuda_rand_states = CUDA.cualloc(Uint8, rnd_state_size*len)
-  x_block = round(Int64, ceil(float64(len)/CUDA.THREADS_PER_BLOCK_X))
+  x_block = round(Int64, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
   CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X, (cuda_rand_states, len))
 
   # hold copy of input blob, we will restore the inputs after backward computing
@@ -34,7 +34,7 @@ function forward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{B
   copy!(state.etc[2], inputs[1])
 
   len = length(inputs[1])
-  x_block = round(Int64, ceil(float64(len)/CUDA.THREADS_PER_BLOCK_X))
+  x_block = round(Int64, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
   data_type = eltype(inputs[1])
   if data_type == Float32
     kernel = backend.mocha.dropout_forward_float
@@ -50,7 +50,7 @@ end
 function backward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   if !isa(diffs[1], NullBlob)
     len = length(inputs[1])
-    x_block = round(Int64, ceil(float64(len)/CUDA.THREADS_PER_BLOCK_X))
+    x_block = round(Int64, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
     data_type = eltype(inputs[1])
     if data_type == Float32
       kernel = backend.mocha.dropout_backward_float

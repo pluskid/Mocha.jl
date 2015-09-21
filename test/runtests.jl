@@ -27,6 +27,11 @@ function test_dir(dir)
   end
 end
 
+############################################################
+# Solvers
+############################################################
+include("solvers/test-adam-solver.jl")
+include("solvers/test-sgd-solver.jl")
 
 ############################################################
 # Network
@@ -55,6 +60,7 @@ end
 include("neurons/relu.jl")
 include("neurons/sigmoid.jl")
 include("neurons/tanh.jl")
+include("neurons/exponential.jl")
 
 ############################################################
 # Regularizers

@@ -83,8 +83,8 @@ function cuda_mean_channel_pooling_forward{T}(backend::GPUBackend, input::CuTens
   output_fea_dim = spatial_dim * pooled_chann
 
   for n = 1:num
-    input_ptr = convert(Ptr{T}, input.ptr.p) + fea_dim*(n-1)
-    output_ptr = convert(Ptr{T}, output.ptr.p) + output_fea_dim*(n-1)
+    input_ptr = convert(Ptr{T}, input.ptr.p + fea_dim*(n-1))
+    output_ptr = convert(Ptr{T}, output.ptr.p + output_fea_dim*(n-1))
     integral_ptr = convert(Ptr{T}, integral.p)
 
     # compute integral image
@@ -147,9 +147,9 @@ end
 
 
 function cuda_geometry_max_chann_pool(sp_dim::Int, num::Int)
-  x_block = round(Int64, ceil(float64(num)/CUDA.THREADS_PER_BLOCK_X));
+  x_block = round(Int64, ceil(convert(Float64, num)/CUDA.THREADS_PER_BLOCK_X));
   y_block = 1;
-  z_block = round(Int64, ceil(float64(sp_dim)/CUDA.THREADS_PER_BLOCK_Z));
+  z_block = round(Int64, ceil(convert(Float64, sp_dim)/CUDA.THREADS_PER_BLOCK_Z));
   return ((x_block,y_block,z_block),
           (CUDA.THREADS_PER_BLOCK_X,1,CUDA.THREADS_PER_BLOCK_Z))
 

@@ -34,7 +34,7 @@ unless it is an identity neuron. Layers have an identity neuron by default [1]_.
    
    .. math::
 
-      \frac{dy}{dx} = \begin{cases}1 & x > 0 \\ 0.01x & x \leq 0\end{cases}
+      \frac{dy}{dx} = \begin{cases}1 & x > 0 \\ 0.01 & x \leq 0\end{cases}
 
 .. class:: Neurons.Sigmoid
 
@@ -58,6 +58,15 @@ unless it is an identity neuron. Layers have an identity neuron by default [1]_.
    .. math::
 
       \frac{dy}{dx} = 4e^{2x}/(e^{2x} + 1)^2 = (1-y^2)
+
+.. class:: Neurons.Exponential
+
+   The exponential function.
+
+   .. math::
+
+      y = exp(x)
+
 
 .. [1] This is actually not true: not all layers in Mocha support neurons. For
    example, data layers currently does not have neurons, but this feature could

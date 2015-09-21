@@ -46,10 +46,11 @@ lr_policy = LRPolicy.Staged(
   (5000, LRPolicy.Fixed(0.0001)),
   (5000, LRPolicy.Fixed(0.00001)),
 )
-solver_params = SolverParameters(max_iter=70000,
+method = SGD()
+solver_params = make_solver_parameters(method, max_iter=70000,
     regu_coef=0.004, mom_policy=MomPolicy.Fixed(0.9), lr_policy=lr_policy,
     load_from="snapshots")
-solver = SGD(solver_params)
+solver = Solver(method, solver_params)
 
 # report training progress every 200 iterations
 add_coffee_break(solver, TrainingSummary(), every_n_iter=200)

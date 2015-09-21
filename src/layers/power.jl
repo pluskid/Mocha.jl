@@ -73,6 +73,9 @@ function backward(backend::CPUBackend, state::PowerLayerState,
   pow_scale = convert(data_type,state.layer.power * state.layer.scale)
   for i = 1:length(inputs)
     diff = diffs[i]
+    if isa(diff, NullBlob)
+      continue
+    end
     if state.layer.power == 1 || state.layer.scale == 0
       # trivial case, derivative is constant
       fill!(diff, pow_scale)

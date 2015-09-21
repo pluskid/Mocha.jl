@@ -8,8 +8,10 @@ export CropLayer, ConcatLayer, RandomMaskLayer, TiedInnerProductLayer
 export IdentityLayer, Index2OnehotLayer, MemoryOutputLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export SoftlabelSoftmaxLossLayer, WassersteinLossLayer
-export AccuracyLayer
+export AccuracyLayer, BinaryCrossEntropyLossLayer
 
+export RandomNormalLayer
+export GaussianKLLossLayer
 export setup, forward, backward, shutdown
 
 export get_param_key
@@ -205,6 +207,7 @@ include("layers/concat.jl")
 include("layers/random-mask.jl")
 include("layers/tied-inner-product.jl")
 include("layers/identity.jl")
+include("layers/random-normal.jl")
 
 #############################################################
 # Utility layers
@@ -222,6 +225,8 @@ include("layers/multinomial-logistic-loss.jl")
 include("layers/softmax-loss.jl")
 include("layers/softlabel-softmax-loss.jl")
 include("layers/wasserstein-loss.jl")
+include("layers/binary-cross-entropy-loss.jl")
+include("layers/gaussian-kl-loss.jl")
 
 #############################################################
 # Statistics Layers

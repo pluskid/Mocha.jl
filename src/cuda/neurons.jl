@@ -1,7 +1,7 @@
 function cuda_geometry(:: ActivationFunction, output :: Blob)
   len = length(output)
 
-  x_block = round(Int64, ceil(float64(len)/1024));
+  x_block = round(Int64, ceil(convert(Float64, len)/1024));
   return ((x_block,1024), (len,))
 end
 
@@ -117,3 +117,13 @@ function backward(backend :: GPUBackend, neuron :: Neurons.Tanh, output :: Blob,
   CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, gradient.ptr.p, blob_dim...))
 end
 
+
+## Exponential
+
+function forward(backend :: GPUBackend, neuron :: Neurons.Exponential, output :: Blob)
+  CuVec.exp!(backend, output)
+end
+
+function backward(backend :: GPUBackend, neuron :: Neurons.Exponential, output :: Blob, gradient :: Blob)
+  CuVec.mul!(backend, gradient, output)
+end
