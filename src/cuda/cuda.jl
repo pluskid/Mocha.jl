@@ -2,25 +2,17 @@
 export CUDA
 module CUDA
 export CuPtr
+using Compat
 
 @windows? (
 begin
-  if VERSION < v"0.4-"
-    const libcuda = find_library(["nvcuda.dll"], [""])
-  else
-    const libcuda = Libdl.find_library(["nvcuda.dll"], [""])
-  end
+  const libcuda = Libdl.find_library(["nvcuda.dll"], [""])
 end
 : # linux or mac
 begin
-  if VERSION < v"0.4-"
-    const libcuda = find_library(["libcuda"], [""])
-  else
-    const libcuda = Libdl.find_library(["libcuda"], [""])
-  end
+  const libcuda = Libdl.find_library(["libcuda"], [""])
 end)
 
-using Compat
 const driver_error_descriptions = @compat(Dict(
   0 => "Success",
   1 => "Invalid value",
