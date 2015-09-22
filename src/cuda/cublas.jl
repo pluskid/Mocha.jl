@@ -36,19 +36,11 @@ show(io::IO, error::CuBLASError) = print(io, cublas_error_description[error.code
 
 @windows? (
 begin
-  if VERSION < v"0.4-"
-    const libcublas = find_library(["cublas64_70.dll", "cublas64_65.dll", "cublas32_70.dll", "cublas32_65.dll"], [""])
-  else
-    const libcublas = Libdl.find_library(["cublas64_70.dll", "cublas64_65.dll", "cublas32_70.dll", "cublas32_65.dll"], [""])
-  end
+  const libcublas = Libdl.find_library(["cublas64_70.dll", "cublas64_65.dll", "cublas32_70.dll", "cublas32_65.dll"], [""])
 end
 : # linux or mac
 begin
-  if VERSION < v"0.4-"
-    const libcublas = find_library(["libcublas"], [""])
-  else
-    const libcublas = Libdl.find_library(["libcublas"], [""])
-  end
+  const libcublas = Libdl.find_library(["libcublas"], [""])
 end)
 
 macro cublascall(fv, argtypes, args...)
