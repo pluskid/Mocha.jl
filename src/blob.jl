@@ -167,3 +167,5 @@ function randn!(a::Array{Float32})
     # https://github.com/JuliaLang/julia/issues/9836
     @compat a[:] = map(Float32, randn(size(a)))
 end
+
+asarray{T}(blob::CPUBlob{T}) = blob.data

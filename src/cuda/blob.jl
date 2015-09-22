@@ -52,3 +52,9 @@ function destroy(blob :: CuTensorBlob)
   end
 end
 
+# Helper function to copy blob to arrays for testing
+function asarray{T}(blob::CuTensorBlob{T})
+  arr = zeros(T, blob.shape)
+  copy!(arr, blob)
+  return arr
+end
