@@ -18,7 +18,7 @@ function forward(backend :: GPUBackend, neuron :: Neurons.ReLU, output :: Blob)
   else
     error("Unsupported data type $data_type")
   end
-  CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, blob_dim...))
+  CUDA.launch(kernel, cuda_dim..., tuple(convert(data_type, neuron.epsilon), output.ptr.p, blob_dim...))
 end
 
 function backward(backend :: GPUBackend, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
@@ -31,7 +31,7 @@ function backward(backend :: GPUBackend, neuron :: Neurons.ReLU, output :: Blob,
   else
     error("Unsupported data type $data_type")
   end
-  CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, gradient.ptr.p, blob_dim...))
+  CUDA.launch(kernel, cuda_dim..., tuple(convert(data_type, neuron.epsilon), output.ptr.p, gradient.ptr.p, blob_dim...))
 end
 
 ############################################################
