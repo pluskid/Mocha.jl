@@ -27,19 +27,24 @@ type HingeLossLayerState{T} <: LayerState
 #     # the prediction results passed up
 #     pred_copy :: Blob
 #     bp_mask :: Blob
+
+    # a helper blob used to compute the loss
+    loss_blob :: Blob
 end
 
 function setup(backend::Backend, layer::HingeLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
     data_type = eltype(inputs[1])
 #     pred_copy = make_blob(backend, data_type, size(inputs[1])...)
 #     bp_mask = make_blob(backend, Bool, size(inputs[1])...)
+    loss_blob = make_blob(backend, Float32, 1)
 
-    state = HingeLossLayerState(layer, zero(data_type), zero(data_type), 0)#, pred_copy, bp_mask)
+    state = HingeLossLayerState(layer, zero(data_type), zero(data_type), 0, loss_blob)#, pred_copy, bp_mask)
     return state
 end
 function shutdown(backend::Backend, state::HingeLossLayerState)
 #     destroy(state.pred_copy)
 #     destroy(state.bp_mask)
+  destroy(state.loss_blob)
   nothing
 end
 function reset_statistics(state::HingeLossLayerState)
@@ -66,9 +71,10 @@ function forward(backend::CPUBackend, state::HingeLossLayerState, inputs::Vector
   for i=1:n
     loss = one(data_type) - pred.data[i]*label.data[i]
     if loss > zero(data_type)
-      state.loss += loss/get_num(pred)
+      state.loss += loss
     end
   end
+  state.loss /= convert(data_type, get_num(pred))
 
   # accumulate statistics
   state.loss_accum = (state.loss_accum*state.n_accum + state.loss*get_num(pred)) / (state.n_accum+get_num(pred))

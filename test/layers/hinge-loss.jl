@@ -30,7 +30,7 @@ function test_hinge_loss_layer(backend::Backend, T, eps)
   forward(backend, state, inputs)
 
   loss = sum(max(one(T) .- preds.*labels, zero(T))) / dims[end]
-  @test -eps < loss-state.loss < eps
+  @test -eps*prod(dims) < loss-state.loss < eps*prod(dims)
 
   backward(backend, state, inputs, diffs)
   grad  = -labels .* errs_mask / dims[end]
@@ -45,13 +45,12 @@ end
 
 function test_hinge_loss_layer(backend::Backend)
   test_hinge_loss_layer(backend, Float32, 1e-2)
-  test_hinge_loss_layer(backend, Float64, 1e-8)
+  test_hinge_loss_layer(backend, Float64, 1e-6)
 end
 
 if test_cpu
   test_hinge_loss_layer(backend_cpu)
 end
 if test_gpu
-  warn("Hinge Loss has no GPU implementation")
-#   test_hinge_loss_layer(backend_gpu)
+  test_hinge_loss_layer(backend_gpu)
 end
