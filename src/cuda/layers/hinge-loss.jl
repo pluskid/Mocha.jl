@@ -7,7 +7,10 @@ function forward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vector
 
   x_block = div(n + CUDA.THREADS_PER_BLOCK_X-1, CUDA.THREADS_PER_BLOCK_X)
 
-  erase!(state.loss_blob)
+  if length(state.loss_blob) < x_block
+    destroy(state.loss_blob)
+    state.loss_blob = make_blob(backend, data_type, x_block)
+  end
 
   if data_type == Float32
     kernel = backend.mocha.hinge_loss_forward_float
@@ -20,9 +23,9 @@ function forward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vector
   CUDA.launch(kernel, (x_block,1), (CUDA.THREADS_PER_BLOCK_X, 1),
               (pred.ptr.p, label.ptr.p, n, state.loss_blob.ptr.p))
 
-  loss = Float32[1]
-  copy!(loss, state.loss_blob)
-  state.loss = state.layer.weight * loss[1] / get_num(pred)
+  losses = Array(data_type, size(state.loss_blob)...)
+  copy!(losses, state.loss_blob)
+  state.loss = state.layer.weight * sum(losses[1:x_block]) / get_num(pred)
 
   # accumulate statistics
   state.loss_accum = (state.loss_accum*state.n_accum + state.loss*get_num(pred)) / (state.n_accum+get_num(pred))

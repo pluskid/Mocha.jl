@@ -30,7 +30,7 @@ function test_hinge_loss_layer(backend::Backend, T, eps)
   forward(backend, state, inputs)
 
   loss = sum(max(one(T) .- preds.*labels, zero(T))) / dims[end]
-  @test -eps*prod(dims) < loss-state.loss < eps*prod(dims)
+  @test -eps < loss-state.loss < eps
 
   backward(backend, state, inputs, diffs)
   grad  = -labels .* errs_mask / dims[end]
@@ -45,7 +45,7 @@ end
 
 function test_hinge_loss_layer(backend::Backend)
   test_hinge_loss_layer(backend, Float32, 1e-2)
-  test_hinge_loss_layer(backend, Float64, 1e-6)
+  test_hinge_loss_layer(backend, Float64, 1e-8)
 end
 
 if test_cpu

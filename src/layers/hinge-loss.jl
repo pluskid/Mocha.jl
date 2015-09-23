@@ -36,7 +36,7 @@ function setup(backend::Backend, layer::HingeLossLayer, inputs::Vector{Blob}, di
     data_type = eltype(inputs[1])
 #     pred_copy = make_blob(backend, data_type, size(inputs[1])...)
 #     bp_mask = make_blob(backend, Bool, size(inputs[1])...)
-    loss_blob = make_blob(backend, Float32, 1)
+    loss_blob = make_blob(backend, data_type, 1)
 
     state = HingeLossLayerState(layer, zero(data_type), zero(data_type), 0, loss_blob)#, pred_copy, bp_mask)
     return state
