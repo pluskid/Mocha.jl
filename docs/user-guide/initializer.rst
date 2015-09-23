@@ -43,3 +43,17 @@ called *Fillers*.
    .. attribute:: std
 
       Default 1.
+
+
+.. class:: OrthogonalInitializer
+
+   Initialize the parameter blob to be a random orthogonal matrix (i.e. :math:`W^TW=I`),
+   times a scalar gain factor.  Based on [Saxe2013]_.
+
+   .. [Saxe2013] Andrew M. Saxe, James L. McClelland, Surya Ganguli, *Exact solutions to
+		 the nonlinear dynamics of learning in deep linear neural networks*,
+		 http://arxiv.org/abs/1312.6120 with a presentation https://www.youtube.com/watch?v=Ap7atx-Ki3Q
+
+   .. attribute:: gain
+
+      Default 1.  Use :math:`\sqrt{2}` for layers with ReLU activations.
