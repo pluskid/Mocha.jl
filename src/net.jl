@@ -2,6 +2,7 @@ export Net
 export init, destroy, forward, forward_epoch, backward, forward_backward, get_epoch, check_bp_topology
 export get_layer, get_layer_state, freeze!, unfreeze!, freeze_all!, unfreeze_all!
 export dump_statistics, reset_statistics
+export forward_from
 
 type Net{T <: Backend}
   name           :: AbstractString
@@ -140,6 +141,40 @@ function forward_epoch(net::Net)
     forward(net)
   end
 end
+
+function forward_from(net::Net, in_layer_name::AbstractString, out_layer_name::AbstractString, in_bottoms::Vector{Array})
+  # forward_from() allows you to make a function out of certain parts of the network after training is complete
+  start = get_layer_index(net, in_layer_name)
+  for (blob, arr) in zip(net.blobs_forward[start], in_bottoms)
+    # If the passed in array is too small, then pad it with zeros
+    if any([sx > sy for (sx,sy) in zip(size(arr), size(blob))])
+      error("In_bottoms size is too big: size(blob) = $(size(blob)), size(arr) = $(size(arr))")
+    end
+    if any([sx < sy for (sx,sy) in zip(size(arr), size(blob))])
+      arr_ = zeros(eltype(arr), size(blob))
+      sub(arr_, [1:k for k in size(arr)]...)[:] = arr
+      arr = arr_
+    end
+    copy!(blob, convert(Array{eltype(blob)}, arr))
+  end
+  forward_from(net, in_layer_name, out_layer_name, net.blobs_forward[start])
+end
+
+
+function forward_from(net::Net, in_layer_name::AbstractString, out_layer_name::AbstractString, in_bottoms::Vector{Blob})
+  start = get_layer_index(net, in_layer_name)
+  stop  = get_layer_index(net, out_layer_name)
+  net.blobs_forward[start] = in_bottoms
+  for i = start:stop
+    forward(net.backend, net.states[i], net.blobs_forward[i])
+    if has_neuron(net.layers[i]) && !isa(net.layers[i].neuron, Neurons.Identity)
+      for blob in net.states[i].blobs
+        forward(net.backend, net.layers[i].neuron, blob)
+      end
+    end
+  end
+end
+
 
 function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
   obj_val = 0.0
