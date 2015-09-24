@@ -152,8 +152,10 @@ function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
         forward(net.backend, net.layers[i].neuron, blob)
       end
     end
-
     if has_loss(net.layers[i])
+      if isnan(net.states[i].loss)
+        error("Got NaN in loss for layer $i, $(net.layers[i].name)")
+      end
       obj_val += net.states[i].loss
     end
 
