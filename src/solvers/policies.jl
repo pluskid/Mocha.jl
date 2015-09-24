@@ -60,7 +60,6 @@ type DecayOnValidation <: LearningRatePolicy
   gamma       :: AbstractFloat
 
   key           :: AbstractString
-  base_lr       :: AbstractFloat
   curr_lr       :: AbstractFloat
   min_lr        :: AbstractFloat
   listener      :: Function
@@ -69,7 +68,7 @@ type DecayOnValidation <: LearningRatePolicy
   higher_better :: Bool # set to false if performance score is the lower the better
 
   DecayOnValidation(base_lr, key, gamma=0.5, min_lr=1e-8; higher_better=true) = begin
-    policy = new(gamma, key, base_lr, base_lr, min_lr)
+    policy = new(gamma, key, base_lr, min_lr)
     policy.solver = nothing
     policy.listener = (coffee_lounge,net,state) -> begin
       if policy.curr_lr < policy.min_lr
@@ -106,6 +105,9 @@ end
 end # module LRPolicy
 
 get_learning_rate(policy::LearningRatePolicy) = policy.base_lr # Need an initial rate to create the state
+get_learning_rate(policy::LRPolicy.Staged) = get_learning_rate(policy.stages[policy.curr_stage])
+get_learning_rate(policy::LRPolicy.DecayOnValidation) = policy.curr_lr
+
 get_learning_rate(policy::LRPolicy.Fixed, state::SolverState) = policy.base_lr
 get_learning_rate(policy::LRPolicy.Step, state::SolverState) =
     policy.base_lr * policy.gamma ^ (floor(state.iter / policy.stepsize))
