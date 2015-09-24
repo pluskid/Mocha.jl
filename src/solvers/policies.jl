@@ -48,7 +48,7 @@ function decay_on_validation_listener(policy, key::AbstractString, coffee_lounge
       # revert to a previously saved "good" snapshot
       if isa(policy.solver, Solver)
         Mocha.info("reverting to previous saved snapshot")
-        solver_state = load_snapshot(net, policy.solver.params.load_from, state)
+        solver_state = load_snapshot(net, policy.solver.params[:load_from], state)
         Mocha.info("snapshot at iteration $(solver_state.iter) loaded")
         copy_solver_state!(state, solver_state)
       end
@@ -60,6 +60,7 @@ type DecayOnValidation <: LearningRatePolicy
   gamma       :: AbstractFloat
 
   key           :: AbstractString
+  base_lr       :: AbstractFloat
   curr_lr       :: AbstractFloat
   min_lr        :: AbstractFloat
   listener      :: Function
@@ -68,7 +69,7 @@ type DecayOnValidation <: LearningRatePolicy
   higher_better :: Bool # set to false if performance score is the lower the better
 
   DecayOnValidation(base_lr, key, gamma=0.5, min_lr=1e-8; higher_better=true) = begin
-    policy = new(gamma, key, base_lr, min_lr)
+    policy = new(gamma, key, base_lr, base_lr, min_lr)
     policy.solver = nothing
     policy.listener = (coffee_lounge,net,state) -> begin
       if policy.curr_lr < policy.min_lr

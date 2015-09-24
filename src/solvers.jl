@@ -27,6 +27,12 @@ type SolverState{T<:InternalSolverState}
   losses             :: Dict
   internal           :: T
 end
+function copy_solver_state!{T<:InternalSolverState}(dst::SolverState{T}, src::SolverState{T})
+  dst.iter = src.iter
+  dst.obj_val = src.obj_val
+  dst.losses = src.losses
+  dst.internal = src.internal
+end
 
 SolverState{T<:InternalSolverState}(internal::T) = SolverState{T}(0, Inf, Dict(), internal)
 
