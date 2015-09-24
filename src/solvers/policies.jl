@@ -105,7 +105,7 @@ end
 end # module LRPolicy
 
 get_learning_rate(policy::LearningRatePolicy) = policy.base_lr # Need an initial rate to create the state
-get_learning_rate(policy::LRPolicy.Staged) = get_learning_rate(policy.stages[policy.curr_stage])
+get_learning_rate(policy::LRPolicy.Staged) = get_learning_rate(policy.stages[policy.curr_stage][2])
 get_learning_rate(policy::LRPolicy.DecayOnValidation) = policy.curr_lr
 
 get_learning_rate(policy::LRPolicy.Fixed, state::SolverState) = policy.base_lr
