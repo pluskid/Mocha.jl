@@ -48,7 +48,7 @@ function shutdown(backend::Backend, state::HingeLossLayerState)
   nothing
 end
 function reset_statistics(state::HingeLossLayerState)
-    stat.n_accum = 0
+    state.n_accum = 0
     state.loss_accum = zero(typeof(state.loss_accum))
 end
 function dump_statistics(storage, state::HingeLossLayerState, show::Bool)

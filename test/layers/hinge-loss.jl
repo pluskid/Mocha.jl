@@ -40,6 +40,14 @@ function test_hinge_loss_layer(backend::Backend, T, eps)
 
   @test all(-eps .< grad - diff .< eps)
 
+  # check accumulated/reset statistics
+  forward(backend, state, Blob[label_blob, label_blob])
+  @test 0 == state.loss
+  @test -eps < 0.5loss-state.loss_accum < eps
+  reset_statistics(state)
+  forward(backend, state, inputs)
+  @test -eps < loss-state.loss_accum < eps
+
   shutdown(backend, state)
 end
 
