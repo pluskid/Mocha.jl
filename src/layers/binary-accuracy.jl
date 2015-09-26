@@ -15,10 +15,18 @@ type BinaryAccuracyLayerState <: LayerState
   accuracy :: Float64
   n_wrong :: Int
   n_accum  :: Int
+
+  etc :: Any
+end
+
+function setup_etc(backend::CPUBackend, layer::BinaryAccuracyLayer, inputs)
+  nothing
 end
 
 function setup(backend::Backend, layer::BinaryAccuracyLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  return BinaryAccuracyLayerState(layer, 0.0, 0, 0)
+  etc = setup_etc(backend, layer, inputs)
+
+  return BinaryAccuracyLayerState(layer, 0.0, 0, 0, etc)
 end
 function shutdown(backend::CPUBackend, state::BinaryAccuracyLayerState)
 end
