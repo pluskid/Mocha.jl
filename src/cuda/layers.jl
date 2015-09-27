@@ -38,3 +38,4 @@ include("layers/gaussian-kl-loss.jl")
 # Statistics Layers
 #############################################################
 include("layers/accuracy.jl")
+include("layers/binary-accuracy.jl")

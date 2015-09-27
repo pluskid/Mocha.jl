@@ -13,6 +13,7 @@
 #include "binary_cross_entropy_loss.impl"
 #include "hinge_loss.impl"
 #include "accuracy.impl"
+#include "binary_accuracy.impl"
 #include "channel_pooling.impl"
 #include "dropout.impl"
 #include "argmax.impl"
