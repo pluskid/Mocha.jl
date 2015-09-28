@@ -76,6 +76,8 @@ end
   tanh_backward_double,
   accuracy_forward_float,
   accuracy_forward_double,
+  binary_accuracy_forward_float,
+  binary_accuracy_forward_double,
   argmax_forward_float,
   argmax_forward_double,
   index2onehot_forward_float,

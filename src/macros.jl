@@ -29,6 +29,7 @@
 #############################################################
 import Base.copy
 export      copy
+
 macro defstruct(name, super_name, fields)
   @assert fields.head == :tuple
   fields = fields.args
@@ -46,7 +47,7 @@ macro defstruct(name, super_name, fields)
       field_asserts[i] = field.args[2]
       field = field.args[1]
     end
-    field_defs[i] = field.args[1]
+    field_defs[i] = esc(field.args[1])
     field_names[i] = field.args[1].args[1]
     field_defaults[i] = Expr(:kw, field.args...)
   end
@@ -111,7 +112,7 @@ macro characterize_layer(layer, properties...)
     prop_name = prop.args[1]
     prop_val  = prop.args[2]
     defs[i] = quote
-      $(esc(prop_name))(::$layer) = $prop_val
+      $(esc(prop_name))(::$(esc(layer))) = $prop_val
     end
   end
 
