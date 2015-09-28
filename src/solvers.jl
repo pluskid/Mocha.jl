@@ -177,7 +177,7 @@ end
 
 
 function init_solve(solver::Solver, net::Net)
-    println("#DEBUG Checking network topology for back-propagation")
+    @debug("#DEBUG Checking network topology for back-propagation")
     check_bp_topology(net)
 
     state = solver_state(solver.method, net, solver.params)
@@ -186,10 +186,9 @@ function init_solve(solver::Solver, net::Net)
     # we init network AFTER loading. If the parameters are loaded from file, the
     # initializers will be automatically set to NullInitializer
     init(net)
-
     state.obj_val = forward(net, solver.params[:regu_coef])
 
-    println("#DEBUG Initializing coffee breaks")
+    @debug("#DEBUG Initializing coffee breaks")
     setup(solver.coffee_lounge, state, net)
 
     # coffee break for iteration 0, before everything starts
@@ -232,13 +231,13 @@ function onestep_solve(solver::Solver, net::Net, state::SolverState)
 end
 
 function solve(solver::Solver, net::Net)
-  state = init_solve(solver, net)
-  do_solve_loop(solver, net, state)
-  finalize_solve(solver, net, state)
+    state = init_solve(solver, net)
+    do_solve_loop(solver, net, state)
+    finalize_solve(solver, net, state)
 end
 
 function do_solve_loop(solver::Solver, net::Net, state::SolverState)
-  println("#DEBUG Entering solver loop")
+  @debug("#DEBUG Entering solver loop")
   while !stop_condition_satisfied(solver, state, net)
     onestep_solve(solver,net,state)
 
