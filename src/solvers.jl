@@ -2,7 +2,7 @@ export SolverParameters, SolverState, Solver
 export setup_coffee_lounge, add_coffee_break, solve
 export load_snapshot
 export make_solver_parameters
-
+export init_solve, onestep_solve, finalize_solve
 import Base.Meta: quot
 
 abstract SolverMethod # An enum type to identify the solver in validation functions
@@ -176,36 +176,36 @@ end
 ############################################################
 
 
-function solve(solver::Solver, net::Net)
-  @debug("Checking network topology for back-propagation")
-  check_bp_topology(net)
+function init_solve(solver::Solver, net::Net)
+    println("#DEBUG Checking network topology for back-propagation")
+    check_bp_topology(net)
 
-  state = solver_state(solver.method, net, solver.params)
-  state = load_snapshot(net, solver.params[:load_from], state)
+    state = solver_state(solver.method, net, solver.params)
+    state = load_snapshot(net, solver.params[:load_from], state)
 
-  # we init network AFTER loading. If the parameters are loaded from file, the
-  # initializers will be automatically set to NullInitializer
-  init(net)
+    # we init network AFTER loading. If the parameters are loaded from file, the
+    # initializers will be automatically set to NullInitializer
+    init(net)
 
-  do_solve_loop(solver, net, state)
-  shutdown(solver.coffee_lounge, net)
-  shutdown(state)
+    state.obj_val = forward(net, solver.params[:regu_coef])
+
+    println("#DEBUG Initializing coffee breaks")
+    setup(solver.coffee_lounge, state, net)
+
+    # coffee break for iteration 0, before everything starts
+    check_coffee_break(solver.coffee_lounge, state, net)
+
+    return state
 end
 
-function do_solve_loop(solver::Solver, net::Net, state::SolverState)
-  # Initial forward iteration
-  state.obj_val = forward(net, solver.params[:regu_coef])
+function finalize_solve(solver::Solver, net::Net, state::SolverState)
+    shutdown(solver.coffee_lounge, net)
+    shutdown(state)
+end
 
-  @debug("Initializing coffee breaks")
-  setup(solver.coffee_lounge, state, net)
-
-  # coffee break for iteration 0, before everything starts
-  check_coffee_break(solver.coffee_lounge, state, net)
-
-  @debug("Entering solver loop")
-  layer_states = updatable_layer_states(net)
-  while !stop_condition_satisfied(solver, state, net)
+function onestep_solve(solver::Solver, net::Net, state::SolverState)
     state.iter += 1
+    layer_states = updatable_layer_states(net)
 
     backward(net, solver.params[:regu_coef])
     update(solver, net, state)
@@ -228,8 +228,19 @@ function do_solve_loop(solver::Solver, net::Net, state::SolverState)
         state.losses[net.layers[i].name] = net.states[i].loss
       end
     end
-
     check_coffee_break(solver.coffee_lounge, state, net)
+end
+
+function solve(solver::Solver, net::Net)
+  state = init_solve(solver, net)
+  do_solve_loop(solver, net, state)
+  finalize_solve(solver, net, state)
+end
+
+function do_solve_loop(solver::Solver, net::Net, state::SolverState)
+  println("#DEBUG Entering solver loop")
+  while !stop_condition_satisfied(solver, state, net)
+    onestep_solve(solver,net,state)
 
     if stop_condition_satisfied(solver, state, net)
       break
@@ -237,7 +248,6 @@ function do_solve_loop(solver::Solver, net::Net, state::SolverState)
   end
   return state
 end
-
 
 trainable_layers(net::Net) = filter(i -> has_param(net.layers[i]) && !is_frozen(net.states[i]),
                                     1:length(net.layers))
