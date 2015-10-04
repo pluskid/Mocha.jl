@@ -2,4 +2,4 @@ julia 0.3
 HDF5 0.4.7
 JLD
 Logging
-
+Compat
