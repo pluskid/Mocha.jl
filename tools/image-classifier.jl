@@ -1,5 +1,5 @@
 using Images # requires Package Images.jl
-using Color
+using Colors # requires Package Colors.jl
 using Mocha
 using Compat
 
