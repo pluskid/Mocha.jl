@@ -31,7 +31,7 @@ example
 .. code-block:: julia
 
    @defstruct PoolingLayer Layer (
-     name :: String = "pooling",
+     name :: AbstractString = "pooling",
      (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) > 0),
      (tops :: Vector{Symbol} = Symbol[], length(tops) == length(bottoms)),
      (kernel :: NTuple{2, Int} = (1,1), all([kernel...] .> 0)),
