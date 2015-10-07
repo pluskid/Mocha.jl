@@ -289,10 +289,10 @@ Built-in Coffee Breaks
       TrainingSummary()
 
       #will only show objective function value
-      TrainingSummary([:iter])
+      TrainingSummary(:iter)
 
       #shows iteration, obj_val, learning_rate, and momentum
-      TrainingSummary([:iter, :obj_val, :learning_rate, :momentum])
+      TrainingSummary(:iter, :obj_val, :learning_rate, :momentum)
 
    Note that the training summary at iteration 0 shows the results before training starts.
    Also, any values that are shown with this method will also be added to the lounge
