@@ -378,11 +378,67 @@ CUDA backend. It runs at about 300 iterations per second.
    14-Nov 12:57:08:INFO:root:002100 :: TRAIN obj-val = 0.20724633
    14-Nov 12:57:08:INFO:root:002200 :: TRAIN obj-val = 0.14952177
 
-Remarks
--------
-
 The accuracy from two different training runs are different due to different random
 initializations. The objective function values shown here are also slightly
 different from Caffe's, as until recently, Mocha counts regularizers in the
 forward stage and adds them into the objective functions. This behavior is removed
 in more recent versions of Mocha to avoid unnecessary computations.
+
+
+Using Saved Snapshots for Prediction
+------------------------------------------------
+
+Often you want to use a network previously trained with Mocha to make individual predictions. Earlier during the training process snapshots of the network state were saved every 5000 iterations, and these can be reloaded at a later time. To do this we first need a network with the same shape and configuration as the one used for training, except instead we supply a ``MemoryDataLayer`` instead of a ``HDF5DataLayer``, and a ``SoftmaxLayer`` instead of a ``SoftmaxLossLayer``:
+
+.. code-block:: julia
+   
+   using Mocha
+   backend = CPUBackend()
+   init(backend)
+   
+   mem_data = MemoryDataLayer(name="data", tops=[:data], batch_size=1,
+       data=Array[zeros(Float32, 28, 28, 1, 1)])
+   softmax_layer = SoftmaxLayer(name="prob", tops=[:prob], bottoms=[:ip2])
+
+   # define common_layers as earlier
+   
+   run_net = Net("imagenet", backend, [mem_data, common_layers..., softmax_layer])
+   
+Note that ``common_layers`` has the same definition as above, and that we specifically pass a ``Float32`` array to the ``MemoryDataLayer`` so that it will match the ``Float32`` data type used in the MNIST HDF5 training dataset. Next we fill in this network with the learned parameters from the final training snapshot:
+
+.. code-block:: julia
+
+   load_snapshot(run_net, "snapshots/snapshot-010000.jld")
+
+Now we are ready to make predictions using our trained model. A simple way to accomplish this is to take the first test data point and run it through the model. This is done by setting the data of the ``MemoryDataLayer`` to the first test image and then using ``forward`` to execute the network. Note that the labels in the test data are indexed starting with 0 not 1 so we adjust them before printing.
+
+.. code-block:: julia
+
+   using HDF5
+   h5open("data/test.hdf5") do f
+       get_layer(run_net, "data").data[1][:,:,1,1] = f["data"][:,:,1,1]
+       println("Correct label index: ", Int64(f["label"][:,1][1]+1))
+   end
+
+   forward(run_net)
+   println()
+   println("Label probability vector:")
+   println(run_net.output_blobs[:prob].data)
+   
+This produces the output:
+
+.. code-block:: text
+
+   Correct label index: 5
+
+   Label probability vector:
+   Float32[5.870685e-6
+           0.00057068263
+           1.5419962e-5
+           8.387835e-7
+           0.99935246
+           5.5915066e-6
+           4.284061e-5
+           1.2896479e-6
+           4.2869314e-7
+           4.600691e-6]
