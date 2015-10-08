@@ -2,11 +2,11 @@ Training LeNet on MNIST
 =======================
 
 This tutorial goes through the code in ``examples/mnist`` to explain
-the basic usages of Mocha. We will use the architecture known as
+the basic usage of Mocha. We will use the architecture known as
 [LeNet]_, which is a deep convolutional neural network known to work
 well on handwritten digit classification tasks. More specifically, we
 will use Caffe's modified architecture, by replacing the sigmoid
-activation functions with Rectified Learning Unit (ReLU) activation
+activation functions with Rectified Linear Unit (ReLU) activation
 functions.
 
 .. [LeNet] Lecun, Y.; Bottou, L.; Bengio, Y.; Haffner, P.,
@@ -21,9 +21,9 @@ Preparing the Data
 `MNIST <http://yann.lecun.com/exdb/mnist/>`_ is a handwritten digit
 recognition dataset containing 60,000 training examples and 10,000
 test examples. Each example is a 28x28 single channel grayscale
-image. The dataset in a binary format could be downloaded from `Yann
+image. The dataset can be downloaded in a binary format from `Yann
 LeCun's website <http://yann.lecun.com/exdb/mnist/>`_. We have created
-a script ``get-mnist.sh`` to download the dataset, and it will call
+a script ``get-mnist.sh`` to download the dataset, and it calls
 ``mnist.convert.jl`` to convert the binary dataset into a HDF5 file that
 Mocha can read.
 
@@ -35,7 +35,7 @@ Defining the Network Architecture
 
 The LeNet consists of a convolution layer followed by a pooling layer,
 and then another convolution followed by a pooling layer. After that,
-two densely connected layers were added. We don't use a configuration
+two densely connected layers are added. We don't use a configuration
 file to define a network architecture like Caffe, instead, the network
 definition is directly done in Julia. First of all, let's import the
 Mocha package.
@@ -56,7 +56,7 @@ Note the ``source`` is a simple text file that contains a list of real
 data files (in this case ``data/train.hdf5``). This behavior is the
 same as in Caffe, and could be useful when your dataset contains a lot
 of files. The network processes data in mini-batches, and we are using a batch
-size of 64 in this example. We also enable random shuffling of the data set.
+size of 64 in this example. Larger mini-batches take more computational time but give a lower variance estimate of the loss function/gradient at each iteration.  We also enable random shuffling of the data set to prevent structure in the ordering of input samples from influencing training.
 
 Next we define a convolution layer in a similar way:
 
@@ -65,38 +65,37 @@ Next we define a convolution layer in a similar way:
    conv_layer = ConvolutionLayer(name="conv1", n_filter=20, kernel=(5,5),
        bottoms=[:data], tops=[:conv1])
 
-There are more parameters we specified here
+There are several parameters specified here:
 
 ``name``
   Every layer can be given a name. When saving the model to
   disk and loading back, this is used as an identifier to map to the
   correct layer. So if your layer contains learned parameters (a
   convolution layer contains learned filters), you should give it a
-  unique name. It is a good practice to give every layer a unique name,
-  for the purpose of getting more informative debugging information
-  when there are any potential issues.
+  unique name. It is a good practice to give every layer a unique name to get
+  more informative debugging information when there are any potential issues.
 ``n_filter``
   Number of convolution filters.
 ``kernel``
   The size of each filter. This is specified in a tuple containing
   kernel width and kernel height, respectively. In this case, we are
-  defining a 5x5 square filter size.
+  defining a 5x5 square filter.
 ``bottoms``
   An array of symbols specifying where to get data from. In this case,
   we are asking for a single data source called ``:data``. This is
   provided by the HDF5 data layer we just defined. By default, the
   HDF5 data layer tries to find two datasets named ``data`` and
-  ``label`` from the HDF5 file, and to provide two streams of data called
+  ``label`` from the HDF5 file, and provide two streams of data called
   ``:data`` and ``:label``, respectively. You can change that by
   specifying the ``tops`` property for the HDF5 data layer if needed.
 ``tops``
   This specifies a list of names for the output of the convolution
-  layer. In this case, we are only taking one stream of input and
-  after convolution, we output one stream of convolved data with the
+  layer. In this case, we are only taking one stream of input, and
+  after convolution we output one stream of convolved data with the
   name ``:conv1``.
 
 Another convolution layer and pooling layer are defined similarly,
-with more filters this time:
+this time with more filters:
 
 .. code-block:: julia
 
@@ -110,7 +109,7 @@ with more filters this time:
 Note how ``tops`` and ``bottoms`` define the computation or data
 dependency. After the convolution and pooling layers, we add two fully
 connected layers. They are called ``InnerProductLayer`` because the
-computation is basically inner products between the input and the
+computation is basically an inner product between the input and the
 layer weights. The layer weights are also learned, so we also give
 names to the two layers:
 
@@ -126,12 +125,12 @@ inner product layer specifies the dimension of the output. Note the
 dimension of the input is automatically determined from the bottom
 data stream.
 
-Note for the first inner product layer, we specifies a Rectified
-Learning Unit (ReLU) activation function via the ``neuron``
-property. An activation function could be added to almost all
-computation layers. By default, no activation
+For the first inner product layer we specify a Rectified
+Linear Unit (ReLU) activation function via the ``neuron``
+property. An activation function could be added to almost any
+computation layer. By default, no activation
 function, or the *identity activation function* is used. We don't use
-activation function for the last inner product layer, because that
+activation an function for the last inner product layer, because that
 layer acts as a linear classifier. For more details, see :doc:`/user-guide/neuron`.
 
 The output dimension of the last inner product layer is 10, which corresponds
@@ -148,7 +147,7 @@ layer:
 Note this softmax loss layer takes as input ``:ip2``, which is the
 output of the last inner product layer, and ``:label``, which comes
 directly from the HDF5 data layer. It will compute an averaged loss
-over each mini batch, which allows us to initiate back propagation to
+over each mini-batch, which allows us to initiate back propagation to
 update network parameters.
 
 Configuring the Backend and Building the Network
@@ -161,6 +160,7 @@ example, we will go with the simple pure Julia CPU backend first:
 .. code-block:: julia
 
    backend = CPUBackend()
+   init(backend)
 
 The ``init`` function of a Mocha Backend will initialize the
 computation backend. With an initialized backend, we can go ahead and
@@ -174,12 +174,12 @@ construct our network:
 
 A network is built by passing the constructor an initialized backend,
 and a list of layers. Note how we use ``common_layers`` to collect a
-subset of the layers. We will explain this in a minute.
+subset of the layers. This will be useful later when constructing a network to process validation data.
 
 Configuring the Solver
 ----------------------
 
-We will use Stochastic Gradient Descent (SGD) to solve or train our
+We will use Stochastic Gradient Descent (SGD) to solve/train our
 deep network.
 
 .. code-block:: julia
@@ -192,7 +192,7 @@ deep network.
        load_from=exp_dir)
    solver = Solver(method, params)
 
-The behavior of the solver is specified in the following parameters
+The behavior of the solver is specified by the following parameters:
 
 ``max_iter``
   Max number of iterations the solver will run to train the network.
@@ -200,12 +200,11 @@ The behavior of the solver is specified in the following parameters
   Regularization coefficient. By default, both the convolution layer
   and the inner product layer have L2 regularizers for their weights
   (and no regularization for bias). Those regularizations could be
-  customized for each layer individually. The parameter here is just a
-  global scaling factor for all the local regularization coefficients
-  if any.
+  customized for each layer individually. The parameter here is a
+  global scaling factor for all the local regularization coefficients.
 ``mom_policy``
-  This specifies the policy of setting the momentum during training. Here we are using
-  a policy that simply uses a fixed momentum of 0.9 all the time. See the `Caffe document
+  This specifies the momentum policy used during training. Here we are using
+  a fixed momentum policy of 0.9 throughout training. See the `Caffe document
   <http://caffe.berkeleyvision.org/tutorial/solver.html>`_ for *rules
   of thumb* for setting the learning rate and momentum.
 ``lr_policy``
@@ -214,7 +213,7 @@ The behavior of the solver is specified in the following parameters
   gradually shrink the learning rate, by setting it to base_lr * (1 +
   gamma * iter)\ :sup:`-power`.
 ``load_from``
-  This could be a file of a saved model or a directory. For the latter case, the
+  This can be a saved model file or a directory. For the latter case, the
   latest saved model snapshot will be loaded automatically before the solver
   loop starts. We will see in a minute how to configure the solver to save
   snapshots automatically during training.
@@ -232,35 +231,35 @@ working plan, we provide it with some coffee breaks:
 
    setup_coffee_lounge(solver, save_into="$exp_dir/statistics.hdf5", every_n_iter=1000)
 
-This sets up the coffee lounge. It also specifies a file to save the information we
-accumulated in coffee breaks. Depending on the coffee breaks, useful statistics
-like objective function values during training will be saved into that file, and
-can be loaded later for plotting or inspecting.
+This sets up the coffee lounge, which holds data reported during coffee breaks.
+Here we also specify a file to save the information we accumulated in coffee breaks to disk.
+Depending on the coffee breaks, useful statistics such as objective function values during
+training will be saved, and can be loaded later for plotting or inspecting.
 
 .. code-block:: julia
 
    add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
 
-First of all, we allow the solver to have a coffee break after every
+First, we allow the solver to have a coffee break after every
 100 iterations so that it can give us a brief summary of the
-training process. Currently ``TrainingSummary`` will print the loss
+training process. By default ``TrainingSummary`` will print the loss
 function value on the last training mini-batch.
 
-We also add a coffee break to save a snapshot for the trained
-network every 5,000 iterations.
+We also add a coffee break to save a snapshot of the trained
+network every 5,000 iterations:
 
 .. code-block:: julia
 
    add_coffee_break(solver, Snapshot(exp_dir), every_n_iter=5000)
 
 Note that we are passing ``exp_dir`` to the constructor of the ``Snapshot`` coffee
-break. The snapshots will be saved into that directory. And according to our
+break so snapshots will be saved into that directory. And according to our
 configuration of the solver above, the latest snapshots will
 be automatically loaded by the solver if you run this script again.
 
 In order to see whether we are really making progress or simply
-overfitting, we also wish to see the performance on a separate
-validation set periodically. In this example, we simply use the test
+overfitting, we also wish to periodically see the performance on a separate
+validation set. In this example, we simply use the test
 dataset as the validation set.
 
 We will define a new network to perform the evaluation. The evaluation
@@ -268,8 +267,7 @@ network will have exactly the same architecture, except with a
 different data layer that reads from the validation dataset instead of
 the training set. We also do not need the softmax loss layer as we will
 not train the validation network. Instead, we will add an accuracy
-layer on the top, which will compute the classification accuracy for
-us.
+layer on top, which will compute the classification accuracy.
 
 .. code-block:: julia
 
@@ -277,10 +275,10 @@ us.
    acc_layer = AccuracyLayer(name="test-accuracy", bottoms=[:ip2, :label])
    test_net = Net("MNIST-test", backend, [data_layer_test, common_layers..., acc_layer])
 
-Note how we re-use the ``common_layers`` variable defined a moment ago to reuse
-the description of the network architecture. By passing the same layer object
+Note how we re-use the ``common_layers`` variable defined a earlier to re-use
+the description of the network architecture. By passing the same layer objects
 used to define the training net to the constructor of the validation net, Mocha
-will be able to automatically setup parameter sharing between the two networks.
+will automatically setup parameter sharing between the two networks.
 The two networks will look like this:
 
 .. image:: images/MNIST-network.*
@@ -299,7 +297,7 @@ the validation net (100 iterations in our case, as we have 10,000
 samples in the MNIST test set), and report the average classification
 accuracy. You do not need to specify the number of iterations here as
 the HDF5 data layer will report the epoch number as it goes through a full
-pass of the whole dataset.
+pass of the dataset.
 
 Training
 --------
@@ -380,11 +378,67 @@ CUDA backend. It runs at about 300 iterations per second.
    14-Nov 12:57:08:INFO:root:002100 :: TRAIN obj-val = 0.20724633
    14-Nov 12:57:08:INFO:root:002200 :: TRAIN obj-val = 0.14952177
 
-Remarks
--------
-
 The accuracy from two different training runs are different due to different random
 initializations. The objective function values shown here are also slightly
-different to Caffe's, as until recently, Mocha counts regularizers in the
+different from Caffe's, as until recently, Mocha counts regularizers in the
 forward stage and adds them into the objective functions. This behavior is removed
 in more recent versions of Mocha to avoid unnecessary computations.
+
+
+Using Saved Snapshots for Prediction
+------------------------------------------------
+
+Often you want to use a network previously trained with Mocha to make individual predictions. Earlier during the training process snapshots of the network state were saved every 5000 iterations, and these can be reloaded at a later time. To do this we first need a network with the same shape and configuration as the one used for training, except instead we supply a ``MemoryDataLayer`` instead of a ``HDF5DataLayer``, and a ``SoftmaxLayer`` instead of a ``SoftmaxLossLayer``:
+
+.. code-block:: julia
+   
+   using Mocha
+   backend = CPUBackend()
+   init(backend)
+   
+   mem_data = MemoryDataLayer(name="data", tops=[:data], batch_size=1,
+       data=Array[zeros(Float32, 28, 28, 1, 1)])
+   softmax_layer = SoftmaxLayer(name="prob", tops=[:prob], bottoms=[:ip2])
+
+   # define common_layers as earlier
+   
+   run_net = Net("imagenet", backend, [mem_data, common_layers..., softmax_layer])
+   
+Note that ``common_layers`` has the same definition as above, and that we specifically pass a ``Float32`` array to the ``MemoryDataLayer`` so that it will match the ``Float32`` data type used in the MNIST HDF5 training dataset. Next we fill in this network with the learned parameters from the final training snapshot:
+
+.. code-block:: julia
+
+   load_snapshot(run_net, "snapshots/snapshot-010000.jld")
+
+Now we are ready to make predictions using our trained model. A simple way to accomplish this is to take the first test data point and run it through the model. This is done by setting the data of the ``MemoryDataLayer`` to the first test image and then using ``forward`` to execute the network. Note that the labels in the test data are indexed starting with 0 not 1 so we adjust them before printing.
+
+.. code-block:: julia
+
+   using HDF5
+   h5open("data/test.hdf5") do f
+       get_layer(run_net, "data").data[1][:,:,1,1] = f["data"][:,:,1,1]
+       println("Correct label index: ", Int64(f["label"][:,1][1]+1))
+   end
+
+   forward(run_net)
+   println()
+   println("Label probability vector:")
+   println(run_net.output_blobs[:prob].data)
+   
+This produces the output:
+
+.. code-block:: text
+
+   Correct label index: 5
+
+   Label probability vector:
+   Float32[5.870685e-6
+           0.00057068263
+           1.5419962e-5
+           8.387835e-7
+           0.99935246
+           5.5915066e-6
+           4.284061e-5
+           1.2896479e-6
+           4.2869314e-7
+           4.600691e-6]
