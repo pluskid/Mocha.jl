@@ -228,4 +228,3 @@ Layer Activation Function
 When it makes sense for a layer to have an activation function, it can add
 a ``neuron`` property to the ``Layer`` object and define the ``has_neuron``
 characterization. Everything else will be handled automatically.
-
