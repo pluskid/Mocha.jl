@@ -38,6 +38,16 @@ if Config.use_cuda
   include("cuda/utils/shifted-copy.jl")
 end
 
+export DefaultBackend
+if Config.use_cuda
+  typealias DefaultBackend GPUBackend
+  const default_backend_type = "gpu"
+else
+  typealias DefaultBackend CPUBackend
+  const default_backend_type = "cpu"
+end
+@show DefaultBackend
+
 include("initializers.jl")
 include("regularizers.jl")
 include("constraints.jl")

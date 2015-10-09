@@ -60,7 +60,7 @@ fc1   = InnerProductLayer(name="ip1",output_dim=500,neuron=Neurons.ReLU(),bottom
 fc2   = InnerProductLayer(name="ip2",output_dim=10,bottoms=[:ip1],tops=[:ip2])
 loss  = SoftmaxLossLayer(name="loss",bottoms=[:ip2,:label])
 
-backend = GPUBackend()
+backend = DefaultBackend()
 init(backend)
 
 common_layers = [conv, pool, conv2, pool2, fc1, fc2]

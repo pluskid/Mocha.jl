@@ -1,8 +1,3 @@
-ENV["MOCHA_USE_CUDA"] = "true"
-#ENV["MOCHA_USE_NATIVE_EXT"] = "true"
-#ENV["OMP_NUM_THREADS"] = 1
-#blas_set_num_threads(1)
-
 using Mocha
 
 data_tr_layer = HDF5DataLayer(name="data-train", source="data/train.txt", batch_size=100, shuffle=@windows ? false : true)
@@ -36,7 +31,7 @@ acc_layer   = AccuracyLayer(name="accuracy", bottoms=[:ip1, :label])
 common_layers = [conv1_layer, pool1_layer, norm1_layer, conv2_layer, pool2_layer, norm2_layer,
                  conv3_layer, pool3_layer, ip1_layer]
 
-backend = GPUBackend()
+backend = DefaultBackend()
 init(backend)
 
 net = Net("CIFAR10-train", backend, [data_tr_layer, common_layers..., loss_layer])

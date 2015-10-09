@@ -1,8 +1,3 @@
-#ENV["MOCHA_USE_NATIVE_EXT"] = "true"
-#ENV["OMP_NUM_THREADS"] = 1
-#blas_set_num_threads(1)
-ENV["MOCHA_USE_CUDA"] = "true"
-
 using Mocha
 
 ############################################################
@@ -60,7 +55,7 @@ drop_input  = DropoutLayer(name="drop_in", bottoms=[:data], ratio=0.2)
 drop_fc1 = DropoutLayer(name="drop_fc1", bottoms=[:fc1], ratio=0.5)
 drop_fc2  = DropoutLayer(name="drop_fc2", bottoms=[:fc2], ratio=0.5)
 
-backend = GPUBackend()
+backend = DefaultBackend()
 init(backend)
 
 common_layers = [fc1_layer, fc2_layer, fc3_layer]

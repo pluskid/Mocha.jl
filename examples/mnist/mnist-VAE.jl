@@ -1,14 +1,8 @@
 using Mocha
 
 include("VAE.jl")
-use_gpu = haskey(ENV, "MOCHA_USE_CUDA")
-#use_gpu = false # HACK
-if use_gpu
-    backend = GPUBackend()
-else
-    backend = CPUBackend()
-end
 
+backend = DefaultBackend()
 init(backend)
 
 # Number of latent variables, size of encoding, decoding layers

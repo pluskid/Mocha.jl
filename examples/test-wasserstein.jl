@@ -1,9 +1,4 @@
-use_cuda = true
 data_type = Float32
-
-if use_cuda
-  ENV["MOCHA_USE_CUDA"] = "true"
-end
 
 using Mocha
 srand(123)
@@ -34,12 +29,7 @@ for i = 1:d
   end
 end
 
-
-if use_cuda
-  backend = GPUBackend()
-else
-  backend = CPUBackend()
-end
+backend = DefaultBackend()
 init(backend)
 
 data_layer = MemoryDataLayer(batch_size=50,
