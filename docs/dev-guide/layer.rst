@@ -31,7 +31,7 @@ example
 .. code-block:: julia
 
    @defstruct PoolingLayer Layer (
-     name :: String = "pooling",
+     name :: AbstractString = "pooling",
      (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) > 0),
      (tops :: Vector{Symbol} = Symbol[], length(tops) == length(bottoms)),
      (kernel :: NTuple{2, Int} = (1,1), all([kernel...] .> 0)),
@@ -228,4 +228,3 @@ Layer Activation Function
 When it makes sense for a layer to have an activation function, it can add
 a ``neuron`` property to the ``Layer`` object and define the ``has_neuron``
 characterization. Everything else will be handled automatically.
-
