@@ -117,7 +117,7 @@ CUDA Backend
 ------------
 
 GPUs have been shown to be very effective at training large scale deep neural
-networks. NVidia® recently released a CUDA accelerated library of primitives for
+networks. NVidia® recently released a GPU accelerated library of primitives for
 deep neural networks called `cuDNN <https://developer.nvidia.com/cuDNN>`_. Mocha
 implementes a CUDA backend by combining cuDNN, `cuBLAS
 <https://developer.nvidia.com/cublas>`_ and plain CUDA kernels.
@@ -157,7 +157,7 @@ setting the environment variable ``MOCHA_USE_CUDA``. For example:
 
    using Mocha
 
-   backend = CUDABackend()
+   backend = GPUBackend()
    init(backend)
 
    # ...
@@ -165,41 +165,12 @@ setting the environment variable ``MOCHA_USE_CUDA``. For example:
    shutdown(backend)
 
 Note that instead of instantiating a ``CPUBackend``, you now construct
-a ``CUDABackend``. The environment variable needs to be set **before** loading
+a ``GPUBackend``. The environment variable needs to be set **before** loading
 Mocha. It is designed to use conditional loading so that the pure CPU backend
 can still run on machines which don't have a GPU device or don't have the CUDA
 library installed. If you have multiple GPU devices on one node, the environment
-variable ``MOCHA_CUDA_DEVICE`` can be used to specify the device ID to use. The
+variable ``MOCHA_GPU_DEVICE`` can be used to specify the device ID to use. The
 default device ID is ``0``.
-
-OpenCL Backend
-~~~~~~~~~~~~~~
-
-**This is a Work In Progress [WIP].**
-
-This backend is similar to the CUDA backend, but using OpenCL instead. Although
-OpenCL hasn't received quite as much attention as CUDA in terms of highly
-optimized performance. Nevertheless, Mocha leverages `CLBLAS.jl
-<https://github.com/JuliaGPU/CLBLAS.jl>`_ for the heavy lifting computation-wise,
-and that is augmented by custom OpenCL kernels.
-
-To use OpenCL, set the ``MOCHA_USE_OPENCL`` environment _before_ loading Mocha.
-
-.. code-block:: julia
-
-   ENV["MOCHA_USE_OPENCL"] = "true"
-
-   using Mocha
-
-   backend = OpenCLBackend()
-   init(backend)
-
-   # ...
-
-   shutdown(backend)
-
-To select the platform and device (instead of the defaults of ``0``), set the
-environment variables ``MOCHA_OPENCL_PLATFORM`` and ``MOCHA_OPENCL_DEVICE``.
 
 Recompiling Kernels
 ~~~~~~~~~~~~~~~~~~~
