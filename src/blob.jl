@@ -28,11 +28,11 @@ end
 function ndims{T,N}(blob :: Blob{T,N})
   N
 end
-function size(blob :: Blob)
-  error("Not implemented (should return the size of data)")
+function size(blob :: Blob) # should return the size of data
+  error("size not implemented for type $(typeof(blob))")
 end
-function destroy(blob :: Blob)
-  error("Not implemented (should destroy the blob)")
+function destroy(blob :: Blob) # should destroy the blob
+  error("destroy not implemented for type $(typeof(blob))")
 end
 function size{T,N}(blob :: Blob{T,N}, dim :: Int)
   if dim < 0
@@ -70,20 +70,20 @@ function to_array(blob::Blob)
   array
 end
 
-function copy!(dst :: Array, src :: Blob)
-  error("Not implemented (should copy content of src to dst)")
+function copy!(dst :: Array, src :: Blob) # should copy content of src to dst
+  error("copy! not implemented from src type $(typeof(src)) to dest type $(typeof(dst))")
 end
-function copy!(dst :: Blob, src :: Array)
-  error("Not implemented (should copy content of src to dst)")
+function copy!(dst :: Blob, src :: Array) # should copy content of src to dst
+  error("copy! not implemented from src type $(typeof(src)) to dest type $(typeof(dst))")
 end
-function fill!(dst :: Blob, val)
-  error("Not implemented (should fill dst with val)")
+function fill!(dst :: Blob, val) # should fill dst with val
+  error("fill! not implemented for src value type $(typeof(val)) to dest type $(typeof(dst))")
 end
 function erase!(dst :: Blob)
   fill!(dst, 0)
 end
-function randn!(dst :: Blob)
-  error("Not implemented (should fill dst with iid standard normal variates)")
+function randn!(dst :: Blob) # should fill dst with iid standard normal variates
+  error("randn! not implemented for type $(typeof(dst))")
 end
 
 ############################################################
