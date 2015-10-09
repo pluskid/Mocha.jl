@@ -2,7 +2,7 @@
 # apply L2 constraint
 ############################################################
 
-function apply_l2_cons!{T <: AbstractFloat}(backend::GPUBackend, blob::CuTensorBlob{T},
+function apply_l2_cons!{T <: AbstractFloat}(backend::CUDABackend, blob::CuTensorBlob{T},
                                             coef::AbstractFloat, ninputs::Integer, nunits::Integer)
   # we allocate a bit of temporary memory here
   # we could instead also store this in the cons type

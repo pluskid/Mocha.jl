@@ -1,4 +1,4 @@
-function forward(backend::GPUBackend, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob})
   pred      = inputs[1]
   label     = inputs[2]
   data_type = eltype(pred)

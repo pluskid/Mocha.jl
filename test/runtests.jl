@@ -1,7 +1,12 @@
 if haskey(ENV, "MOCHA_USE_CUDA")
-  const test_gpu = true
+  const test_cuda = true
 else
-  const test_gpu = false
+  const test_cuda = false
+end
+if haskey(ENV, "MOCHA_USE_OPENCL")
+  const test_opencl = true
+else
+  const test_opencl = false
 end
 const test_cpu   = true
 
@@ -13,9 +18,14 @@ if test_cpu
   init(backend_cpu)
 end
 
-if test_gpu
-  backend_gpu = GPUBackend()
-  init(backend_gpu)
+if test_cuda
+  backend_cuda = CUDABackend()
+  init(backend_cuda)
+end
+
+if test_opencl
+  backend_opencl = OpenCLBackend()
+  init(backend_opencl)
 end
 
 # run test in the whole directory, latest modified files
@@ -47,11 +57,15 @@ include("utils/glob.jl")
 include("utils/blas.jl")
 include("utils/blob-reshape.jl")
 
-if test_gpu
+if test_cuda
   include("cuda/padded-copy.jl")
   include("cuda/cuvec.jl")
   include("cuda/mocha.jl")
   include("cuda/cublas.jl")
+end
+
+if test_opencl
+  warn("TODO: OpenCL utilities tests")
 end
 
 ############################################################
@@ -84,8 +98,11 @@ include("data-transformers.jl")
 ############################################################
 test_dir("layers")
 
-if test_gpu
-  shutdown(backend_gpu)
+if test_opencl
+  shutdown(backend_opencl)
+end
+if test_cuda
+  shutdown(backend_cuda)
 end
 if test_cpu
   shutdown(backend_cpu)

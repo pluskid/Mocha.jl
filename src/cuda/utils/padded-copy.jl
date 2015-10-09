@@ -1,6 +1,6 @@
 export dense2padded!, padded2dense!
 
-function dense2padded!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
+function dense2padded!{T}(backend::CUDABackend, dst::CuTensorBlob{T},
     src::CuTensorBlob{T}, pad_head::NTuple{2,Int}, pad_tail::NTuple{2,Int}, mirror::Bool)
 
     width, height, channels, num = size(src)
@@ -23,7 +23,7 @@ function dense2padded!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
         (dst.ptr.p,src.ptr.p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num,mirror))
 end
 
-function padded2dense!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
+function padded2dense!{T}(backend::CUDABackend, dst::CuTensorBlob{T},
     src::CuTensorBlob{T}, pad_head::NTuple{2,Int}, pad_tail::NTuple{2,Int}, mirror::Bool)
 
     width, height, channels, num = size(dst)
@@ -46,11 +46,11 @@ function padded2dense!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
         (dst.ptr.p,src.ptr.p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num, mirror))
 end
 
-function dense2padded!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
+function dense2padded!{T}(backend::CUDABackend, dst::CuTensorBlob{T},
     src::CuTensorBlob{T}, pad::NTuple{2,Int}, mirror=false)
   dense2padded!(backend, dst, src, pad, pad, mirror)
 end
-function padded2dense!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
+function padded2dense!{T}(backend::CUDABackend, dst::CuTensorBlob{T},
     src::CuTensorBlob{T}, pad::NTuple{2,Int}, mirror=false)
   padded2dense!(backend, dst, src, pad, pad, mirror)
 end

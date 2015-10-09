@@ -1,12 +1,12 @@
-function setup_etc(backend::GPUBackend, layer::BinaryAccuracyLayer, inputs)
+function setup_etc(backend::CUDABackend, layer::BinaryAccuracyLayer, inputs)
   etc = make_blob(backend, Float32, 1)
   return etc
 end
-function shutdown(backend::GPUBackend, state::BinaryAccuracyLayerState)
+function shutdown(backend::CUDABackend, state::BinaryAccuracyLayerState)
   destroy(state.etc)
 end
 
-function forward(backend::GPUBackend, state::BinaryAccuracyLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::BinaryAccuracyLayerState, inputs::Vector{Blob})
   pred = inputs[1]
   label = inputs[2]
 

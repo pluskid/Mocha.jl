@@ -1,4 +1,4 @@
-function forward(backend::GPUBackend, state::SquareLossLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::SquareLossLayerState, inputs::Vector{Blob})
   pred = inputs[1]
   label = inputs[2]
 
@@ -14,7 +14,7 @@ function forward(backend::GPUBackend, state::SquareLossLayerState, inputs::Vecto
   state.n_accum += get_num(pred)
 end
 
-function backward(backend::GPUBackend, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::SquareLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   diff = diffs[1]
   if isa(diff, CuTensorBlob)
     pred = inputs[1]

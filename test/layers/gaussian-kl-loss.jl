@@ -57,10 +57,14 @@ function test_gaussian_kl_loss_layer(backend::Backend)
   test_gaussian_kl_loss_layer(backend, Float64, 1e-8)
 end
 
-if test_gpu
-  test_gaussian_kl_loss_layer(backend_gpu)
+if test_cuda
+  test_gaussian_kl_loss_layer(backend_cuda)
 end
 
 if test_cpu
   test_gaussian_kl_loss_layer(backend_cpu)
+end
+
+if test_opencl
+  warn("TODO: OpenCL gaussian kl loss layer tests")
 end

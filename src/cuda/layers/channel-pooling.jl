@@ -1,4 +1,4 @@
-function setup_etc(backend::GPUBackend, layer::ChannelPoolingLayer, inputs, blobs)
+function setup_etc(backend::CUDABackend, layer::ChannelPoolingLayer, inputs, blobs)
   if isa(layer.pooling, Pooling.Max)
     masks = Array(CuPtr, length(inputs))
     for i = 1:length(inputs)
@@ -16,7 +16,7 @@ function setup_etc(backend::GPUBackend, layer::ChannelPoolingLayer, inputs, blob
   end
   return etc
 end
-function shutdown_etc(backend::GPUBackend, state::ChannelPoolingLayerState)
+function shutdown_etc(backend::CUDABackend, state::ChannelPoolingLayerState)
   if isa(state.layer.pooling, Pooling.Max)
     map(CUDA.free, state.etc)
   elseif isa(state.layer.pooling, Pooling.Mean)
@@ -26,10 +26,10 @@ function shutdown_etc(backend::GPUBackend, state::ChannelPoolingLayerState)
   end
 end
 
-function forward(backend::GPUBackend, state::ChannelPoolingLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::ChannelPoolingLayerState, inputs::Vector{Blob})
   forward(backend, state.layer.pooling, state, inputs)
 end
-function forward(backend::GPUBackend, pool::StdPoolingFunction,
+function forward(backend::CUDABackend, pool::StdPoolingFunction,
     state::ChannelPoolingLayerState, inputs::Vector{Blob})
 
   for i = 1:length(inputs)
@@ -46,11 +46,11 @@ function forward(backend::GPUBackend, pool::StdPoolingFunction,
   end
 end
 
-function backward(backend::GPUBackend, state::ChannelPoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::ChannelPoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   backward(backend, state.layer.pooling, state, inputs, diffs)
 end
 
-function backward(backend::GPUBackend, pool::StdPoolingFunction, state::ChannelPoolingLayerState,
+function backward(backend::CUDABackend, pool::StdPoolingFunction, state::ChannelPoolingLayerState,
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   for i = 1:length(inputs)
@@ -69,7 +69,7 @@ function backward(backend::GPUBackend, pool::StdPoolingFunction, state::ChannelP
   end
 end
 
-function cuda_mean_channel_pooling_forward{T}(backend::GPUBackend, input::CuTensorBlob{T},
+function cuda_mean_channel_pooling_forward{T}(backend::CUDABackend, input::CuTensorBlob{T},
     output::CuTensorBlob{T}, integral::CuPtr, layer, op_dim)
 
   spatial_dim_T, channels, num = split_dims(input, op_dim)
@@ -114,7 +114,7 @@ function cuda_mean_channel_pooling_forward{T}(backend::GPUBackend, input::CuTens
   end
 end
 
-function cuda_mean_channel_pooling_backward{T}(backend::GPUBackend, input::CuTensorBlob{T},
+function cuda_mean_channel_pooling_backward{T}(backend::CUDABackend, input::CuTensorBlob{T},
     output::CuTensorBlob{T}, layer, op_dim)
 
   spatial_dim_T, channels, num = split_dims(input, op_dim)
@@ -154,7 +154,7 @@ function cuda_geometry_max_chann_pool(sp_dim::Int, num::Int)
           (CUDA.THREADS_PER_BLOCK_X,1,CUDA.THREADS_PER_BLOCK_Z))
 
 end
-function cuda_max_channel_pooling_forward{T}(backend::GPUBackend, input::CuTensorBlob{T},
+function cuda_max_channel_pooling_forward{T}(backend::CUDABackend, input::CuTensorBlob{T},
     output::CuTensorBlob{T}, mask::CuPtr, layer, op_dim)
 
   sp_dim, channels, num = split_dims(input, op_dim)
@@ -173,7 +173,7 @@ function cuda_max_channel_pooling_forward{T}(backend::GPUBackend, input::CuTenso
       pooled_chann, layer.kernel, layer.stride, layer.pad[1]))
 end
 
-function cuda_max_channel_pooling_backward{T}(backend::GPUBackend, input::CuTensorBlob{T},
+function cuda_max_channel_pooling_backward{T}(backend::CUDABackend, input::CuTensorBlob{T},
     output::CuTensorBlob{T}, mask::CuPtr, layer, op_dim)
 
   sp_dim, channels, num = split_dims(input, op_dim)

@@ -38,10 +38,10 @@ function erase!{T}(dst :: CuTensorBlob{T})
   @CUDA.cucall(:cuMemsetD8_v2, (Ptr{Void}, Cuchar, Csize_t), dst.ptr.p, 0, length(dst)*sizeof(T))
 end
 
-function make_blob{N}(backend::GPUBackend, data_type::Type, dims::NTuple{N,Int})
+function make_blob{N}(backend::CUDABackend, data_type::Type, dims::NTuple{N,Int})
   return CuTensorBlob(data_type, dims)
 end
-function reshape_blob{T,N}(backend::GPUBackend, blob::CuTensorBlob{T}, dims::NTuple{N,Int})
+function reshape_blob{T,N}(backend::CUDABackend, blob::CuTensorBlob{T}, dims::NTuple{N,Int})
   @assert prod(dims) == length(blob)
   return CuTensorBlob{T,N}(blob.ptr, dims, length(blob))
 end

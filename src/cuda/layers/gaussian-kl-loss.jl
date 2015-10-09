@@ -1,5 +1,5 @@
 
-function setup(backend::GPUBackend, layer::GaussianKLLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::CUDABackend, layer::GaussianKLLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
   aux_ones = make_blob(backend, data_type, size(inputs[2])...) # for summing
   fill!(aux_ones, 1.0)
@@ -10,7 +10,7 @@ function setup(backend::GPUBackend, layer::GaussianKLLossLayer, inputs::Vector{B
 end
 
 
-function forward(backend::GPUBackend, state::GaussianKLLossLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::GaussianKLLossLayerState, inputs::Vector{Blob})
   mu  = inputs[1]
   sigma = inputs[2]
   num = get_num(mu)
@@ -36,7 +36,7 @@ function forward(backend::GPUBackend, state::GaussianKLLossLayerState, inputs::V
 end
 
 
-function backward(backend::GPUBackend, state::GaussianKLLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::GaussianKLLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 
   mu  = inputs[1]
   sigma = inputs[2]

@@ -26,7 +26,9 @@ end
 if test_cpu
   test_l2_regularizer(backend_cpu)
 end
-if test_gpu
-  test_l2_regularizer(backend_gpu)
+if test_cuda
+  test_l2_regularizer(backend_cuda)
 end
-
+if test_opencl
+  warn("TODO: OpenCL l2 regularizer tests")
+end

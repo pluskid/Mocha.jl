@@ -1,4 +1,4 @@
-function sinkhorn(backend::GPUBackend, state::WassersteinLossLayerState, inputs::Vector{Blob})
+function sinkhorn(backend::CUDABackend, state::WassersteinLossLayerState, inputs::Vector{Blob})
   pred  = inputs[1]
   label = inputs[2]
 

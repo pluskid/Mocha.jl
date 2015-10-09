@@ -1,4 +1,4 @@
-function setup_etc(backend::GPUBackend, layer::DropoutLayer, inputs::Vector{Blob})
+function setup_etc(backend::CUDABackend, layer::DropoutLayer, inputs::Vector{Blob})
   cuda_rand_states = CuPtr
   kernel = backend.mocha.dropout_init
   rnd_state_size_blob = make_blob(backend, Float64, 1, 1, 1, 1)
@@ -23,13 +23,13 @@ function setup_etc(backend::GPUBackend, layer::DropoutLayer, inputs::Vector{Blob
   return (cuda_rand_states, input_copy)
 end
 
-function destroy_etc(backend::GPUBackend, state::DropoutLayerState)
+function destroy_etc(backend::CUDABackend, state::DropoutLayerState)
   cuda_rand_states, input_copy = state.etc
   CUDA.free(cuda_rand_states)
   destroy(input_copy)
 end
 
-function forward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::DropoutLayerState, inputs::Vector{Blob})
   # make copy of input blob
   copy!(state.etc[2], inputs[1])
 
@@ -47,7 +47,7 @@ function forward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{B
       state.rand_vals.ptr.p, state.ratio, state.scale))
 end
 
-function backward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::DropoutLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   if !isa(diffs[1], NullBlob)
     len = length(inputs[1])
     x_block = round(Int, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))

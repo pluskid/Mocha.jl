@@ -83,6 +83,9 @@ end
 if test_cpu
   test_crop_layer(backend_cpu)
 end
-if test_gpu
-  test_crop_layer(backend_gpu)
+if test_cuda
+  test_crop_layer(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL crop layer tests")
 end

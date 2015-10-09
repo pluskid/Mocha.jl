@@ -101,6 +101,9 @@ end
 if test_cpu
   test_softmax_loss_layer(backend_cpu)
 end
-if test_gpu
-  test_softmax_loss_layer(backend_gpu)
+if test_cuda
+  test_softmax_loss_layer(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL softmax loss layer tests")
 end

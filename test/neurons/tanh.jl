@@ -31,7 +31,10 @@ end
 if test_cpu
   test_tanh_neuron(backend_cpu)
 end
-if test_gpu
-  test_tanh_neuron(backend_gpu)
+if test_cuda
+  test_tanh_neuron(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL tanh neuron tests")
 end
 

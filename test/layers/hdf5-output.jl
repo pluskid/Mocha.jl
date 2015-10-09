@@ -51,7 +51,10 @@ end
 if test_cpu
   test_hdf5_output_layer(backend_cpu)
 end
-if test_gpu
-  test_hdf5_output_layer(backend_gpu)
+if test_cuda
+  test_hdf5_output_layer(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL hdf5 output layer tests")
 end
 

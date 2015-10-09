@@ -67,7 +67,9 @@ end
 if test_cpu
   test_element_wise_layer(backend_cpu)
 end
-if test_gpu
-  test_element_wise_layer(backend_gpu)
+if test_cuda
+  test_element_wise_layer(backend_cuda)
 end
-
+if test_opencl
+  warn("TODO: OpenCL elementwise layer tests")
+end

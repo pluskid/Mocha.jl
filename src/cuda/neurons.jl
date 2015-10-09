@@ -8,7 +8,7 @@ end
 ############################################################
 # Rectified-Linear
 ############################################################
-function forward(backend :: GPUBackend, neuron :: Neurons.ReLU, output :: Blob)
+function forward(backend :: CUDABackend, neuron :: Neurons.ReLU, output :: Blob)
   cuda_dim, blob_dim = cuda_geometry(neuron, output)
   data_type = eltype(output)
   if data_type == Float32
@@ -21,7 +21,7 @@ function forward(backend :: GPUBackend, neuron :: Neurons.ReLU, output :: Blob)
   CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, blob_dim...))
 end
 
-function backward(backend :: GPUBackend, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
+function backward(backend :: CUDABackend, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
   cuda_dim, blob_dim = cuda_geometry(neuron, output)
   data_type = eltype(output)
   if data_type == Float32
@@ -37,7 +37,7 @@ end
 ############################################################
 # Leaky Rectified-Linear
 ############################################################
-function forward(backend :: GPUBackend, neuron :: Neurons.LReLU, output :: Blob)
+function forward(backend :: CUDABackend, neuron :: Neurons.LReLU, output :: Blob)
   cuda_dim, blob_dim = cuda_geometry(neuron, output)
   data_type = eltype(output)
   if data_type == Float32
@@ -50,7 +50,7 @@ function forward(backend :: GPUBackend, neuron :: Neurons.LReLU, output :: Blob)
   CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, blob_dim...))
 end
 
-function backward(backend :: GPUBackend, neuron :: Neurons.LReLU, output :: Blob, gradient :: Blob)
+function backward(backend :: CUDABackend, neuron :: Neurons.LReLU, output :: Blob, gradient :: Blob)
   cuda_dim, blob_dim = cuda_geometry(neuron, output)
   data_type = eltype(output)
   if data_type == Float32
@@ -64,7 +64,7 @@ function backward(backend :: GPUBackend, neuron :: Neurons.LReLU, output :: Blob
 end
 
 
-function forward(backend :: GPUBackend, neuron :: Neurons.Sigmoid, output :: Blob)
+function forward(backend :: CUDABackend, neuron :: Neurons.Sigmoid, output :: Blob)
   cuda_dim, blob_dim = cuda_geometry(neuron, output)
   data_type = eltype(output)
   if data_type == Float32
@@ -77,7 +77,7 @@ function forward(backend :: GPUBackend, neuron :: Neurons.Sigmoid, output :: Blo
   CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, blob_dim...))
 end
 
-function backward(backend :: GPUBackend, neuron :: Neurons.Sigmoid, output :: Blob, gradient :: Blob)
+function backward(backend :: CUDABackend, neuron :: Neurons.Sigmoid, output :: Blob, gradient :: Blob)
   cuda_dim, blob_dim = cuda_geometry(neuron, output)
   data_type = eltype(output)
   if data_type == Float32
@@ -91,7 +91,7 @@ function backward(backend :: GPUBackend, neuron :: Neurons.Sigmoid, output :: Bl
 end
 
 
-function forward(backend :: GPUBackend, neuron :: Neurons.Tanh, output :: Blob)
+function forward(backend :: CUDABackend, neuron :: Neurons.Tanh, output :: Blob)
   cuda_dim, blob_dim = cuda_geometry(neuron, output)
   data_type = eltype(output)
   if data_type == Float32
@@ -104,7 +104,7 @@ function forward(backend :: GPUBackend, neuron :: Neurons.Tanh, output :: Blob)
   CUDA.launch(kernel, cuda_dim..., tuple(output.ptr.p, blob_dim...))
 end
 
-function backward(backend :: GPUBackend, neuron :: Neurons.Tanh, output :: Blob, gradient :: Blob)
+function backward(backend :: CUDABackend, neuron :: Neurons.Tanh, output :: Blob, gradient :: Blob)
   cuda_dim, blob_dim = cuda_geometry(neuron, output)
   data_type = eltype(output)
   if data_type == Float32
@@ -120,10 +120,10 @@ end
 
 ## Exponential
 
-function forward(backend :: GPUBackend, neuron :: Neurons.Exponential, output :: Blob)
+function forward(backend :: CUDABackend, neuron :: Neurons.Exponential, output :: Blob)
   CuVec.exp!(backend, output)
 end
 
-function backward(backend :: GPUBackend, neuron :: Neurons.Exponential, output :: Blob, gradient :: Blob)
+function backward(backend :: CUDABackend, neuron :: Neurons.Exponential, output :: Blob, gradient :: Blob)
   CuVec.mul!(backend, gradient, output)
 end

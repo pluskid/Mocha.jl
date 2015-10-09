@@ -38,8 +38,11 @@ end
 if test_cpu
   test_data_transformer(backend_cpu)
 end
-if test_gpu
-  test_data_transformer(backend_gpu)
+if test_cuda
+  test_data_transformer(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL data transformer tests")
 end
 
 

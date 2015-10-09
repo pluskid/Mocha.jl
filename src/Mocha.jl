@@ -38,10 +38,19 @@ if Config.use_cuda
   include("cuda/utils/shifted-copy.jl")
 end
 
+if Config.use_opencl
+  include("opencl/opencl.jl")
+  include("opencl/backend.jl")
+  include("opencl/blob.jl")
+end
+
 export DefaultBackend
 if Config.use_cuda
-  typealias DefaultBackend GPUBackend
-  const default_backend_type = "gpu"
+  typealias DefaultBackend CUDABackend
+  const default_backend_type = "cuda"
+elseif Config.use_opencl
+  typealias DefaultBackend OpenCLBackend
+  const default_backend_type = "opencl"
 else
   typealias DefaultBackend CPUBackend
   const default_backend_type = "cpu"

@@ -1,10 +1,10 @@
-function setup_etc(backend::GPUBackend, state::SoftlabelSoftmaxLossLayerState, inputs::Vector{Blob})
+function setup_etc(backend::CUDABackend, state::SoftlabelSoftmaxLossLayerState, inputs::Vector{Blob})
   state.etc = make_blob(backend, eltype(inputs[1]), size(inputs[1]))
 end
-function shutdown_etc(backend::GPUBackend, state::SoftlabelSoftmaxLossLayerState)
+function shutdown_etc(backend::CUDABackend, state::SoftlabelSoftmaxLossLayerState)
   destroy(state.etc)
 end
-function forward(backend::GPUBackend, state::SoftlabelSoftmaxLossLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::SoftlabelSoftmaxLossLayerState, inputs::Vector{Blob})
   pred = inputs[1]
   label = inputs[2]
 
@@ -20,7 +20,7 @@ function forward(backend::GPUBackend, state::SoftlabelSoftmaxLossLayerState, inp
   state.loss = state.layer.weight * loss / (prod(dims) / dims[state.op_dim])
 end
 
-function backward(backend::GPUBackend, state::SoftlabelSoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::SoftlabelSoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   diff = diffs[1]
 
   if isa(diff, CuTensorBlob)

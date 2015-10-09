@@ -1,4 +1,4 @@
-function forward(backend::GPUBackend, state::ArgmaxLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::ArgmaxLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input = inputs[i]
     output = state.blobs[i]

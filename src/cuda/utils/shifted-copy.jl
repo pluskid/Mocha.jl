@@ -1,6 +1,6 @@
 export copy_to_shifted!, copy_from_shifted!
 
-function copy_to_shifted!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
+function copy_to_shifted!{T}(backend::CUDABackend, dst::CuTensorBlob{T},
     src::CuTensorBlob{T}, shift::NTuple{2,Int})
 
   dims = size(src)
@@ -32,7 +32,7 @@ function copy_to_shifted!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
       (dst.ptr.p,src.ptr.p,dim_x,dim_y,dim_z,dim_y2,shift_amount))
 end
 
-function copy_from_shifted!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
+function copy_from_shifted!{T}(backend::CUDABackend, dst::CuTensorBlob{T},
     src::CuTensorBlob{T}, shift::NTuple{2,Int})
 
   dims = size(dst)

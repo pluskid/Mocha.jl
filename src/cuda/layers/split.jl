@@ -1,4 +1,4 @@
-function backward{N}(backend::GPUBackend, state::SplitLayerState{N}, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward{N}(backend::CUDABackend, state::SplitLayerState{N}, inputs::Vector{Blob}, diffs::Vector{Blob})
   if !isa(diffs[1], NullBlob)
     diff = diffs[1]
     len = length(diff)

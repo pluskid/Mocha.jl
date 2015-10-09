@@ -69,6 +69,9 @@ end
 if test_cpu
   test_binary_crossentropy_loss_layer(backend_cpu)
 end
-if test_gpu
-  test_binary_crossentropy_loss_layer(backend_gpu)
+if test_cuda
+  test_binary_crossentropy_loss_layer(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL binary cross entropy loss layer tests")
 end

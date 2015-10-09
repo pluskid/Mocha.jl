@@ -64,4 +64,4 @@ function test_mocha_kernels(backend::Backend)
   test_mocha_kernels(backend, Float64)
 end
 
-test_mocha_kernels(backend_gpu)
+test_mocha_kernels(backend_cuda)

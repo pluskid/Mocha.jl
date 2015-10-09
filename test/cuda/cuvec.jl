@@ -40,4 +40,4 @@ function test_cuvec(backend::Backend)
   test_cuvec(backend, Float64)
 end
 
-test_cuvec(backend_gpu)
+test_cuvec(backend_cuda)

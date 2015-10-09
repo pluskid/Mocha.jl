@@ -18,6 +18,9 @@ end
 if test_cpu
   test_blob_reshape(backend_cpu)
 end
-if test_gpu
-  test_blob_reshape(backend_gpu)
+if test_cuda
+  test_blob_reshape(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL blob reshape tests")
 end

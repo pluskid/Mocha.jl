@@ -62,7 +62,10 @@ end
 if test_cpu
   test_power_layer(backend_cpu)
 end
-if test_gpu
-  test_power_layer(backend_gpu)
+if test_cuda
+  test_power_layer(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL power layer tests")
 end
 

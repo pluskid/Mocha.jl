@@ -51,6 +51,9 @@ if test_cpu
     test_sgd_solver(backend_cpu)
 end
 
-if test_gpu
-    test_sgd_solver(backend_gpu)
+if test_cuda
+    test_sgd_solver(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL sgd solver tests")
 end

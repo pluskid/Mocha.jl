@@ -4,7 +4,7 @@ type CuDNNPoolingState
   outputs_desc :: Vector{CuDNN.Tensor4dDescriptor}
 end
 
-function setup_etc(backend::GPUBackend, layer::PoolingLayer, inputs,
+function setup_etc(backend::CUDABackend, layer::PoolingLayer, inputs,
     pooled_width, pooled_height)
 
   dtype = eltype(inputs[1])
@@ -30,7 +30,7 @@ function setup_etc(backend::GPUBackend, layer::PoolingLayer, inputs,
   return etc
 end
 
-function shutdown(backend::GPUBackend, state::PoolingLayerState)
+function shutdown(backend::CUDABackend, state::PoolingLayerState)
   map(destroy, state.blobs)
   map(destroy, state.blobs_diff)
   CuDNN.destroy_pooling_descriotpr(state.etc.pooling_desc)
@@ -38,7 +38,7 @@ function shutdown(backend::GPUBackend, state::PoolingLayerState)
   map(CuDNN.destroy_tensor4d_descriptor, state.etc.outputs_desc)
 end
 
-function forward(backend::GPUBackend, state::PoolingLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::PoolingLayerState, inputs::Vector{Blob})
   layer = state.layer
   alpha = one(eltype(inputs[1]))
   beta = zero(eltype(inputs[1]))
@@ -49,7 +49,7 @@ function forward(backend::GPUBackend, state::PoolingLayerState, inputs::Vector{B
   end
 end
 
-function backward(backend::GPUBackend, state::PoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::PoolingLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   layer = state.layer
   alpha = one(eltype(inputs[1]))
   beta = zero(eltype(inputs[1]))

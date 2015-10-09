@@ -3,7 +3,7 @@ type CuDNNSoftmaxState
   outputs_desc :: Vector{CuDNN.Tensor4dDescriptor}
 end
 
-function setup_etc(backend::GPUBackend, layer::SoftmaxLayer, dims::Vector{Int}, data_type, inputs)
+function setup_etc(backend::CUDABackend, layer::SoftmaxLayer, dims::Vector{Int}, data_type, inputs)
   inputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
   outputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
   for i = 1:length(inputs)
@@ -14,13 +14,13 @@ function setup_etc(backend::GPUBackend, layer::SoftmaxLayer, dims::Vector{Int}, 
   etc = CuDNNSoftmaxState(inputs_desc, outputs_desc)
   return etc
 end
-function shutdown(backend::GPUBackend, state::SoftmaxLayerState)
+function shutdown(backend::CUDABackend, state::SoftmaxLayerState)
   map(destroy, state.blobs)
   map(CuDNN.destroy_tensor4d_descriptor, state.etc.inputs_desc)
   map(CuDNN.destroy_tensor4d_descriptor, state.etc.outputs_desc)
 end
 
-function forward(backend::GPUBackend, state::SoftmaxLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::SoftmaxLayerState, inputs::Vector{Blob})
   alpha = one(eltype(inputs[1]))
   beta = zero(eltype(inputs[1]))
   for i = 1:length(inputs)
@@ -30,7 +30,7 @@ function forward(backend::GPUBackend, state::SoftmaxLayerState, inputs::Vector{B
   end
 end
 
-function backward(backend::GPUBackend, state::SoftmaxLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::SoftmaxLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   alpha = one(eltype(inputs[1]))
   beta = zero(eltype(inputs[1]))
 

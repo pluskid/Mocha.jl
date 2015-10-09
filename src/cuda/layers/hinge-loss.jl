@@ -1,4 +1,4 @@
-function forward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::HingeLossLayerState, inputs::Vector{Blob})
   pred = inputs[1]
   label = inputs[2]
 
@@ -32,7 +32,7 @@ function forward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vector
   state.n_accum += get_num(pred)
 end
 
-function backward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::HingeLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   const pred = inputs[1]
   const label = inputs[2]
 

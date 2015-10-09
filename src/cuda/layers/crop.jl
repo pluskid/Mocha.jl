@@ -1,4 +1,4 @@
-function forward(backend::GPUBackend, state::CropLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::CropLayerState, inputs::Vector{Blob})
   crop_size = state.layer.crop_size
   for i = 1:length(inputs)
     input = inputs[i]

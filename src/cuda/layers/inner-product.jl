@@ -1,4 +1,4 @@
-function forward(backend::GPUBackend, state::InnerProductLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::InnerProductLayerState, inputs::Vector{Blob})
   M = size(state.W, 2)   # target dim
   K = size(state.W, 1)   # source dim
   dtype = eltype(state.W)
@@ -15,7 +15,7 @@ function forward(backend::GPUBackend, state::InnerProductLayerState, inputs::Vec
   end
 end
 
-function backward(backend::GPUBackend, state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::InnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   target_dim = size(state.W, 2)
   source_dim = size(state.W, 1)
   data_type  = eltype(state.W)

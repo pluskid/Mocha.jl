@@ -189,9 +189,9 @@ function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, p
 end
 function test_convolution_layer(backend::Backend, n_input, T, eps)
   test_convolution_layer(backend, 2, 3, 4, 2, 2, 1, 2, n_input, T, eps)
-  #XXX: temporarily disable this test for GPU of a bug in cuDNN v2 RC2
+  #XXX: temporarily disable this test for CUDA of a bug in cuDNN v2 RC2
   # see https://devtalk.nvidia.com/default/topic/806940/gpu-accelerated-libraries/cudnn-1x1-filter-convolutions
-  #if !test_gpu
+  #if !test_cuda
     test_convolution_layer(backend, 1, 1, 1, 0, 0, 1, 1, n_input, T, eps)
   #end
 end
@@ -203,6 +203,9 @@ end
 if test_cpu
   test_convolution_layer(backend_cpu)
 end
-if test_gpu
-  test_convolution_layer(backend_gpu)
+if test_cuda
+  test_convolution_layer(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL convolution layer tests")
 end

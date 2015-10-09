@@ -117,6 +117,9 @@ end
 if test_cpu
   test_net_topology(backend_cpu)
 end
-if test_gpu
-  test_net_topology(backend_gpu)
+if test_cuda
+  test_net_topology(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL net topology tests")
 end

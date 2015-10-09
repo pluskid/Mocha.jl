@@ -52,7 +52,10 @@ end
 if test_cpu
   test_l2_constraint(backend_cpu)
 end
-if test_gpu
-  test_l2_constraint(backend_gpu)
+if test_cuda
+  test_l2_constraint(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL l2 constraint tests")
 end
 

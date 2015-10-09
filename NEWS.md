@@ -1,5 +1,10 @@
 # News for Mocha Development
 
+## Next version
+
+* Infrastructure
+  * A whole new OpenCL backend
+
 ## v0.0.9 2015.07.20
 
 * Infrastructure

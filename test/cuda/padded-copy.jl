@@ -30,5 +30,5 @@ function test_padded_copy(backend::Backend)
   test_padded_copy(backend, Float64)
 end
 
-test_padded_copy(backend_gpu)
+test_padded_copy(backend_cuda)
 
