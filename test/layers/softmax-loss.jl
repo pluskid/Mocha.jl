@@ -58,10 +58,10 @@ function test_softmax_loss_layer(backend::Backend, tensor_dim, use_weights::Bool
       pred /= sum(pred)
       if isempty(weights)
         canonical_grad[i,:,j] = pred
-        canonical_grad[i,round(Int64, label[i,1,j])+1,j] -= 1
-        expected_loss += -log(pred[round(Int64, label[i,1,j])+1])
+        canonical_grad[i,round(Int, label[i,1,j])+1,j] -= 1
+        expected_loss += -log(pred[round(Int, label[i,1,j])+1])
       else
-        y = round(Int64, label[i,1,j])+1
+        y = round(Int, label[i,1,j])+1
         canonical_grad[i,:,j] = pred .* weights[i,y,j]
         canonical_grad[i,y,j] -= weights[i,y,j]
         expected_loss += -log(pred[y]) * weights[i,y,j]

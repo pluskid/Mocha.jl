@@ -61,7 +61,7 @@ function forward(backend::CPUBackend, state::AccuracyLayerState, inputs::Vector{
   for i = 0:dim_pre-1
     for j = 0:dim_post-1
       idx = Int[i + dim_pre*(k + dim_prob*j) for k=0:dim_prob-1] + 1
-      @inbounds if round(Int64, label[i + dim_pre*j + 1])+1 == indmax(pred[idx])
+      @inbounds if round(Int, label[i + dim_pre*j + 1])+1 == indmax(pred[idx])
         accuracy += 1.0
       end
     end

@@ -45,8 +45,8 @@ function setup(backend::Backend, layer::PoolingLayer, inputs::Vector{Blob}, diff
   for i = 1:length(inputs)
     width,height,channels,num = size(inputs[i])
 
-    pooled_width  = round(Int64, ceil(float(width +2*layer.pad[1]-layer.kernel[1]) / layer.stride[1]))+1
-    pooled_height = round(Int64, ceil(float(height+2*layer.pad[2]-layer.kernel[2]) / layer.stride[2]))+1
+    pooled_width  = round(Int, ceil(float(width +2*layer.pad[1]-layer.kernel[1]) / layer.stride[1]))+1
+    pooled_height = round(Int, ceil(float(height+2*layer.pad[2]-layer.kernel[2]) / layer.stride[2]))+1
 
     # make sure the last pooling is not purely pooling padded area
     if layer.pad[1] > 0 || layer.pad[2] > 0

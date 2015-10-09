@@ -56,7 +56,7 @@ function setup(backend::Backend, layer::ChannelPoolingLayer, inputs::Vector{Blob
 
     dims = [size(inputs[i])...]
     pool_dim = dims[op_dim]
-    pooled_dim = round(Int64, ceil(float(pool_dim + layer.pad[1]+layer.pad[2] - layer.kernel) / layer.stride)) + 1
+    pooled_dim = round(Int, ceil(float(pool_dim + layer.pad[1]+layer.pad[2] - layer.kernel) / layer.stride)) + 1
 
     # make sure the last pooling is not purely pooling padded area
     if ((pooled_dim-1)*layer.stride >= pool_dim + layer.pad[1])

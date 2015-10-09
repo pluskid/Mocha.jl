@@ -8,7 +8,7 @@ function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, p
   n_filter = 12
 
   input_dims = (input_w, input_h, input_chann, input_num)
-  filter_dims = (filter_w, filter_h, round(Int64, input_chann/n_group), n_filter)
+  filter_dims = (filter_w, filter_h, round(Int, input_chann/n_group), n_filter)
   bias_dims = (1, 1, n_filter, 1)
 
   layer = ConvolutionLayer(name="conv", kernel=(filter_w, filter_h), stride=(stride_w, stride_h),
@@ -65,8 +65,11 @@ function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, p
   copy!(grad_filter_got, state.∇filter)
   copy!(grad_bias_got, state.∇bias)
 
-  is_grad_filter_match = all(abs(grad_filter_exp - grad_filter_got) .< eps)
-  is_grad_bias_match   = all(abs(grad_bias_exp - grad_bias_got) .< eps)
+  #is_grad_filter_match = all(abs(grad_filter_exp - grad_filter_got) .< eps)
+  #is_grad_bias_match   = all(abs(grad_bias_exp - grad_bias_got) .< eps)
+
+  is_grad_filter_match = all(map((x,y)->isapprox(x,y; atol=eps), grad_filter_exp, grad_filter_got))
+  is_grad_bias_match   = all(map((x,y)->isapprox(x,y; atol=eps), grad_bias_exp, grad_bias_got))
 
   if freeze
     # when frozen, the gradients are not computed, so the got value
@@ -75,6 +78,8 @@ function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, p
     @test !is_grad_bias_match
     @test !is_grad_filter_match
   else
+    @show maximum(abs(grad_filter_exp - grad_filter_got))
+    @show eps
     @test is_grad_filter_match
     @test is_grad_bias_match
   end
@@ -86,8 +91,8 @@ end
 function convolution_forward(state, filter::Array, bias::Array, input::Array)
   width, height, channel, num = size(input)
   n_group = state.layer.n_group
-  o_g = round(Int64, state.layer.n_filter / n_group)
-  k_g = round(Int64, channel / n_group)
+  o_g = round(Int, state.layer.n_filter / n_group)
+  k_g = round(Int, channel / n_group)
 
   output = Array(eltype(input), size(state.blobs[1]))
   output[:] = 0
@@ -137,8 +142,8 @@ function convolution_backward(state, filter::Array, bias::Array, input::Array, t
 
   width, height, channels, num = size(input)
   n_group = state.layer.n_group
-  o_g = round(Int64, state.layer.n_filter / n_group)
-  k_g = round(Int64, channels / n_group)
+  o_g = round(Int, state.layer.n_filter / n_group)
+  k_g = round(Int, channels / n_group)
 
   # ∇bias
   for n = 1:num
