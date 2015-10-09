@@ -63,7 +63,7 @@ drop_layers = [drop_input, drop_fc1, drop_fc2]
 # put training net together, note that the correct ordering will automatically be established by the constructor
 net = Net("MNIST-train", backend, [data_layer, common_layers..., drop_layers..., loss_layer])
 
-base_dir = "snapshots_dropout_fc"
+base_dir = "snapshots_dropout_ft-$(Mocha.default_backend_type)"
 # we let the learning rate decrease by 0.998 in each epoch (=600 batches of size 100)
 # and let the momentum increase linearly from 0.5 to 0.9 over 500 epochs
 # which is equivalent to an increase step of 0.0008
