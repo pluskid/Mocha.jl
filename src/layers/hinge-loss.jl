@@ -4,8 +4,8 @@
 # L(\hat{y},y) = 1/2N \sum_{i=1}^N (1-y_i \hat{y}_i)
 #########################################################
 @defstruct HingeLossLayer Layer (
-    name :: String = "hinge-loss",
-    (weight :: FloatingPoint = 1.0, weight >= 0),
+    name :: AbstractString = "hinge-loss",
+    (weight :: AbstractFloat = 1.0, weight >= 0),
     (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 
