@@ -9,6 +9,7 @@ julia:
 notifications:
   email: false
 script:
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'Pkg.init(); Pkg.clone(pwd()); Pkg.test("Mocha", coverage=true)'
   - MOCHA_USE_NATIVE_EXT=true julia -e 'Pkg.build("Mocha"); Pkg.test("Mocha", coverage=true)'
 after_success:
