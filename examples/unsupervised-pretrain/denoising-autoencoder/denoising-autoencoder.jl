@@ -1,7 +1,6 @@
 ################################################################################
 # Configuration
 ################################################################################
-ENV["MOCHA_USE_CUDA"] = "true"
 using Mocha
 
 # --start-config--
@@ -25,7 +24,7 @@ param_keys       = ["$param_key_prefix-$i" for i = 1:n_hidden_layer]
 ################################################################################
 srand(12345678)
 
-backend = GPUBackend()
+backend = DefaultBackend()
 init(backend)
 
 # --start-basic-layers--

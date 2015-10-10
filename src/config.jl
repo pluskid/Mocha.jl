@@ -2,36 +2,38 @@ export Config
 module Config
 
 println("Configuring Mocha...")
-const use_cuda_key = "MOCHA_USE_CUDA"
-const cuda_dev_key = "MOCHA_GPU_DEVICE"
+const use_cuda_key             = "MOCHA_USE_CUDA"
+const cuda_dev_key             = "MOCHA_CUDA_DEVICE"
+
 const use_native_extension_key = "MOCHA_USE_NATIVE_EXT"
 
-if haskey(ENV, cuda_dev_key)
-  const cuda_dev_id =
+parseEnvInt(key; dflt=0) = begin
   try
-    parse(Int, ENV[cuda_dev_key])
+    parseint(ENV[key])
   catch
-    0
+    dflt
   end
-else
-  const cuda_dev_id = 0
 end
 
-if haskey(ENV, use_cuda_key) && lowercase(ENV[use_cuda_key]) != "false"
-  println(" * CUDA       enabled [DEV=$cuda_dev_id] ($use_cuda_key environment variable detected)")
-  const use_cuda = true
-else
-  println(" * CUDA       disabled by default")
-  const use_cuda = false
+parseEnvBool(key; dflt=false) = begin
+  try
+    lowercase(ENV[key]) != "false"
+  catch
+    dflt
+  end
 end
 
-if haskey(ENV, use_native_extension_key) && lowercase(ENV[use_native_extension_key]) != "false"
-  println(" * Native Ext enabled ($use_native_extension_key environment variable detected)")
-  const use_native_extension = true
-else
-  println(" * Native Ext disabled by default")
-  const use_native_extension = false
-end
+const use_cuda = parseEnvBool(use_cuda_key)
+const cuda_dev_id = parseEnvInt(cuda_dev_key)
+
+const use_native_extension = parseEnvBool(use_native_extension_key)
+
+use_cuda && println(" * CUDA       enabled [DEV=$cuda_dev_id] ($use_cuda_key environment variable detected)")
+use_cuda || println(" * CUDA       disabled by default")
+
+use_native_extension && println(" * Native Ext enabled ($use_native_extension_key environment variable detected)")
+use_native_extension || println(" * Native Ext disabled by default")
+
 println("Mocha configured, continue loading module...")
 
 end

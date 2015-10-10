@@ -1,5 +1,3 @@
-use_cuda = false
-
 using Mocha
 srand(12345678)
 
@@ -20,11 +18,7 @@ Y = Y + 0.01*randn(size(Y))
 ############################################################
 # Define network
 ############################################################
-if use_cuda
-  backend = GPUBackend()
-else
-  backend = CPUBackend()
-end
+backend = DefaultBackend()
 init(backend)
 
 data_layer = MemoryDataLayer(batch_size=500, data=Array[X,Y])

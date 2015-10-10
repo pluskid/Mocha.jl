@@ -45,7 +45,7 @@ function shutdown(backend::Backend, state::HingeLossLayerState)
 #     destroy(state.pred_copy)
 #     destroy(state.bp_mask)
   destroy(state.loss_blob)
-  nothing
+  Void()
 end
 function reset_statistics(state::HingeLossLayerState)
     state.n_accum = 0

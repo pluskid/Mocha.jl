@@ -21,7 +21,7 @@ function test_mocha_kernels(backend::Backend, data_type)
   spatial_dim = h*w
   prob_dim = c
 
-  x_block = round(Int64, ceil(float64(n)/CUDA.THREADS_PER_BLOCK_X))
+  x_block = round(Int, ceil(float64(n)/CUDA.THREADS_PER_BLOCK_X))
   y_block = spatial_dim
 
   if data_type == Float32
@@ -46,7 +46,7 @@ function test_mocha_kernels(backend::Backend, data_type)
     for k = 1:h
       local_loss = 0f0
       for i = 1:n
-        local_loss += -log(prob[j, k, round(Int64, label[j,k,1,i])+1, i])
+        local_loss += -log(prob[j, k, round(Int, label[j,k,1,i])+1, i])
       end
       expected_loss += local_loss
     end

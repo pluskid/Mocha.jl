@@ -72,7 +72,7 @@ function sinkhorn(backend::CPUBackend, state::WassersteinLossLayerState, inputs:
   state.loss = sum(u .* ((state.KM.data)*v)) / pred_num
 
   # compute gradient
-  alpha = log(u) / state.layer.lambda / pred_num
+  alpha = log(u) / convert(data_type, state.layer.lambda) / pred_num
   copy!(state.alpha, alpha)
 end
 

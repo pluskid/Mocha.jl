@@ -114,7 +114,7 @@ function pooling_forward(state, i, input::Array)
   if isa(state.layer.pooling, Pooling.Max)
     return (output, mask)
   else
-    return (output, nothing)
+    return (output, Void())
   end
 end
 
