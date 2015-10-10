@@ -1,4 +1,4 @@
-export CUDABackend
+export CUDABackend, GPUBackend
 
 macro defkernels(kernels...)
   field_defs = map(kernels) do ker
@@ -154,6 +154,7 @@ type CUDABackend <: AbstractGPUBackend
 
   CUDABackend() = new(ParameterRegistry(), false) # everything will be initialized later
 end
+Base.@deprecate_binding GPUBackend CUDABackend
 
 function init(backend::CUDABackend)
   @assert backend.initialized == false
