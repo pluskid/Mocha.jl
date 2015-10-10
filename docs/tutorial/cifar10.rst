@@ -182,16 +182,16 @@ definitions:
    acc_layer   = AccuracyLayer(name="accuracy", bottoms=[:ip1, :label])
 
 Next we collect the layers, and define a Mocha :class:`Net` on
-a :class:`CuDNNBackend`. You can use :class:`CPUBackend` if no CUDA-compatible
-GPU devices are available. But it will be much slower (see also
-:doc:`/user-guide/backend`).
+the :class:`DefaultBackend`. It is a typealias for :class:`GPUBackend` if CUDA
+is available and properly set up (see :doc:`/user-guide/backend`), or uses
+:class:`CPUBackend` as a backup even though it will be much slower.
 
 .. code-block:: julia
 
    common_layers = [conv1_layer, pool1_layer, norm1_layer, conv2_layer, pool2_layer, norm2_layer,
                     conv3_layer, pool3_layer, ip1_layer]
 
-   backend = GPUBackend()
+   backend = DefaultBackend()
    init(backend)
 
    net = Net("CIFAR10-train", backend, [data_tr_layer, common_layers..., loss_layer])
@@ -386,7 +386,7 @@ CUDA with cuDNN
 ~~~~~~~~~~~~~~~
 
 It takes only 5~6 seconds to finish every 200 iterations on the
-``CuDNNBackend``.
+``GPUBackend``.
 
 .. code-block:: text
 

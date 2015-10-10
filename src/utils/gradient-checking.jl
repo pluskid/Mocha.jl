@@ -143,7 +143,7 @@ end
 #  indicate the positon in the layer itself; to aid debugging.  Since author
 #  ported this code from his implentation, further fitting is needed
 
-function gradient_check(model::Net, epsilon::Float64, digit::Int64, visual::Bool)
+function gradient_check(model::Net, epsilon::Float64, digit::Int, visual::Bool)
     # create objective that computes grad( θ ), and cost( θ )
     (J,θ, grad) = hypothesis_and_gradient( model::Net )
     ∇ᵋ,∇ = compute_finite_difference( J, grad, θ )

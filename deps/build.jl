@@ -16,7 +16,7 @@ openmp   = "-fopenmp"
     println("")
     openmp = ""
   end
-end : nothing
+end : Void()
 
 cmd = `$compiler $flags $openmp -o $libname $sources`
 println("Running $cmd")

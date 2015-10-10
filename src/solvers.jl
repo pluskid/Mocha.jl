@@ -91,35 +91,35 @@ function format_statistic(state::SolverState, name, value)
 end
 
 
-validate_parameters(method::SolverMethod, params::SolverParameters) = begin
+validate_parameters(method::SolverMethod, params::SolverParameters) = begin # should turn validate method-specific parameters
     validate_parameters(params)
-    error("Not implemented - should turn validate method-specific parameters")
+    error("solver_state is not implemented for the method type $(typeof(method)), and params type $(typeof(params))")
 end
 
-function snapshot(state::SolverState)
-    error("Not implemented - should turn a SolverState{T] into a SolverStateSnapshot instance")
+function snapshot(state::SolverState) # should turn a SolverState{T} into a SolverStateSnapshot instance
+    error("snapshot is not implemented for the state type $(typeof(state))")
 end
 
-function solver_state(net::Net, snapshot::SolverStateSnapshot)
-    error("Not implemented - should use a SolverStateSnapshot instance to create a SolverState{T]")
+function solver_state(net::Net, snapshot::SolverStateSnapshot) # should use a SolverStateSnapshot instance to create a SolverState{T}
+    error("solver_state is not implemented for the net type $(typeof(net)), and snapshot type $(typeof(snapshot))")
 end
 
-function solver_state(solver::SolverMethod, net::Net, params::SolverParameters)
-    error("Not implemented - should create SolverState{T] from SolverParameters dictionary")
+function solver_state(solver::SolverMethod, net::Net, params::SolverParameters) # should create SolverState{T} from SolverParameters dictionary
+    error("solver_state is not implemented for the solver type $(typeof(solver)), net type $(typeof(net)), and params type $(typeof(params))")
 end
 
-function update{T}(solver::Solver{T}, net::Net, state::SolverState)
-  error("Not implemented, should do one iteration of update")
+function update{T}(solver::Solver{T}, net::Net, state::SolverState) # should do one iteration of update
+    error("update is not implemented for the solver type $(typeof(solver)), net type $(typeof(net)), and state type $(typeof(state))")
 end
-function shutdown(state::SolverState)
-  error("Not implemented, should shutdown the solver")
+function shutdown(state::SolverState) # should shutdown the solver
+    error("shutdown is not implemented for the $(typeof(state)) type")
 end
 
 
 ############################################################
 # General utilities that could be used by all solvers
 ############################################################
-function load_snapshot(net::Net, path::AbstractString="", state=nothing)
+function load_snapshot(net::Net, path::AbstractString="", state=Void())
   if isempty(path)
     return state
   end

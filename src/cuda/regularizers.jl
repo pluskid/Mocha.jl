@@ -17,7 +17,7 @@ function forward(backend::GPUBackend, regu :: L1Regu, global_regu::AbstractFloat
   loss_blob = make_zero_blob(backend, Float32, 1, 1, 1, 1)
   len = length(param)
   coef = convert(eltype(param), regu.coefficient * global_regu)
-  x_block = round(Int64, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
+  x_block = round(Int, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
   if eltype(param) == Float32
     kernel = backend.mocha.l1_forward_float
   else
@@ -30,7 +30,7 @@ function forward(backend::GPUBackend, regu :: L1Regu, global_regu::AbstractFloat
 end
 function backward(backend::GPUBackend, regu :: L1Regu, global_regu::AbstractFloat, param :: Blob, gradient :: Blob)
   len = length(param)
-  x_block = round(Int64, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
+  x_block = round(Int, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
   coef = convert(eltype(param), regu.coefficient * global_regu)
   if eltype(param) == Float32
     kernel = backend.mocha.l1_backward_float

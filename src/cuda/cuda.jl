@@ -86,7 +86,7 @@ macro cucall(fv, argtypes, args...)
   quote
     _curet = ccall( ($(Meta.quot(f)), $libcuda), Cint, $argtypes, $(args...) )
     if _curet != 0
-      throw(CuDriverError(round(Int64, _curet)))
+      throw(CuDriverError(round(Int, _curet)))
     end
   end
 end
@@ -142,7 +142,7 @@ end
 ############################################################
 # Memory allocation
 ############################################################
-typealias CUdeviceptr UInt64
+typealias CUdeviceptr UInt
 
 type CuPtr
   p::CUdeviceptr
@@ -155,7 +155,7 @@ cubox(p::CuPtr) = cubox(p.p)
 
 function cualloc(T::Type, len::Integer)
   a = CUdeviceptr[0]
-  nbytes = round(Int64, len) * sizeof(T)
+  nbytes = round(Int, len) * sizeof(T)
   @cucall(:cuMemAlloc_v2, (Ptr{CUdeviceptr}, Csize_t), a, nbytes)
   return CuPtr(a[1])
 end

@@ -51,7 +51,7 @@ end
 ################################################################################
 #-- Classify a single image via filename
 function classify(classifier::ImageClassifier, filename::AbstractString)
-  results = classify(classifier, String[filename])
+  results = classify(classifier, AbstractString[filename])
   return results[1]
 end
 

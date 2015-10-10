@@ -15,7 +15,7 @@ function setup_etc(backend::GPUBackend, layer::RandomNormalLayer)
       len = outlen*layer.batch_sizes[i]
       cuda_rand_states = CUDA.cualloc(UInt8, rnd_state_size*len)
       x_block = int(ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
-      seed = rand(UInt64)
+      seed = rand(UInt)
       println("launching stdnormal init on bloc $i with len $len")
       CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X, (cuda_rand_states, seed))
       push!(etc, cuda_rand_states)

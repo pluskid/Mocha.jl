@@ -4,7 +4,7 @@ using ..Mocha
 
 const THREADS_PER_BLOCK = 128
 function cuda_geometry(len::Int)
-  x_block = round(Int64, ceil(convert(Float64, len)/THREADS_PER_BLOCK))
+  x_block = round(Int, ceil(convert(Float64, len)/THREADS_PER_BLOCK))
   return (x_block, THREADS_PER_BLOCK)
 end
 

@@ -4,8 +4,8 @@
 # L(\hat{y},y) = 1/2N \sum_{i=1}^N (1-y_i \hat{y}_i)
 #########################################################
 @defstruct HingeLossLayer Layer (
-    name :: String = "hinge-loss",
-    (weight :: FloatingPoint = 1.0, weight >= 0),
+    name :: AbstractString = "hinge-loss",
+    (weight :: AbstractFloat = 1.0, weight >= 0),
     (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == 2),
 )
 
@@ -45,7 +45,7 @@ function shutdown(backend::Backend, state::HingeLossLayerState)
 #     destroy(state.pred_copy)
 #     destroy(state.bp_mask)
   destroy(state.loss_blob)
-  nothing
+  Void()
 end
 function reset_statistics(state::HingeLossLayerState)
     state.n_accum = 0

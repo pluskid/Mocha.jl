@@ -52,7 +52,7 @@ function setup(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Ve
     if ndims(weights) == tensor_dim-1
       @assert size(weights) == dims[1:end-1]
       new_shape = [size(weights)..., 1]
-      rep_shape = [ones(Int64, length(dims)-1)..., dims[end]]
+      rep_shape = [ones(Int, length(dims)-1)..., dims[end]]
       weights = repeat(reshape(weights, new_shape...), inner=rep_shape)
     end
 
@@ -93,7 +93,7 @@ function forward(backend::CPUBackend, state::MultinomialLogisticLossLayerState, 
 
   idx_all = map(1:length(dims)) do i
     if i == state.op_dim
-      round(Int64, label) + 1
+      round(Int, label) + 1
     else
       dim = dims[i]
       reshape(1:dim, [j == i? dim : 1 for j = 1:length(dims)]...)

@@ -62,7 +62,7 @@ type InnerProductLayerState <: LayerState
     state = new(layer, blobs, blobs_diff)
     state.bias_multipliers = bias_multipliers
 
-    if shared_params != nothing
+    if shared_params != Void()
       @assert length(shared_params) == 2
       @assert shared_params[1].name == "weight" && shared_params[2].name == "bias"
       @assert size(shared_params[1].blob) == (fea_size, out_dim)
@@ -104,7 +104,7 @@ function setup(backend::Backend, layer::InnerProductLayer, shared_state, inputs:
   return state
 end
 function setup(backend::Backend, layer::InnerProductLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  setup(backend, layer, nothing, inputs, diffs)
+  setup(backend, layer, Void(), inputs, diffs)
 end
 function shutdown(backend::Backend, state::InnerProductLayerState)
   map(destroy, state.blobs)

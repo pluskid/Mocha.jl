@@ -81,7 +81,7 @@ function channel_pooling_forward(state, i, input::Array, op_dim)
   if isa(state.layer.pooling, Pooling.Max)
     return (output, mask)
   else
-    return (output, nothing)
+    return (output, Void())
   end
 end
 

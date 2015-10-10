@@ -39,7 +39,7 @@ function test_power_layer(backend::Backend, scale, shift, power, n_input, T, eps
 end
 
 function simple_rand()
-  round(Int64, 100*rand())/100
+  round(Int, 100*rand())/100
 end
 function test_power_layer(backend::Backend, n_input, T, eps)
   println("-- Testing PowerLayer on $(typeof(backend)){$T}...")

@@ -5,6 +5,10 @@ A backend in Mocha is a component that carries out the actual numerical computat
 Mocha is designed to support multiple backends, and switching between different
 backends should be almost transparent to the rest of the world.
 
+There is a ``DefaultBackend`` defined which is a typealias for one of the following
+backends, depending on availability. By default, ``GPUBackend`` is preferred if
+CUDA is available, falling back to the ``CPUBackend`` otherwise.
+
 Pure Julia CPU Backend
 ----------------------
 
