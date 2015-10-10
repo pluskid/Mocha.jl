@@ -35,7 +35,7 @@ function setup_etc(backend::CPUBackend, layer::ChannelPoolingLayer, inputs, blob
     end
     etc = integrals
   else
-    etc = nothing
+    etc = Void()
   end
   return etc
 end

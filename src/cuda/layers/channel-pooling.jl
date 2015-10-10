@@ -12,7 +12,7 @@ function setup_etc(backend::CUDABackend, layer::ChannelPoolingLayer, inputs, blo
     end
     etc = integrals
   else
-    etc = nothing
+    etc = Void()
   end
   return etc
 end

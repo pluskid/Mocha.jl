@@ -119,7 +119,7 @@ end
 ############################################################
 # General utilities that could be used by all solvers
 ############################################################
-function load_snapshot(net::Net, path::AbstractString="", state=nothing)
+function load_snapshot(net::Net, path::AbstractString="", state=Void())
   if isempty(path)
     return state
   end
