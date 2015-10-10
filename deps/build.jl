@@ -14,7 +14,7 @@ openmp   = "-fopenmp"
     println("Disabling OpenMP. To force enable OpenMP, set MOCHA_FORCE_OMP environment")
     println("variable.")
     println("")
-    openmp = ()
+    openmp = ""
   end
 end : nothing
 
