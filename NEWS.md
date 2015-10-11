@@ -1,5 +1,25 @@
 # News for Mocha Development
 
+## v0.1.0 2015.10.10
+
+To celebrate the release of Julia v0.4 and increased involvement from the community of the development of Mocha.jl, we decided to have a v0.1.0 release.
+
+* Infrastructure
+  * Backward compatibility with Julia v0.3, and Julia v0.4 compatability
+  * Solver refactoring (@benmoran, @CarloLucibello)
+  * Adam Solver (@benmoran)
+  * Improved compatibility on Windows (@droidicus)
+* Network
+  * Leaky ReLU (@stjanovitz)
+  * Shuffling support for memory-data layer
+  * `DecayOnValidation` now support square-loss like criterions
+  * Variational Auto-Encoder and related layers: `RandomNormal`, `BinaryCrossEntropyLossLayer`, `GaussianKLLoss`, and `Exponential` neuron type (@benmoran)
+  * SVM related layers: `HingeLossLayer` and `BinaryAccuracyLayer` (@nstiurca)
+  * `OrthogonalInitializer` (@benmoran)
+* Documentation
+  * Various typos and improvements from the community
+  * MNIST Variational Auto-Encoder example (@benmoran)
+
 ## v0.0.9 2015.07.20
 
 * Infrastructure
