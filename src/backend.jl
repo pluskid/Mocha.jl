@@ -29,7 +29,7 @@ function registry_put(backend::Backend, key::AbstractString, params::Vector)
   backend.param_registry[key] = AbstractParameter[share_parameter(backend, p) for p in params]
 end
 function registry_get(backend::Backend, key::AbstractString)
-  return get(backend.param_registry, key, Void())
+  return get(backend.param_registry, key, nothing)
 end
 
 type CPUBackend <: Backend

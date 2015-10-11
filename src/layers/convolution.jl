@@ -96,7 +96,7 @@ type ConvolutionLayerState <: LayerState
       blobs_diff[i] = make_blob(backend, dtype, width_out, height_out, layer.n_filter, batch_size)
     end
 
-    if shared_params != Void()
+    if shared_params != nothing
       @assert length(shared_params) == 2
       @assert shared_params[1].name == "filter" && shared_params[2].name == "bias"
       @assert size(shared_params[1].blob) == tuple(layer.kernel...,div(channels,layer.n_group),layer.n_filter)
@@ -158,7 +158,7 @@ function setup(backend::Backend, layer::ConvolutionLayer, shared_state, inputs::
   return ConvolutionLayerState(backend, layer, shared_state, inputs)
 end
 function setup(backend::Backend, layer::ConvolutionLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  setup(backend, layer, Void(), inputs, diffs)
+  setup(backend, layer, nothing, inputs, diffs)
 end
 function shutdown_etc(backend::CPUBackend, state::ConvolutionLayerState)
 end

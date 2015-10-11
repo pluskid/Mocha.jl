@@ -33,7 +33,7 @@ function setup(backend::Backend, layer::SoftlabelSoftmaxLossLayer, inputs::Vecto
 
   softmax_layer = SoftmaxLayer(bottoms=[:softmax_input], tops=[:softmax_output], dim=layer.dim)
   softmax = setup(backend, softmax_layer, Blob[inputs[1]], Blob[diffs[1]])
-  state = SoftlabelSoftmaxLossLayerState(layer, zero(data_type), softmax, op_dim, Void())
+  state = SoftlabelSoftmaxLossLayerState(layer, zero(data_type), softmax, op_dim, nothing)
 
   setup_etc(backend, state, inputs)
 

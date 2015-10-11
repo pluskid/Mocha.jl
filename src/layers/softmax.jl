@@ -21,7 +21,7 @@ type SoftmaxLayerState <: LayerState
 end
 
 function setup_etc(backend::CPUBackend, layer::SoftmaxLayer, dims::Vector{Int}, data_type, inputs)
-  Void()
+  nothing
 end
 
 function setup(backend::Backend, layer::SoftmaxLayer, inputs::Vector{Blob}, diffs::Vector{Blob})

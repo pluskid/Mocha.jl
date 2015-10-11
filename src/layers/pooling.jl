@@ -32,7 +32,7 @@ function setup_etc(backend::CPUBackend, layer::PoolingLayer, inputs,
     end
     etc = masks
   else
-    etc = Void()
+    etc = nothing
   end
   return etc
 end

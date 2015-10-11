@@ -114,7 +114,7 @@ function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}
               if state.stop_task
                 @info("AsyncHDF5DataLayer: IO Task reaching the end...")
                 close(h5_file)
-                produce(Void())
+                produce(nothing)
                 return
               end
 
@@ -150,7 +150,7 @@ end
 function shutdown(backend::Backend, state::AsyncHDF5DataLayerState)
   @info("AsyncHDF5DataLayer: Stopping IO task...")
   state.stop_task = true
-  while consume(state.io_task) != Void()
+  while consume(state.io_task) != nothing
     # ignore everything
   end
 

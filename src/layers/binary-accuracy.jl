@@ -20,7 +20,7 @@ type BinaryAccuracyLayerState <: LayerState
 end
 
 function setup_etc(backend::CPUBackend, layer::BinaryAccuracyLayer, inputs)
-  Void()
+  nothing
 end
 
 function setup(backend::Backend, layer::BinaryAccuracyLayer, inputs::Vector{Blob}, diffs::Vector{Blob})

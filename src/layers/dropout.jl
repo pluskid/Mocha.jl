@@ -31,7 +31,7 @@ type DropoutLayerState{T} <: LayerState
 end
 
 function setup_etc(backend::CPUBackend, layer::DropoutLayer, inputs::Vector{Blob})
-  return Void()
+  return nothing
 end
 function setup(backend::Backend, layer::DropoutLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])

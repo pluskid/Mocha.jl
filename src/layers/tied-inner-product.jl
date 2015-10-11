@@ -62,7 +62,7 @@ type TiedInnerProductLayerState <: LayerState
     state = new(layer, blobs, blobs_diff)
     state.bias_multipliers = bias_multipliers
 
-    if shared_params != Void()
+    if shared_params != nothing
       @assert length(shared_params) == 1
       @assert shared_params[1].name == "bias"
       @assert size(shared_params[1].blob) == (out_dim, 1)
@@ -99,7 +99,7 @@ function setup(backend::Backend, layer::TiedInnerProductLayer, shared_state, inp
 end
 
 function setup(backend::Backend, layer::TiedInnerProductLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  setup(backend, layer, Void(), inputs, diffs)
+  setup(backend, layer, nothing, inputs, diffs)
 end
 
 function shutdown(backend::Backend, state::TiedInnerProductLayerState)
