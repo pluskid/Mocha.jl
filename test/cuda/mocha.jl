@@ -21,7 +21,7 @@ function test_mocha_kernels(backend::Backend, data_type)
   spatial_dim = h*w
   prob_dim = c
 
-  x_block = round(Int, ceil(float64(n)/CUDA.THREADS_PER_BLOCK_X))
+  x_block = round(Int, ceil(Float64(n)/CUDA.THREADS_PER_BLOCK_X))
   y_block = spatial_dim
 
   if data_type == Float32
