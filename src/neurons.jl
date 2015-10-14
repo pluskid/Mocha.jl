@@ -31,9 +31,11 @@ using ..Mocha.ActivationFunction
 type Identity <: ActivationFunction
 end
 
-# Rectified-Linear: ReLU(x) = max(x,0)
+# Rectified-Linear: ReLU(eps)(x) = max(x,eps)
 type ReLU <: ActivationFunction
+  epsilon::Float64 # optional floor value, default zero
 end
+ReLU() = ReLU(0.0)
 
 # Exponential: Exponential(x) = exp(x)
 type Exponential <: ActivationFunction
@@ -67,12 +69,12 @@ end
 ############################################################
 function forward(backend :: CPUBackend, neuron :: Neurons.ReLU, output :: Blob)
   @simd for i = 1:length(output.data)
-    @inbounds output.data[i] = max(0, output.data[i])
+    @inbounds output.data[i] = max(neuron.epsilon, output.data[i])
   end
 end
 function backward(backend :: CPUBackend, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
   @simd for i = 1:length(output.data)
-    @inbounds gradient.data[i] *= (output.data[i] > 0)
+    @inbounds gradient.data[i] *= (output.data[i] > neuron.epsilon)
   end
 end
 
@@ -81,7 +83,7 @@ end
 ############################################################
 function forward(backend :: CPUBackend, neuron :: Neurons.LReLU, output :: Blob)
   @simd for i = 1:length(output.data)
-    @inbounds output.data[i] = output.data[i] > 0 ? output.data[i] : 0.01 * output.data[i] 
+    @inbounds output.data[i] = output.data[i] > 0 ? output.data[i] : 0.01 * output.data[i]
   end
 end
 function backward(backend :: CPUBackend, neuron :: Neurons.LReLU, output :: Blob, gradient :: Blob)

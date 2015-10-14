@@ -11,27 +11,32 @@ unless it is an identity neuron. Layers have an identity neuron by default [1]_.
 
 .. class:: Neurons.ReLU
 
-   Rectified Linear Unit. During the forward pass, it inhibits all negative
-   activations. In other words, it computes point-wise :math:`y=\max(0, x)`. The
+   Rectified Linear Unit. During the forward pass, it inhibits all inhibitions
+   below some threshold :math:`\epsilon`, typically 0. In other words, it computes
+   point-wise :math:`y=\max(\epsilon, x)`. The
    point-wise derivative for ReLU is
 
    .. math::
 
-      \frac{dy}{dx} = \begin{cases}1 & x > 0 \\ 0 & x \leq 0\end{cases}
+      \frac{dy}{dx} = \begin{cases}1 & x > \epsilon \\ 0 & x \leq \epsilon\end{cases}
+
+   .. attribute:: epsilon
+
+      Specifies the minimum threshold at which the neuron will truncate.  Default ``0``.
 
    .. note::
 
-      ReLU is actually not differentialble at 0. But it has *subdifferential*
+      ReLU is actually not differentiable at :math:`\epsilon`. But it has *subdifferential*
       :math:`[0,1]`. Any value in that interval can be taken as
       a *subderivative*, and can be used in SGD if we generalize from gradient
       descent to *subgradient* descent. In the implementation, we choose the subgradient at :math:`x==0` to be 0.
-      
+
 .. class:: Neurons.LReLU
 
    Leaky Rectified Linear Unit. A Leaky ReLU can help fix the "dying ReLU" problem. ReLU's
    can "die" if a large enough gradient changes the weights such that the neuron never activates
    on new data.
-   
+
    .. math::
 
       \frac{dy}{dx} = \begin{cases}1 & x > 0 \\ 0.01 & x \leq 0\end{cases}

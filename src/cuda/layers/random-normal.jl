@@ -14,7 +14,7 @@ function setup_etc(backend::CUDABackend, layer::RandomNormalLayer)
   for i = 1:length(layer.tops)
       len = outlen*layer.batch_sizes[i]
       cuda_rand_states = CUDA.cualloc(UInt8, rnd_state_size*len)
-      x_block = int(ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
+      x_block = round(Int, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
       seed = rand(UInt)
       println("launching stdnormal init on bloc $i with len $len")
       CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X, (cuda_rand_states, seed))
@@ -32,7 +32,7 @@ end
 function forward(backend::CUDABackend, state::RandomNormalLayerState, inputs::Vector{Blob})
     for i = 1:length(state.blobs)
         len = length(state.blobs[i])
-        x_block = int(ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
+        x_block = round(Int, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
         data_type = state.layer.eltype
         if data_type == Float32
             kernel = backend.mocha.stdnormal_forward_float

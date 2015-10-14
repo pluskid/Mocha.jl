@@ -3,6 +3,7 @@ export Initializer
 export ConstantInitializer
 export XavierInitializer
 export GaussianInitializer
+export OrthogonalInitializer
 
 abstract Initializer # The root type of all initializer
 
@@ -50,4 +51,27 @@ function init(initializer::GaussianInitializer, blob::Blob)
   init_val = randn(size(blob)) * initializer.std + initializer.mean
   init_val = convert(Array{eltype(blob)}, init_val)
   copy!(blob, init_val)
+end
+
+####### Orthogonal Initializer ##############################################
+#
+# Based on https://github.com/Lasagne/Lasagne/blob/master/lasagne/init.py
+#
+#############################################################################
+
+immutable OrthogonalInitializer <: Initializer
+  gain::AbstractFloat
+end
+OrthogonalInitializer() = OrthogonalInitializer(1.0) # but use OrthogonalInitializer(sqrt(2)) for ReLU units
+
+function init(initializer::OrthogonalInitializer, blob::Blob)
+  dims = size(blob)
+  if length(dims) < 2
+    error("Must have length(size(blob)) >= 2")
+  end
+  flatshape = (dims[1], prod(dims[2:end]))
+  x = randn(flatshape)
+  u, _, v = svd(x)
+  x = (size(u) == flatshape) ? u : v
+  copy!(blob, convert(Array{eltype(blob)}, x*initializer.gain))
 end
