@@ -27,6 +27,8 @@ function init(backend :: OpenCLBackend)
   backend.context     = cl.Context(backend.device)
   backend.queue       = cl.CmdQueue(backend.context)
 
+  clblas.setup()
+
   backend.initialized = true
   @info("OpenCL backend initialized!")
 end
@@ -36,10 +38,12 @@ function shutdown(backend :: OpenCLBackend)
 
   @info("Shutting down OpenCL backend...")
   # NOTE: destroy should be in reverse order of init
+  backend.initialized = false
+
+  clblas.teardown()
+
   registry_reset(backend)
   cl.release!(backend.queue)
   cl.release!(backend.context)
-
-  backend.initialized = false
   @info("OpenCL backend shutdown finished!")
 end

@@ -1,5 +1,5 @@
-#import OpenCL
-#import CLBLAS
 import OpenCL
+import CLBLAS
 const cl = OpenCL
-export cl
+const clblas = CLBLAS
+export cl, clblas

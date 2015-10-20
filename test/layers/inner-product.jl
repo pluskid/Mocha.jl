@@ -83,5 +83,5 @@ if test_cuda
   test_inner_product_layer(backend_cuda)
 end
 if test_opencl
-  warn("TODO: OpenCL inner product layer tests")
+  test_inner_product_layer(backend_opencl)
 end

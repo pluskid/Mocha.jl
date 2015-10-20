@@ -45,8 +45,6 @@ function reshape_blob{T,N}(backend::OpenCLBackend, blob::ClTensorBlob{T}, dims::
   ClTensorBlob{T,N}(backend, blob.buffer, dims)
 end
 function destroy(blob :: ClTensorBlob)
-  if blob.buffer.valid
-    cl.release!(blob.buffer)
-  end
+  cl.release!(blob.buffer)
 end
 
