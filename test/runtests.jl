@@ -1,17 +1,9 @@
-if haskey(ENV, "MOCHA_USE_CUDA")
-  const test_cuda = true
-else
-  const test_cuda = false
-end
-if haskey(ENV, "MOCHA_USE_OPENCL")
-  const test_opencl = true
-else
-  const test_opencl = false
-end
-const test_cpu   = true
-
 using Mocha
 using Base.Test
+
+const test_cpu    = true
+const test_cuda   = Config.use_cuda
+const test_opencl = Config.use_opencl
 
 if test_cpu
   backend_cpu = CPUBackend()

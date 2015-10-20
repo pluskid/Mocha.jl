@@ -1,31 +1,45 @@
 export OpenCLBackend
-
 # TODO: define kernels
 # TODO: define shutdown function for kernels
 
 type OpenCLBackend <: AbstractGPUBackend
-  initialized    :: Bool
-  # TODO
+  param_registry :: ParameterRegistry
 
-  OpenCLBackend() = new(false) # everything will be initialized later
+  platform       :: cl.Platform
+  device         :: cl.Device
+  initialized    :: Bool
+
+  context        :: cl.Context
+  queue          :: cl.CmdQueue
+
+  function OpenCLBackend(platform_id = Config.opencl_platform_id,
+                         device_id   = Config.opencl_dev_id)
+    platform    = cl.platforms()[platform_id+1]
+    device      = cl.devices(platform)[device_id+1]
+    new(ParameterRegistry(), platform, device, false) # everything will be initialized later
+  end
 end
 
 function init(backend :: OpenCLBackend)
   @assert backend.initialized == false
 
-  @info("STUB: Initializing OpenCL backend...")
-  # TODO
+  @info("Initializing OpenCL backend...")
+  backend.context     = cl.Context(backend.device)
+  backend.queue       = cl.CmdQueue(backend.context)
 
   backend.initialized = true
-  @info("STUB: OpenCL backend initialized!")
+  @info("OpenCL backend initialized!")
 end
 
 function shutdown(backend :: OpenCLBackend)
   @assert backend.initialized = true
 
-  @info("STUB: Shutting down OpenCL backend...")
-  # TODO
+  @info("Shutting down OpenCL backend...")
+  # NOTE: destroy should be in reverse order of init
+  registry_reset(backend)
+  cl.release!(backend.queue)
+  cl.release!(backend.context)
 
   backend.initialized = false
-  @info("STUB: OpenCL backend shutdown finished!")
+  @info("OpenCL backend shutdown finished!")
 end

@@ -22,5 +22,5 @@ if test_cuda
   test_blob_reshape(backend_cuda)
 end
 if test_opencl
-  warn("TODO: OpenCL blob reshape tests")
+  test_blob_reshape(backend_opencl)
 end
