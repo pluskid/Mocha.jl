@@ -38,7 +38,7 @@ stolen from `Wikipedia's page on Artificial Neural Networks
 
 When writing Mocha, I found this kind of illustrations a bit confusing, as it
 does not align well with the abstract concept of *layers* we just described. In
-our abstraction, the computation is done **within** each layers, and the network
+our abstraction, the computation is done **within** each layer, and the network
 architecture specifies the data path connections for the layers only.
 In the figure above, the "Input", "Hidden", and "Output" labels are put on the
 nodes, suggesting the nodes are layers. However, the nodes do not
