@@ -1,5 +1,7 @@
 export ClTensorBlob
 
+using Debug
+
 immutable ClTensorBlob{T<:AbstractFloat,N} <: Blob{T,N}
   backend :: OpenCLBackend
   buffer  :: cl.Buffer
@@ -45,6 +47,6 @@ function reshape_blob{T,N}(backend::OpenCLBackend, blob::ClTensorBlob{T}, dims::
   ClTensorBlob{T,N}(backend, blob.buffer, dims)
 end
 function destroy(blob :: ClTensorBlob)
-  cl.release!(blob.buffer)
+  finalize(blob.buffer)
 end
 

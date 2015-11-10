@@ -43,7 +43,7 @@ function shutdown(backend :: OpenCLBackend)
   clblas.teardown()
 
   registry_reset(backend)
-  cl.release!(backend.queue)
-  cl.release!(backend.context)
+  finalize(backend.queue)
+  finalize(backend.context)
   @info("OpenCL backend shutdown finished!")
 end
