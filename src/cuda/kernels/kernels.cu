@@ -16,6 +16,7 @@
 #include "binary_accuracy.impl"
 #include "channel_pooling.impl"
 #include "dropout.impl"
+#include "rmnan.impl"
 #include "argmax.impl"
 #include "index2onehot.impl"
 

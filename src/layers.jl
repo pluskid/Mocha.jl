@@ -9,6 +9,7 @@ export IdentityLayer, Index2OnehotLayer, MemoryOutputLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export SoftlabelSoftmaxLossLayer, WassersteinLossLayer, HingeLossLayer
 export AccuracyLayer, BinaryAccuracyLayer, BinaryCrossEntropyLossLayer
+export RmNaLayer, NaSquareLossLayer
 
 export RandomNormalLayer
 export GaussianKLLossLayer
@@ -208,6 +209,7 @@ include("layers/random-mask.jl")
 include("layers/tied-inner-product.jl")
 include("layers/identity.jl")
 include("layers/random-normal.jl")
+include("layers/rmna.jl")
 
 #############################################################
 # Utility layers
@@ -228,10 +230,10 @@ include("layers/wasserstein-loss.jl")
 include("layers/binary-cross-entropy-loss.jl")
 include("layers/gaussian-kl-loss.jl")
 include("layers/hinge-loss.jl")
+include("layers/na-square-loss.jl")
 
 #############################################################
 # Statistics Layers
 #############################################################
 include("layers/accuracy.jl")
 include("layers/binary-accuracy.jl")
-

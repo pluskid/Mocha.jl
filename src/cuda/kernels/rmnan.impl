@@ -1,0 +1,39 @@
+
+
+template <typename T>
+__device__ void rmnan_forward(int len, T *input, T *is_nan) {
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx < len) {
+    is_nan[idx] = isnan(input[idx]);
+    input[idx] = input[idx] * is_nan[idx];
+  }
+}
+
+template <typename T>
+__device__ void rmnan_backward(int len, T *grad, T *is_nan) {
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx < len) {
+    grad[idx] = grad[idx] * is_nan[idx];
+  }
+}
+
+
+#define DEF_RMNAN_API(NAME, DTYPE) \
+  __global__ void NAME ## _ ## DTYPE (int len, \
+    DTYPE *grad, DTYPE *is_nan) { \
+      NAME (len, grad, is_nan); \
+  }
+
+extern "C" {
+__global__ void rmnan_alloc_size(double *is_nan) {
+  *is_nan = (double)sizeof(input);
+}
+
+DEF_RMNAN_API(rmnan_forward, float)
+DEF_RMNAN_API(rmnan_forward, double)
+DEF_RMNAN_API(rmnan_backward, float)
+DEF_RMNAN_API(rmnan_backward, double)
+
+} // extern "C"
+
+// vim: ft=cuda
