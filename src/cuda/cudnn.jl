@@ -325,7 +325,7 @@ function convolution_forward{T<:AbstractFloat}(handle::Handle, alpha::T, src_des
   @assert CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM <= algo <= CUDNN_CONVOLUTION_FWD_ALGO_FFT
   @cudnncall(:cudnnConvolutionForward, (Handle, Ptr{Void}, Tensor4dDescriptor, Ptr{Void},
                                         FilterDescriptor, Ptr{Void}, ConvolutionDescriptor,
-                                        Ptr{Void}, Ptr{Void}, Csize_t, Ptr{Void},
+                                        Cint, Ptr{Void}, Csize_t, Ptr{Void},
                                         Tensor4dDescriptor, Ptr{Void}),
              handle, alpha_ptr, src_desc, src.p,
              filter_desc, filter.p, conv,

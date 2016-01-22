@@ -7,7 +7,7 @@ function setup_etc(backend::GPUBackend, layer::RandomNormalLayer)
   rnd_state_size = Float64[0]
   copy!(rnd_state_size, rnd_state_size_blob)
   destroy(rnd_state_size_blob)
-  rnd_state_size = int(rnd_state_size[1])
+  rnd_state_size = round(Int, rnd_state_size[1])
 
   etc = Any[]
   outlen = prod(layer.output_dims)
