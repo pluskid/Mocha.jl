@@ -58,7 +58,6 @@ SGDSolverState(net::Net, learning_rate::Float64, momentum::Float64) = begin
     state = param_states[i]
     param_history[i] = [make_zero_blob(net.backend, eltype(x.blob),size(x.blob)...) for x in state.parameters]
   end
-a
   return SGDSolverState(learning_rate, momentum, param_states, param_history, momentum)
 end
 
