@@ -1,8 +1,8 @@
 export Blob
 export CPUBlob, NullBlob
 
-import Base: eltype, size, length, ndims, copy!, fill!, show, randn!
-export       eltype, size, length, ndims, copy!, fill!, erase!, show
+import Base: eltype, size, length, sizeof, ndims, copy!, fill!, show, randn!
+export       eltype, size, length, sizeof, ndims, copy!, fill!, erase!, show
 export get_num, get_height, get_width, get_fea_size, to_array
 export make_blob, make_zero_blob, reshape_blob
 
@@ -44,7 +44,9 @@ end
 function length(blob :: Blob)
   return prod(size(blob))
 end
-
+function sizeof(blob :: Blob)
+  sizeof(eltype(blob)) * length(blob)
+end
 function get_height(blob :: Blob)
   size(blob, 2)
 end
@@ -108,6 +110,9 @@ function make_blob(backend::Backend, data::Array)
   blob = make_blob(backend, eltype(data), size(data))
   copy!(blob, data)
   return blob
+end
+function make_blob(backend::Backend, size::Int)
+  blob = make_blob(backend, UInt8, size)
 end
 function make_zero_blob{N}(backend::Backend, data_type::Type, dims::NTuple{N,Int})
   blob = make_blob(backend, data_type, dims)

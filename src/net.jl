@@ -17,6 +17,8 @@ type Net{T <: Backend}
 
   output_blobs   :: Dict{Symbol, Blob}
   diff_blobs     :: Dict{Symbol, Blob}
+  
+  param_blob     :: Blob
 end
 
 import Base.show
@@ -108,6 +110,7 @@ function init(net::Net)
 end
 function destroy(net::Net)
   @debug("Destroying network $(net.name)")
+  destroy(net.param_blob)
   for state in net.states
     shutdown(net.backend, state)
   end
@@ -208,6 +211,8 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
   diff_blobs = Dict{Symbol,Blob}()
 
   @info("Setup layers...")
+  
+  total_param_size = 0
   for i = 1:n
     layer = layers[i]
     # record if layers has any dependency
@@ -219,14 +224,15 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
       blob_bwd = Blob[]
     end
 
-    if has_param(layers[i])
-      params = registry_get(backend, param_key(layers[i]))
+    if has_param(layer)
+      params = registry_get(backend, param_key(layer))
     else
       params = nothing
     end
-    states[i] = setup(backend, layers[i], params, blob_fwd, blob_bwd)
-    if has_param(layers[i])
-      registry_put(backend, param_key(layers[i]), states[i].parameters)
+    states[i] = setup(backend, layer, params, blob_fwd, blob_bwd)
+    if has_param(layer)
+      registry_put(backend, param_key(layer), states[i].parameters)
+      total_param_size += sum([sizeof(param.blob) for param in states[i].parameters])
     end
 
     if !is_sink(layer) && !is_inplace(layer)
@@ -247,9 +253,26 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
     blobs_forward[i] = blob_fwd
     blobs_backward[i] = blob_bwd
   end
+  
+  # assign single array to all learnable parameters
+  if (total_param_size > 0)
+    param_blob = make_blob(backend, total_param_size)
+    offset = 0
+    for i = 1:n
+        layer = layers[i]
+        if (has_param(layer))
+            for param in states[i].parameters
+                replace_ptr(backend, param.blob, param_blob.ptr, offset)
+                offset += sizeof(param.blob)
+            end
+        end
+    end
+  else
+    param_blob = NullBlob()
+  end
 
   @info("Network constructed!")
-  return Net(name, backend, layers, states, blobs_forward, blobs_backward, data_layers, output_blobs, diff_blobs)
+  return Net(name, backend, layers, states, blobs_forward, blobs_backward, data_layers, output_blobs, diff_blobs, param_blob)
 end
 
 function topological_sort(layers :: Vector{Layer})
