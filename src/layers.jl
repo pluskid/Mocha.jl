@@ -9,6 +9,7 @@ export IdentityLayer, Index2OnehotLayer, MemoryOutputLayer
 export SquareLossLayer, SoftmaxLossLayer, MultinomialLogisticLossLayer
 export SoftlabelSoftmaxLossLayer, WassersteinLossLayer, HingeLossLayer
 export AccuracyLayer, BinaryAccuracyLayer, BinaryCrossEntropyLossLayer
+export RegressionAccuracyLayer
 
 export RandomNormalLayer
 export GaussianKLLossLayer
@@ -233,5 +234,6 @@ include("layers/hinge-loss.jl")
 # Statistics Layers
 #############################################################
 include("layers/accuracy.jl")
+include("layers/regressionaccuracy.jl")
 include("layers/binary-accuracy.jl")
 
