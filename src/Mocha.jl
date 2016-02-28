@@ -29,6 +29,7 @@ include("blob.jl")
 
 if Config.use_cuda
   include("cuda/cuda.jl")
+  include("cuda/cudart.jl")
   include("cuda/cublas.jl")
   include("cuda/cudnn.jl")
   include("cuda/backend.jl")

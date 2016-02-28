@@ -1,3 +1,13 @@
+function forward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vector{Blob})
+  forward(backend, state.softmax, Blob[inputs[1]])
+  forward(backend, state.logistic, Blob[state.softmax.blobs[1], inputs[2]])
+end
+
+function sync(backend::GPUBackend, state::SoftmaxLossLayerState)
+  sync(backend, state.logistic)
+  state.loss = state.logistic.loss * state.layer.weight
+end
+
 function backward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   diff = diffs[1]
   if isa(diff, CuTensorBlob)

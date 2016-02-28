@@ -2,6 +2,7 @@ export CuDNN
 
 module CuDNN
 using ..CUDA
+using ..CudaRT
 
 # cudnnStatus_t
 const  CUDNN_STATUS_SUCCESS          = 0
@@ -56,7 +57,7 @@ macro cudnncall(fv, argtypes, args...)
 end
 
 typealias Handle Ptr{Void}
-typealias StreamHandle Ptr{Void}
+typealias StreamHandle CudaStream
 
 function create()
   handle = Handle[0]

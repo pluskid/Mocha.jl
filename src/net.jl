@@ -147,6 +147,7 @@ end
 function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
   obj_val = 0.0
 
+  # forward the net asynchronously
   for i = 1:length(net.layers)
     forward(net.backend, net.states[i], net.blobs_forward[i])
 
@@ -154,6 +155,13 @@ function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
       for blob in net.states[i].blobs
         forward(net.backend, net.layers[i].neuron, blob)
       end
+    end
+  end
+  
+  # sync the net
+  for i = 1:length(net.layers)
+    if has_sync(net.layers[i])
+      sync(net.backend, net.states[i])
     end
 
     if has_loss(net.layers[i])

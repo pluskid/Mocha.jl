@@ -162,7 +162,7 @@ function forward(backend::Backend, state::AsyncHDF5DataLayerState, inputs::Vecto
   data_blocks = consume(state.io_task)
 
   for i = 1:length(state.blobs)
-    copy!(state.blobs[i], data_blocks[i])
+    copy_async!(backend, state.blobs[i], data_blocks[i])
     for j = 1:length(state.trans[i])
       forward(backend, state.trans[i][j], state.blobs[i])
     end

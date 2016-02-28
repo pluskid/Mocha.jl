@@ -2,6 +2,7 @@ export CuBLAS
 
 module CuBLAS
 using ..CUDA
+using ..CudaRT
 
 # cublasStatus_t
 const CUBLAS_STATUS_SUCCESS         = 0
@@ -55,7 +56,7 @@ macro cublascall(fv, argtypes, args...)
 end
 
 typealias Handle Ptr{Void}
-typealias StreamHandle Ptr{Void}
+typealias StreamHandle CudaStream
 
 function create()
   handle = Handle[0]
@@ -78,20 +79,24 @@ end
 ############################################################
 # Copy a vector from host to device
 ############################################################
-function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::Ptr{Void}, incy::Int)
-  @cublascall(:cublasSetVector, (Cint, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
-      n, elem_size, src, incx, dest, incy)
+function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::Ptr{Void}, incy::Int;
+                        stream::CudaRT.CudaStream=CudaRT.cuda_null_stream())
+  @cublascall(:cublasSetVectorAsync, (Cint, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
+      n, elem_size, src, incx, dest, incy, stream)
 end
-function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::CuPtr, incy::Int)
-  set_vector(n, elem_size, src, incx, Compat.unsafe_convert(Ptr{Void}, dest.p), incy)
+function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::CuPtr, incy::Int;
+                        stream::CudaRT.CudaStream=CudaRT.cuda_null_stream())
+  set_vector(n, elem_size, src, incx, Compat.unsafe_convert(Ptr{Void}, dest.p), incy, stream=stream)
 end
-function set_vector{T}(src::Array{T}, incx::Int, dest::CuPtr, incy::Int)
+function set_vector{T}(src::Array{T}, incx::Int, dest::CuPtr, incy::Int;
+                        stream::CudaRT.CudaStream=CudaRT.cuda_null_stream())
   elem_size = sizeof(T)
   n = length(src)
   src_buf = convert(Ptr{Void}, pointer(src))
-  set_vector(n, elem_size, src_buf, incx, dest, incy)
+  set_vector(n, elem_size, src_buf, incx, dest, incy, stream=stream)
 end
-set_vector{T}(src::Array{T}, dest::CuPtr) = set_vector(src, 1, dest, 1)
+set_vector{T}(src::Array{T}, dest::CuPtr; 
+    stream::CudaRT.CudaStream=CudaRT.cuda_null_stream()) = set_vector(src, 1, dest, 1, stream=stream)
 
 ############################################################
 # Copy a vector from device to host
@@ -157,6 +162,17 @@ for (fname, elty) in ((:cublasSdot_v2, :Float32),
       @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
                   handle, n, x.p, incx, y.p, incy, result)
       return result[1]
+    end
+  end
+end
+
+for (fname, elty) in ((:cublasSdot_v2, Float32),
+                      (:cublasDdot_v2, Float64))
+  @eval begin
+    function dot(handle::Handle, result::Array{$elty,1}, n::Int, x::CuPtr, incx::Int, 
+                            y::CuPtr, incy::Int)
+      @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
+                  handle, n, x.p, incx, y.p, incy, result)
     end
   end
 end

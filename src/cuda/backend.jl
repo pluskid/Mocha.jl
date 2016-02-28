@@ -149,6 +149,7 @@ type GPUBackend <: AbstractGPUBackend
   cu_ctx         :: CUDA.CuContext
   cublas_ctx     :: CuBLAS.Handle
   cudnn_ctx      :: CuDNN.Handle
+  stream         :: CudaRT.CudaStream
 
   mocha          :: MochaKernels
 
@@ -162,8 +163,15 @@ function init(backend::GPUBackend)
   CUDA.init()
   dev = CUDA.CuDevice(Config.cuda_dev_id)
   backend.cu_ctx = CUDA.create_context(dev)
+  # TODO: Ideally should create a stream here. Have to use default stream because the kernel launch
+  # functions are using the default stream. Need to change kernel launch to CUDA Runtime API
+  # to use a non-default stream that can be shared by cublas & cudnn.
+  #backend.stream = CudaRT.create_stream()
+  backend.stream = CudaRT.cuda_null_stream()
   backend.cublas_ctx = CuBLAS.create()
+  CuBLAS.set_stream(backend.cublas_ctx, backend.stream)
   backend.cudnn_ctx = CuDNN.create()
+  CuDNN.set_stream(backend.cudnn_ctx, backend.stream)
   backend.mocha = MochaKernels()
   backend.initialized = true
   info("CuDNN backend initialized!")
@@ -177,6 +185,7 @@ function shutdown(backend::GPUBackend)
   shutdown(backend.mocha)
   CuDNN.destroy(backend.cudnn_ctx)
   CuBLAS.destroy(backend.cublas_ctx)
+  CudaRT.destroy(backend.stream)
   CUDA.destroy(backend.cu_ctx)
   backend.initialized = false
   @info("CuDNN Backend shutdown finished!")

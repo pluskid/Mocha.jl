@@ -12,6 +12,7 @@
 @characterize_layer(MultinomialLogisticLossLayer,
   has_loss => true,
   is_sink  => true,
+  has_sync => true,
 )
 
 type MultinomialLogisticLossLayerState{T} <: LayerState
@@ -20,6 +21,12 @@ type MultinomialLogisticLossLayerState{T} <: LayerState
 
   op_dim       :: Int
   weights_blob :: Blob
+  
+  etc   :: Any
+end
+
+function setup_etc(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Vector{Blob})
+  nothing
 end
 
 function setup(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
@@ -73,7 +80,8 @@ function setup(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Ve
     weights_blob = make_blob(backend, weights)
   end
 
-  state = MultinomialLogisticLossLayerState(layer, convert(data_type, 0), op_dim, weights_blob)
+  etc = setup_etc(backend, layer, inputs)
+  state = MultinomialLogisticLossLayerState(layer, convert(data_type, 0), op_dim, weights_blob, etc)
   return state
 end
 function shutdown(backend::Backend, state::MultinomialLogisticLossLayerState)
