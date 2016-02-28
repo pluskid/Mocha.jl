@@ -102,7 +102,7 @@ immutable CudaError <: Exception
   code :: Int
 end
 import Base.show
-show(io::IO, error::CudaError) = print(io, cuda_error_description[error.code])
+show(io::IO, error::CudaError) = print(io, cuda_error_descriptions[error.code])
 
 macro cudacall(fv, argtypes, args...)
   f = eval(fv)
@@ -126,7 +126,9 @@ function create_stream()
 end
 
 function destroy_stream(stream :: CudaStream)
-  @cudacall(:cudaStreamDestroy, (CudaStream,), stream)
+  if (stream != cuda_null_stream())
+    @cudacall(:cudaStreamDestroy, (CudaStream,), stream)
+  end
 end
 
 function sync_stream(stream :: CudaStream)
