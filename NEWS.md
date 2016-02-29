@@ -1,5 +1,12 @@
 # News for Mocha Development
 
+## v0.1.1 2016.02.29
+
+* Infrastructure
+  * Fix compatability with Julia v0.5 nightly
+  * Fix blasfunc compatibility (@elehcim)
+  * Improved computation performance for neurons on CPU backend (@uschmidt83)
+
 ## v0.1.0 2015.10.10
 
 To celebrate the release of Julia v0.4 and increased involvement from the community of the development of Mocha.jl, we decided to have a v0.1.0 release.
