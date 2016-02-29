@@ -2,7 +2,7 @@
 export CudaRT
 module CudaRT
 export CudaStream
-export create_stream, sync_stream, cuda_null_stream
+export set_device, create_stream, sync_stream, cuda_null_stream
 
 @windows? (
 begin
@@ -113,6 +113,14 @@ macro cudacall(fv, argtypes, args...)
     end
   end
 end
+
+############################################################
+# CUDART devices
+############################################################
+function set_device(device_id::Int)
+  @cudacall(:cudaSetDevice, (Cint,), device_id)
+end
+
 
 ############################################################
 # CUDART streams
