@@ -63,7 +63,7 @@ function shutdown_etc(backend::GPUBackend, state::ConvolutionLayerState)
   map(CuDNN.destroy_tensor4d_descriptor, etc.outputs_desc)
   map(CuDNN.destroy_convolution_descriptor, etc.conv_desc)
   if etc.workspace_size != 0
-    CUDA.free(etc.workspace)
+    CudaRT.free(etc.workspace)
   end
 end
 

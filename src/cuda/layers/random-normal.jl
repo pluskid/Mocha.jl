@@ -25,7 +25,7 @@ end
 
 function destroy_etc(backend::GPUBackend, state::RandomNormalLayerState)
     for i = 1:length(state.etc)
-        CUDA.free(state.etc[i])
+        CudaRT.free(state.etc[i])
     end
 end
 

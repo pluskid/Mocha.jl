@@ -25,7 +25,7 @@ end
 
 function destroy_etc(backend::GPUBackend, state::DropoutLayerState)
   cuda_rand_states, input_copy = state.etc
-  CUDA.free(cuda_rand_states)
+  CudaRT.free(cuda_rand_states)
   destroy(input_copy)
 end
 

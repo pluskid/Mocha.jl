@@ -18,9 +18,9 @@ function setup_etc(backend::GPUBackend, layer::ChannelPoolingLayer, inputs, blob
 end
 function shutdown_etc(backend::GPUBackend, state::ChannelPoolingLayerState)
   if isa(state.layer.pooling, Pooling.Max)
-    map(CUDA.free, state.etc)
+    map(CudaRT.free, state.etc)
   elseif isa(state.layer.pooling, Pooling.Mean)
-    map(CUDA.free, state.etc)
+    map(CudaRT.free, state.etc)
   else
     error("Unknown pooling $(state.layer.pooling)")
   end
