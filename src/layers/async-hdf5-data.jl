@@ -15,10 +15,11 @@ using HDF5
 
 
 type AsyncHDF5DataLayerState <: LayerState
-  layer :: AsyncHDF5DataLayer
-  blobs :: Vector{Blob}
-  epoch :: Int
-  trans :: Vector{Vector{DataTransformerState}}
+  layer         :: AsyncHDF5DataLayer
+  blobs         :: Vector{Blob}
+  epoch         :: Int
+  trans         :: Vector{Vector{DataTransformerState}}
+  data_blocks   :: Array{Any}
 
   sources        :: Vector{AbstractString}
 
@@ -43,6 +44,10 @@ type AsyncHDF5DataLayerState <: LayerState
   end
 end
 
+function setup_etc(backend::Backend, state::AsyncHDF5DataLayerState)
+  return Array[Array(eltype(x), size(x)) for x in state.blobs]
+end
+
 function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   @assert length(inputs) == 0
   state = AsyncHDF5DataLayerState(backend, layer)
@@ -63,13 +68,14 @@ function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}
     state.trans[i] = [setup(backend, convert(DataTransformerType, t), state.blobs[i])
         for (k,t) in filter(kt -> kt[1] == state.layer.tops[i], transformers)]
   end
+  state.data_blocks = setup_etc(backend, state)
 
   state.stop_task = false
   close(h5_file)
 
   function io_task_impl()
     # data blocks to produce
-    data_blocks = Array[Array(eltype(x), size(x)) for x in state.blobs]
+    data_blocks = state.data_blocks
     n_done = 0
 
     while true
@@ -147,6 +153,10 @@ function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}
 
   return state
 end
+
+function shutdown_etc(backend::Backend, state::AsyncHDF5DataLayerState)
+  nothing
+end
 function shutdown(backend::Backend, state::AsyncHDF5DataLayerState)
   @info("AsyncHDF5DataLayer: Stopping IO task...")
   state.stop_task = true
@@ -156,6 +166,8 @@ function shutdown(backend::Backend, state::AsyncHDF5DataLayerState)
 
   map(destroy, state.blobs)
   map(ts -> map(t -> shutdown(backend, t), ts), state.trans)
+  
+  shutdown_etc(backend, state)
 end
 
 function forward(backend::Backend, state::AsyncHDF5DataLayerState, inputs::Vector{Blob})

@@ -165,6 +165,20 @@ function free(p::CuPtr)
 end
 
 ############################################################
+# Pinned Host Memory allocation
+############################################################
+function cualloc_host(T::Type, len::Integer)
+  a = Ptr{Void}[0]
+  nbytes = round(Int, len) * sizeof(T)
+  @cucall(:cuMemAllocHost_v2, (Ptr{Ptr{Void}}, Csize_t), a, nbytes)
+  return a[1]
+end
+
+function cufree_host(p::Ptr{Void})
+  @cucall(:cuMemFreeHost, (Ptr{Void},), p)
+end
+
+############################################################
 # CUDA streams
 ############################################################
 immutable CuStream
