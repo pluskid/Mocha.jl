@@ -270,7 +270,7 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
         layer = layers[i]
         if (has_param(layer))
             for param in states[i].parameters
-                replace_ptr(backend, param.blob, param_blob.ptr, offset)
+                replace_ptr(backend, param.blob, param_blob, offset)
                 offset += sizeof(param.blob)
             end
         end
