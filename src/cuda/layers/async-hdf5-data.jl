@@ -13,5 +13,5 @@ function setup_etc(backend::GPUBackend, state::AsyncHDF5DataLayerState)
 end
 
 function shutdown_etc(backend::GPUBackend, state::AsyncHDF5DataLayerState)
-  map(free_host_array, state.etc)
+  map(free_host_array, state.data_blocks)
 end

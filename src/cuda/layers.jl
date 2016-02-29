@@ -2,6 +2,7 @@
 # Data Layers
 #############################################################
 include("layers/hdf5-data.jl")
+include("layers/async-hdf5-data.jl")
 
 #############################################################
 # General Computation Layers
