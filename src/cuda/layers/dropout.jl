@@ -2,7 +2,7 @@ function setup_etc(backend::GPUBackend, layer::DropoutLayer, inputs::Vector{Blob
   cuda_rand_states = CuPtr
   kernel = backend.mocha.dropout_init
   rnd_state_size_blob = make_blob(backend, Float64, 1, 1, 1, 1)
-  CUDA.launch(backend.mocha.dropout_alloc_size, 1, 1, (rnd_state_size_blob.ptr.p, ))
+  CUDA.launch(backend.mocha.dropout_alloc_size, 1, 1, (get_ptr(rnd_state_size_blob).p, ))
   rnd_state_size = Float64[0]
   copy!(rnd_state_size, rnd_state_size_blob)
   destroy(rnd_state_size_blob)
@@ -43,8 +43,8 @@ function forward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{B
   end
 
   CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X,
-      (state.etc[1], length(inputs[1]), inputs[1].ptr.p,
-      state.rand_vals.ptr.p, state.ratio, state.scale))
+      (state.etc[1], length(inputs[1]), get_ptr(inputs[1]).p,
+      get_ptr(state.rand_vals).p, state.ratio, state.scale))
 end
 
 function backward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
@@ -59,8 +59,8 @@ function backward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{
     end
 
     CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X,
-        (state.etc[1], length(inputs[1]), diffs[1].ptr.p,
-        state.rand_vals.ptr.p, state.ratio, state.scale))
+        (state.etc[1], length(inputs[1]), get_ptr(diffs[1]).p,
+        get_ptr(state.rand_vals).p, state.ratio, state.scale))
 
     # restore the input blob
     copy!(inputs[1], state.etc[2])

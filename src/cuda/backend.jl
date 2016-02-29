@@ -146,7 +146,6 @@ end
 type GPUBackend <: AbstractGPUBackend
   param_registry :: ParameterRegistry
   initialized    :: Bool
-  current_dev    :: Int
   cublas_ctx     :: CuBLAS.Handle
   cudnn_ctx      :: CuDNN.Handle
   stream         :: CudaRT.CudaStream
@@ -160,8 +159,9 @@ function init(backend::GPUBackend)
   @assert backend.initialized == false
 
   @info("Initializing CuDNN backend...")
-  backend.current_dev = Config.cuda_dev_id
-  CudaRT.set_device(backend.current_dev)
+  @assert Config.cuda_dev_id < Config.cuda_dev_count
+  CudaRT.set_dev_count(Config.cuda_dev_count)
+  CudaRT.set_device(Config.cuda_dev_id)
   # TODO: Ideally should create a stream here. Have to use default stream because the kernel launch
   # functions are using the default stream. Need to change kernel launch to CUDA Runtime API
   # to use a non-default stream that can be shared by cublas & cudnn.

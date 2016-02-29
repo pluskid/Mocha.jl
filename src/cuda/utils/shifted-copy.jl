@@ -29,7 +29,7 @@ function copy_to_shifted!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
 
   CUDA.launch(kernel, (x_block,y_block,z_block),
       (CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z),
-      (dst.ptr.p,src.ptr.p,dim_x,dim_y,dim_z,dim_y2,shift_amount))
+      (get_ptr(dst).p,get_ptr(src).p,dim_x,dim_y,dim_z,dim_y2,shift_amount))
 end
 
 function copy_from_shifted!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
@@ -61,5 +61,5 @@ function copy_from_shifted!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
 
   CUDA.launch(kernel, (x_block,y_block,z_block),
       (CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z),
-      (dst.ptr.p,src.ptr.p,dim_x,dim_y,dim_z,dim_y2,shift_amount))
+      (get_ptr(dst).p,get_ptr(src).p,dim_x,dim_y,dim_z,dim_y2,shift_amount))
 end

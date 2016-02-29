@@ -29,17 +29,17 @@ function apply_l2_cons!{T <: AbstractFloat}(backend::GPUBackend, blob::CuTensorB
   # we compute the squared norm of all colums of matrix A as:
   #  ||A||^2 = transpose(A .* A) * ones(size(A))
   # square blob inplace
-  CuVec.mul!(backend, T, tmpA.ptr.p, tmpA.ptr.p, length(blob))
+  CuVec.mul!(backend, T, get_ptr(tmpA).p, get_ptr(tmpA).p, length(blob))
   # and reduce via gemv to get the sum
   CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_T, CuBLAS.OP_N, nunits, 1, ninputs,
-              convert(T, 1), tmpA.ptr, ninputs, onesv.ptr, ninputs, convert(T, 0), tmp_norm.ptr, nunits)
+              convert(T, 1), get_ptr(tmpA), ninputs, get_ptr(onesv), ninputs, convert(T, 0), get_ptr(tmp_norm), nunits)
   # copy back for doing the norm size check on the cpu
   copy!(tmp_norm_host, tmp_norm)
 
   for i = 1:nunits
     # calculate offset in blob vector
     offset = sizeof(T) * (i-1) * ninputs
-    off_ptr = CuPtr(blob.ptr.p + offset)
+    off_ptr = CuPtr(get_ptr(blob).p + offset)
     @inbounds norm = sqrt(tmp_norm_host[i])
     if norm > coef
       scale_factor = (1. / norm) * coef

@@ -44,8 +44,8 @@ function forward(backend::GPUBackend, state::PoolingLayerState, inputs::Vector{B
   beta = zero(eltype(inputs[1]))
   for i = 1:length(inputs)
     CuDNN.pooling_forward(backend.cudnn_ctx, state.etc.pooling_desc, alpha,
-        state.etc.inputs_desc[i], inputs[i].ptr, beta,
-        state.etc.outputs_desc[i], state.blobs[i].ptr)
+        state.etc.inputs_desc[i], get_ptr(inputs[i]), beta,
+        state.etc.outputs_desc[i], get_ptr(state.blobs[i]))
   end
 end
 
@@ -56,10 +56,10 @@ function backward(backend::GPUBackend, state::PoolingLayerState, inputs::Vector{
   for i = 1:length(inputs)
     if isa(diffs[i], CuTensorBlob)
       CuDNN.pooling_backward(backend.cudnn_ctx, state.etc.pooling_desc, alpha,
-          state.etc.outputs_desc[i], state.blobs[i].ptr,
-          state.etc.outputs_desc[i], state.blobs_diff[i].ptr,
-          state.etc.inputs_desc[i], inputs[i].ptr,
-          beta, state.etc.inputs_desc[i], diffs[i].ptr)
+          state.etc.outputs_desc[i], get_ptr(state.blobs[i]),
+          state.etc.outputs_desc[i], get_ptr(state.blobs_diff[i]),
+          state.etc.inputs_desc[i], get_ptr(inputs[i]),
+          beta, state.etc.inputs_desc[i], get_ptr(diffs[i]))
     end
   end
 end

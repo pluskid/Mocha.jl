@@ -2,7 +2,7 @@
 export CudaRT
 module CudaRT
 export CudaStream
-export set_device, create_stream, sync_stream, cuda_null_stream
+export set_device_count, get_device_count, set_device, get_device, create_stream, sync_stream, cuda_null_stream
 
 @windows? (
 begin
@@ -117,8 +117,21 @@ end
 ############################################################
 # CUDART devices
 ############################################################
+dev_count = 0
+function set_dev_count(count::Int)
+  global dev_count = count
+end
+function get_dev_count()
+  return dev_count
+end
+
+current_dev = 0
 function set_device(device_id::Int)
   @cudacall(:cudaSetDevice, (Cint,), device_id)
+  global current_dev = device_id
+end
+function get_device()
+  return current_dev
 end
 
 

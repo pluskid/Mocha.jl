@@ -83,8 +83,8 @@ function cuda_mean_channel_pooling_forward{T}(backend::GPUBackend, input::CuTens
   output_fea_dim = spatial_dim * pooled_chann
 
   for n = 1:num
-    input_ptr = convert(Ptr{T}, input.ptr.p + fea_dim*(n-1))
-    output_ptr = convert(Ptr{T}, output.ptr.p + output_fea_dim*(n-1))
+    input_ptr = convert(Ptr{T}, get_ptr(input).p + fea_dim*(n-1))
+    output_ptr = convert(Ptr{T}, get_ptr(output).p + output_fea_dim*(n-1))
     integral_ptr = convert(Ptr{T}, integral.p)
 
     # compute integral image
@@ -128,8 +128,8 @@ function cuda_mean_channel_pooling_backward{T}(backend::GPUBackend, input::CuTen
   output_fea_dim = spatial_dim * pooled_chann
 
   for n = 1:num
-    input_ptr = convert(Ptr{T}, input.ptr.p) + fea_dim*(n-1)
-    output_ptr = convert(Ptr{T}, output.ptr.p) + output_fea_dim*(n-1)
+    input_ptr = convert(Ptr{T}, get_ptr(input).p) + fea_dim*(n-1)
+    output_ptr = convert(Ptr{T}, get_ptr(output).p) + output_fea_dim*(n-1)
 
     for pc = 1:pooled_chann
       cstart = (pc-1)*layer.stride - layer.pad[1] + 1
@@ -169,7 +169,7 @@ function cuda_max_channel_pooling_forward{T}(backend::GPUBackend, input::CuTenso
     error("Unsupported data type for channel pooling: $T")
   end
 
-  CUDA.launch(kernel, cuda_dim..., (input.ptr.p, output.ptr.p, mask.p, sp_dim, channels, num,
+  CUDA.launch(kernel, cuda_dim..., (get_ptr(input).p, get_ptr(output).p, mask.p, sp_dim, channels, num,
       pooled_chann, layer.kernel, layer.stride, layer.pad[1]))
 end
 
@@ -189,7 +189,7 @@ function cuda_max_channel_pooling_backward{T}(backend::GPUBackend, input::CuTens
   end
   erase!(input)
 
-  CUDA.launch(kernel, cuda_dim..., (input.ptr.p, output.ptr.p, mask.p, sp_dim, channels, num,
+  CUDA.launch(kernel, cuda_dim..., (get_ptr(input).p, get_ptr(output).p, mask.p, sp_dim, channels, num,
       pooled_chann, layer.kernel, layer.stride, layer.pad[1]))
 end
 

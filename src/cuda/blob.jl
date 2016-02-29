@@ -1,38 +1,47 @@
 using .CUDA
+using .CudaRT
 
 export CuBlobDescriptor, CuPODBlobDescriptor, CuTensorBlobDescriptor, CuFilterBlobDescriptor
 export CuTensorBlob
+export get_ptr
 
 type CuTensorBlob{T,N} <: Blob{T,N}
-  ptr       :: CuPtr
+  ptrs      :: Array{CuPtr} # one CuPtr for each device
   shape     :: NTuple{N, Int}
   len       :: Int
   own_data  :: Bool
 end
 function CuTensorBlob{T, N}(dtype::Type{T}, dims::NTuple{N,Int})
   len = prod(dims)
-  ptr = CUDA.cualloc(dtype, len)
-  return CuTensorBlob{T,N}(ptr, dims, len, true)
+  ptrs = Array(CuPtr, CudaRT.get_dev_count())
+  orig_dev = CudaRT.get_device()
+  for i=1:CudaRT.get_dev_count()
+    CudaRT.set_device(i - 1)
+    @inbounds ptrs[i] = CUDA.cualloc(dtype, len)
+  end
+  CudaRT.set_device(orig_dev)
+  return CuTensorBlob{T,N}(ptrs, dims, len, true)
 end
+get_ptr(blob::CuTensorBlob) = @inbounds return blob.ptrs[CudaRT.get_device() + 1]
 
 length(b::CuTensorBlob) = b.len
 size(b::CuTensorBlob) = b.shape
 
 function copy!{T}(dst :: CuTensorBlob{T}, src :: Array{T})
   @assert length(dst) == length(src)
-  CuBLAS.set_vector(src, dst.ptr)
+  CuBLAS.set_vector(src, get_ptr(dst))
 end
 function copy!{T}(dst :: Array{T}, src :: CuTensorBlob{T})
   @assert length(dst) == length(src)
-  CuBLAS.get_vector(src.ptr, dst)
+  CuBLAS.get_vector(get_ptr(src), dst)
 end
 function copy!{T}(dst :: CuTensorBlob{T}, src :: CuTensorBlob{T})
   @assert length(dst) == length(src)
-  @CUDA.cucall(:cuMemcpy, (Ptr{Void}, Ptr{Void}, Cint), dst.ptr.p, src.ptr.p, sizeof(dst))
+  @CUDA.cucall(:cuMemcpy, (Ptr{Void}, Ptr{Void}, Cint), get_ptr(dst).p, get_ptr(src).p, sizeof(dst))
 end
 function copy_async!{T}(backend::GPUBackend, dst :: CuTensorBlob{T}, src :: Array{T})
   @assert length(dst) == length(src)
-  CuBLAS.set_vector(src, dst.ptr, stream=backend.stream)
+  CuBLAS.set_vector(src, get_ptr(dst), stream=backend.stream)
 end
 function fill!{T}(dst :: CuTensorBlob{T}, val)
   val_vec = Array(T, length(dst))
@@ -40,25 +49,29 @@ function fill!{T}(dst :: CuTensorBlob{T}, val)
   copy!(dst, val_vec)
 end
 function erase!{T}(dst :: CuTensorBlob{T})
-  @CUDA.cucall(:cuMemsetD8_v2, (Ptr{Void}, Cuchar, Csize_t), dst.ptr.p, 0, sizeof(dst))
+  @CUDA.cucall(:cuMemsetD8_v2, (Ptr{Void}, Cuchar, Csize_t), get_ptr(dst).p, 0, sizeof(dst))
 end
 
 function make_blob{N}(backend::GPUBackend, data_type::Type, dims::NTuple{N,Int})
   return CuTensorBlob(data_type, dims)
 end
-function replace_ptr(backend::GPUBackend, blob::CuTensorBlob, ptr::CuPtr, offset::Int)
-    destroy(blob)
-    blob.ptr.p = ptr.p + offset
-    blob.own_data = false
+function replace_ptr(backend::GPUBackend, dst::CuTensorBlob, src::CuTensorBlob, offset::Int)
+  @assert(length(dst.ptrs) == length(src.ptrs))
+  @assert(length(dst.ptrs) == CudaRT.get_dev_count())
+  destroy(dst)
+  for i=1:CudaRT.get_dev_count()
+    @inbounds dst.ptrs[i].p = src.ptrs[i].p + offset
+  end
+  dst.own_data = false
 end
 function reshape_blob{T,N}(backend::GPUBackend, blob::CuTensorBlob{T}, dims::NTuple{N,Int})
   @assert prod(dims) == length(blob)
-  return CuTensorBlob{T,N}(blob.ptr, dims, length(blob), blob.own_data)
+  return CuTensorBlob{T,N}(blob.ptrs, dims, length(blob), blob.own_data)
 end
 function destroy(blob :: CuTensorBlob)
-  if blob.own_data && blob.ptr.p != 0
-    CUDA.free(blob.ptr)
-    blob.ptr.p = 0
+  if blob.own_data
+    map(ptr -> ptr.p != 0 && CUDA.free(ptr), blob.ptrs)
+    map(ptr -> ptr.p = 0, blob.ptrs)
   end
 end
 

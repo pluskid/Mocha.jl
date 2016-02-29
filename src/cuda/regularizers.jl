@@ -3,11 +3,11 @@
 ############################################################
 function forward(backend::GPUBackend, regu :: L2Regu, global_regu::AbstractFloat, param :: Blob)
   return regu.coefficient * global_regu * CuBLAS.dot(backend.cublas_ctx, eltype(param), length(param),
-      param.ptr, 1, param.ptr, 1)
+      get_ptr(param), 1, get_ptr(param), 1)
 end
 function backward(backend::GPUBackend, regu :: L2Regu, global_regu::AbstractFloat, param :: Blob, gradient :: Blob)
     CuBLAS.axpy(backend.cublas_ctx, length(param),
-        convert(eltype(param), 2 * regu.coefficient * global_regu), param.ptr, 1, gradient.ptr, 1)
+        convert(eltype(param), 2 * regu.coefficient * global_regu), get_ptr(param), 1, get_ptr(gradient), 1)
 end
 
 ############################################################
@@ -23,7 +23,7 @@ function forward(backend::GPUBackend, regu :: L1Regu, global_regu::AbstractFloat
   else
     kernel = backend.mocha.l1_forward_double
   end
-  CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X, (param.ptr.p, len, coef, loss_blob.ptr.p))
+  CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X, (get_ptr(param).p, len, coef, get_ptr(loss_blob).p))
   loss = Float32[0]
   copy!(loss, loss_blob)
   return loss[1]
@@ -37,6 +37,6 @@ function backward(backend::GPUBackend, regu :: L1Regu, global_regu::AbstractFloa
   else
     kernel = backend.mocha.l1_backward_double
   end
-  CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X, (param.ptr.p, gradient.ptr.p, len, coef))
+  CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X, (get_ptr(param).p, get_ptr(gradient).p, len, coef))
 end
 

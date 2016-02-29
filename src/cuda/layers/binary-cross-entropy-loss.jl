@@ -19,7 +19,7 @@ function forward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, i
   end
 
   CUDA.launch(kernel, x_block, (CUDA.THREADS_PER_BLOCK_X, 1),
-        (pred.ptr.p, label.ptr.p, dim, loss_blob.ptr.p))
+        (get_ptr(pred).p, get_ptr(label).p, dim, get_ptr(loss_blob).p))
 
   loss = Float32[0]
   copy!(loss, loss_blob)
@@ -50,11 +50,11 @@ function backward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, 
   end
 
   null_ptr = convert(Ptr{data_type}, 0)
-  grad_pred =  isa(diffs[1], CuTensorBlob) ? diffs[1].ptr.p : null_ptr
-  grad_label = isa(diffs[2], CuTensorBlob) ? diffs[2].ptr.p : null_ptr
+  grad_pred =  isa(diffs[1], CuTensorBlob) ? get_ptr(diffs[1]).p : null_ptr
+  grad_label = isa(diffs[2], CuTensorBlob) ? get_ptr(diffs[2]).p : null_ptr
 
   CUDA.launch(kernel, x_block, (CUDA.THREADS_PER_BLOCK_X, 1),
-        (pred.ptr.p, label.ptr.p, dim, grad_pred, grad_label,
+        (get_ptr(pred).p, get_ptr(label).p, dim, grad_pred, grad_label,
          convert(data_type, state.layer.weight/num)))
 
 end

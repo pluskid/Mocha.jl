@@ -21,7 +21,7 @@ function forward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vector
   end
 
   CUDA.launch(kernel, (x_block,1), (CUDA.THREADS_PER_BLOCK_X, 1),
-              (pred.ptr.p, label.ptr.p, n, state.loss_blob.ptr.p))
+              (get_ptr(pred).p, get_ptr(label).p, n, get_ptr(state.loss_blob).p))
 
   losses = Array(data_type, size(state.loss_blob)...)
   copy!(losses, state.loss_blob)
@@ -50,9 +50,9 @@ function backward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vecto
     error("Unsupported data type $data_type")
   end
 
-  const gradient1 :: CuPtr = isa(diffs[1], CuTensorBlob) ? diffs[1].ptr : CuPtr()
-  const gradient2 :: CuPtr = isa(diffs[2], CuTensorBlob) ? diffs[2].ptr : CuPtr()
+  const gradient1 :: CuPtr = isa(diffs[1], CuTensorBlob) ? get_ptr(diffs[1]) : CuPtr()
+  const gradient2 :: CuPtr = isa(diffs[2], CuTensorBlob) ? get_ptr(diffs[2]) : CuPtr()
 
   CUDA.launch(kernel, (x_block,1), (CUDA.THREADS_PER_BLOCK_X,1),
-              (pred.ptr.p, label.ptr.p, gradient1.p, gradient2.p, n, neg_weight))
+              (get_ptr(pred).p, get_ptr(label).p, gradient1.p, gradient2.p, n, neg_weight))
 end

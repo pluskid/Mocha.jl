@@ -18,6 +18,6 @@ function forward(backend::GPUBackend, state::ArgmaxLayerState, inputs::Vector{Bl
     end
 
     CUDA.launch(kernel, (x_block,y_block),(CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y),
-        (input.ptr.p, output.ptr.p, num, channels, spatial_dim));
+        (get_ptr(input).p, get_ptr(output).p, num, channels, spatial_dim));
   end
 end

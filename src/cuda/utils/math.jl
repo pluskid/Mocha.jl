@@ -70,25 +70,25 @@ for name in [:add, :sub, :mul, :div, :div2]
   @eval begin
     function $(symbol("$(name)!")){T}(backend::GPUBackend, X::CuTensorBlob{T}, Y::CuTensorBlob{T})
       len = length(X)
-      $(symbol("$(name)!"))(backend, T, X.ptr.p, Y.ptr.p, len)
+      $(symbol("$(name)!"))(backend, T, get_ptr(X).p, get_ptr(Y).p, len)
     end
   end
 end
 function add_scal!{T}(backend::GPUBackend, X::CuTensorBlob{T}, Y)
   Y = convert(T, Y)
   len = length(X)
-  add_scal!(backend, T, X.ptr.p, Y, len)
+  add_scal!(backend, T, get_ptr(X).p, Y, len)
 end
 function mul_scal!{T}(backend::GPUBackend, X::CuTensorBlob{T}, Y)
   Y = convert(T, Y)
   len = length(X)
-  mul_scal!(backend, T, X.ptr.p, Y, len)
+  mul_scal!(backend, T, get_ptr(X).p, Y, len)
 end
 function log!{T}(backend::GPUBackend, X::CuTensorBlob{T})
-  log!(backend, T, X.ptr.p, length(X))
+  log!(backend, T, get_ptr(X).p, length(X))
 end
 function exp!{T}(backend::GPUBackend, X::CuTensorBlob{T})
-  exp!(backend, T, X.ptr.p, length(X))
+  exp!(backend, T, get_ptr(X).p, length(X))
 end
 
 for (postfix, dt1, dt2) in [(:fi, Float32, Int), (:di, Float64, Int),
@@ -101,7 +101,7 @@ for (postfix, dt1, dt2) in [(:fi, Float32, Int), (:di, Float64, Int),
       CUDA.launch(kernel, cuda_dim..., (X,Y,len))
     end
     function pow!{T}(backend::GPUBackend, X::CuTensorBlob{T}, Y::$dt2)
-      pow!(backend, T, X.ptr.p, Y, length(X))
+      pow!(backend, T, get_ptr(X).p, Y, length(X))
     end
   end
 end

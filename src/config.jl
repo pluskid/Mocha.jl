@@ -4,6 +4,7 @@ module Config
 println("Configuring Mocha...")
 const use_cuda_key             = "MOCHA_USE_CUDA"
 const cuda_dev_key             = "MOCHA_CUDA_DEVICE"
+const cuda_dev_count_key       = "MOCHA_CUDA_DEVICE_COUNT"
 
 const use_native_extension_key = "MOCHA_USE_NATIVE_EXT"
 
@@ -25,6 +26,7 @@ end
 
 const use_cuda = parseEnvBool(use_cuda_key)
 const cuda_dev_id = parseEnvInt(cuda_dev_key)
+const cuda_dev_count = parseEnvInt(cuda_dev_count_key, dflt=1)
 
 const use_native_extension = parseEnvBool(use_native_extension_key)
 
