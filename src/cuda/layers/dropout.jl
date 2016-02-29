@@ -1,5 +1,5 @@
 function setup_etc(backend::GPUBackend, layer::DropoutLayer, inputs::Vector{Blob})
-  cuda_rand_states = CuPtr
+  cuda_rand_states = CudaPtr
   kernel = backend.mocha.dropout_init
   rnd_state_size_blob = make_blob(backend, Float64, 1, 1, 1, 1)
   CUDA.launch(backend.mocha.dropout_alloc_size, 1, 1, (get_ptr(rnd_state_size_blob).p, ))
@@ -9,7 +9,7 @@ function setup_etc(backend::GPUBackend, layer::DropoutLayer, inputs::Vector{Blob
   rnd_state_size = round(Int, rnd_state_size[1])
 
   len = length(inputs[1])
-  cuda_rand_states = CUDA.cualloc(UInt8, rnd_state_size*len)
+  cuda_rand_states = CudaRT.malloc(UInt8, rnd_state_size*len)
   x_block = round(Int, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
   CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X, (cuda_rand_states, len))
 

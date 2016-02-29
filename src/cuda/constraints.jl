@@ -39,7 +39,7 @@ function apply_l2_cons!{T <: AbstractFloat}(backend::GPUBackend, blob::CuTensorB
   for i = 1:nunits
     # calculate offset in blob vector
     offset = sizeof(T) * (i-1) * ninputs
-    off_ptr = CuPtr(get_ptr(blob).p + offset)
+    off_ptr = CudaPtr(get_ptr(blob).p + offset)
     @inbounds norm = sqrt(tmp_norm_host[i])
     if norm > coef
       scale_factor = (1. / norm) * coef

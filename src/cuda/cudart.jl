@@ -1,7 +1,7 @@
 # a simplified CudaRT module, adapted from github.com/JuliaGPU/CUDArt.jl
 export CudaRT
 module CudaRT
-export CudaStream
+export CudaPtr, CudaStream
 export set_device_count, get_device_count, set_device, get_device, create_stream, sync_stream, cuda_null_stream
 
 @windows? (
@@ -132,6 +132,58 @@ function set_device(device_id::Int)
 end
 function get_device()
   return current_dev
+end
+
+############################################################
+# CUDART device memory
+############################################################
+typealias CUDAdeviceptr Ptr{Void}
+
+type CudaPtr
+  p::CUDAdeviceptr
+
+  CudaPtr() = new(convert(CUDAdeviceptr, 0))
+  CudaPtr(p::CUDAdeviceptr) = new(p)
+end
+
+function malloc(T::Type, len::Integer)
+  a = CUDAdeviceptr[0]
+  nbytes = round(Int, len) * sizeof(T)
+  @cudacall(:cudaMalloc, (Ptr{CUDAdeviceptr}, Csize_t), a, nbytes)
+  return CudaPtr(a[1])
+end
+
+function free(p::CudaPtr)
+  @cudacall(:cudaFree, (CUDAdeviceptr,), p.p)
+end
+
+const cudaMemcpyHostToHost      = 0x0
+const cudaMemcpyHostToDevice    = 0x1
+const cudaMemcpyDeviceToHost    = 0x2
+const cudaMemcpyDeviceToDevice  = 0x3
+const cudaMemcpyDefault         = 0x4
+function copy!(dst::CudaPtr, src::CudaPtr, size::Int)
+  @cudacall(:cudaMemcpy, (CUDAdeviceptr, CUDAdeviceptr, Csize_t, Cint),
+                dst.p, src.p, size, cudaMemcpyDeviceToDevice)
+end
+
+function memset!(ptr::CudaPtr, val::Int, size::Int)
+  @cudacall(:cudaMemset, (Ptr{Void}, Cint, Csize_t), ptr.p, val, size)
+end
+
+
+############################################################
+# CUDART pinned memory
+############################################################
+function alloc_host(T::Type, len::Integer)
+  a = Ptr{Void}[0]
+  nbytes = round(Int, len) * sizeof(T)
+  @cudacall(:cudaHostAlloc, (Ptr{Ptr{Void}}, Csize_t, Cuint), a, nbytes, 0)
+  return a[1]
+end
+
+function free_host(p::Ptr{Void})
+  @cudacall(:cudaFreeHost, (Ptr{Void},), p)
 end
 
 

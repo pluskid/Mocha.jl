@@ -50,8 +50,8 @@ function backward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vecto
     error("Unsupported data type $data_type")
   end
 
-  const gradient1 :: CuPtr = isa(diffs[1], CuTensorBlob) ? get_ptr(diffs[1]) : CuPtr()
-  const gradient2 :: CuPtr = isa(diffs[2], CuTensorBlob) ? get_ptr(diffs[2]) : CuPtr()
+  const gradient1 :: CudaPtr = isa(diffs[1], CuTensorBlob) ? get_ptr(diffs[1]) : CudaPtr()
+  const gradient2 :: CudaPtr = isa(diffs[2], CuTensorBlob) ? get_ptr(diffs[2]) : CudaPtr()
 
   CUDA.launch(kernel, (x_block,1), (CUDA.THREADS_PER_BLOCK_X,1),
               (get_ptr(pred).p, get_ptr(label).p, gradient1.p, gradient2.p, n, neg_weight))

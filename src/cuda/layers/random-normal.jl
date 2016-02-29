@@ -1,6 +1,6 @@
 
 function setup_etc(backend::GPUBackend, layer::RandomNormalLayer)
-  cuda_rand_states = CuPtr
+  cuda_rand_states = CudaPtr
   kernel = backend.mocha.stdnormal_init
   rnd_state_size_blob = make_blob(backend, Float64, 1, 1, 1, 1)
   CUDA.launch(backend.mocha.stdnormal_alloc_size, 1, 1, (get_ptr(rnd_state_size_blob).p, ))
@@ -13,7 +13,7 @@ function setup_etc(backend::GPUBackend, layer::RandomNormalLayer)
   outlen = prod(layer.output_dims)
   for i = 1:length(layer.tops)
       len = outlen*layer.batch_sizes[i]
-      cuda_rand_states = CUDA.cualloc(UInt8, rnd_state_size*len)
+      cuda_rand_states = CudaRT.malloc(UInt8, rnd_state_size*len)
       x_block = round(Int, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
       seed = rand(UInt)
       println("launching stdnormal init on bloc $i with len $len")
