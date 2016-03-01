@@ -41,7 +41,7 @@ function copy!{T}(dst :: CuTensorBlob{T}, src :: CuTensorBlob{T})
 end
 function copy_async!{T}(backend::GPUBackend, dst :: CuTensorBlob{T}, src :: Array{T})
   @assert length(dst) == length(src)
-  CuBLAS.set_vector(src, get_ptr(dst), stream=backend.stream)
+  CuBLAS.set_vector(src, get_ptr(dst), stream=CudaRT.get_stream())
 end
 function fill!{T}(dst :: CuTensorBlob{T}, val)
   val_vec = Array(T, length(dst))

@@ -3,6 +3,7 @@ export CUDA
 module CUDA
 export CuPtr
 using Compat
+import ..CudaRT.get_stream
 
 @windows? (
 begin
@@ -255,7 +256,7 @@ using Compat
 
 # Stream management
 
-function launch(f::CuFunction, grid::CuDim, block::CuDim, args::Tuple; shmem_bytes::Int=4, stream::CuStream=null_stream())
+function launch(f::CuFunction, grid::CuDim, block::CuDim, args::Tuple; shmem_bytes::Int=4)
   gx = get_dim_x(grid)
   gy = get_dim_y(grid)
   gz = get_dim_z(grid)
@@ -278,7 +279,7 @@ function launch(f::CuFunction, grid::CuDim, block::CuDim, args::Tuple; shmem_byt
       Ptr{Void},       # stream
       Ptr{Ptr{Void}},  # kernel parameters,
       Ptr{Ptr{Void}}), # extra parameters
-      f.handle, gx, gy, gz, tx, ty, tz, shmem_bytes, stream.handle, kernel_args, Ptr{Ptr{Void}}(0))
+      f.handle, gx, gy, gz, tx, ty, tz, shmem_bytes, get_stream(), kernel_args, Ptr{Ptr{Void}}(0))
 end
 
 end # module CUDA

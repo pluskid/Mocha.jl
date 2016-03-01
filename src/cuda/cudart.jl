@@ -212,4 +212,12 @@ cuda_null_stream() = C_NULL
 
 destroy(stream :: CudaStream) = destroy_stream(stream)
 
+current_stream = C_NULL
+function set_stream(stream :: CudaStream)
+  global current_stream = stream
+end
+function get_stream()
+  return current_stream
+end
+
 end # module CudaRT

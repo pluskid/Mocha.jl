@@ -46,7 +46,7 @@ end
 
 function sync(backend::GPUBackend, state::AccuracyLayerState)
   custate = state.etc
-  CudaRT.sync_stream(backend.stream)
+  CudaRT.sync_stream(CudaRT.get_stream())
 
   # accumulate accuracy
   state.accuracy = (state.accuracy * state.n_accum + custate.accuracy[1]) / (custate.N + state.n_accum)
