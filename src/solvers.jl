@@ -202,8 +202,7 @@ function finalize_solve(solver::Solver, net::Net, state::SolverState)
     shutdown(state)
 end
 
-function onestep_solve(solver::Solver, net::Net, state::SolverState)
-    state.iter += 1
+function onestep_flow(solver::Solver, net::Net, state::SolverState)
     layer_states = updatable_layer_states(net)
 
     backward(net, solver.params[:regu_coef])
@@ -219,7 +218,16 @@ function onestep_solve(solver::Solver, net::Net, state::SolverState)
       end
     end
 
-    state.obj_val = forward(net, solver.params[:regu_coef])
+    async_forward(net)
+end
+
+function onestep_solve(solver::Solver, net::Net, state::SolverState)
+    state.iter += 1
+    layer_states = updatable_layer_states(net)
+
+    onestep_flow(solver, net, state)
+
+    state.obj_val = syncup_forward(net)
 
     state.losses = Dict()
     for i = 1:length(net.layers)

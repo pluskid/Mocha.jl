@@ -1,5 +1,5 @@
 export Net
-export init, destroy, forward, forward_epoch, backward, forward_backward, get_epoch, check_bp_topology
+export init, destroy, forward, forward_epoch, async_forward, syncup_forward, backward, forward_backward, get_epoch, check_bp_topology
 export get_layer, get_layer_state, freeze!, unfreeze!, freeze_all!, unfreeze_all!
 export dump_statistics, reset_statistics
 
@@ -144,9 +144,7 @@ function forward_epoch(net::Net)
   end
 end
 
-function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
-  obj_val = 0.0
-
+function async_forward(net::Net)
   # forward the net asynchronously
   for i = 1:length(net.layers)
     forward(net.backend, net.states[i], net.blobs_forward[i])
@@ -157,8 +155,10 @@ function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
       end
     end
   end
-  
-  # sync the net
+end
+
+function syncup_forward(net::Net)
+  obj_val = 0.0
   for i = 1:length(net.layers)
     if has_sync(net.layers[i])
       sync(net.backend, net.states[i])
@@ -167,20 +167,29 @@ function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
     if has_loss(net.layers[i])
       obj_val += net.states[i].loss
     end
-
-    #-- Whether or not computing regularizer forward does not affect the
-    #-- back propagation results. It just makes the objective function
-    #-- look more "consistent". To comment out the computation by default
-    #-- just to save computational resources.
-    #
-    # # handle regularization
-    # if has_param(net.layers[i])
-    #   for param in net.states[i].parameters
-    #     obj_val += forward(net.backend, param.regularizer, regu_coef, param.blob)
-    #   end
-    # end
   end
 
+  return obj_val
+end
+
+function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
+  async_forward(net)
+
+  obj_val = syncup_forward(net)
+
+  #-- Whether or not computing regularizer forward does not affect the
+  #-- back propagation results. It just makes the objective function
+  #-- look more "consistent". To comment out the computation by default
+  #-- just to save computational resources.
+  #
+  # for i = 1:length(net.layers)
+  # # handle regularization
+  #   if has_param(net.layers[i])
+  #     for param in net.states[i].parameters
+  #       obj_val += forward(net.backend, param.regularizer, regu_coef, param.blob)
+  #     end
+  #   end
+  # end
   return obj_val
 end
 
