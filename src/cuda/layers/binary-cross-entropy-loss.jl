@@ -1,4 +1,4 @@
-function forward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::BinaryCrossEntropyLossLayerState, inputs::Vector{Blob})
   pred    = inputs[1]
   label   = inputs[2]
   data_type = eltype(pred)
@@ -27,7 +27,7 @@ function forward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, i
   destroy(loss_blob)
 end
 
-function backward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::BinaryCrossEntropyLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   if !any([isa(d, CuTensorBlob) for d in diffs])
     return
   end

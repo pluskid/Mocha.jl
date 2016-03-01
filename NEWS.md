@@ -1,5 +1,10 @@
 # News for Mocha Development
 
+## Next version
+
+* Infrastructure
+  * A whole new OpenCL backend
+
 ## v0.1.0 2015.10.10
 
 To celebrate the release of Julia v0.4 and increased involvement from the community of the development of Mocha.jl, we decided to have a v0.1.0 release.

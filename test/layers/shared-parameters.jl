@@ -46,6 +46,9 @@ end
 if test_cpu
   test_shared_parameters_layers(backend_cpu)
 end
-if test_gpu
-  test_shared_parameters_layers(backend_gpu)
+if test_cuda
+  test_shared_parameters_layers(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL shared parameters tests")
 end

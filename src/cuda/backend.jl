@@ -1,4 +1,4 @@
-export GPUBackend
+export CUDABackend, GPUBackend
 
 macro defkernels(kernels...)
   field_defs = map(kernels) do ker
@@ -143,7 +143,7 @@ function shutdown(mocha :: MochaKernels)
   CUDA.unload(mocha.mod)
 end
 
-type GPUBackend <: AbstractGPUBackend
+type CUDABackend <: AbstractGPUBackend
   param_registry :: ParameterRegistry
   initialized    :: Bool
   cu_ctx         :: CUDA.CuContext
@@ -152,10 +152,11 @@ type GPUBackend <: AbstractGPUBackend
 
   mocha          :: MochaKernels
 
-  GPUBackend() = new(ParameterRegistry(), false) # everything will be initialized later
+  CUDABackend() = new(ParameterRegistry(), false) # everything will be initialized later
 end
+Base.@deprecate_binding GPUBackend CUDABackend
 
-function init(backend::GPUBackend)
+function init(backend::CUDABackend)
   @assert backend.initialized == false
 
   @info("Initializing CuDNN backend...")
@@ -169,7 +170,7 @@ function init(backend::GPUBackend)
   info("CuDNN backend initialized!")
 end
 
-function shutdown(backend::GPUBackend)
+function shutdown(backend::CUDABackend)
   @assert backend.initialized == true
 
   @info("Shutting down CuDNN backend...")

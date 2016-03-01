@@ -182,9 +182,10 @@ definitions:
    acc_layer   = AccuracyLayer(name="accuracy", bottoms=[:ip1, :label])
 
 Next we collect the layers, and define a Mocha :class:`Net` on
-the :class:`DefaultBackend`. It is a typealias for :class:`GPUBackend` if CUDA
-is available and properly set up (see :doc:`/user-guide/backend`), or uses
-:class:`CPUBackend` as a backup even though it will be much slower.
+the :class:`DefaultBackend`. It is a typealias for one of :class:`CUDABackend`,
+:class:`OpenCLBackend`, or :class:`CPUBackend`, depending on availability of
+a compatible GPU device, properly configured. CUDA is preferred over OpenCL,
+and both are preferred over the CPU backend (see :doc:`/user-guide/backend`).
 
 .. code-block:: julia
 
@@ -386,7 +387,7 @@ CUDA with cuDNN
 ~~~~~~~~~~~~~~~
 
 It takes only 5~6 seconds to finish every 200 iterations on the
-``GPUBackend``.
+``CUDABackend``.
 
 .. code-block:: text
 

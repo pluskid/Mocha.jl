@@ -16,7 +16,8 @@ Mocha is a Deep Learning framework for [Julia](http://julialang.org/), inspired 
 - **Portability and Speed**: Mocha comes with multiple backend that could be switched transparently.
   - The *pure Julia backend* is portable -- it runs on any platform that support Julia. This is reasonably fast on small models thanks to Julia's LLVM-based just-in-time (JIT) compiler and [Performance Annotations](http://julia.readthedocs.org/en/latest/manual/performance-tips/#performance-annotations), and could be very useful for prototyping.
   - The *native extension backend* could be turned on when a C++ compiler is available. It runs 2~3 times faster than the pure Julia backend.
-  - The *GPU backend* uses NVidia® [cuDNN](https://developer.nvidia.com/cuDNN), cuBLAS and customized CUDA kernels to provide highly efficient computation. 20~30 times or even more speedup could be observed on a modern GPU device, especially on larger models.
+  - The *CUDA backend* uses NVidia® [cuDNN](https://developer.nvidia.com/cuDNN), cuBLAS and customized CUDA kernels to provide highly efficient computation. 20~30 times or even more speedup could be observed on a modern GPU device, especially on larger models.
+  - The *OpenCL backend* is similaro to the CUDA backend, but uses OpenCL instead, leveraging [CLBLAS.jl](https://github.com/JuliaGPU/CLBLAS.jl) as well as custom OpenCL kernels.
 - **Compatibility**: Mocha uses the widely adopted HDF5 format to store both datasets and model snapshots, making it easy to inter-operate with Matlab, Python (numpy) and other existing computational tools. Mocha also provides tools to import trained model snapshots from Caffe.
 - **Correctness**: the computational components in Mocha in all backends are extensively covered by unit-tests.
 - **Open Source**: Mocha is licensed under [the MIT "Expat" License](LICENSE.md).

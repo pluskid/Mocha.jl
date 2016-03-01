@@ -68,6 +68,9 @@ end
 if test_cpu
   test_tied_inner_product_layer(backend_cpu)
 end
-if test_gpu
-  test_tied_inner_product_layer(backend_gpu)
+if test_cuda
+  test_tied_inner_product_layer(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL tied inner product layer tests")
 end

@@ -19,7 +19,7 @@ type AccuracyLayerState <: LayerState
 end
 
 function setup_etc(backend::CPUBackend, layer::AccuracyLayer, op_dim::Int, inputs)
-  nothing
+  Void()
 end
 
 function setup(backend::Backend, layer::AccuracyLayer, inputs::Vector{Blob}, diffs::Vector{Blob})

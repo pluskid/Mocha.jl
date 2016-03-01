@@ -81,7 +81,7 @@ function channel_pooling_forward(state, i, input::Array, op_dim)
   if isa(state.layer.pooling, Pooling.Max)
     return (output, mask)
   else
-    return (output, nothing)
+    return (output, Void())
   end
 end
 
@@ -136,6 +136,9 @@ end
 if test_cpu
   test_channel_pooling_layer(backend_cpu)
 end
-if test_gpu
-  test_channel_pooling_layer(backend_gpu)
+if test_cuda
+  test_channel_pooling_layer(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL channel pooling layer tests")
 end

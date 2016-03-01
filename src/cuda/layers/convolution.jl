@@ -15,7 +15,7 @@ type CuDNNConvState
   bias_offset   :: Int
 end
 
-function setup_etc(backend::GPUBackend, layer::ConvolutionLayer, dtype, width, height, channels,
+function setup_etc(backend::CUDABackend, layer::ConvolutionLayer, dtype, width, height, channels,
     batch_size, width_out, height_out, inputs)
 
   filter_desc = CuDNN.create_filter_descriptor(dtype, (layer.kernel[1], layer.kernel[2],
@@ -55,7 +55,7 @@ function setup_etc(backend::GPUBackend, layer::ConvolutionLayer, dtype, width, h
       bottom_offset, top_offset, weight_offset, bias_offset)
   return etc
 end
-function shutdown_etc(backend::GPUBackend, state::ConvolutionLayerState)
+function shutdown_etc(backend::CUDABackend, state::ConvolutionLayerState)
   etc = state.etc
   CuDNN.destroy_filter_descriptor(etc.filter_desc)
   CuDNN.destroy_tensor4d_descriptor(etc.bias_desc)
@@ -67,7 +67,7 @@ function shutdown_etc(backend::GPUBackend, state::ConvolutionLayerState)
   end
 end
 
-function forward(backend::GPUBackend, state::ConvolutionLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::ConvolutionLayerState, inputs::Vector{Blob})
   alpha = one(eltype(inputs[1]))
   beta_accumulate = one(eltype(inputs[1]))
   beta_dont_accumulate = zero(eltype(inputs[1]))
@@ -93,7 +93,7 @@ function forward(backend::GPUBackend, state::ConvolutionLayerState, inputs::Vect
   end
 end
 
-function backward(backend::GPUBackend, state::ConvolutionLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::ConvolutionLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   erase!(state.∇filter)
   erase!(state.∇bias)
   alpha = one(eltype(inputs[1]))

@@ -40,6 +40,9 @@ end
 if test_cpu
   test_relu_neuron(backend_cpu)
 end
-if test_gpu
-  test_relu_neuron(backend_gpu)
+if test_cuda
+  test_relu_neuron(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL relu neuron tests")
 end

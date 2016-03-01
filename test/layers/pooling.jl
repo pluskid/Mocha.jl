@@ -21,6 +21,7 @@ function test_pooling_layer(backend::Backend, pooling::PoolingFunction, has_padd
   dims = [abs(rand(Int,4)) % 5 + 12 for i = 1:n_input]
   dims[1] = [input_w, input_h, input_chann, input_num]
   if isa(backend, AbstractGPUBackend)
+    # TODO: does this also apply for OpenCL backend?
     for i = 1:n_input
       # cuDNN pooling have different behavior on the boundary.
       # For mean pooling, cuDNN restricts the pooling size when it runs beyond the boundary.
@@ -114,7 +115,7 @@ function pooling_forward(state, i, input::Array)
   if isa(state.layer.pooling, Pooling.Max)
     return (output, mask)
   else
-    return (output, nothing)
+    return (output, Void())
   end
 end
 
@@ -169,6 +170,9 @@ end
 if test_cpu
   test_pooling_layer(backend_cpu)
 end
-if test_gpu
-  test_pooling_layer(backend_gpu)
+if test_cuda
+  test_pooling_layer(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL pooling layer tests")
 end

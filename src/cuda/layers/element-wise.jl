@@ -3,7 +3,7 @@ for (functor, impl) in ((ElementWiseFunctors.Add, :(CuVec.add!)),
                         (ElementWiseFunctors.Multiply, :(CuVec.mul!)),
                         (ElementWiseFunctors.Divide, :(CuVec.div!)))
   @eval begin
-    function forward(backend::GPUBackend, state::ElementWiseLayerState{$functor},
+    function forward(backend::CUDABackend, state::ElementWiseLayerState{$functor},
         inputs::Vector{Blob})
 
       input1 = inputs[1]
@@ -18,7 +18,7 @@ for (functor, impl) in ((ElementWiseFunctors.Add, :(CuVec.add!)),
   end
 end
 
-function backward(backend::GPUBackend, state::ElementWiseLayerState{ElementWiseFunctors.Subtract},
+function backward(backend::CUDABackend, state::ElementWiseLayerState{ElementWiseFunctors.Subtract},
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   if !isa(diffs[1], NullBlob)
@@ -30,7 +30,7 @@ function backward(backend::GPUBackend, state::ElementWiseLayerState{ElementWiseF
         diffs[2].ptr, 1)
   end
 end
-function backward(backend::GPUBackend, state::ElementWiseLayerState{ElementWiseFunctors.Multiply},
+function backward(backend::CUDABackend, state::ElementWiseLayerState{ElementWiseFunctors.Multiply},
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   for i = 1:length(diffs)
@@ -40,7 +40,7 @@ function backward(backend::GPUBackend, state::ElementWiseLayerState{ElementWiseF
     end
   end
 end
-function backward(backend::GPUBackend, state::ElementWiseLayerState{ElementWiseFunctors.Divide},
+function backward(backend::CUDABackend, state::ElementWiseLayerState{ElementWiseFunctors.Divide},
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   data_type = eltype(inputs[1])

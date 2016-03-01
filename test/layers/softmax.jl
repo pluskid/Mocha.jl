@@ -82,8 +82,11 @@ function test_softmax_layer(backend::Backend)
   test_softmax_layer(backend, 3, Float32, 1e-5)
 end
 
-if test_gpu
-  test_softmax_layer(backend_gpu)
+if test_cuda
+  test_softmax_layer(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL softmax layer tests")
 end
 if test_cpu
   test_softmax_layer(backend_cpu)

@@ -1,5 +1,5 @@
 
-function setup_etc(backend::GPUBackend, layer::RandomNormalLayer)
+function setup_etc(backend::CUDABackend, layer::RandomNormalLayer)
   cuda_rand_states = CuPtr
   kernel = backend.mocha.stdnormal_init
   rnd_state_size_blob = make_blob(backend, Float64, 1, 1, 1, 1)
@@ -23,13 +23,13 @@ function setup_etc(backend::GPUBackend, layer::RandomNormalLayer)
   return etc
 end
 
-function destroy_etc(backend::GPUBackend, state::RandomNormalLayerState)
+function destroy_etc(backend::CUDABackend, state::RandomNormalLayerState)
     for i = 1:length(state.etc)
         CUDA.free(state.etc[i])
     end
 end
 
-function forward(backend::GPUBackend, state::RandomNormalLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::RandomNormalLayerState, inputs::Vector{Blob})
     for i = 1:length(state.blobs)
         len = length(state.blobs[i])
         x_block = round(Int, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
@@ -45,7 +45,7 @@ function forward(backend::GPUBackend, state::RandomNormalLayerState, inputs::Vec
     end
 end
 
-function backward(backend::GPUBackend, state::RandomNormalLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::RandomNormalLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 
 end
 

@@ -62,4 +62,4 @@ function test_cublas(backend::Backend)
   test_cublas(backend, Float64)
 end
 
-test_cublas(backend_gpu)
+test_cublas(backend_cuda)

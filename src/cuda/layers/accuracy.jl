@@ -1,14 +1,14 @@
-function setup_etc(backend::GPUBackend, layer::AccuracyLayer, op_dim::Int, inputs)
+function setup_etc(backend::CUDABackend, layer::AccuracyLayer, op_dim::Int, inputs)
   dims = [size(inputs[1])...]
   dims[op_dim] = 1
   etc = make_blob(backend, eltype(inputs[1]), dims...)
   return etc
 end
-function shutdown(backend::GPUBackend, state::AccuracyLayerState)
+function shutdown(backend::CUDABackend, state::AccuracyLayerState)
   destroy(state.etc)
 end
 
-function forward(backend::GPUBackend, state::AccuracyLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::AccuracyLayerState, inputs::Vector{Blob})
   pred = inputs[1]
   label = inputs[2]
 

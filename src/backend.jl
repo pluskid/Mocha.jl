@@ -29,7 +29,7 @@ function registry_put(backend::Backend, key::AbstractString, params::Vector)
   backend.param_registry[key] = AbstractParameter[share_parameter(backend, p) for p in params]
 end
 function registry_get(backend::Backend, key::AbstractString)
-  return get(backend.param_registry, key, nothing)
+  return get(backend.param_registry, key, Void())
 end
 
 type CPUBackend <: Backend
@@ -39,6 +39,6 @@ type CPUBackend <: Backend
 end
 
 # This is forward declaration to allow some code to compile
-# (especially testing codes) even if CUDA module is completely
+# (especially testing codes) even if CUDA and OpenCL modules are completely
 # disabled. See test/layers/pooling.jl for example.
 abstract AbstractGPUBackend <: Backend

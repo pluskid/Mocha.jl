@@ -1,4 +1,4 @@
-function forward(backend::GPUBackend, state::ConcatLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::ConcatLayerState, inputs::Vector{Blob})
   output = state.blobs[1]
   shift = 0
   for i = 1:length(inputs)
@@ -7,7 +7,7 @@ function forward(backend::GPUBackend, state::ConcatLayerState, inputs::Vector{Bl
   end
 end
 
-function backward(backend::GPUBackend, state::ConcatLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::ConcatLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   grad = state.blobs_diff[1]
   shift = 0
   for i = 1:length(diffs)

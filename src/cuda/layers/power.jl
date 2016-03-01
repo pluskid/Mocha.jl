@@ -2,7 +2,7 @@
 # Power Layer
 ############################################################
 
-function forward(backend::GPUBackend, state::PowerLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::PowerLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input = inputs[i]
     output = state.blobs[i]
@@ -37,7 +37,7 @@ function forward(backend::GPUBackend, state::PowerLayerState, inputs::Vector{Blo
   end
 end
 
-function backward(backend::GPUBackend, state::PowerLayerState,
+function backward(backend::CUDABackend, state::PowerLayerState,
     inputs::Vector{Blob}, diffs::Vector{Blob})
 
   data_type = eltype(inputs[1])

@@ -1,4 +1,4 @@
-function backward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   diff = diffs[1]
   if isa(diff, CuTensorBlob)
     copy!(diff, state.softmax.blobs[1])

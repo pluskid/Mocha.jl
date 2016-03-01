@@ -47,6 +47,9 @@ end
 if test_cpu
   test_random_mask_layer(backend_cpu)
 end
-if test_gpu
-  test_random_mask_layer(backend_gpu)
+if test_cuda
+  test_random_mask_layer(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL random mask layer tests")
 end

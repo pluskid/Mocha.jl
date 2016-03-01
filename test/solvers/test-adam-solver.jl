@@ -44,6 +44,9 @@ if test_cpu
     test_adam_solver(backend_cpu)
 end
 
-if test_gpu
-    test_adam_solver(backend_gpu)
+if test_cuda
+    test_adam_solver(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL adam solver tests")
 end

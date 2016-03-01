@@ -1,4 +1,4 @@
-function forward(backend::GPUBackend, state::TiedInnerProductLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::TiedInnerProductLayerState, inputs::Vector{Blob})
   recon_dim  = size(state.W, 1)
   hidden_dim = size(state.W, 2)
   dtype = eltype(state.W)
@@ -15,7 +15,7 @@ function forward(backend::GPUBackend, state::TiedInnerProductLayerState, inputs:
   end
 end
 
-function backward(backend::GPUBackend, state::TiedInnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CUDABackend, state::TiedInnerProductLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   recon_dim  = size(state.W, 1)
   hidden_dim = size(state.W, 2)
   data_type  = eltype(state.W)

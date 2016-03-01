@@ -38,10 +38,19 @@ if Config.use_cuda
   include("cuda/utils/shifted-copy.jl")
 end
 
+if Config.use_opencl
+  include("opencl/opencl.jl")
+  include("opencl/backend.jl")
+  include("opencl/blob.jl")
+end
+
 export DefaultBackend
 if Config.use_cuda
-  typealias DefaultBackend GPUBackend
-  const default_backend_type = "gpu"
+  typealias DefaultBackend CUDABackend
+  const default_backend_type = "cuda"
+elseif Config.use_opencl
+  typealias DefaultBackend OpenCLBackend
+  const default_backend_type = "opencl"
 else
   typealias DefaultBackend CPUBackend
   const default_backend_type = "cpu"
@@ -59,6 +68,12 @@ if Config.use_cuda
   include("cuda/neurons.jl")
 end
 
+if Config.use_opencl
+  include("opencl/regularizers.jl")
+  include("opencl/constraints.jl")
+  include("opencl/neurons.jl")
+end
+
 include("pooling-functions.jl")
 include("parameter.jl")
 
@@ -66,10 +81,16 @@ include("data-transformers.jl")
 if Config.use_cuda
   include("cuda/data-transformers.jl")
 end
+if Config.use_opencl
+  include("opencl/data-transformers.jl")
+end
 
 include("layers.jl")
 if Config.use_cuda
   include("cuda/layers.jl")
+end
+if Config.use_opencl
+  include("opencl/layers.jl")
 end
 
 if Config.use_native_extension
@@ -92,6 +113,9 @@ include("solvers/adam.jl")
 
 if Config.use_cuda
   include("cuda/solvers.jl")
+end
+if Config.use_opencl
+  include("opencl/solvers.jl")
 end
 
 include("utils/gradient-checking.jl")

@@ -79,6 +79,9 @@ end
 if test_cpu
   test_inner_product_layer(backend_cpu)
 end
-if test_gpu
-  test_inner_product_layer(backend_gpu)
+if test_cuda
+  test_inner_product_layer(backend_cuda)
+end
+if test_opencl
+  test_inner_product_layer(backend_opencl)
 end

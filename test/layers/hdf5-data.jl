@@ -128,7 +128,7 @@ end
 function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
   # do not run (non-async) HDF5 data layer shuffling on windows, because it is implemented
   # with memmap, which is not working properly on Windows.
-  @windows? nothing : test_hdf5_data_layer_shuffle(backend, batch_size, false, n, T)
+  @windows? Void() : test_hdf5_data_layer_shuffle(backend, batch_size, false, n, T)
 
   test_hdf5_data_layer_shuffle(backend, batch_size, true, n, T)
 end
@@ -148,6 +148,9 @@ end
 if test_cpu
   test_hdf5_data_layer(backend_cpu)
 end
-if test_gpu
-  test_hdf5_data_layer(backend_gpu)
+if test_cuda
+  test_hdf5_data_layer(backend_cuda)
+end
+if test_opencl
+  warn("TODO: OpenCL hdf5 data layer tests")
 end

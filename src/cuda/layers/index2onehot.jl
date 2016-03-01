@@ -1,4 +1,4 @@
-function forward(backend::GPUBackend, state::Index2OnehotLayerState, inputs::Vector{Blob})
+function forward(backend::CUDABackend, state::Index2OnehotLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input = inputs[i]
     output = state.blobs[i]
