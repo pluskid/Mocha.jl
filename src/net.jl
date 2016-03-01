@@ -1,5 +1,5 @@
 export Net
-export init, destroy, forward, forward_epoch, async_forward, syncup_forward, backward, forward_backward, get_epoch, check_bp_topology
+export init, destroy, forward, forward_epoch, async_forward, syncup_forward, get_loss, backward, forward_backward, get_epoch, check_bp_topology
 export get_layer, get_layer_state, freeze!, unfreeze!, freeze_all!, unfreeze_all!
 export dump_statistics, reset_statistics
 
@@ -158,14 +158,19 @@ function async_forward(net::Net)
 end
 
 function syncup_forward(net::Net)
-  obj_val = 0.0
   for i = 1:length(net.layers)
     if has_sync(net.layers[i])
       sync(net.backend, net.states[i])
     end
+  end
+end
 
+function get_loss(net::Net)
+  obj_val = 0.0
+
+  for i = 1:length(net.layers)
     if has_loss(net.layers[i])
-      obj_val += net.states[i].loss
+      obj_val += calc_loss(net.backend, net.states[i])
     end
   end
 
@@ -175,7 +180,9 @@ end
 function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
   async_forward(net)
 
-  obj_val = syncup_forward(net)
+  syncup_forward(net)
+  
+  obj_val = get_loss(net)
 
   #-- Whether or not computing regularizer forward does not affect the
   #-- back propagation results. It just makes the objective function

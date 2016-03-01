@@ -223,11 +223,19 @@ end
 
 function onestep_solve(solver::Solver, net::Net, state::SolverState)
     state.iter += 1
-    layer_states = updatable_layer_states(net)
 
-    onestep_flow(solver, net, state)
+    for dev=1:net.backend.dev_count
+        set_dev(net.backend, dev - 1)
+        onestep_flow(solver, net, state)
+    end
+    
+    for dev=1:net.backend.dev_count
+        set_dev(net.backend, dev - 1)
+        syncup_forward(net)
+    end
 
-    state.obj_val = syncup_forward(net)
+    set_dev(net.backend, state.iter % net.backend.dev_count)
+    state.obj_val = get_loss(net)
 
     state.losses = Dict()
     for i = 1:length(net.layers)

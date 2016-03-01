@@ -5,7 +5,12 @@ end
 
 function sync(backend::GPUBackend, state::SoftmaxLossLayerState)
   sync(backend, state.logistic)
+end
+
+function calc_loss(backend::GPUBackend, state::SoftmaxLossLayerState)
+  calc_loss(backend, state.logistic)
   state.loss = state.logistic.loss * state.layer.weight
+  return state.loss
 end
 
 function backward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
