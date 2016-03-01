@@ -29,9 +29,9 @@ function forward(backend::GPUBackend, state::MultinomialLogisticLossLayerState, 
   y_block = spatial_dim
 
   if data_type == Float32
-    kernel = backend.mocha.logistic_loss_forward_float
+    kernel = get_mocha(backend).logistic_loss_forward_float
   elseif data_type == Float64
-    kernel = backend.mocha.logistic_loss_forward_double
+    kernel = get_mocha(backend).logistic_loss_forward_double
   else
     error("Unsupported data type $data_type")
   end

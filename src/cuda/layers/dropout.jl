@@ -1,8 +1,8 @@
 function setup_etc(backend::GPUBackend, layer::DropoutLayer, inputs::Vector{Blob})
   cuda_rand_states = CudaPtr
-  kernel = backend.mocha.dropout_init
+  kernel = get_mocha(backend).dropout_init
   rnd_state_size_blob = make_blob(backend, Float64, 1, 1, 1, 1)
-  CUDA.launch(backend.mocha.dropout_alloc_size, 1, 1, (get_ptr(rnd_state_size_blob).p, ), get_stream(backend))
+  CUDA.launch(get_mocha(backend).dropout_alloc_size, 1, 1, (get_ptr(rnd_state_size_blob).p, ), get_stream(backend))
   rnd_state_size = Float64[0]
   copy!(rnd_state_size, rnd_state_size_blob)
   destroy(rnd_state_size_blob)
@@ -37,9 +37,9 @@ function forward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{B
   x_block = round(Int, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
   data_type = eltype(inputs[1])
   if data_type == Float32
-    kernel = backend.mocha.dropout_forward_float
+    kernel = get_mocha(backend).dropout_forward_float
   elseif data_type == Float64
-    kernel = backend.mocha.dropout_forward_double
+    kernel = get_mocha(backend).dropout_forward_double
   end
 
   CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X,
@@ -53,9 +53,9 @@ function backward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{
     x_block = round(Int, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
     data_type = eltype(inputs[1])
     if data_type == Float32
-      kernel = backend.mocha.dropout_backward_float
+      kernel = get_mocha(backend).dropout_backward_float
     elseif data_type == Float64
-      kernel = backend.mocha.dropout_backward_double
+      kernel = get_mocha(backend).dropout_backward_double
     end
 
     CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X,

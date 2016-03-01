@@ -11,9 +11,9 @@ function forward(backend::GPUBackend, state::Index2OnehotLayerState, inputs::Vec
     y_block = round(Int, ceil(convert(Float64, spatial_dim)/CUDA.THREADS_PER_BLOCK_Y));
 
     if data_type == Float32
-      kernel = backend.mocha.index2onehot_forward_float
+      kernel = get_mocha(backend).index2onehot_forward_float
     elseif data_type == Float64
-      kernel = backend.mocha.index2onehot_forward_double
+      kernel = get_mocha(backend).index2onehot_forward_double
     else
       error("Unsupported data type $data_type")
     end

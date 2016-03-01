@@ -11,9 +11,9 @@ function dense2padded!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
     z_block = round(Int, ceil(float(height)/CUDA.THREADS_PER_BLOCK_Z))
 
     if T == Float32
-      kernel = backend.mocha.dense_to_padded_float
+      kernel = get_mocha(backend).dense_to_padded_float
     elseif T == Float64
-      kernel = backend.mocha.dense_to_padded_double
+      kernel = get_mocha(backend).dense_to_padded_double
     else
       error("Unsupported data type $T for padded copy")
     end
@@ -35,9 +35,9 @@ function padded2dense!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
     z_block = round(Int, ceil(float(height)/CUDA.THREADS_PER_BLOCK_Z))
 
     if T == Float32
-      kernel = backend.mocha.padded_to_dense_float
+      kernel = get_mocha(backend).padded_to_dense_float
     elseif T == Float64
-      kernel = backend.mocha.padded_to_dense_double
+      kernel = get_mocha(backend).padded_to_dense_double
     else
       error("Unsupported data type $T for padded copy")
     end

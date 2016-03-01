@@ -15,9 +15,9 @@ function forward(backend::GPUBackend, state::BinaryAccuracyLayerState, inputs::V
 
   const data_type = eltype(pred)
   if data_type == Float32
-    kernel = backend.mocha.binary_accuracy_forward_float
+    kernel = get_mocha(backend).binary_accuracy_forward_float
   elseif data_type == Float64
-    kernel = backend.mocha.binary_accuracy_forward_double
+    kernel = get_mocha(backend).binary_accuracy_forward_double
   else
     error("Unsupported data type $data_type")
   end

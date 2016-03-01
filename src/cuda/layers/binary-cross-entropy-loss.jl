@@ -11,9 +11,9 @@ function forward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, i
   loss_blob = make_zero_blob(backend, Float32, 1, 1, 1, 1)
 
   if data_type == Float32
-    kernel = backend.mocha.binary_cross_entropy_loss_forward_float
+    kernel = get_mocha(backend).binary_cross_entropy_loss_forward_float
   elseif data_type == Float64
-    kernel = backend.mocha.binary_cross_entropy_loss_forward_double
+    kernel = get_mocha(backend).binary_cross_entropy_loss_forward_double
   else
     error("Unsupported data type $data_type")
   end
@@ -42,9 +42,9 @@ function backward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, 
   x_block = int(ceil(convert(Float64, dim)/CUDA.THREADS_PER_BLOCK_X))
 
   if data_type == Float32
-    kernel = backend.mocha.binary_cross_entropy_loss_backward_float
+    kernel = get_mocha(backend).binary_cross_entropy_loss_backward_float
   elseif data_type == Float64
-    kernel = backend.mocha.binary_cross_entropy_loss_backward_double
+    kernel = get_mocha(backend).binary_cross_entropy_loss_backward_double
   else
     error("Unsupported data type $data_type")
   end

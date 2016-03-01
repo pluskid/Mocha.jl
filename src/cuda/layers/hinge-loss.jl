@@ -13,9 +13,9 @@ function forward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vector
   end
 
   if data_type == Float32
-    kernel = backend.mocha.hinge_loss_forward_float
+    kernel = get_mocha(backend).hinge_loss_forward_float
   elseif data_type == Float64
-    kernel = backend.mocha.hinge_loss_forward_double
+    kernel = get_mocha(backend).hinge_loss_forward_double
   else
     error("Unsupported data type $data_type")
   end
@@ -43,9 +43,9 @@ function backward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vecto
   const x_block = div(n + CUDA.THREADS_PER_BLOCK_X-1, CUDA.THREADS_PER_BLOCK_X)
 
   if data_type == Float32
-    kernel = backend.mocha.hinge_loss_backward_float
+    kernel = get_mocha(backend).hinge_loss_backward_float
   elseif data_type == Float64
-    kernel = backend.mocha.hinge_loss_backward_double
+    kernel = get_mocha(backend).hinge_loss_backward_double
   else
     error("Unsupported data type $data_type")
   end

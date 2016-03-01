@@ -16,7 +16,7 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
         X = convert(Ptr{Void},X)
         Y = convert(Ptr{Void},Y)
         cuda_dim = cuda_geometry(len)
-        kernel = backend.mocha.$(symbol("elem_$(name)_$ctype"))
+        kernel = get_mocha(backend).$(symbol("elem_$(name)_$ctype"))
         CUDA.launch(kernel, cuda_dim..., (X, Y, len), get_stream(backend))
       end
     end
@@ -28,7 +28,7 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
       X = convert(Ptr{Void}, X)
       Y = convert($dtype, Y)
       cuda_dim = cuda_geometry(len)
-      kernel = backend.mocha.$(symbol("add_scal_$ctype"))
+      kernel = get_mocha(backend).$(symbol("add_scal_$ctype"))
       CUDA.launch(kernel, cuda_dim..., (X,Y,len), get_stream(backend))
     end
   end
@@ -38,7 +38,7 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
     function log!(backend::GPUBackend, ::Type{$dtype}, X, len::Int)
       X = convert(Ptr{Void}, X)
       cuda_dim = cuda_geometry(len)
-      kernel = backend.mocha.$(symbol("elem_log_$ctype"))
+      kernel = get_mocha(backend).$(symbol("elem_log_$ctype"))
       CUDA.launch(kernel, cuda_dim..., (X,len), get_stream(backend))
     end
   end
@@ -48,7 +48,7 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
     function exp!(backend::GPUBackend, ::Type{$dtype}, X, len::Int)
       X = convert(Ptr{Void}, X)
       cuda_dim = cuda_geometry(len)
-      kernel = backend.mocha.$(symbol("elem_exp_$ctype"))
+      kernel = get_mocha(backend).$(symbol("elem_exp_$ctype"))
       CUDA.launch(kernel, cuda_dim..., (X,len), get_stream(backend))
     end
   end
@@ -59,7 +59,7 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
       X = convert(Ptr{Void}, X)
       Y = convert($dtype, Y)
       cuda_dim = cuda_geometry(len)
-      kernel = backend.mocha.$(symbol("mul_scal_$ctype"))
+      kernel = get_mocha(backend).$(symbol("mul_scal_$ctype"))
       CUDA.launch(kernel, cuda_dim..., (X,Y,len), get_stream(backend))
     end
   end
@@ -97,7 +97,7 @@ for (postfix, dt1, dt2) in [(:fi, Float32, Int), (:di, Float64, Int),
     function pow!(backend::GPUBackend, ::Type{$dt1}, X, Y::$dt2, len::Int)
       X = convert(Ptr{Void}, X)
       cuda_dim = cuda_geometry(len)
-      kernel = backend.mocha.$(symbol("elem_pow_$postfix"))
+      kernel = get_mocha(backend).$(symbol("elem_pow_$postfix"))
       CUDA.launch(kernel, cuda_dim..., (X,Y,len), get_stream(backend))
     end
     function pow!{T}(backend::GPUBackend, X::CuTensorBlob{T}, Y::$dt2)

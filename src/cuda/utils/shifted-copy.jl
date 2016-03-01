@@ -20,9 +20,9 @@ function copy_to_shifted!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
   z_block = round(Int, ceil(float(dim_z)/CUDA.THREADS_PER_BLOCK_Z))
 
   if T == Float32
-    kernel = backend.mocha.copy_to_shifted_float
+    kernel = get_mocha(backend).copy_to_shifted_float
   elseif T == Float64
-    kernel = backend.mocha.copy_to_shifted_double
+    kernel = get_mocha(backend).copy_to_shifted_double
   else
     error("Unsupported data type $T for shifted copy")
   end
@@ -52,9 +52,9 @@ function copy_from_shifted!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
   z_block = round(Int, ceil(float(dim_z)/CUDA.THREADS_PER_BLOCK_Z))
 
   if T == Float32
-    kernel = backend.mocha.copy_from_shifted_float
+    kernel = get_mocha(backend).copy_from_shifted_float
   elseif T == Float64
-    kernel = backend.mocha.copy_from_shifted_double
+    kernel = get_mocha(backend).copy_from_shifted_double
   else
     error("Unsupported data type $T for shifted copy")
   end

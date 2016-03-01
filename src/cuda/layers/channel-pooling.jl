@@ -162,9 +162,9 @@ function cuda_max_channel_pooling_forward{T}(backend::GPUBackend, input::CuTenso
 
   cuda_dim = cuda_geometry_max_chann_pool(sp_dim, num);
   if T == Float32
-    kernel = backend.mocha.max_channel_pooling_forward_float
+    kernel = get_mocha(backend).max_channel_pooling_forward_float
   elseif T == Float64
-    kernel = backend.mocha.max_channel_pooling_forward_double
+    kernel = get_mocha(backend).max_channel_pooling_forward_double
   else
     error("Unsupported data type for channel pooling: $T")
   end
@@ -181,9 +181,9 @@ function cuda_max_channel_pooling_backward{T}(backend::GPUBackend, input::CuTens
 
   cuda_dim = cuda_geometry_max_chann_pool(sp_dim, num);
   if T == Float32
-    kernel = backend.mocha.max_channel_pooling_backward_float
+    kernel = get_mocha(backend).max_channel_pooling_backward_float
   elseif T == Float64
-    kernel = backend.mocha.max_channel_pooling_backward_double
+    kernel = get_mocha(backend).max_channel_pooling_backward_double
   else
     error("Unsupported data type for channel pooling: $T")
   end

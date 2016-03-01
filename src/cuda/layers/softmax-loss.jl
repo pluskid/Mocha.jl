@@ -32,9 +32,9 @@ function backward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vec
     end
 
     if data_type == Float32
-      kernel = backend.mocha.softmax_loss_backward_float
+      kernel = get_mocha(backend).softmax_loss_backward_float
     elseif data_type == Float64
-      kernel = backend.mocha.softmax_loss_backward_double
+      kernel = get_mocha(backend).softmax_loss_backward_double
     else
       error("Unsupported data type $data_type")
     end
