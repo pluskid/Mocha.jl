@@ -1,20 +1,19 @@
 type CuMultinomialLogisticLossEtcState{T}
-  loss_blob     :: CuTensorBlob{T}
-  loss          :: Array{T}
+  loss          :: SyncMem{T}
   spatial_dim   :: Int
   num           :: Int
 end
 
 function setup_etc(backend::GPUBackend, layer::MultinomialLogisticLossLayer, inputs::Vector{Blob})
   data_type = eltype(inputs[1])
-  loss_blob = make_zero_blob(backend, data_type, 1, 1, 1, 1)
-  loss = data_type[0]
-  return CuMultinomialLogisticLossEtcState(loss_blob, loss, 0, 0)
+  dev_blob = make_zero_blob(backend, data_type, 1, 1, 1, 1)
+  loss = SyncMem(backend, dev_blob)
+  return CuMultinomialLogisticLossEtcState(loss, 0, 0)
 end
 
 function shutdown(backend::GPUBackend, state::MultinomialLogisticLossLayerState)
   custate = state.etc
-  destroy(custate.loss_blob)
+  destroy(custate.loss)
 end
 
 function forward(backend::GPUBackend, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob})
@@ -44,7 +43,7 @@ function forward(backend::GPUBackend, state::MultinomialLogisticLossLayerState, 
   end
 
   CUDA.launch(kernel, (x_block, y_block), (CUDA.THREADS_PER_BLOCK_X, 1),
-      (get_ptr(pred).p, get_ptr(label).p, weights, num, spatial_dim, prob_dim, get_ptr(custate.loss_blob).p), get_stream(backend))
+      (get_ptr(pred).p, get_ptr(label).p, weights, num, spatial_dim, prob_dim, get_ptr(custate.loss.dev_blob).p), get_stream(backend))
 
   custate.spatial_dim = spatial_dim
   custate.num = num
@@ -52,10 +51,9 @@ end
 
 function sync(backend::GPUBackend, state::MultinomialLogisticLossLayerState)
   custate = state.etc
-  # use copy to sync
-  copy!(custate.loss, custate.loss_blob)
-  erase!(custate.loss_blob)
+  sync!(custate.loss)
+  erase!(custate.loss.dev_blob)
 
-  state.loss = state.layer.weight * custate.loss[1] / (custate.spatial_dim * custate.num)
+  state.loss = state.layer.weight * get_data(custate.loss.host_blob)[1] / (custate.spatial_dim * custate.num)
 end
 
