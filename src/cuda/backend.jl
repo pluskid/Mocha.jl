@@ -1,4 +1,5 @@
 export GPUBackend
+export get_cublas_ctx, get_cudnn_ctx, get_stream
 
 macro defkernels(kernels...)
   field_defs = map(kernels) do ker
@@ -146,12 +147,33 @@ end
 type GPUBackend <: AbstractGPUBackend
   param_registry :: ParameterRegistry
   initialized    :: Bool
-  cublas_ctx     :: CuBLAS.Handle
-  cudnn_ctx      :: CuDNN.Handle
-
+  cur_dev        :: CudaRT.CudaDevice
+  dev_count      :: Int
+  streams        :: Array{CudaRT.CudaStream}
+  cublas_ctxs    :: Array{CuBLAS.Handle}
+  cudnn_ctxs     :: Array{CuDNN.Handle}
   mocha          :: MochaKernels
 
   GPUBackend() = new(ParameterRegistry(), false) # everything will be initialized later
+end
+
+function set_dev(backend::GPUBackend, dev::Int)
+  backend.cur_dev.ordinal = dev
+  CudaRT.set_device(backend.cur_dev)
+  @inbounds CuBLAS.set_stream(backend.cublas_ctxs[dev + 1], backend.streams[dev + 1])
+  @inbounds CuDNN.set_stream(backend.cublas_ctxs[dev + 1], backend.streams[dev + 1])
+end
+
+function get_cublas_ctx(backend::GPUBackend)
+  @inbounds return backend.cublas_ctxs[backend.cur_dev.ordinal + 1]
+end
+
+function get_cudnn_ctx(backend::GPUBackend)
+  @inbounds return backend.cudnn_ctxs[backend.cur_dev.ordinal + 1]
+end
+
+function get_stream(backend::GPUBackend)
+  @inbounds return backend.streams[backend.cur_dev.ordinal + 1]
 end
 
 function init(backend::GPUBackend)
@@ -159,14 +181,18 @@ function init(backend::GPUBackend)
 
   @info("Initializing CuDNN backend...")
   @assert Config.cuda_dev_id < Config.cuda_dev_count
-  CudaRT.set_dev_count(Config.cuda_dev_count)
-  CudaRT.set_device(Config.cuda_dev_id)
-  stream = CudaRT.create_stream()
-  CudaRT.set_stream(stream)
-  backend.cublas_ctx = CuBLAS.create()
-  CuBLAS.set_stream(backend.cublas_ctx, stream)
-  backend.cudnn_ctx = CuDNN.create()
-  CuDNN.set_stream(backend.cudnn_ctx, stream)
+  backend.cur_dev = CudaRT.CudaDevice(Config.cuda_dev_id)
+  backend.dev_count = Config.cuda_dev_count
+  backend.streams = Array(CudaRT.CudaStream, backend.dev_count)
+  backend.cublas_ctxs = Array(CuBLAS.Handle, backend.dev_count)
+  backend.cudnn_ctxs = Array(CuDNN.Handle, backend.dev_count)
+  @inbounds for i=1:backend.dev_count
+    CudaRT.set_device(CudaDevice(i - 1))
+    backend.streams[i] = CudaRT.create_stream()
+    backend.cublas_ctxs[i] = CuBLAS.create()
+    backend.cudnn_ctxs[i] = CuDNN.create()
+  end
+  set_dev(backend, Config.cuda_dev_id)
   backend.mocha = MochaKernels()
   backend.initialized = true
   info("CuDNN backend initialized!")
@@ -178,9 +204,9 @@ function shutdown(backend::GPUBackend)
   @info("Shutting down CuDNN backend...")
   # NOTE: destroy should be in reverse order of init
   shutdown(backend.mocha)
-  CuDNN.destroy(backend.cudnn_ctx)
-  CuBLAS.destroy(backend.cublas_ctx)
-  CudaRT.destroy(backend.stream)
+  map(CuDNN.destroy, backend.cudnn_ctxs)
+  map(CuBLAS.destroy, backend.cublas_ctxs)
+  map(CudaRT.destroy, backend.streams)
   backend.initialized = false
   @info("CuDNN Backend shutdown finished!")
 end

@@ -44,7 +44,7 @@ function forward(backend::GPUBackend, state::MultinomialLogisticLossLayerState, 
   end
 
   CUDA.launch(kernel, (x_block, y_block), (CUDA.THREADS_PER_BLOCK_X, 1),
-      (get_ptr(pred).p, get_ptr(label).p, weights, num, spatial_dim, prob_dim, get_ptr(custate.loss_blob).p))
+      (get_ptr(pred).p, get_ptr(label).p, weights, num, spatial_dim, prob_dim, get_ptr(custate.loss_blob).p), get_stream(backend))
 
   custate.spatial_dim = spatial_dim
   custate.num = num

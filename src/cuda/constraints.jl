@@ -31,7 +31,7 @@ function apply_l2_cons!{T <: AbstractFloat}(backend::GPUBackend, blob::CuTensorB
   # square blob inplace
   CuVec.mul!(backend, T, get_ptr(tmpA).p, get_ptr(tmpA).p, length(blob))
   # and reduce via gemv to get the sum
-  CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_T, CuBLAS.OP_N, nunits, 1, ninputs,
+  CuBLAS.gemm(get_cublas_ctx(backend), CuBLAS.OP_T, CuBLAS.OP_N, nunits, 1, ninputs,
               convert(T, 1), get_ptr(tmpA), ninputs, get_ptr(onesv), ninputs, convert(T, 0), get_ptr(tmp_norm), nunits)
   # copy back for doing the norm size check on the cpu
   copy!(tmp_norm_host, tmp_norm)
@@ -43,7 +43,7 @@ function apply_l2_cons!{T <: AbstractFloat}(backend::GPUBackend, blob::CuTensorB
     @inbounds norm = sqrt(tmp_norm_host[i])
     if norm > coef
       scale_factor = (1. / norm) * coef
-      CuBLAS.scal(backend.cublas_ctx, ninputs, convert(T, scale_factor), off_ptr, 1)
+      CuBLAS.scal(get_cublas_ctx(backend), ninputs, convert(T, scale_factor), off_ptr, 1)
     end
   end
   destroy(tmpA)

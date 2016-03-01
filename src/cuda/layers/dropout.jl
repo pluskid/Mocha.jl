@@ -2,7 +2,7 @@ function setup_etc(backend::GPUBackend, layer::DropoutLayer, inputs::Vector{Blob
   cuda_rand_states = CudaPtr
   kernel = backend.mocha.dropout_init
   rnd_state_size_blob = make_blob(backend, Float64, 1, 1, 1, 1)
-  CUDA.launch(backend.mocha.dropout_alloc_size, 1, 1, (get_ptr(rnd_state_size_blob).p, ))
+  CUDA.launch(backend.mocha.dropout_alloc_size, 1, 1, (get_ptr(rnd_state_size_blob).p, ), get_stream(backend))
   rnd_state_size = Float64[0]
   copy!(rnd_state_size, rnd_state_size_blob)
   destroy(rnd_state_size_blob)
@@ -11,7 +11,7 @@ function setup_etc(backend::GPUBackend, layer::DropoutLayer, inputs::Vector{Blob
   len = length(inputs[1])
   cuda_rand_states = CudaRT.malloc(UInt8, rnd_state_size*len)
   x_block = round(Int, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
-  CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X, (cuda_rand_states, len))
+  CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X, (cuda_rand_states, len), get_stream(backend))
 
   # hold copy of input blob, we will restore the inputs after backward computing
   # this is because when used with the cuDNN pooling layer, the in-place modification
@@ -44,7 +44,7 @@ function forward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{B
 
   CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X,
       (state.etc[1], length(inputs[1]), get_ptr(inputs[1]).p,
-      get_ptr(state.rand_vals).p, state.ratio, state.scale))
+      get_ptr(state.rand_vals).p, state.ratio, state.scale), get_stream(backend))
 end
 
 function backward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
@@ -60,7 +60,7 @@ function backward(backend::GPUBackend, state::DropoutLayerState, inputs::Vector{
 
     CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X,
         (state.etc[1], length(inputs[1]), get_ptr(diffs[1]).p,
-        get_ptr(state.rand_vals).p, state.ratio, state.scale))
+        get_ptr(state.rand_vals).p, state.ratio, state.scale), get_stream(backend))
 
     # restore the input blob
     copy!(inputs[1], state.etc[2])

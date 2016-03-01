@@ -18,7 +18,7 @@ function forward(backend :: GPUBackend, neuron :: Neurons.ReLU, output :: Blob)
   else
     error("Unsupported data type $data_type")
   end
-  CUDA.launch(kernel, cuda_dim..., tuple(convert(data_type, neuron.epsilon), get_ptr(output).p, blob_dim...))
+  CUDA.launch(kernel, cuda_dim..., tuple(convert(data_type, neuron.epsilon), get_ptr(output).p, blob_dim...), get_stream(backend))
 end
 
 function backward(backend :: GPUBackend, neuron :: Neurons.ReLU, output :: Blob, gradient :: Blob)
@@ -31,7 +31,8 @@ function backward(backend :: GPUBackend, neuron :: Neurons.ReLU, output :: Blob,
   else
     error("Unsupported data type $data_type")
   end
-  CUDA.launch(kernel, cuda_dim..., tuple(convert(data_type, neuron.epsilon), get_ptr(output).p, get_ptr(gradient).p, blob_dim...))
+  CUDA.launch(kernel, cuda_dim..., tuple(convert(data_type, neuron.epsilon), get_ptr(output).p, get_ptr(gradient).p, blob_dim...),
+                get_stream(backend))
 end
 
 ############################################################
@@ -47,7 +48,7 @@ function forward(backend :: GPUBackend, neuron :: Neurons.LReLU, output :: Blob)
   else
     error("Unsupported data type $data_type")
   end
-  CUDA.launch(kernel, cuda_dim..., tuple(get_ptr(output).p, blob_dim...))
+  CUDA.launch(kernel, cuda_dim..., tuple(get_ptr(output).p, blob_dim...), get_stream(backend))
 end
 
 function backward(backend :: GPUBackend, neuron :: Neurons.LReLU, output :: Blob, gradient :: Blob)
@@ -60,7 +61,7 @@ function backward(backend :: GPUBackend, neuron :: Neurons.LReLU, output :: Blob
   else
     error("Unsupported data type $data_type")
   end
-  CUDA.launch(kernel, cuda_dim..., tuple(get_ptr(output).p, get_ptr(gradient).p, blob_dim...))
+  CUDA.launch(kernel, cuda_dim..., tuple(get_ptr(output).p, get_ptr(gradient).p, blob_dim...), get_stream(backend))
 end
 
 
@@ -74,7 +75,7 @@ function forward(backend :: GPUBackend, neuron :: Neurons.Sigmoid, output :: Blo
   else
     error("Unsupported data type $data_type")
   end
-  CUDA.launch(kernel, cuda_dim..., tuple(get_ptr(output).p, blob_dim...))
+  CUDA.launch(kernel, cuda_dim..., tuple(get_ptr(output).p, blob_dim...), get_stream(backend))
 end
 
 function backward(backend :: GPUBackend, neuron :: Neurons.Sigmoid, output :: Blob, gradient :: Blob)
@@ -87,7 +88,7 @@ function backward(backend :: GPUBackend, neuron :: Neurons.Sigmoid, output :: Bl
   else
     error("Unsupported data type $data_type")
   end
-  CUDA.launch(kernel, cuda_dim..., tuple(get_ptr(output).p, get_ptr(gradient).p, blob_dim...))
+  CUDA.launch(kernel, cuda_dim..., tuple(get_ptr(output).p, get_ptr(gradient).p, blob_dim...), get_stream(backend))
 end
 
 
@@ -101,7 +102,7 @@ function forward(backend :: GPUBackend, neuron :: Neurons.Tanh, output :: Blob)
   else
     error("Unsupported data type $data_type")
   end
-  CUDA.launch(kernel, cuda_dim..., tuple(get_ptr(output).p, blob_dim...))
+  CUDA.launch(kernel, cuda_dim..., tuple(get_ptr(output).p, blob_dim...), get_stream(backend))
 end
 
 function backward(backend :: GPUBackend, neuron :: Neurons.Tanh, output :: Blob, gradient :: Blob)
@@ -114,7 +115,7 @@ function backward(backend :: GPUBackend, neuron :: Neurons.Tanh, output :: Blob,
   else
     error("Unsupported data type $data_type")
   end
-  CUDA.launch(kernel, cuda_dim..., tuple(get_ptr(output).p, get_ptr(gradient).p, blob_dim...))
+  CUDA.launch(kernel, cuda_dim..., tuple(get_ptr(output).p, get_ptr(gradient).p, blob_dim...), get_stream(backend))
 end
 
 

@@ -88,11 +88,11 @@ function cuda_mean_channel_pooling_forward{T}(backend::GPUBackend, input::CuTens
     integral_ptr = convert(Ptr{T}, integral.p)
 
     # compute integral image
-    CuBLAS.copy(backend.cublas_ctx, T, spatial_dim_T, input_ptr, 1, integral_ptr, 1)
+    CuBLAS.copy(get_cublas_ctx(backend), T, spatial_dim_T, input_ptr, 1, integral_ptr, 1)
     for c = 2:channels
-      CuBLAS.copy(backend.cublas_ctx, T, spatial_dim_T, input_ptr + (c-1)*spatial_dim, 1,
+      CuBLAS.copy(get_cublas_ctx(backend), T, spatial_dim_T, input_ptr + (c-1)*spatial_dim, 1,
           integral_ptr + (c-1)*spatial_dim, 1)
-      CuBLAS.axpy(backend.cublas_ctx, spatial_dim_T, one, integral_ptr + (c-2)*spatial_dim, 1,
+      CuBLAS.axpy(get_cublas_ctx(backend), spatial_dim_T, one, integral_ptr + (c-2)*spatial_dim, 1,
           integral_ptr + (c-1)*spatial_dim, 1)
     end
 
@@ -103,13 +103,13 @@ function cuda_mean_channel_pooling_forward{T}(backend::GPUBackend, input::CuTens
 
       output_ptr_pc = output_ptr + (pc-1)*spatial_dim
 
-      CuBLAS.copy(backend.cublas_ctx, T, spatial_dim_T, integral_ptr + (cend-1)*spatial_dim, 1,
+      CuBLAS.copy(get_cublas_ctx(backend), T, spatial_dim_T, integral_ptr + (cend-1)*spatial_dim, 1,
           output_ptr_pc, 1)
       if cstart > 1
-        CuBLAS.axpy(backend.cublas_ctx, spatial_dim_T, neg_one,
+        CuBLAS.axpy(get_cublas_ctx(backend), spatial_dim_T, neg_one,
             integral_ptr + (cstart-2)*spatial_dim, 1, output_ptr_pc, 1)
       end
-      CuBLAS.scal(backend.cublas_ctx, spatial_dim_T, scale, output_ptr_pc, 1)
+      CuBLAS.scal(get_cublas_ctx(backend), spatial_dim_T, scale, output_ptr_pc, 1)
     end
   end
 end
@@ -138,7 +138,7 @@ function cuda_mean_channel_pooling_backward{T}(backend::GPUBackend, input::CuTen
       output_ptr_pc = output_ptr + (pc-1)*spatial_dim
 
       for c = cstart:cend
-        CuBLAS.axpy(backend.cublas_ctx, spatial_dim_T, scale, output_ptr_pc, 1,
+        CuBLAS.axpy(get_cublas_ctx(backend), spatial_dim_T, scale, output_ptr_pc, 1,
             input_ptr + (c-1)*spatial_dim, 1)
       end
     end
@@ -170,7 +170,7 @@ function cuda_max_channel_pooling_forward{T}(backend::GPUBackend, input::CuTenso
   end
 
   CUDA.launch(kernel, cuda_dim..., (get_ptr(input).p, get_ptr(output).p, mask.p, sp_dim, channels, num,
-      pooled_chann, layer.kernel, layer.stride, layer.pad[1]))
+      pooled_chann, layer.kernel, layer.stride, layer.pad[1]), get_stream(backend))
 end
 
 function cuda_max_channel_pooling_backward{T}(backend::GPUBackend, input::CuTensorBlob{T},
@@ -190,6 +190,6 @@ function cuda_max_channel_pooling_backward{T}(backend::GPUBackend, input::CuTens
   erase!(input)
 
   CUDA.launch(kernel, cuda_dim..., (get_ptr(input).p, get_ptr(output).p, mask.p, sp_dim, channels, num,
-      pooled_chann, layer.kernel, layer.stride, layer.pad[1]))
+      pooled_chann, layer.kernel, layer.stride, layer.pad[1]), get_stream(backend))
 end
 

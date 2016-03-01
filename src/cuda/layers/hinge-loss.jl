@@ -21,7 +21,7 @@ function forward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vector
   end
 
   CUDA.launch(kernel, (x_block,1), (CUDA.THREADS_PER_BLOCK_X, 1),
-              (get_ptr(pred).p, get_ptr(label).p, n, get_ptr(state.loss_blob).p))
+              (get_ptr(pred).p, get_ptr(label).p, n, get_ptr(state.loss_blob).p), get_stream(backend))
 
   losses = Array(data_type, size(state.loss_blob)...)
   copy!(losses, state.loss_blob)
@@ -54,5 +54,5 @@ function backward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vecto
   const gradient2 :: CudaPtr = isa(diffs[2], CuTensorBlob) ? get_ptr(diffs[2]) : CudaPtr()
 
   CUDA.launch(kernel, (x_block,1), (CUDA.THREADS_PER_BLOCK_X,1),
-              (get_ptr(pred).p, get_ptr(label).p, gradient1.p, gradient2.p, n, neg_weight))
+              (get_ptr(pred).p, get_ptr(label).p, gradient1.p, gradient2.p, n, neg_weight), get_stream(backend))
 end

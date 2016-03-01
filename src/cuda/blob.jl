@@ -6,23 +6,24 @@ export CuTensorBlob
 export get_ptr
 
 type CuTensorBlob{T,N} <: Blob{T,N}
-  ptrs      :: Array{CudaPtr} # one CudaPtr for each device
+  ptrs      :: Array{CudaPtr}         # one CudaPtr for each device
+  cur_dev   :: CudaDevice
   shape     :: NTuple{N, Int}
   len       :: Int
   own_data  :: Bool
 end
-function CuTensorBlob{T, N}(dtype::Type{T}, dims::NTuple{N,Int})
+function CuTensorBlob{T, N}(backend::GPUBackend, dtype::Type{T}, dims::NTuple{N,Int})
   len = prod(dims)
-  ptrs = Array(CudaPtr, CudaRT.get_dev_count())
-  orig_dev = CudaRT.get_device()
-  for i=1:CudaRT.get_dev_count()
-    CudaRT.set_device(i - 1)
+  ptrs = Array(CudaPtr, backend.dev_count)
+  orig_dev = backend.cur_dev
+  for i=1:backend.dev_count
+    CudaRT.set_device(CudaDevice(i - 1))
     @inbounds ptrs[i] = CudaRT.malloc(dtype, len)
   end
   CudaRT.set_device(orig_dev)
-  return CuTensorBlob{T,N}(ptrs, dims, len, true)
+  return CuTensorBlob{T,N}(ptrs, backend.cur_dev, dims, len, true)
 end
-get_ptr(blob::CuTensorBlob) = @inbounds return blob.ptrs[CudaRT.get_device() + 1]
+get_ptr(blob::CuTensorBlob) = @inbounds return blob.ptrs[blob.cur_dev.ordinal + 1]
 
 length(b::CuTensorBlob) = b.len
 size(b::CuTensorBlob) = b.shape
@@ -41,7 +42,7 @@ function copy!{T}(dst :: CuTensorBlob{T}, src :: CuTensorBlob{T})
 end
 function copy_async!{T}(backend::GPUBackend, dst :: CuTensorBlob{T}, src :: Array{T})
   @assert length(dst) == length(src)
-  CuBLAS.set_vector(src, get_ptr(dst), stream=CudaRT.get_stream())
+  CuBLAS.set_vector(src, get_ptr(dst), stream=get_stream(backend))
 end
 function fill!{T}(dst :: CuTensorBlob{T}, val)
   val_vec = Array(T, length(dst))
@@ -53,13 +54,13 @@ function erase!{T}(dst :: CuTensorBlob{T})
 end
 
 function make_blob{N}(backend::GPUBackend, data_type::Type, dims::NTuple{N,Int})
-  return CuTensorBlob(data_type, dims)
+  return CuTensorBlob(backend, data_type, dims)
 end
 function replace_ptr(backend::GPUBackend, dst::CuTensorBlob, src::CuTensorBlob, offset::Int)
   @assert(length(dst.ptrs) == length(src.ptrs))
-  @assert(length(dst.ptrs) == CudaRT.get_dev_count())
+  @assert(length(dst.ptrs) == backend.dev_count)
   destroy(dst)
-  for i=1:CudaRT.get_dev_count()
+  for i=1:backend.dev_count
     @inbounds dst.ptrs[i].p = src.ptrs[i].p + offset
   end
   dst.own_data = false

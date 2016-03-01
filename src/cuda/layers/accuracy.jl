@@ -35,18 +35,19 @@ function forward(backend::GPUBackend, state::AccuracyLayerState, inputs::Vector{
     error("Unsupported data type $data_type")
   end
   CUDA.launch(kernel, (x_block,y_block),(CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y),
-      (get_ptr(pred).p, get_ptr(label).p, get_ptr(custate.tmp_blob).p, num, pred_dim, spatial_dim));
+      (get_ptr(pred).p, get_ptr(label).p, get_ptr(custate.tmp_blob).p, num, pred_dim, spatial_dim),
+      get_stream(backend));
 
   N = num * spatial_dim
 
-  CuBLAS.dot(backend.cublas_ctx, custate.accuracy, N, get_ptr(custate.tmp_blob), 1, get_ptr(custate.tmp_blob), 1)
+  CuBLAS.dot(get_cublas_ctx(backend), custate.accuracy, N, get_ptr(custate.tmp_blob), 1, get_ptr(custate.tmp_blob), 1)
 
   custate.N = N
 end
 
 function sync(backend::GPUBackend, state::AccuracyLayerState)
   custate = state.etc
-  CudaRT.sync_stream(CudaRT.get_stream())
+  CudaRT.sync_stream(get_stream(backend))
 
   # accumulate accuracy
   state.accuracy = (state.accuracy * state.n_accum + custate.accuracy[1]) / (custate.N + state.n_accum)

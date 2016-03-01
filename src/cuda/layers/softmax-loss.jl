@@ -34,8 +34,8 @@ function backward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vec
       error("Unsupported data type $data_type")
     end
     CUDA.launch(kernel, (x_block, y_block), (CUDA.THREADS_PER_BLOCK_X, 1),
-        (get_ptr(diff).p, get_ptr(inputs[2]).p, weights, num, spatial_dim, prob_dim))
-    CuBLAS.scal(backend.cublas_ctx, length(diff), convert(data_type, state.layer.weight/(spatial_dim*num)),
+        (get_ptr(diff).p, get_ptr(inputs[2]).p, weights, num, spatial_dim, prob_dim), get_stream(backend))
+    CuBLAS.scal(get_cublas_ctx(backend), length(diff), convert(data_type, state.layer.weight/(spatial_dim*num)),
         get_ptr(diff), 1)
   end
 end

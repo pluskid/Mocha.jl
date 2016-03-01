@@ -3,7 +3,7 @@ function setup_etc(backend::GPUBackend, layer::RandomNormalLayer)
   cuda_rand_states = CudaPtr
   kernel = backend.mocha.stdnormal_init
   rnd_state_size_blob = make_blob(backend, Float64, 1, 1, 1, 1)
-  CUDA.launch(backend.mocha.stdnormal_alloc_size, 1, 1, (get_ptr(rnd_state_size_blob).p, ))
+  CUDA.launch(backend.mocha.stdnormal_alloc_size, 1, 1, (get_ptr(rnd_state_size_blob).p, ), get_stream(backend))
   rnd_state_size = Float64[0]
   copy!(rnd_state_size, rnd_state_size_blob)
   destroy(rnd_state_size_blob)
@@ -17,7 +17,7 @@ function setup_etc(backend::GPUBackend, layer::RandomNormalLayer)
       x_block = round(Int, ceil(convert(Float64, len)/CUDA.THREADS_PER_BLOCK_X))
       seed = rand(UInt)
       println("launching stdnormal init on bloc $i with len $len")
-      CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X, (cuda_rand_states, seed))
+      CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X, (cuda_rand_states, seed), get_stream(backend))
       push!(etc, cuda_rand_states)
   end
   return etc
@@ -41,7 +41,7 @@ function forward(backend::GPUBackend, state::RandomNormalLayerState, inputs::Vec
         end
 
         CUDA.launch(kernel, x_block, CUDA.THREADS_PER_BLOCK_X,
-                    (state.etc[i], get_ptr(state.blobs[i]).p, len,))
+                    (state.etc[i], get_ptr(state.blobs[i]).p, len,), get_stream(backend))
     end
 end
 

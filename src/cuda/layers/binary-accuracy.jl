@@ -25,7 +25,8 @@ function forward(backend::GPUBackend, state::BinaryAccuracyLayerState, inputs::V
   threshold = convert(data_type, state.layer.threshold)
   erase!(state.etc)
   CUDA.launch(kernel, (x_block,1),(CUDA.THREADS_PER_BLOCK_X,1),
-      (get_ptr(pred).p, get_ptr(label).p, N, threshold, get_ptr(state.etc).p));
+      (get_ptr(pred).p, get_ptr(label).p, N, threshold, get_ptr(state.etc).p),
+      get_stream(backend));
 
   n_wrong = Float32[0.0f0]
   copy!(n_wrong, state.etc)

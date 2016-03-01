@@ -16,7 +16,7 @@ function forward(backend::GPUBackend, state::SoftlabelSoftmaxLossLayerState, inp
   data_type = eltype(prob)
 
   CuVec.log!(backend, prob)
-  loss = -CuBLAS.dot(backend.cublas_ctx, data_type, length(prob), get_ptr(prob), 1, get_ptr(label), 1)
+  loss = -CuBLAS.dot(get_cublas_ctx(backend), data_type, length(prob), get_ptr(prob), 1, get_ptr(label), 1)
   state.loss = state.layer.weight * loss / (prod(dims) / dims[state.op_dim])
 end
 
@@ -29,8 +29,8 @@ function backward(backend::GPUBackend, state::SoftlabelSoftmaxLossLayerState, in
     data_type = eltype(diff)
     dims = size(diff)
 
-    CuBLAS.axpy(backend.cublas_ctx, length(diff), -one(data_type), get_ptr(label), 1, get_ptr(diff), 1)
-    CuBLAS.scal(backend.cublas_ctx, length(diff), convert(data_type, state.layer.weight * dims[state.op_dim]/prod(dims)), get_ptr(diff), 1)
+    CuBLAS.axpy(get_cublas_ctx(backend), length(diff), -one(data_type), get_ptr(label), 1, get_ptr(diff), 1)
+    CuBLAS.scal(get_cublas_ctx(backend), length(diff), convert(data_type, state.layer.weight * dims[state.op_dim]/prod(dims)), get_ptr(diff), 1)
   end
 end
 

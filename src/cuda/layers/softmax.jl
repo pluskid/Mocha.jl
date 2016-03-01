@@ -24,7 +24,7 @@ function forward(backend::GPUBackend, state::SoftmaxLayerState, inputs::Vector{B
   alpha = one(eltype(inputs[1]))
   beta = zero(eltype(inputs[1]))
   for i = 1:length(inputs)
-    CuDNN.softmax_forward(backend.cudnn_ctx, CuDNN.CUDNN_SOFTMAX_ACCURATE,
+    CuDNN.softmax_forward(get_cudnn_ctx(backend), CuDNN.CUDNN_SOFTMAX_ACCURATE,
         CuDNN.CUDNN_SOFTMAX_MODE_CHANNEL, alpha, state.etc.inputs_desc[i], get_ptr(inputs[i]),
         beta, state.etc.outputs_desc[i], get_ptr(state.blobs[i]))
   end
@@ -37,7 +37,7 @@ function backward(backend::GPUBackend, state::SoftmaxLayerState, inputs::Vector{
   for i = 1:length(inputs)
     diff = diffs[i]
     if !isa(diff, NullBlob)
-      CuDNN.softmax_backward(backend.cudnn_ctx, CuDNN.CUDNN_SOFTMAX_ACCURATE,
+      CuDNN.softmax_backward(get_cudnn_ctx(backend), CuDNN.CUDNN_SOFTMAX_ACCURATE,
           CuDNN.CUDNN_SOFTMAX_MODE_CHANNEL, alpha, state.etc.outputs_desc[i], get_ptr(state.blobs[i]),
           state.etc.outputs_desc[i], get_ptr(state.blobs_diff[i]), beta, state.etc.inputs_desc[i], get_ptr(diff))
     end

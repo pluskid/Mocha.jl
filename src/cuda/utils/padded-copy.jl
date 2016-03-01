@@ -20,7 +20,8 @@ function dense2padded!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
     mirror = convert(Int, mirror)
     CUDA.launch(kernel, (x_block,y_block,z_block),
         (CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z),
-        (get_ptr(dst).p,get_ptr(src).p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num,mirror))
+        (get_ptr(dst).p,get_ptr(src).p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num,mirror),
+        get_stream(backend))
 end
 
 function padded2dense!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
@@ -43,7 +44,8 @@ function padded2dense!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
     mirror = convert(Int, mirror)
     CUDA.launch(kernel, (x_block,y_block,z_block),
         (CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z),
-        (get_ptr(dst).p,get_ptr(src).p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num, mirror))
+        (get_ptr(dst).p,get_ptr(src).p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num, mirror),
+        get_stream(backend))
 end
 
 function dense2padded!{T}(backend::GPUBackend, dst::CuTensorBlob{T},

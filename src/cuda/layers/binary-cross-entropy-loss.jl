@@ -19,7 +19,7 @@ function forward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, i
   end
 
   CUDA.launch(kernel, x_block, (CUDA.THREADS_PER_BLOCK_X, 1),
-        (get_ptr(pred).p, get_ptr(label).p, dim, get_ptr(loss_blob).p))
+        (get_ptr(pred).p, get_ptr(label).p, dim, get_ptr(loss_blob).p), get_stream(backend))
 
   loss = Float32[0]
   copy!(loss, loss_blob)
