@@ -19,7 +19,7 @@ type AsyncHDF5DataLayerState <: LayerState
   blobs         :: Vector{Blob}
   epoch         :: Int
   trans         :: Vector{Vector{DataTransformerState}}
-  data_blocks   :: Array{Any}
+  data_blocks   :: Vector{Blob}
 
   sources        :: Vector{AbstractString}
 
@@ -44,8 +44,8 @@ type AsyncHDF5DataLayerState <: LayerState
   end
 end
 
-function setup_etc(backend::Backend, state::AsyncHDF5DataLayerState)
-  return Array[Array(eltype(x), size(x)) for x in state.blobs]
+function setup_etc(backend::CPUBackend, state::AsyncHDF5DataLayerState)
+  return Array[CPUBlob(eltype(x), size(x)) for x in state.blobs]
 end
 
 function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
@@ -135,7 +135,7 @@ function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}
               if layer.shuffle
                 idx_take = shuffle_idx[idx_take]
               end
-              data_blocks[i_dset][idx...,n_done+1:n_done+n_take] = data_chunks[i_dset][idx..., idx_take]
+              get_data(data_blocks[i_dset])[idx...,n_done+1:n_done+n_take] = data_chunks[i_dset][idx..., idx_take]
             end
             curr_idx += n_take
             n_done += n_take

@@ -1,6 +1,6 @@
 type CuAccuracycustate{T}
   tmp_blob  :: CuTensorBlob{T}
-  accuracy  :: Array{T,1}
+  accuracy  :: SyncMem{T}
   N         :: Int
 end
 function setup_etc(backend::GPUBackend, layer::AccuracyLayer, op_dim::Int, inputs)
@@ -8,12 +8,14 @@ function setup_etc(backend::GPUBackend, layer::AccuracyLayer, op_dim::Int, input
   dims[op_dim] = 1
   data_type = eltype(inputs[1])
   tmp_blob = make_blob(backend, data_type, dims...)
-  accuracy = data_type[0]
+  accuracy_blob = make_blob(backend, data_type, (1,))
+  accuracy = SyncMem(backend, accuracy_blob)
   return CuAccuracycustate{data_type}(tmp_blob, accuracy, 0)
 end
 function shutdown(backend::GPUBackend, state::AccuracyLayerState)
   custate = state.etc
   destroy(custate.tmp_blob)
+  destroy(custate.accuracy)
 end
 
 function forward(backend::GPUBackend, state::AccuracyLayerState, inputs::Vector{Blob})
@@ -40,16 +42,20 @@ function forward(backend::GPUBackend, state::AccuracyLayerState, inputs::Vector{
 
   N = num * spatial_dim
 
-  CuBLAS.dot(get_cublas_ctx(backend), custate.accuracy, N, get_ptr(custate.tmp_blob), 1, get_ptr(custate.tmp_blob), 1)
+  # Ideally, should use custate.accuracy.dev_blob here to get the result. However got ReadOnlyMemoryError from julia if doing this.
+  #CuBLAS.dot(get_cublas_ctx(backend), data_type, get_ptr(custate.accuracy.dev_blob), N, get_ptr(custate.tmp_blob), 1, get_ptr(custate.tmp_blob), 1)
+  CuBLAS.dot(get_cublas_ctx(backend), get_data(custate.accuracy.host_blob), N, get_ptr(custate.tmp_blob), 1, get_ptr(custate.tmp_blob), 1)
 
   custate.N = N
 end
 
 function sync(backend::GPUBackend, state::AccuracyLayerState)
   custate = state.etc
+  # Ideally, should use custate.accuracy.dev_blob above, and sync with custate.accuracy here.
+  # sync!(custate.accuracy)
   CudaRT.sync_stream(get_stream(backend))
 
   # accumulate accuracy
-  state.accuracy = (state.accuracy * state.n_accum + custate.accuracy[1]) / (custate.N + state.n_accum)
+  state.accuracy = (state.accuracy * state.n_accum + get_data(custate.accuracy.host_blob)[1]) / (custate.N + state.n_accum)
   state.n_accum += custate.N
 end

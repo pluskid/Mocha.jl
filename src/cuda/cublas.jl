@@ -177,6 +177,18 @@ for (fname, elty) in ((:cublasSdot_v2, Float32),
   end
 end
 
+# For some reason, this call causes ReadOnlyMemoryError
+for (fname, elty) in ((:cublasSdot_v2, :Float32),
+                      (:cublasDdot_v2, :Float64))
+  @eval begin
+    function dot(handle::Handle, ::Type{$elty}, result::CudaPtr, n::Int, x::CudaPtr, incx::Int, 
+                            y::CudaPtr, incy::Int)
+      @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
+                  handle, n, x.p, incx, y.p, incy, result.p)
+    end
+  end
+end
+
 ############################################################
 # blas copy
 # Note blascopy is copying from x to y, while most of the

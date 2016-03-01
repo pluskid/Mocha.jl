@@ -147,6 +147,7 @@ function destroy(blob::CPUBlob)
   # do nothing... or is there anything that I could do?
 end
 
+get_data(blob::CPUBlob) = blob.data
 size(blob::CPUBlob) = size(blob.data)
 
 function copy!{T}(dst :: Array{T}, src :: CPUBlob{T})

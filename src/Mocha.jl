@@ -37,6 +37,7 @@ if Config.use_cuda
   include("cuda/utils/math.jl")
   include("cuda/utils/padded-copy.jl")
   include("cuda/utils/shifted-copy.jl")
+  include("cuda/utils/sync-mem.jl")
 end
 
 export DefaultBackend
