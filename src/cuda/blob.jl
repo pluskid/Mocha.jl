@@ -32,6 +32,10 @@ function copy!{T}(dst :: CuTensorBlob{T}, src :: Array{T})
   @assert length(dst) == length(src)
   CuBLAS.set_vector(src, get_ptr(dst))
 end
+function copy_all!{T}(dst :: CuTensorBlob{T}, src :: Array{T})
+  @assert length(dst) == length(src)
+  map(p -> CuBLAS.set_vector(src, p), dst.ptrs)
+end
 function copy!{T}(dst :: Array{T}, src :: CuTensorBlob{T})
   @assert length(dst) == length(src)
   CuBLAS.get_vector(get_ptr(src), dst)

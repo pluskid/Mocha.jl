@@ -111,9 +111,6 @@ function make_blob(backend::Backend, data::Array)
   copy!(blob, data)
   return blob
 end
-function make_blob(backend::Backend, size::Int)
-  blob = make_blob(backend, UInt8, size)
-end
 function make_zero_blob{N}(backend::Backend, data_type::Type, dims::NTuple{N,Int})
   blob = make_blob(backend, data_type, dims)
   erase!(blob)

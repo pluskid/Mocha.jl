@@ -242,7 +242,8 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
 
   @info("Setup layers...")
   
-  total_param_size = 0
+  total_param_length = 0
+  param_type = Any
   for i = 1:n
     layer = layers[i]
     # record if layers has any dependency
@@ -262,7 +263,15 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
     states[i] = setup(backend, layer, params, blob_fwd, blob_bwd)
     if has_param(layer)
       registry_put(backend, param_key(layer), states[i].parameters)
-      total_param_size += sum([sizeof(param.blob) for param in states[i].parameters])
+      total_param_length += sum([length(param.blob) for param in states[i].parameters])
+      if length(states[i].parameters) > 0
+        if param_type == Any
+          param_type = eltype(states[i].parameters[1].blob)
+        end
+        @assert param_type != Any
+        # ensure all parameters have same data type
+        map(param -> @assert(param_type == eltype(param.blob)), states[i].parameters)
+      end
     end
 
     if !is_sink(layer) && !is_inplace(layer)
@@ -285,8 +294,9 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
   end
   
   # assign single array to all learnable parameters
-  if (total_param_size > 0)
-    param_blob = make_blob(backend, total_param_size)
+  if (total_param_length > 0)
+    @assert param_type != Any
+    param_blob = make_blob(backend, param_type, total_param_length)
     offset = 0
     for i = 1:n
         layer = layers[i]
