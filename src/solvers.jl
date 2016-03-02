@@ -234,7 +234,6 @@ function onestep_solve(solver::Solver, net::Net, state::SolverState)
         syncup_forward(net)
     end
 
-    set_dev(net.backend, state.iter % net.backend.dev_count)
     state.obj_val = get_loss(net)
 
     state.losses = Dict()

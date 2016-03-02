@@ -1,6 +1,8 @@
 export SyncMem
 export alloc_host_array, free_host_array, destory
 
+import Base.mean
+
 function alloc_host_array{T}(blob::CuTensorBlob{T})
   p = CudaRT.alloc_host(T, length(blob))
   p = convert(Ptr{T}, p)
@@ -39,6 +41,10 @@ end
 
 function copy_async!{T}(backend :: GPUBackend, dst :: CuTensorBlob{T}, src :: CuHostBlob{T})
   copy_async!(backend, dst, get_data(src))
+end
+
+function mean{T}(blob :: CuHostBlob{T})
+  return mean(blob.data)
 end
 
 destroy(host_blob::CuHostBlob) = map(free_host_array, host_blob.data)
