@@ -210,7 +210,7 @@ function init(backend::GPUBackend)
   backend.mochas = Array(MochaKernels, backend.dev_count)
   @inbounds for i=1:backend.dev_count
     CudaRT.set_device(CudaDevice(i - 1))
-    backend.streams[i] = CudaRT.create_stream()
+    backend.streams[i] = backend.dev_count == 1 ? CudaRT.cuda_null_stream() : CudaRT.create_stream()
     backend.cublas_ctxs[i] = CuBLAS.create()
     backend.cudnn_ctxs[i] = CuDNN.create()
     backend.mochas[i] = MochaKernels()
