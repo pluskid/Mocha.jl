@@ -233,6 +233,9 @@ function onestep_solve(solver::Solver, net::Net, state::SolverState)
         set_dev(net.backend, dev - 1)
         syncup_forward(net)
     end
+    
+    mean!(net.backend, net.param, net.param_mean)
+    mean!(net.backend, net.grad, net.grad_mean)
 
     state.obj_val = get_loss(net)
 

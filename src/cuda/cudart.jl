@@ -126,6 +126,31 @@ function set_device(dev::CudaDevice)
 end
 
 ############################################################
+# CUDART streams
+############################################################
+typealias CudaStream Ptr{Void}
+
+function create_stream()
+  a = CudaStream[0]
+  @cudacall(:cudaStreamCreate, (Ptr{CudaStream},), a)
+  return a[1]
+end
+
+function destroy_stream(stream :: CudaStream)
+  if (stream != cuda_null_stream())
+    @cudacall(:cudaStreamDestroy, (CudaStream,), stream)
+  end
+end
+
+function sync_stream(stream :: CudaStream)
+  @cudacall(:cudaStreamSynchronize, (CudaStream,), stream)
+end
+
+cuda_null_stream() = C_NULL
+
+destroy(stream :: CudaStream) = destroy_stream(stream)
+
+############################################################
 # CUDART device memory
 ############################################################
 typealias CUDAdeviceptr Ptr{Void}
@@ -157,6 +182,10 @@ function copy!(dst::CudaPtr, src::CudaPtr, size::Int)
   @cudacall(:cudaMemcpy, (CUDAdeviceptr, CUDAdeviceptr, Csize_t, Cint),
                 dst.p, src.p, size, cudaMemcpyDeviceToDevice)
 end
+function copy_async!(dst::CudaPtr, src::CudaPtr, size::Int, stream::CudaStream)
+  @cudacall(:cudaMemcpyAsync, (CUDAdeviceptr, CUDAdeviceptr, Csize_t, Cint, Ptr{Void}),
+                dst.p, src.p, size, cudaMemcpyDeviceToDevice, stream)
+end
 
 function memset!(ptr::CudaPtr, val::Int, size::Int)
   @cudacall(:cudaMemset, (Ptr{Void}, Cint, Csize_t), ptr.p, val, size)
@@ -176,31 +205,5 @@ end
 function free_host(p::Ptr{Void})
   @cudacall(:cudaFreeHost, (Ptr{Void},), p)
 end
-
-
-############################################################
-# CUDART streams
-############################################################
-typealias CudaStream Ptr{Void}
-
-function create_stream()
-  a = CudaStream[0]
-  @cudacall(:cudaStreamCreate, (Ptr{CudaStream},), a)
-  return a[1]
-end
-
-function destroy_stream(stream :: CudaStream)
-  if (stream != cuda_null_stream())
-    @cudacall(:cudaStreamDestroy, (CudaStream,), stream)
-  end
-end
-
-function sync_stream(stream :: CudaStream)
-  @cudacall(:cudaStreamSynchronize, (CudaStream,), stream)
-end
-
-cuda_null_stream() = C_NULL
-
-destroy(stream :: CudaStream) = destroy_stream(stream)
 
 end # module CudaRT

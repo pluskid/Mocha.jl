@@ -18,7 +18,11 @@ type Net{T <: Backend}
   output_blobs   :: Dict{Symbol, Blob}
   diff_blobs     :: Dict{Symbol, Blob}
   
-  param_blob     :: Blob
+  param          :: Blob
+  grad           :: Blob
+  
+  param_mean     :: Blob
+  grad_mean      :: Blob
 end
 
 import Base.show
@@ -110,7 +114,10 @@ function init(net::Net)
 end
 function destroy(net::Net)
   @debug("Destroying network $(net.name)")
-  destroy(net.param_blob)
+  destroy(net.param)
+  destroy(net.grad)
+  destroy(net.param_mean)
+  destroy(net.grad_mean)
   for state in net.states
     shutdown(net.backend, state)
   end
@@ -297,12 +304,16 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
   if (total_param_length > 0)
     @assert param_type != Any
     param_blob = make_blob(backend, param_type, total_param_length)
+    grad_blob = make_blob(backend, param_type, total_param_length)
+    param_mean = make_blob(backend, param_type, total_param_length)
+    grad_mean = make_blob(backend, param_type, total_param_length)
     offset = 0
     for i = 1:n
         layer = layers[i]
         if (has_param(layer))
             for param in states[i].parameters
                 replace_ptr(backend, param.blob, param_blob, offset)
+                replace_ptr(backend, param.gradient, grad_blob, offset)
                 offset += sizeof(param.blob)
             end
         end
@@ -312,7 +323,8 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
   end
 
   @info("Network constructed!")
-  return Net(name, backend, layers, states, blobs_forward, blobs_backward, data_layers, output_blobs, diff_blobs, param_blob)
+  return Net(name, backend, layers, states, blobs_forward, blobs_backward, data_layers, 
+                output_blobs, diff_blobs, param_blob, grad_blob, param_mean, grad_mean)
 end
 
 function topological_sort(layers :: Vector{Layer})

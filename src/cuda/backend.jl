@@ -98,6 +98,8 @@ end
   elem_div_double,
   elem_div2_float,
   elem_div2_double,
+  elem_mean_float,
+  elem_mean_double,
   elem_pow_fi,
   elem_pow_di,
   elem_pow_ff,

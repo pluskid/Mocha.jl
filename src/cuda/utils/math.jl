@@ -10,14 +10,17 @@ end
 
 for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
   # define add!, sub!, mul!, div!, div2!
-  for name in [:add, :sub, :mul, :div, :div2]
+  for name in [:add, :sub, :mul, :div, :div2, :mean]
     @eval begin
-      function $(symbol("$(name)!"))(backend::GPUBackend, ::Type{$dtype}, X, Y, len::Int)
+      function $(symbol("$(name)!"))(backend::GPUBackend, ::Type{$dtype}, X, Y, len::Int, stream::CudaRT.CudaStream)
         X = convert(Ptr{Void},X)
         Y = convert(Ptr{Void},Y)
         cuda_dim = cuda_geometry(len)
         kernel = get_mocha(backend).$(symbol("elem_$(name)_$ctype"))
-        CUDA.launch(kernel, cuda_dim..., (X, Y, len), get_stream(backend))
+        CUDA.launch(kernel, cuda_dim..., (X, Y, len), stream)
+      end
+      function $(symbol("$(name)!"))(backend::GPUBackend, ::Type{$dtype}, X, Y, len::Int)
+        $(symbol("$(name)!"))(backend, $dtype, X, Y, len, get_stream(backend))
       end
     end
   end
