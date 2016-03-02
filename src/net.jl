@@ -178,9 +178,15 @@ function get_loss(net::Net)
 end
 
 function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
-  async_forward(net)
+  for dev=1:net.backend.dev_count
+    set_dev(net.backend, dev - 1)
+    async_forward(net)
+  end
 
-  syncup_forward(net)
+  for dev=1:net.backend.dev_count
+    set_dev(net.backend, dev - 1)
+    syncup_forward(net)
+  end
   
   obj_val = get_loss(net)
 
