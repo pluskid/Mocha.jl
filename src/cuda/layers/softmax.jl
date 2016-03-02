@@ -5,10 +5,10 @@ end
 
 function setup_etc(backend::GPUBackend, layer::SoftmaxLayer, dims::Vector{Int}, data_type, inputs)
   softmax_states = MultiGPUType(backend, CuDNNSoftmaxState)
-  orig_dev = backend.cur_dev
+  orig_dev = backend.cur_dev.ordinal
 
   for dev=1:backend.dev_count
-      CudaRT.set_device(CudaDevice(dev - 1))
+      set_dev_id(backend, dev - 1)
 
       inputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
       outputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
@@ -19,7 +19,7 @@ function setup_etc(backend::GPUBackend, layer::SoftmaxLayer, dims::Vector{Int}, 
       end
       softmax_states.elems[dev] = CuDNNSoftmaxState(inputs_desc, outputs_desc)
   end
-  CudaRT.set_device(orig_dev)
+  set_dev_id(backend, orig_dev)
   return softmax_states
 end
 function shutdown(backend::GPUBackend, state::SoftmaxLayerState)

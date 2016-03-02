@@ -118,3 +118,23 @@ macro characterize_layer(layer, properties...)
 
   Expr(:block, defs...)
 end
+
+#############################################################
+# A macro used to run a command for all GPUs. Example
+#
+#  @forall(dst, 
+#    copy!(dst, src)
+#  )
+# )
+#############################################################
+macro forall(obj, expression)
+   quote
+      orig_dev = $(esc(obj)).cur_dev.ordinal
+      for i=1:ndev($(esc(obj)))
+         set_dev_id($(esc(obj)).cur_dev, i - 1)
+         $(esc(expression))
+      end
+      set_dev_id($(esc(obj)).cur_dev, orig_dev)
+   end
+end
+

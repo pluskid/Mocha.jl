@@ -159,11 +159,19 @@ type GPUBackend <: AbstractGPUBackend
   GPUBackend() = new(ParameterRegistry(), false) # everything will be initialized later
 end
 
-function set_dev(backend::GPUBackend, dev::Int)
-  backend.cur_dev.ordinal = dev
-  CudaRT.set_device(backend.cur_dev)
-  @inbounds CuBLAS.set_stream(backend.cublas_ctxs[dev + 1], backend.streams[dev + 1])
-  @inbounds CuDNN.set_stream(backend.cublas_ctxs[dev + 1], backend.streams[dev + 1])
+function set_dev_id(device::CudaRT.CudaDevice, id::Int)
+  device.ordinal = id
+  CudaRT.set_device(device)
+end
+
+function set_dev_id(backend::GPUBackend, id::Int)
+  set_dev_id(backend.cur_dev, id)
+end
+
+function set_dev(backend::GPUBackend, id::Int)
+  set_dev_id(backend, id)
+  @inbounds CuBLAS.set_stream(backend.cublas_ctxs[id + 1], backend.streams[id + 1])
+  @inbounds CuDNN.set_stream(backend.cublas_ctxs[id + 1], backend.streams[id + 1])
 end
 
 function get_cublas_ctx(backend::GPUBackend)
@@ -180,6 +188,13 @@ end
 
 function get_mocha(backend::GPUBackend)
   @inbounds return backend.mochas[backend.cur_dev.ordinal + 1]
+end
+
+# sync all GPU's streams
+function sync(backend::GPUBackend)
+  for i=1:backend.dev_count
+    CudaRT.sync_stream(backend.streams[i])
+  end
 end
 
 function init(backend::GPUBackend)
@@ -227,4 +242,4 @@ function MultiGPUType{T}(backend::GPUBackend, dtype::Type{T})
   return MultiGPUType(elems, backend.cur_dev)
 end
 get_elem(multi :: MultiGPUType) = @inbounds return multi.elems[multi.cur_dev.ordinal + 1]
-
+ndev(multi :: MultiGPUType) = return length(multi.elems)

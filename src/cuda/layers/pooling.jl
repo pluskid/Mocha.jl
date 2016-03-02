@@ -18,9 +18,9 @@ function setup_etc(backend::GPUBackend, layer::PoolingLayer, inputs,
   end
   
   pooling_states = MultiGPUType(backend, CuDNNPoolingState)
-  orig_dev = backend.cur_dev
+  orig_dev = backend.cur_dev.ordinal
   for dev=1:backend.dev_count
-      CudaRT.set_device(CudaDevice(dev - 1))
+      set_dev_id(backend, dev - 1)
 
       pooling_desc = CuDNN.create_pooling_descriptor(pooling_mode, layer.kernel, layer.stride, layer.pad)
       inputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
@@ -34,7 +34,7 @@ function setup_etc(backend::GPUBackend, layer::PoolingLayer, inputs,
       end
       pooling_states.elems[dev] = CuDNNPoolingState(pooling_desc, inputs_desc, outputs_desc)
   end
-  CudaRT.set_device(orig_dev)
+  set_dev_id(backend, orig_dev)
   return pooling_states
 end
 

@@ -33,12 +33,12 @@ function CuHostBlob{T, N}(backend::GPUBackend, dtype::Type{T}, dims::NTuple{N, I
 end
 CuHostBlob{T, N}(backend::GPUBackend, dev_blob::CuTensorBlob{T, N}) =
     CuHostBlob(backend, eltype(dev_blob), size(dev_blob))
-get_data(host_blob::CuHostBlob) = @inbounds return host_blob.data[host_blob.cur_dev.ordinal + 1]
+get_data(blob::CuHostBlob) = @inbounds return blob.data[blob.cur_dev.ordinal + 1]
+ndev(blob :: CuHostBlob) = length(blob.data)
 
 function copy!{T}(dst :: CuHostBlob{T}, src :: CuTensorBlob{T})
   copy!(get_data(dst), src)
 end
-
 function copy_async!{T}(backend :: GPUBackend, dst :: CuTensorBlob{T}, src :: CuHostBlob{T})
   copy_async!(backend, dst, get_data(src))
 end
@@ -47,7 +47,7 @@ function mean{T}(blob :: CuHostBlob{T})
   return mean(blob.data)
 end
 
-destroy(host_blob::CuHostBlob) = map(free_host_array, host_blob.data)
+destroy(blob::CuHostBlob) = map(free_host_array, blob.data)
 
 type SyncMem{T}
   dev_blob  :: CuTensorBlob{T}
@@ -61,8 +61,10 @@ end
 function sync!(sync_mem :: SyncMem)
   copy!(sync_mem.host_blob, sync_mem.dev_blob)
 end
-function copy_async!(backend::GPUBackend, sync_mem :: SyncMem)
-  copy_async!(backend, sync_mem.dev_blob, sync_mem.host_blob)
+function sync_all!(sync_mem :: SyncMem)
+  @forall(sync_mem.host_blob,
+    copy!(sync_mem.host_blob, sync_mem.dev_blob)
+  )
 end
 function destroy(sync_mem :: SyncMem)
   destroy(sync_mem.dev_blob)

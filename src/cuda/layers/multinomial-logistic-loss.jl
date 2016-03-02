@@ -51,8 +51,8 @@ end
 
 function sync(backend::GPUBackend, state::MultinomialLogisticLossLayerState)
   custate = state.etc
-  sync!(custate.loss)
-  erase!(custate.loss.dev_blob)
+  sync_all!(custate.loss)
+  erase_all!(custate.loss.dev_blob)
 end
 
 function calc_loss(backend::GPUBackend, state::MultinomialLogisticLossLayerState)

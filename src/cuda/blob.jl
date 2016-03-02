@@ -15,18 +15,19 @@ end
 function CuTensorBlob{T, N}(backend::GPUBackend, dtype::Type{T}, dims::NTuple{N,Int})
   len = prod(dims)
   ptrs = Array(CudaPtr, backend.dev_count)
-  orig_dev = backend.cur_dev
-  for i=1:backend.dev_count
-    CudaRT.set_device(CudaDevice(i - 1))
-    @inbounds ptrs[i] = CudaRT.malloc(dtype, len)
+  orig_dev = backend.cur_dev.ordinal
+  for dev=1:backend.dev_count
+    set_dev_id(backend, dev - 1)
+    @inbounds ptrs[dev] = CudaRT.malloc(dtype, len)
   end
-  CudaRT.set_device(orig_dev)
+  set_dev_id(backend, orig_dev)
   return CuTensorBlob{T,N}(ptrs, backend.cur_dev, dims, len, true)
 end
 get_ptr(blob::CuTensorBlob) = @inbounds return blob.ptrs[blob.cur_dev.ordinal + 1]
 
 length(b::CuTensorBlob) = b.len
 size(b::CuTensorBlob) = b.shape
+ndev(b::CuTensorBlob) = length(b.ptrs)
 
 function copy!{T}(dst :: CuTensorBlob{T}, src :: Array{T})
   @assert length(dst) == length(src)
@@ -34,7 +35,9 @@ function copy!{T}(dst :: CuTensorBlob{T}, src :: Array{T})
 end
 function copy_all!{T}(dst :: CuTensorBlob{T}, src :: Array{T})
   @assert length(dst) == length(src)
-  map(p -> CuBLAS.set_vector(src, p), dst.ptrs)
+  @forall(dst, 
+    copy!(dst, src)
+  )
 end
 function copy!{T}(dst :: Array{T}, src :: CuTensorBlob{T})
   @assert length(dst) == length(src)
@@ -56,10 +59,18 @@ end
 function fill_all!{T}(dst :: CuTensorBlob{T}, val)
   val_vec = Array(T, length(dst))
   fill!(val_vec, val)
-  copy_all!(dst, val_vec)
+  @forall(dst, 
+    copy!(dst, val_vec)
+  )
+
 end
 function erase!{T}(dst :: CuTensorBlob{T})
   CudaRT.memset!(get_ptr(dst), 0, sizeof(dst))
+end
+function erase_all!{T}(dst :: CuTensorBlob{T})
+  @forall(dst, 
+    erase!(dst)
+  )
 end
 
 function make_blob{N}(backend::GPUBackend, data_type::Type, dims::NTuple{N,Int})

@@ -164,10 +164,22 @@ function async_forward(net::Net)
   end
 end
 
-function syncup_forward(net::Net)
-  for i = 1:length(net.layers)
+function need_sync(net::Net)
+  for i = length(net.layers):-1:1
     if has_sync(net.layers[i])
-      sync(net.backend, net.states[i])
+      return true
+    end
+  end
+  return false
+end
+
+function syncup_forward(net::Net)
+  if need_sync(net)
+    sync(net.backend)
+    for i = 1:length(net.layers)
+      if has_sync(net.layers[i])
+        sync(net.backend, net.states[i])
+      end
     end
   end
 end
@@ -190,10 +202,7 @@ function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
     async_forward(net)
   end
 
-  for dev=1:net.backend.dev_count
-    set_dev(net.backend, dev - 1)
-    syncup_forward(net)
-  end
+  syncup_forward(net)
   
   obj_val = get_loss(net)
 

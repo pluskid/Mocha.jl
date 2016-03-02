@@ -18,9 +18,9 @@ end
 function setup_etc(backend::GPUBackend, layer::ConvolutionLayer, dtype, width, height, channels,
     batch_size, width_out, height_out, inputs)
   conv_states = MultiGPUType(backend, CuDNNConvState)
-  orig_dev = backend.cur_dev
+  orig_dev = backend.cur_dev.ordinal
   for dev=1:backend.dev_count
-      CudaRT.set_device(CudaDevice(dev - 1))
+      set_dev_id(backend, dev - 1)
   
       filter_desc = CuDNN.create_filter_descriptor(dtype, (layer.kernel[1], layer.kernel[2],
           div(channels,layer.n_group), div(layer.n_filter,layer.n_group)))
@@ -58,7 +58,7 @@ function setup_etc(backend::GPUBackend, layer::ConvolutionLayer, dtype, width, h
           fwd_algorithm, workspace, workspace_size,
           bottom_offset, top_offset, weight_offset, bias_offset)
   end
-  CudaRT.set_device(orig_dev)
+  set_dev_id(backend, orig_dev)
   return conv_states
 end
 function shutdown_etc(backend::GPUBackend, state::ConvolutionLayerState)

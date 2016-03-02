@@ -118,7 +118,7 @@ end
 # CUDART devices
 ############################################################
 type CudaDevice
-  ordinal :: Cint
+  ordinal :: Int
 end
 
 function set_device(dev::CudaDevice)
