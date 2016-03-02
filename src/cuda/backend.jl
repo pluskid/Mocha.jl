@@ -1,4 +1,4 @@
-export GPUBackend
+export GPUBackend, MultiGPUType
 export get_cublas_ctx, get_cudnn_ctx, get_stream, get_mocha
 
 macro defkernels(kernels...)
@@ -215,3 +215,14 @@ function shutdown(backend::GPUBackend)
   backend.initialized = false
   @info("CuDNN Backend shutdown finished!")
 end
+
+type MultiGPUType{T}
+  elems   :: Array{T}
+  cur_dev :: CudaRT.CudaDevice
+end
+function MultiGPUType{T}(backend::GPUBackend, dtype::Type{T})
+  elems = Array(T, backend.dev_count)
+  return MultiGPUType(elems, backend.cur_dev)
+end
+get_elem(multi :: MultiGPUType) = @inbounds return multi.elems[multi.cur_dev.ordinal + 1]
+
