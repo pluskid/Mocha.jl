@@ -87,12 +87,12 @@ end
 
 # pairwise mean: devx = (devx + devy) * 0.5
 function mean_async!{T}(backend::GPUBackend, blob::CuTensorBlob{T}, tmp::CuTensorBlob{T}, devx::Int, devy::Int)
-  @inbounds stream = backend.streams[devx + 1]
-  @inbounds CudaRT.copy_async!(tmp.ptrs[devx + 1], blob.ptrs[devy + 1], sizeof(blob), stream)
-  @inbounds CuVec.mean!(backend, eltype(blob), blob.ptrs[devx + 1].p, tmp.ptrs[devx + 1].p, length(blob), stream)
+  @inbounds CudaRT.copy_async!(tmp.ptrs[devx + 1], blob.ptrs[devy + 1], sizeof(blob), get_stream(backend))
+  @inbounds CuVec.mean!(backend, eltype(blob), blob.ptrs[devx + 1].p, tmp.ptrs[devx + 1].p, length(blob))
 end
 function mean!{T}(backend::GPUBackend, blob::CuTensorBlob{T}, tmp::CuTensorBlob{T})
   if backend.dev_count == 2
+    set_dev(backend, 0)
     @inbounds mean_async!(backend, blob, tmp, 0, 1)
     @inbounds CudaRT.sync_stream(backend.streams[1])
     @inbounds CudaRT.copy!(blob.ptrs[2], blob.ptrs[1], sizeof(blob))
