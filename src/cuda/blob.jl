@@ -53,6 +53,11 @@ function fill!{T}(dst :: CuTensorBlob{T}, val)
   fill!(val_vec, val)
   copy!(dst, val_vec)
 end
+function fill_all!{T}(dst :: CuTensorBlob{T}, val)
+  val_vec = Array(T, length(dst))
+  fill!(val_vec, val)
+  copy_all!(dst, val_vec)
+end
 function erase!{T}(dst :: CuTensorBlob{T})
   CudaRT.memset!(get_ptr(dst), 0, sizeof(dst))
 end

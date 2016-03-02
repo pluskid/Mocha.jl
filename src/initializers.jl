@@ -17,7 +17,7 @@ immutable ConstantInitializer <: Initializer
 end
 
 function init(initializer::ConstantInitializer, blob::Blob)
-  fill!(blob, initializer.value)
+  fill_all!(blob, initializer.value)
 end
 
 ################################################################################
