@@ -201,8 +201,7 @@ function init(backend::GPUBackend)
   @assert backend.initialized == false
 
   @info("Initializing CuDNN backend...")
-  @assert Config.cuda_dev_id < Config.cuda_dev_count
-  backend.cur_dev = CudaRT.CudaDevice(Config.cuda_dev_id)
+  backend.cur_dev = CudaRT.CudaDevice(0)
   backend.dev_count = Config.cuda_dev_count
   backend.streams = Array(CudaRT.CudaStream, backend.dev_count)
   backend.cublas_ctxs = Array(CuBLAS.Handle, backend.dev_count)
@@ -215,7 +214,7 @@ function init(backend::GPUBackend)
     backend.cudnn_ctxs[i] = CuDNN.create()
     backend.mochas[i] = MochaKernels()
   end
-  set_dev(backend, Config.cuda_dev_id)
+  set_dev(backend, backend.dev_count - 1)
   backend.initialized = true
   info("CuDNN backend initialized!")
 end
