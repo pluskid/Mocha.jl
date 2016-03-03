@@ -202,37 +202,41 @@ function finalize_solve(solver::Solver, net::Net, state::SolverState)
     shutdown(state)
 end
 
-function onestep_flow(solver::Solver, net::Net, state::SolverState)
-    layer_states = updatable_layer_states(net)
-
-    backward(net, solver.params[:regu_coef])
-    update(solver, net, state)
-
-    # apply weight constraints
-    for layer_state in layer_states
-      for param in layer_state.parameters
-        cons_every = param.constraint.every_n_iter
-        if cons_every > 0 && state.iter % cons_every == 0
-          constrain!(net.backend, param.constraint, param.blob)
-        end
-      end
-    end
-
-    async_forward(net)
-end
-
 function onestep_solve(solver::Solver, net::Net, state::SolverState)
     state.iter += 1
 
+    layer_states = updatable_layer_states(net)
+
     for dev=1:net.backend.dev_count
         set_dev(net.backend, dev - 1)
-        onestep_flow(solver, net, state)
+        backward(net, solver.params[:regu_coef])
     end
-    
+
+    if (net.backend.dev_count > 1)
+        sync(net.backend)
+        mean!(net.backend, net.param, net.param_mean)
+        mean!(net.backend, net.grad, net.grad_mean)
+    end
+
+    for dev=1:net.backend.dev_count
+        set_dev(net.backend, dev - 1) 
+
+        update(solver, net, state)
+
+        # apply weight constraints
+        for layer_state in layer_states
+          for param in layer_state.parameters
+            cons_every = param.constraint.every_n_iter
+            if cons_every > 0 && state.iter % cons_every == 0
+              constrain!(net.backend, param.constraint, param.blob)
+            end
+          end
+        end
+
+	async_forward(net)
+    end
+
     syncup_forward(net)
-    
-    #mean!(net.backend, net.param, net.param_mean)
-    #mean!(net.backend, net.grad, net.grad_mean)
 
     state.obj_val = get_loss(net)
 
