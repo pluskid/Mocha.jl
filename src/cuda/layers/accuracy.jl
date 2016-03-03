@@ -53,10 +53,9 @@ function sync(backend::GPUBackend, state::AccuracyLayerState)
   custate = state.etc
   # Ideally, should use custate.accuracy.dev_blob above, and sync with custate.accuracy here.
   # sync_all!(custate.accuracy)
-  CudaRT.sync_stream(get_stream(backend))
 
   # accumulate accuracy
-  # always grab the first device for accuracy
-  state.accuracy = (state.accuracy * state.n_accum + custate.accuracy.host_blob.data[1][1]) / (custate.N + state.n_accum)
-  state.n_accum += custate.N
+  @assert length(custate.accuracy.host_blob.data) == backend.dev_count
+  state.accuracy = (state.accuracy * state.n_accum + sum(custate.accuracy.host_blob.data)[1]) / (custate.N * backend.dev_count + state.n_accum)
+  state.n_accum += custate.N * backend.dev_count
 end
