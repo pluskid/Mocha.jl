@@ -103,9 +103,29 @@ function mean_async!{T}(backend::GPUBackend, blob::CuTensorBlob{T}, tmp::CuTenso
 end
 function mean!{T}(backend::GPUBackend, blob::CuTensorBlob{T}, tmp::CuTensorBlob{T})
   if backend.dev_count == 2
+    # 1 -> 0
     set_dev(backend, 0)
     @inbounds mean_async!(backend, blob, tmp, 0, 1)
     @inbounds CudaRT.sync_stream(backend.streams[1])
+    # 0 -> 1
     @inbounds CudaRT.copy!(blob.ptrs[2], blob.ptrs[1], sizeof(blob))
+  elseif backend.dev_count == 4
+    # 3 -> 2, 1 -> 0
+    set_dev(backend, 2)
+    @inbounds mean_async!(backend, blob, tmp, 2, 3)
+    set_dev(backend, 0)
+    @inbounds mean_async!(backend, blob, tmp, 0, 1)
+    @inbounds CudaRT.sync_stream(backend.streams[1])
+    @inbounds CudaRT.sync_stream(backend.streams[3])
+    # 2 -> 0
+    @inbounds mean_async!(backend, blob, tmp, 0, 2)
+    @inbounds CudaRT.sync_stream(backend.streams[1])
+    # 0 -> 2
+    @inbounds CudaRT.copy!(blob.ptrs[3], blob.ptrs[1], sizeof(blob))
+    # 0 -> 1, 2 -> 3
+    @inbounds CudaRT.copy_async!(blob.ptrs[2], blob.ptrs[1], sizeof(blob), backend.streams[2])
+    @inbounds CudaRT.copy_async!(blob.ptrs[4], blob.ptrs[3], sizeof(blob), backend.streams[4])
+    @inbounds CudaRT.sync_stream(backend.streams[2])
+    @inbounds CudaRT.sync_stream(backend.streams[4])
   end
 end
