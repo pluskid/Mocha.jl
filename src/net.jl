@@ -325,6 +325,8 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
     end
   else
     param_blob = NullBlob()
+    grad_blob = NullBlob()
+    mean = NullBlob()
   end
 
   @info("Network constructed!")
