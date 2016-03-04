@@ -20,9 +20,7 @@ type Net{T <: Backend}
   
   param          :: Blob
   grad           :: Blob
-  
-  param_mean     :: Blob
-  grad_mean      :: Blob
+  mean           :: Blob
 end
 
 import Base.show
@@ -116,8 +114,7 @@ function destroy(net::Net)
   @debug("Destroying network $(net.name)")
   destroy(net.param)
   destroy(net.grad)
-  destroy(net.param_mean)
-  destroy(net.grad_mean)
+  destroy(net.mean)
   for state in net.states
     shutdown(net.backend, state)
   end
@@ -314,8 +311,7 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
     @assert param_type != Any
     param_blob = make_blob(backend, param_type, total_param_length)
     grad_blob = make_blob(backend, param_type, total_param_length)
-    param_mean = make_blob(backend, param_type, total_param_length)
-    grad_mean = make_blob(backend, param_type, total_param_length)
+    mean = make_blob(backend, param_type, total_param_length)
     offset = 0
     for i = 1:n
         layer = layers[i]
@@ -333,7 +329,7 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
 
   @info("Network constructed!")
   return Net(name, backend, layers, states, blobs_forward, blobs_backward, data_layers, 
-                output_blobs, diff_blobs, param_blob, grad_blob, param_mean, grad_mean)
+                output_blobs, diff_blobs, param_blob, grad_blob, mean)
 end
 
 function topological_sort(layers :: Vector{Layer})

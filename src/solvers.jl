@@ -214,7 +214,7 @@ function onestep_solve(solver::Solver, net::Net, state::SolverState)
 
     if (net.backend.dev_count > 1)
         sync(net.backend)
-        mean!(net.backend, net.grad, net.grad_mean)
+        mean!(net.backend, net.grad, net.mean)
     end
 
     for dev=1:net.backend.dev_count
@@ -234,7 +234,7 @@ function onestep_solve(solver::Solver, net::Net, state::SolverState)
     end
     if (net.backend.dev_count > 1)
         sync(net.backend)
-        mean!(net.backend, net.param, net.param_mean)
+        mean!(net.backend, net.param, net.mean)
     end
 
     for dev=1:net.backend.dev_count
