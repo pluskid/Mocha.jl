@@ -171,7 +171,7 @@ end
 function set_dev(backend::GPUBackend, id::Int)
   set_dev_id(backend, id)
   @inbounds CuBLAS.set_stream(backend.cublas_ctxs[id + 1], backend.streams[id + 1])
-  @inbounds CuDNN.set_stream(backend.cublas_ctxs[id + 1], backend.streams[id + 1])
+  @inbounds CuDNN.set_stream(backend.cudnn_ctxs[id + 1], backend.streams[id + 1])
 end
 
 function get_cublas_ctx(backend::GPUBackend)
