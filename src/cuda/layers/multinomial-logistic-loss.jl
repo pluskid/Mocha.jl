@@ -5,8 +5,7 @@ type CuMultinomialLogisticLossEtcState{T}
 end
 
 function setup_etc(backend::GPUBackend, layer::MultinomialLogisticLossLayer, inputs::Vector{Blob})
-  data_type = eltype(inputs[1])
-  dev_blob = make_zero_blob(backend, data_type, 1, 1, 1, 1)
+  dev_blob = make_zero_blob(backend, Float32, 1, 1, 1, 1)
   loss = SyncMem(backend, dev_blob)
   return CuMultinomialLogisticLossEtcState(loss, 0, 0)
 end

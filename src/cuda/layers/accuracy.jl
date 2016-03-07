@@ -1,4 +1,4 @@
-type CuAccuracycustate{T}
+type CuAccuracyEtcState{T}
   tmp_blob  :: CuTensorBlob{T}
   accuracy  :: SyncMem{T}
   N         :: Int
@@ -10,7 +10,7 @@ function setup_etc(backend::GPUBackend, layer::AccuracyLayer, op_dim::Int, input
   tmp_blob = make_blob(backend, data_type, dims...)
   accuracy_blob = make_blob(backend, data_type, (1,))
   accuracy = SyncMem(backend, accuracy_blob)
-  return CuAccuracycustate{data_type}(tmp_blob, accuracy, 0)
+  return CuAccuracyEtcState{data_type}(tmp_blob, accuracy, 0)
 end
 function shutdown(backend::GPUBackend, state::AccuracyLayerState)
   custate = state.etc
