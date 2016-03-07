@@ -7,6 +7,7 @@
 @characterize_layer(BinaryAccuracyLayer,
   is_sink    => true,
   has_stats  => true,
+  has_sync   => true,
 )
 
 type BinaryAccuracyLayerState <: LayerState
