@@ -76,6 +76,11 @@ end
 function make_blob{N}(backend::GPUBackend, data_type::Type, dims::NTuple{N,Int})
   return CuTensorBlob(backend, data_type, dims)
 end
+function make_zero_blob{N}(backend::GPUBackend, data_type::Type, dims::NTuple{N,Int})
+  blob = make_blob(backend, data_type, dims)
+  erase_all!(blob)
+  return blob
+end
 function replace_ptr(backend::GPUBackend, dst::CuTensorBlob, src::CuTensorBlob, offset::Int)
   @assert(length(dst.ptrs) == length(src.ptrs))
   @assert(length(dst.ptrs) == backend.dev_count)
