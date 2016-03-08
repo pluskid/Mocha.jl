@@ -76,6 +76,11 @@ end
 function make_blob{N}(backend::GPUBackend, data_type::Type, dims::NTuple{N,Int})
   return CuTensorBlob(backend, data_type, dims)
 end
+function make_blob(backend::GPUBackend, data::Array)
+  blob = make_blob(backend, eltype(data), size(data))
+  copy_all!(blob, data)
+  return blob
+end
 function make_zero_blob{N}(backend::GPUBackend, data_type::Type, dims::NTuple{N,Int})
   blob = make_blob(backend, data_type, dims)
   erase_all!(blob)
