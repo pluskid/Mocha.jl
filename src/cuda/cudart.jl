@@ -178,9 +178,25 @@ const cudaMemcpyHostToDevice    = 0x1
 const cudaMemcpyDeviceToHost    = 0x2
 const cudaMemcpyDeviceToDevice  = 0x3
 const cudaMemcpyDefault         = 0x4
+function copy!(dst::Ptr{Void}, src::CudaPtr, size::Int)
+  @cudacall(:cudaMemcpy, (Ptr{Void}, CUDAdeviceptr, Csize_t, Cint),
+                dst, src.p, size, cudaMemcpyDeviceToHost)
+end
+function copy!(dst::CudaPtr, src::Ptr{Void}, size::Int)
+  @cudacall(:cudaMemcpy, (CUDAdeviceptr, Ptr{Void}, Csize_t, Cint),
+                dst.p, src, size, cudaMemcpyHostToDevice)
+end
 function copy!(dst::CudaPtr, src::CudaPtr, size::Int)
   @cudacall(:cudaMemcpy, (CUDAdeviceptr, CUDAdeviceptr, Csize_t, Cint),
                 dst.p, src.p, size, cudaMemcpyDeviceToDevice)
+end
+function copy_async!(dst::Ptr{Void}, src::CudaPtr, size::Int, stream::CudaStream)
+  @cudacall(:cudaMemcpyAsync, (Ptr{Void}, CUDAdeviceptr, Csize_t, Cint, Ptr{Void}),
+                dst, src.p, size, cudaMemcpyDeviceToHost, stream)
+end
+function copy_async!(dst::CudaPtr, src::Ptr{Void}, size::Int, stream::CudaStream)
+  @cudacall(:cudaMemcpyAsync, (CUDAdeviceptr, Ptr{Void}, Csize_t, Cint, Ptr{Void}),
+                dst.p, src, size, cudaMemcpyHostToDevice, stream)
 end
 function copy_async!(dst::CudaPtr, src::CudaPtr, size::Int, stream::CudaStream)
   @cudacall(:cudaMemcpyAsync, (CUDAdeviceptr, CUDAdeviceptr, Csize_t, Cint, Ptr{Void}),

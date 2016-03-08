@@ -31,7 +31,7 @@ ndev(b::CuTensorBlob) = length(b.ptrs)
 
 function copy!{T}(dst :: CuTensorBlob{T}, src :: Array{T})
   @assert length(dst) == length(src)
-  CuBLAS.set_vector(src, get_ptr(dst))
+  CudaRT.copy!(get_ptr(dst), convert(Ptr{Void}, pointer(src)), sizeof(dst))
 end
 function copy_all!{T}(dst :: CuTensorBlob{T}, src :: Array{T})
   @assert length(dst) == length(src)
@@ -41,7 +41,7 @@ function copy_all!{T}(dst :: CuTensorBlob{T}, src :: Array{T})
 end
 function copy!{T}(dst :: Array{T}, src :: CuTensorBlob{T})
   @assert length(dst) == length(src)
-  CuBLAS.get_vector(get_ptr(src), dst)
+  CudaRT.copy!(convert(Ptr{Void}, pointer(dst)), get_ptr(src), sizeof(src))
 end
 function copy!{T}(dst :: CuTensorBlob{T}, src :: CuTensorBlob{T})
   @assert length(dst) == length(src)
@@ -49,7 +49,7 @@ function copy!{T}(dst :: CuTensorBlob{T}, src :: CuTensorBlob{T})
 end
 function copy_async!{T}(backend::GPUBackend, dst :: CuTensorBlob{T}, src :: Array{T})
   @assert length(dst) == length(src)
-  CuBLAS.set_vector(src, get_ptr(dst), stream=get_stream(backend))
+  CudaRT.copy_async!(get_ptr(dst), convert(Ptr{Void}, pointer(src)), sizeof(dst), get_stream(backend))
 end
 function fill!{T}(dst :: CuTensorBlob{T}, val)
   val_vec = Array(T, length(dst))
