@@ -214,7 +214,6 @@ function init(backend::GPUBackend)
     backend.cudnn_ctxs[i] = CuDNN.create()
     backend.mochas[i] = MochaKernels()
   end
-  set_dev(backend, backend.dev_count - 1)
   backend.initialized = true
   info("CuDNN backend initialized!")
 end

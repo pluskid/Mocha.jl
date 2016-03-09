@@ -55,6 +55,7 @@ function sync(backend::GPUBackend, state::AccuracyLayerState)
   # sync_all!(custate.accuracy)
   # NOTE: the following dot is moved to sync() because it is synchrounous and last call in forward.
   for dev=1:backend.dev_count
+    set_dev(backend, dev - 1)
     CuBLAS.dot(get_cublas_ctx(backend), get_data(custate.accuracy.host_blob), custate.N, get_ptr(custate.tmp_blob), 1, get_ptr(custate.tmp_blob), 1)
   end
 
