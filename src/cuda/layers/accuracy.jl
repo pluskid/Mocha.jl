@@ -43,8 +43,8 @@ function forward(backend::GPUBackend, state::AccuracyLayerState, inputs::Vector{
   N = num * spatial_dim
 
   # Ideally, should use custate.accuracy.dev_blob here to get the result. However got ReadOnlyMemoryError from julia if doing this.
-  #CuBLAS.dot(get_cublas_ctx(backend), data_type, get_ptr(custate.accuracy.dev_blob), N, get_ptr(custate.tmp_blob), 1, get_ptr(custate.tmp_blob), 1)
-  CuBLAS.dot(get_cublas_ctx(backend), get_data(custate.accuracy.host_blob), N, get_ptr(custate.tmp_blob), 1, get_ptr(custate.tmp_blob), 1)
+  # CuBLAS.dot(get_cublas_ctx(backend), data_type, get_ptr(custate.accuracy.dev_blob), N, get_ptr(custate.tmp_blob), 1, get_ptr(custate.tmp_blob), 1)
+  # NOTE: since the last dot has to be synchronous, it is moved to the sync() below.
 
   custate.N = N
 end
@@ -53,6 +53,10 @@ function sync(backend::GPUBackend, state::AccuracyLayerState)
   custate = state.etc
   # Ideally, should use custate.accuracy.dev_blob above, and sync with custate.accuracy here.
   # sync_all!(custate.accuracy)
+  # NOTE: the following dot is moved to sync() because it is synchrounous and last call in forward.
+  for dev=1:backend.dev_count
+    CuBLAS.dot(get_cublas_ctx(backend), get_data(custate.accuracy.host_blob), custate.N, get_ptr(custate.tmp_blob), 1, get_ptr(custate.tmp_blob), 1)
+  end
 
   # accumulate accuracy
   @assert length(custate.accuracy.host_blob.data) == backend.dev_count
