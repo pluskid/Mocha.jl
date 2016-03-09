@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 # a simplified CUDA module, adapted from github.com/JuliaGPU/CUDA.jl
 export CUDA
 module CUDA

@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 export SyncMem
 export alloc_host_array, free_host_array, destory
 

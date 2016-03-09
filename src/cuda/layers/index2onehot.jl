@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 function forward(backend::GPUBackend, state::Index2OnehotLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input = inputs[i]

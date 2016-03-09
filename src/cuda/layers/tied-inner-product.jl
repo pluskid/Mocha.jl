@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 function forward(backend::GPUBackend, state::TiedInnerProductLayerState, inputs::Vector{Blob})
   recon_dim  = size(state.W, 1)
   hidden_dim = size(state.W, 2)

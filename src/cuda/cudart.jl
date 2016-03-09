@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 # a simplified CudaRT module, adapted from github.com/JuliaGPU/CUDArt.jl
 export CudaRT
 module CudaRT

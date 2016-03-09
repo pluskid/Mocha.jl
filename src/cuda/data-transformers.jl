@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 function forward(backend::GPUBackend, state::SubMeanState, input::Blob)
   fea_dim = get_fea_size(input)
   num     = get_num(input)

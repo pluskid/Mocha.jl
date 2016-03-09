@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 function setup_etc(backend::GPUBackend, state::SoftlabelSoftmaxLossLayerState, inputs::Vector{Blob})
   state.etc = make_blob(backend, eltype(inputs[1]), size(inputs[1]))
 end

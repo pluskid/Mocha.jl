@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 function update_parameters!(net::Net{GPUBackend}, method::Adam,
                             alpha::Float64, epsilon::Float64, beta1::Float64, beta2::Float64,
                             m, v, gradient, param_blob, t, data_type)

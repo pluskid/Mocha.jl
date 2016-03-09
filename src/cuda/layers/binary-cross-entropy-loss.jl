@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 function forward(backend::GPUBackend, state::BinaryCrossEntropyLossLayerState, inputs::Vector{Blob})
   pred    = inputs[1]
   label   = inputs[2]

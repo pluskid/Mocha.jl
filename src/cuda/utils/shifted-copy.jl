@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 export copy_to_shifted!, copy_from_shifted!
 
 function copy_to_shifted!{T}(backend::GPUBackend, dst::CuTensorBlob{T},

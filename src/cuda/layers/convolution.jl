@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 type CuDNNConvState
   inputs_desc   :: Vector{CuDNN.Tensor4dDescriptor}
   outputs_desc  :: Vector{CuDNN.Tensor4dDescriptor}

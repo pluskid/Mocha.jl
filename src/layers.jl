@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 export LayerState
 
 export HDF5DataLayer, MemoryDataLayer, AsyncHDF5DataLayer

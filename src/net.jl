@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 export Net
 export init, destroy, forward, forward_epoch, async_forward, syncup_forward, get_loss, backward, forward_backward, get_epoch, check_bp_topology
 export get_layer, get_layer_state, freeze!, unfreeze!, freeze_all!, unfreeze_all!

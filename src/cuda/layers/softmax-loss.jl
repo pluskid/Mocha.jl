@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 function forward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vector{Blob})
   forward(backend, state.softmax, Blob[inputs[1]])
   forward(backend, state.logistic, Blob[state.softmax.blobs[1], inputs[2]])

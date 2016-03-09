@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 function setup_etc(backend::GPUBackend, layer::DropoutLayer, inputs::Vector{Blob})
   cuda_rand_states = CudaPtr
   kernel = get_mocha(backend).dropout_init

@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 type CuDNNPoolingState
   pooling_desc :: CuDNN.PoolingDescriptor
   inputs_desc  :: Vector{CuDNN.Tensor4dDescriptor}

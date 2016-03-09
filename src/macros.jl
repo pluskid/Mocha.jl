@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 #############################################################
 # A convenient macro to define a Composite Type, with
 # default values for fields and a constructor that accept

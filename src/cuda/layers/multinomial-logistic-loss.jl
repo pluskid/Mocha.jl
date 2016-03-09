@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 type CuMultinomialLogisticLossEtcState{T}
   loss          :: SyncMem{T}
   spatial_dim   :: Int

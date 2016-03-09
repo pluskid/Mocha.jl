@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 export SolverParameters, SolverState, Solver
 export setup_coffee_lounge, add_coffee_break, solve
 export load_snapshot

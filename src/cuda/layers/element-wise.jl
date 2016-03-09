@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 for (functor, impl) in ((ElementWiseFunctors.Add, :(CuVec.add!)),
                         (ElementWiseFunctors.Subtract, :(CuVec.sub!)),
                         (ElementWiseFunctors.Multiply, :(CuVec.mul!)),

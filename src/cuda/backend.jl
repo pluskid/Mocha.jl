@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 export GPUBackend, MultiGPUType
 export get_cublas_ctx, get_cudnn_ctx, get_stream, get_mocha
 
