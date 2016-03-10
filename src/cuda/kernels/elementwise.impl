@@ -1,8 +1,8 @@
-#=
-# Code change history:
-#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
-#
-=#
+/*
+ * Code change history:
+ *     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+ *
+ */
 #define ELEMWISE_BOUNDS_AND_INDEX \
   int idx = threadIdx.x + blockIdx.x * blockDim.x; \
   if (idx >= len) \
