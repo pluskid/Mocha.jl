@@ -74,15 +74,25 @@ function sinkhorn(backend::GPUBackend, state::WassersteinLossLayerState, inputs:
   # tmps[2] = u .* tmps[2]
   CuVec.mul!(backend, state.tmps[2], u)
 
-  # tmps[3] == ones/pred_num
-  # loss = sum(tmps[2]) / pred_num
-  state.loss = CuBLAS.dot(get_cublas_ctx(backend), data_type, length(state.tmps[2]),
-      get_ptr(state.tmps[2]), 1, get_ptr(state.tmps[3]), 1)
-
   # compute gradient
   copy!(state.alpha, u)
   CuVec.log!(backend, state.alpha)
   CuBLAS.scal(get_cublas_ctx(backend), length(state.alpha), convert(data_type, 1.0/state.layer.lambda/pred_num),
       get_ptr(state.alpha), 1)
+end
+
+function calc_loss(backend::GPUBackend, state::WassersteinLossLayerState)
+  # Ideally, should call asynchorous CuBLAS.dot in forward() and read the results from GPU here. 
+  # However, for some reason, asynchorous CuBLAS.dot does not work properly, see accuracy.jl.
+  data_type = eltype(state.tmps[2]) 
+  state.loss = 0
+  for dev=1:backend.dev_count
+    set_dev(backend, dev - 1)
+    # tmps[3] == ones/pred_num
+    # loss = sum(tmps[2]) / pred_num
+    state.loss += CuBLAS.dot(get_cublas_ctx(backend), data_type, length(state.tmps[2]),
+        get_ptr(state.tmps[2]), 1, get_ptr(state.tmps[3]), 1)
+  end
+  state.loss /= backend.dev_count
 end
 
