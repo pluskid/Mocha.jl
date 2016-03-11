@@ -206,6 +206,9 @@ function init(backend::GPUBackend)
   @assert backend.initialized == false
 
   @info("Initializing CuDNN backend...")
+  if ! (Config.cuda_dev_count in (1, 2, 4))
+    error("Only support 1, 2 and 4 GPUs.")
+  end
   backend.cur_dev = CudaRT.CudaDevice(0)
   backend.dev_count = Config.cuda_dev_count
   backend.streams = Array(CudaRT.CudaStream, backend.dev_count)
@@ -246,3 +249,11 @@ function MultiGPUType{T}(backend::GPUBackend, dtype::Type{T})
 end
 get_elem(multi :: MultiGPUType) = @inbounds return multi.elems[multi.cur_dev.ordinal + 1]
 ndev(multi :: MultiGPUType) = return length(multi.elems)
+
+function check_support(backend::GPUBackend, layer::Layer)
+  if (backend.dev_count > 1)
+    if typeof(layer) in (BinaryCrossEntropyLossLayer, ChannelPoolingLayer, DropoutLayer, GaussianKLLossLayer, HingeLossLayer, RandomNormalLayer, SquareLossLayer)
+        error("GPU backend does not support multi-GPU " * string(typeof(layer)) * ".")
+    end
+  end
+end

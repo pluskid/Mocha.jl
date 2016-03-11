@@ -118,6 +118,7 @@ function mean_async!{T}(backend::GPUBackend, blob::CuTensorBlob{T}, tmp::CuTenso
   @inbounds CuVec.mean!(backend, eltype(blob), blob.ptrs[devx + 1].p, tmp.ptrs[devx + 1].p, length(blob))
 end
 function mean!{T}(backend::GPUBackend, blob::CuTensorBlob{T}, tmp::CuTensorBlob{T})
+#TODO: Fix this to add any number of GPUs support.
   if backend.dev_count == 2
     # 1 -> 0
     @inbounds mean_async!(backend, blob, tmp, 0, 1)
