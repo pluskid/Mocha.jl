@@ -246,6 +246,8 @@ end
 
 Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
   @info("Constructing net $name on $backend...")
+  map(l -> check_support(backend, l), layers)
+
   @info("Topological sorting $(length(layers)) layers...")
   layers = topological_sort(layers)
   data_layers = find(l -> is_source(l), layers)
