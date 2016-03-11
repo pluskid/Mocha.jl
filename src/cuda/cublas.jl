@@ -1,7 +1,13 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 export CuBLAS
 
 module CuBLAS
 using ..CUDA
+using ..CudaRT
 
 # cublasStatus_t
 const CUBLAS_STATUS_SUCCESS         = 0
@@ -55,7 +61,7 @@ macro cublascall(fv, argtypes, args...)
 end
 
 typealias Handle Ptr{Void}
-typealias StreamHandle Ptr{Void}
+typealias StreamHandle CudaStream
 
 function create()
   handle = Handle[0]
@@ -78,35 +84,39 @@ end
 ############################################################
 # Copy a vector from host to device
 ############################################################
-function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::Ptr{Void}, incy::Int)
-  @cublascall(:cublasSetVector, (Cint, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
-      n, elem_size, src, incx, dest, incy)
+function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::Ptr{Void}, incy::Int;
+                        stream::CudaRT.CudaStream=CudaRT.cuda_null_stream())
+  @cublascall(:cublasSetVectorAsync, (Cint, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
+      n, elem_size, src, incx, dest, incy, stream)
 end
-function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::CuPtr, incy::Int)
-  set_vector(n, elem_size, src, incx, Compat.unsafe_convert(Ptr{Void}, dest.p), incy)
+function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::CudaPtr, incy::Int;
+                        stream::CudaRT.CudaStream=CudaRT.cuda_null_stream())
+  set_vector(n, elem_size, src, incx, Compat.unsafe_convert(Ptr{Void}, dest.p), incy, stream=stream)
 end
-function set_vector{T}(src::Array{T}, incx::Int, dest::CuPtr, incy::Int)
+function set_vector{T}(src::Array{T}, incx::Int, dest::CudaPtr, incy::Int;
+                        stream::CudaRT.CudaStream=CudaRT.cuda_null_stream())
   elem_size = sizeof(T)
   n = length(src)
   src_buf = convert(Ptr{Void}, pointer(src))
-  set_vector(n, elem_size, src_buf, incx, dest, incy)
+  set_vector(n, elem_size, src_buf, incx, dest, incy, stream=stream)
 end
-set_vector{T}(src::Array{T}, dest::CuPtr) = set_vector(src, 1, dest, 1)
+set_vector{T}(src::Array{T}, dest::CudaPtr; 
+    stream::CudaRT.CudaStream=CudaRT.cuda_null_stream()) = set_vector(src, 1, dest, 1, stream=stream)
 
 ############################################################
 # Copy a vector from device to host
 ############################################################
-function get_vector(n::Int, elem_size::Int, src::CuPtr, incx::Int, dest::Ptr{Void}, incy::Int)
+function get_vector(n::Int, elem_size::Int, src::CudaPtr, incx::Int, dest::Ptr{Void}, incy::Int)
   @cublascall(:cublasGetVector, (Cint, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
       n, elem_size, Compat.unsafe_convert(Ptr{Void}, src.p), incx, dest, incy)
 end
-function get_vector{T}(src::CuPtr, incx::Int, dest::Array{T}, incy::Int)
+function get_vector{T}(src::CudaPtr, incx::Int, dest::Array{T}, incy::Int)
   elem_size = sizeof(T)
   n = length(dest)
   dest_buf = convert(Ptr{Void}, pointer(dest))
   get_vector(n, elem_size, src, incx, dest_buf, incy)
 end
-get_vector{T}(src::CuPtr, dest::Array{T}) = get_vector(src, 1, dest, 1)
+get_vector{T}(src::CudaPtr, dest::Array{T}) = get_vector(src, 1, dest, 1)
 
 
 ############################################################
@@ -121,7 +131,7 @@ for (fname, elty) in ((:cublasSscal_v2, :Float32),
       @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint),
                   handle, n, alpha_box, x, incx)
     end
-    function scal(handle::Handle, n::Int, alpha::$elty, x::CuPtr, incx::Int)
+    function scal(handle::Handle, n::Int, alpha::$elty, x::CudaPtr, incx::Int)
       scal(handle, n, alpha, x.p, incx)
     end
   end
@@ -140,7 +150,7 @@ for (fname, elty) in ((:cublasSaxpy_v2, :Float32),
       @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint, Ptr{Void}, Cint),
                   handle, n, alpha_box, x, incx, y, incy)
     end
-    function axpy(handle::Handle, n::Int, alpha::$elty, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+    function axpy(handle::Handle, n::Int, alpha::$elty, x::CudaPtr, incx::Int, y::CudaPtr, incy::Int)
       axpy(handle, n, alpha, x.p, incx, y.p, incy)
     end
   end
@@ -152,11 +162,34 @@ end
 for (fname, elty) in ((:cublasSdot_v2, :Float32),
                       (:cublasDdot_v2, :Float64))
   @eval begin
-    function dot(handle::Handle, ::Type{$elty}, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
+    function dot(handle::Handle, ::Type{$elty}, n::Int, x::CudaPtr, incx::Int, y::CudaPtr, incy::Int)
       result = $elty[0]
       @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
                   handle, n, x.p, incx, y.p, incy, result)
       return result[1]
+    end
+  end
+end
+
+for (fname, elty) in ((:cublasSdot_v2, Float32),
+                      (:cublasDdot_v2, Float64))
+  @eval begin
+    function dot(handle::Handle, result::Array{$elty,1}, n::Int, x::CudaPtr, incx::Int, 
+                            y::CudaPtr, incy::Int)
+      @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
+                  handle, n, x.p, incx, y.p, incy, result)
+    end
+  end
+end
+
+# For some reason, this call causes ReadOnlyMemoryError
+for (fname, elty) in ((:cublasSdot_v2, :Float32),
+                      (:cublasDdot_v2, :Float64))
+  @eval begin
+    function dot(handle::Handle, ::Type{$elty}, result::CudaPtr, n::Int, x::CudaPtr, incx::Int, 
+                            y::CudaPtr, incy::Int)
+      @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
+                  handle, n, x.p, incx, y.p, incy, result.p)
     end
   end
 end
@@ -190,7 +223,7 @@ const OP_C=2
 # C = α A * B + β C
 ############################################################
 function gemm{T}(handle::Handle, trans_a::Int, trans_b::Int, m::Int, n::Int, k::Int,
-    alpha::T, A::CuPtr, lda::Int, B::CuPtr, ldb::Int, beta::T, C::CuPtr, ldc::Int)
+    alpha::T, A::CudaPtr, lda::Int, B::CudaPtr, ldb::Int, beta::T, C::CudaPtr, ldc::Int)
   @assert OP_N <= trans_a <= OP_C
   @assert OP_N <= trans_b <+ OP_C
   alpha_box = T[alpha]
@@ -202,7 +235,7 @@ for (fname, elty) in ((:cublasSgemm_v2, :Float32),
                       (:cublasDgemm_v2, :Float64))
   @eval begin
     function gemm_impl(handle::Handle, trans_a::Int, trans_b::Int, m::Int, n::Int, k::Int,
-        alpha_box::Array{$elty}, A::CuPtr, lda::Int, B::CuPtr, ldb::Int, beta_box::Array{$elty}, C::CuPtr, ldc::Int)
+        alpha_box::Array{$elty}, A::CudaPtr, lda::Int, B::CudaPtr, ldb::Int, beta_box::Array{$elty}, C::CudaPtr, ldc::Int)
       @cublascall($(string(fname)), (Handle, Cint,Cint, Cint,Cint,Cint, Ptr{Void},
                   Ptr{Void},Cint, Ptr{Void},Cint, Ptr{Void}, Ptr{Void},Cint),
                   handle, trans_a, trans_b, m, n, k, alpha_box, A.p, lda, B.p, ldb, beta_box, C.p, ldc)

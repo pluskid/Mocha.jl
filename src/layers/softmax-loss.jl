@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 ############################################################
 # Softmax Loss
 ############################################################
@@ -12,7 +17,8 @@
 @characterize_layer(SoftmaxLossLayer,
   has_loss  => true,
   can_do_bp => true,
-  is_sink   => true
+  is_sink   => true,
+  has_sync  => true
 )
 
 type SoftmaxLossLayerState{T} <: LayerState

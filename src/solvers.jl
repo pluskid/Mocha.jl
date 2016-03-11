@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 export SolverParameters, SolverState, Solver
 export setup_coffee_lounge, add_coffee_break, solve
 export load_snapshot
@@ -204,22 +209,48 @@ end
 
 function onestep_solve(solver::Solver, net::Net, state::SolverState)
     state.iter += 1
+
     layer_states = updatable_layer_states(net)
 
-    backward(net, solver.params[:regu_coef])
-    update(solver, net, state)
-
-    # apply weight constraints
-    for layer_state in layer_states
-      for param in layer_state.parameters
-        cons_every = param.constraint.every_n_iter
-        if cons_every > 0 && state.iter % cons_every == 0
-          constrain!(net.backend, param.constraint, param.blob)
-        end
-      end
+    for dev=1:net.backend.dev_count
+        set_dev(net.backend, dev - 1)
+        backward(net, solver.params[:regu_coef])
     end
 
-    state.obj_val = forward(net, solver.params[:regu_coef])
+    if (net.backend.dev_count > 1)
+        sync(net.backend)
+        mean!(net.backend, net.grad, net.mean)
+    end
+
+    for dev=1:net.backend.dev_count
+        set_dev(net.backend, dev - 1) 
+
+        update(solver, net, state)
+
+        # apply weight constraints
+        for layer_state in layer_states
+          for param in layer_state.parameters
+            cons_every = param.constraint.every_n_iter
+            if cons_every > 0 && state.iter % cons_every == 0
+              constrain!(net.backend, param.constraint, param.blob)
+            end
+          end
+        end
+    end
+    if (net.backend.dev_count > 1)
+        sync(net.backend)
+        mean!(net.backend, net.param, net.mean)
+    end
+
+    for dev=1:net.backend.dev_count
+       set_dev(net.backend, dev - 1) 
+
+       async_forward(net)
+    end
+
+    syncup_forward(net)
+
+    state.obj_val = get_loss(net)
 
     state.losses = Dict()
     for i = 1:length(net.layers)

@@ -1,3 +1,8 @@
+/*
+ * Code change history:
+ *     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+ *
+ */
 #define ELEMWISE_BOUNDS_AND_INDEX \
   int idx = threadIdx.x + blockIdx.x * blockDim.x; \
   if (idx >= len) \
@@ -50,6 +55,12 @@ __device__ void elem_div2(T *X, T *Y, int len) {
   }
 }
 
+template <typename T>
+__device__ void elem_mean(T *X, T *Y, int len) {
+  ELEMWISE_BOUNDS_AND_INDEX;
+  X[idx] = (X[idx] + Y[idx]) * 0.5;
+}
+
 template <typename T1, typename T2>
 __device__ void elem_pow(T1 *X, T2 p, int len) {
   ELEMWISE_BOUNDS_AND_INDEX;
@@ -90,6 +101,7 @@ DEF_ELEMWISE_API(add)
 DEF_ELEMWISE_API(sub)
 DEF_ELEMWISE_API(div)
 DEF_ELEMWISE_API(div2)
+DEF_ELEMWISE_API(mean)
 
 
 __global__ void add_scal_float(float *X, float Y, int len) {

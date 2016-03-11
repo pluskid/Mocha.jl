@@ -1,8 +1,13 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 export Blob
 export CPUBlob, NullBlob
 
-import Base: eltype, size, length, ndims, copy!, fill!, show, randn!
-export       eltype, size, length, ndims, copy!, fill!, erase!, show
+import Base: eltype, size, length, sizeof, ndims, copy!, fill!, show, randn!
+export       eltype, size, length, sizeof, ndims, copy!, fill!, erase!, show
 export get_num, get_height, get_width, get_fea_size, to_array
 export make_blob, make_zero_blob, reshape_blob
 
@@ -44,7 +49,9 @@ end
 function length(blob :: Blob)
   return prod(size(blob))
 end
-
+function sizeof(blob :: Blob)
+  sizeof(eltype(blob)) * length(blob)
+end
 function get_height(blob :: Blob)
   size(blob, 2)
 end
@@ -142,6 +149,7 @@ function destroy(blob::CPUBlob)
   # do nothing... or is there anything that I could do?
 end
 
+get_data(blob::CPUBlob) = blob.data
 size(blob::CPUBlob) = size(blob.data)
 
 function copy!{T}(dst :: Array{T}, src :: CPUBlob{T})

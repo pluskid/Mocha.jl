@@ -1,14 +1,19 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 function setup_etc(backend::GPUBackend, layer::ChannelPoolingLayer, inputs, blobs)
   if isa(layer.pooling, Pooling.Max)
-    masks = Array(CuPtr, length(inputs))
+    masks = Array(CudaPtr, length(inputs))
     for i = 1:length(inputs)
-      masks[i] = CUDA.cualloc(Csize_t, length(blobs[i]))
+      masks[i] = CudaRT.malloc(Csize_t, length(blobs[i]))
     end
     etc = masks
   elseif isa(layer.pooling, Pooling.Mean)
-    integrals = Array(CuPtr, length(inputs))
+    integrals = Array(CudaPtr, length(inputs))
     for i = 1:length(inputs)
-      integrals[i] = CUDA.cualloc(eltype(inputs[i]), prod(size(inputs[i])[1:end-1]))
+      integrals[i] = CudaRT.malloc(eltype(inputs[i]), prod(size(inputs[i])[1:end-1]))
     end
     etc = integrals
   else
@@ -18,9 +23,9 @@ function setup_etc(backend::GPUBackend, layer::ChannelPoolingLayer, inputs, blob
 end
 function shutdown_etc(backend::GPUBackend, state::ChannelPoolingLayerState)
   if isa(state.layer.pooling, Pooling.Max)
-    map(CUDA.free, state.etc)
+    map(CudaRT.free, state.etc)
   elseif isa(state.layer.pooling, Pooling.Mean)
-    map(CUDA.free, state.etc)
+    map(CudaRT.free, state.etc)
   else
     error("Unknown pooling $(state.layer.pooling)")
   end
@@ -70,7 +75,7 @@ function backward(backend::GPUBackend, pool::StdPoolingFunction, state::ChannelP
 end
 
 function cuda_mean_channel_pooling_forward{T}(backend::GPUBackend, input::CuTensorBlob{T},
-    output::CuTensorBlob{T}, integral::CuPtr, layer, op_dim)
+    output::CuTensorBlob{T}, integral::CudaPtr, layer, op_dim)
 
   spatial_dim_T, channels, num = split_dims(input, op_dim)
   pooled_chann = size(output, op_dim)
@@ -83,16 +88,16 @@ function cuda_mean_channel_pooling_forward{T}(backend::GPUBackend, input::CuTens
   output_fea_dim = spatial_dim * pooled_chann
 
   for n = 1:num
-    input_ptr = convert(Ptr{T}, input.ptr.p + fea_dim*(n-1))
-    output_ptr = convert(Ptr{T}, output.ptr.p + output_fea_dim*(n-1))
+    input_ptr = convert(Ptr{T}, get_ptr(input).p + fea_dim*(n-1))
+    output_ptr = convert(Ptr{T}, get_ptr(output).p + output_fea_dim*(n-1))
     integral_ptr = convert(Ptr{T}, integral.p)
 
     # compute integral image
-    CuBLAS.copy(backend.cublas_ctx, T, spatial_dim_T, input_ptr, 1, integral_ptr, 1)
+    CuBLAS.copy(get_cublas_ctx(backend), T, spatial_dim_T, input_ptr, 1, integral_ptr, 1)
     for c = 2:channels
-      CuBLAS.copy(backend.cublas_ctx, T, spatial_dim_T, input_ptr + (c-1)*spatial_dim, 1,
+      CuBLAS.copy(get_cublas_ctx(backend), T, spatial_dim_T, input_ptr + (c-1)*spatial_dim, 1,
           integral_ptr + (c-1)*spatial_dim, 1)
-      CuBLAS.axpy(backend.cublas_ctx, spatial_dim_T, one, integral_ptr + (c-2)*spatial_dim, 1,
+      CuBLAS.axpy(get_cublas_ctx(backend), spatial_dim_T, one, integral_ptr + (c-2)*spatial_dim, 1,
           integral_ptr + (c-1)*spatial_dim, 1)
     end
 
@@ -103,13 +108,13 @@ function cuda_mean_channel_pooling_forward{T}(backend::GPUBackend, input::CuTens
 
       output_ptr_pc = output_ptr + (pc-1)*spatial_dim
 
-      CuBLAS.copy(backend.cublas_ctx, T, spatial_dim_T, integral_ptr + (cend-1)*spatial_dim, 1,
+      CuBLAS.copy(get_cublas_ctx(backend), T, spatial_dim_T, integral_ptr + (cend-1)*spatial_dim, 1,
           output_ptr_pc, 1)
       if cstart > 1
-        CuBLAS.axpy(backend.cublas_ctx, spatial_dim_T, neg_one,
+        CuBLAS.axpy(get_cublas_ctx(backend), spatial_dim_T, neg_one,
             integral_ptr + (cstart-2)*spatial_dim, 1, output_ptr_pc, 1)
       end
-      CuBLAS.scal(backend.cublas_ctx, spatial_dim_T, scale, output_ptr_pc, 1)
+      CuBLAS.scal(get_cublas_ctx(backend), spatial_dim_T, scale, output_ptr_pc, 1)
     end
   end
 end
@@ -128,8 +133,8 @@ function cuda_mean_channel_pooling_backward{T}(backend::GPUBackend, input::CuTen
   output_fea_dim = spatial_dim * pooled_chann
 
   for n = 1:num
-    input_ptr = convert(Ptr{T}, input.ptr.p) + fea_dim*(n-1)
-    output_ptr = convert(Ptr{T}, output.ptr.p) + output_fea_dim*(n-1)
+    input_ptr = convert(Ptr{T}, get_ptr(input).p) + fea_dim*(n-1)
+    output_ptr = convert(Ptr{T}, get_ptr(output).p) + output_fea_dim*(n-1)
 
     for pc = 1:pooled_chann
       cstart = (pc-1)*layer.stride - layer.pad[1] + 1
@@ -138,7 +143,7 @@ function cuda_mean_channel_pooling_backward{T}(backend::GPUBackend, input::CuTen
       output_ptr_pc = output_ptr + (pc-1)*spatial_dim
 
       for c = cstart:cend
-        CuBLAS.axpy(backend.cublas_ctx, spatial_dim_T, scale, output_ptr_pc, 1,
+        CuBLAS.axpy(get_cublas_ctx(backend), spatial_dim_T, scale, output_ptr_pc, 1,
             input_ptr + (c-1)*spatial_dim, 1)
       end
     end
@@ -155,41 +160,41 @@ function cuda_geometry_max_chann_pool(sp_dim::Int, num::Int)
 
 end
 function cuda_max_channel_pooling_forward{T}(backend::GPUBackend, input::CuTensorBlob{T},
-    output::CuTensorBlob{T}, mask::CuPtr, layer, op_dim)
+    output::CuTensorBlob{T}, mask::CudaPtr, layer, op_dim)
 
   sp_dim, channels, num = split_dims(input, op_dim)
   pooled_chann = size(output, op_dim)
 
   cuda_dim = cuda_geometry_max_chann_pool(sp_dim, num);
   if T == Float32
-    kernel = backend.mocha.max_channel_pooling_forward_float
+    kernel = get_mocha(backend).max_channel_pooling_forward_float
   elseif T == Float64
-    kernel = backend.mocha.max_channel_pooling_forward_double
+    kernel = get_mocha(backend).max_channel_pooling_forward_double
   else
     error("Unsupported data type for channel pooling: $T")
   end
 
-  CUDA.launch(kernel, cuda_dim..., (input.ptr.p, output.ptr.p, mask.p, sp_dim, channels, num,
-      pooled_chann, layer.kernel, layer.stride, layer.pad[1]))
+  CUDA.launch(kernel, cuda_dim..., (get_ptr(input).p, get_ptr(output).p, mask.p, sp_dim, channels, num,
+      pooled_chann, layer.kernel, layer.stride, layer.pad[1]), get_stream(backend))
 end
 
 function cuda_max_channel_pooling_backward{T}(backend::GPUBackend, input::CuTensorBlob{T},
-    output::CuTensorBlob{T}, mask::CuPtr, layer, op_dim)
+    output::CuTensorBlob{T}, mask::CudaPtr, layer, op_dim)
 
   sp_dim, channels, num = split_dims(input, op_dim)
   pooled_chann = size(output, op_dim)
 
   cuda_dim = cuda_geometry_max_chann_pool(sp_dim, num);
   if T == Float32
-    kernel = backend.mocha.max_channel_pooling_backward_float
+    kernel = get_mocha(backend).max_channel_pooling_backward_float
   elseif T == Float64
-    kernel = backend.mocha.max_channel_pooling_backward_double
+    kernel = get_mocha(backend).max_channel_pooling_backward_double
   else
     error("Unsupported data type for channel pooling: $T")
   end
   erase!(input)
 
-  CUDA.launch(kernel, cuda_dim..., (input.ptr.p, output.ptr.p, mask.p, sp_dim, channels, num,
-      pooled_chann, layer.kernel, layer.stride, layer.pad[1]))
+  CUDA.launch(kernel, cuda_dim..., (get_ptr(input).p, get_ptr(output).p, mask.p, sp_dim, channels, num,
+      pooled_chann, layer.kernel, layer.stride, layer.pad[1]), get_stream(backend))
 end
 

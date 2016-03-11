@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 using HDF5
 
 @defstruct AsyncHDF5DataLayer Layer (
@@ -15,10 +20,11 @@ using HDF5
 
 
 type AsyncHDF5DataLayerState <: LayerState
-  layer :: AsyncHDF5DataLayer
-  blobs :: Vector{Blob}
-  epoch :: Int
-  trans :: Vector{Vector{DataTransformerState}}
+  layer         :: AsyncHDF5DataLayer
+  blobs         :: Vector{Blob}
+  epoch         :: Int
+  trans         :: Vector{Vector{DataTransformerState}}
+  data_blocks   :: Vector{Blob}
 
   sources        :: Vector{AbstractString}
 
@@ -43,6 +49,10 @@ type AsyncHDF5DataLayerState <: LayerState
   end
 end
 
+function setup_etc(backend::CPUBackend, state::AsyncHDF5DataLayerState)
+  return Array[CPUBlob(eltype(x), size(x)) for x in state.blobs]
+end
+
 function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   @assert length(inputs) == 0
   state = AsyncHDF5DataLayerState(backend, layer)
@@ -63,13 +73,14 @@ function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}
     state.trans[i] = [setup(backend, convert(DataTransformerType, t), state.blobs[i])
         for (k,t) in filter(kt -> kt[1] == state.layer.tops[i], transformers)]
   end
+  state.data_blocks = setup_etc(backend, state)
 
   state.stop_task = false
   close(h5_file)
 
   function io_task_impl()
     # data blocks to produce
-    data_blocks = Array[Array(eltype(x), size(x)) for x in state.blobs]
+    data_blocks = state.data_blocks
     n_done = 0
 
     while true
@@ -129,7 +140,7 @@ function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}
               if layer.shuffle
                 idx_take = shuffle_idx[idx_take]
               end
-              data_blocks[i_dset][idx...,n_done+1:n_done+n_take] = data_chunks[i_dset][idx..., idx_take]
+              get_data(data_blocks[i_dset])[idx...,n_done+1:n_done+n_take] = data_chunks[i_dset][idx..., idx_take]
             end
             curr_idx += n_take
             n_done += n_take
@@ -147,6 +158,10 @@ function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}
 
   return state
 end
+
+function shutdown_etc(backend::Backend, state::AsyncHDF5DataLayerState)
+  nothing
+end
 function shutdown(backend::Backend, state::AsyncHDF5DataLayerState)
   @info("AsyncHDF5DataLayer: Stopping IO task...")
   state.stop_task = true
@@ -156,13 +171,15 @@ function shutdown(backend::Backend, state::AsyncHDF5DataLayerState)
 
   map(destroy, state.blobs)
   map(ts -> map(t -> shutdown(backend, t), ts), state.trans)
+  
+  shutdown_etc(backend, state)
 end
 
 function forward(backend::Backend, state::AsyncHDF5DataLayerState, inputs::Vector{Blob})
   data_blocks = consume(state.io_task)
 
   for i = 1:length(state.blobs)
-    copy!(state.blobs[i], data_blocks[i])
+    copy_async!(backend, state.blobs[i], data_blocks[i])
     for j = 1:length(state.trans[i])
       forward(backend, state.trans[i][j], state.blobs[i])
     end

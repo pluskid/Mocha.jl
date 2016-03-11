@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 ############################################################
 # Power Layer
 ############################################################
@@ -15,21 +20,21 @@ function forward(backend::GPUBackend, state::PowerLayerState, inputs::Vector{Blo
 
     # output *= scale
     if state.layer.scale != 1
-      CuBLAS.scal(backend.cublas_ctx, length(output),
-          convert(data_type,state.layer.scale), output.ptr, 1)
+      CuBLAS.scal(get_cublas_ctx(backend), length(output),
+          convert(data_type,state.layer.scale), get_ptr(output), 1)
     end
 
     if state.layer.shift != 0
       # output += shift
-      CuVec.add_scal!(backend, data_type, output.ptr.p, convert(data_type, state.layer.shift), len)
+      CuVec.add_scal!(backend, data_type, get_ptr(output).p, convert(data_type, state.layer.shift), len)
     end
 
     # output = output ^ power
     if state.layer.power != 1
       if state.layer.power == 2
-        CuVec.mul!(backend, data_type, output.ptr.p, output.ptr.p, len)
+        CuVec.mul!(backend, data_type, get_ptr(output).p, get_ptr(output).p, len)
       else
-        CuVec.pow!(backend, data_type, output.ptr.p,
+        CuVec.pow!(backend, data_type, get_ptr(output).p,
             isinteger(state.layer.power) ? round(Int, state.layer.power) : convert(data_type, state.layer.power),
             len)
       end
@@ -61,31 +66,31 @@ function backward(backend::GPUBackend, state::PowerLayerState,
       if state.layer.power == 2
         # dO/dI = 2 * scale * (scale * I + shift)
         #       = pow_scale * scale * I + pow_scale * shift
-        CuBLAS.axpy(backend.cublas_ctx, length(input), convert(data_type, pow_scale*state.layer.scale),
-            input.ptr, 1, diff.ptr, 1)
+        CuBLAS.axpy(get_cublas_ctx(backend), length(input), convert(data_type, pow_scale*state.layer.scale),
+            get_ptr(input), 1, get_ptr(diff), 1)
         if state.layer.shift != 0
-          CuVec.add_scal!(backend, data_type, diff.ptr.p, pow_scale * state.layer.shift, len)
+          CuVec.add_scal!(backend, data_type, get_ptr(diff).p, pow_scale * state.layer.shift, len)
         end
       elseif state.layer.shift == 0
         # dO/dI = power * scale * (scale * I) ^ (power - 1)
         #       = power * O / I
-        CuBLAS.axpy(backend.cublas_ctx, length(input), convert(data_type,state.layer.power),
-            output.ptr, 1, diff.ptr, 1)
-        CuVec.div!(backend, data_type, diff.ptr.p, input.ptr.p, len)
+        CuBLAS.axpy(get_cublas_ctx(backend), length(input), convert(data_type,state.layer.power),
+            get_ptr(output), 1, get_ptr(diff), 1)
+        CuVec.div!(backend, data_type, get_ptr(diff).p, get_ptr(input).p, len)
       else
         # general case
         # dO/dI = power * scale * (scale * I + shift) ^ (power - 1)
         #       = power * scale * O / (scale * I + shift)
         copy!(diff, input)
         if state.layer.scale != 1
-          CuBLAS.scal(backend.cublas_ctx, length(diff),
-              convert(data_type,state.layer.scale), diff.ptr, 1)
+          CuBLAS.scal(get_cublas_ctx(backend), length(diff),
+              convert(data_type,state.layer.scale), get_ptr(diff), 1)
         end
-        CuVec.add_scal!(backend, data_type, diff.ptr.p, state.layer.shift, len)
-        CuVec.div2!(backend, data_type, output.ptr.p, diff.ptr.p, len)
-        CuBLAS.scal(backend.cublas_ctx, length(diff), pow_scale, diff.ptr, 1)
+        CuVec.add_scal!(backend, data_type, get_ptr(diff).p, state.layer.shift, len)
+        CuVec.div2!(backend, data_type, get_ptr(output).p, get_ptr(diff).p, len)
+        CuBLAS.scal(get_cublas_ctx(backend), length(diff), pow_scale, get_ptr(diff), 1)
       end
     end
-    CuVec.mul!(backend, data_type, diff.ptr.p, state.blobs_diff[i].ptr.p, len)
+    CuVec.mul!(backend, data_type, get_ptr(diff).p, get_ptr(state.blobs_diff[i]).p, len)
   end
 end

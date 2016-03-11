@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 function forward(backend::GPUBackend, state::Index2OnehotLayerState, inputs::Vector{Blob})
   for i = 1:length(inputs)
     input = inputs[i]
@@ -11,15 +16,15 @@ function forward(backend::GPUBackend, state::Index2OnehotLayerState, inputs::Vec
     y_block = round(Int, ceil(convert(Float64, spatial_dim)/CUDA.THREADS_PER_BLOCK_Y));
 
     if data_type == Float32
-      kernel = backend.mocha.index2onehot_forward_float
+      kernel = get_mocha(backend).index2onehot_forward_float
     elseif data_type == Float64
-      kernel = backend.mocha.index2onehot_forward_double
+      kernel = get_mocha(backend).index2onehot_forward_double
     else
       error("Unsupported data type $data_type")
     end
 
     CUDA.launch(kernel, (x_block,y_block),(CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y),
-        (input.ptr.p, output.ptr.p, num, channels, spatial_dim));
+        (get_ptr(input).p, get_ptr(output).p, num, channels, spatial_dim), get_stream(backend));
   end
 end
 

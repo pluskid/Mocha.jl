@@ -1,3 +1,23 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
+function forward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vector{Blob})
+  forward(backend, state.softmax, Blob[inputs[1]])
+  forward(backend, state.logistic, Blob[state.softmax.blobs[1], inputs[2]])
+end
+
+function sync(backend::GPUBackend, state::SoftmaxLossLayerState)
+  sync(backend, state.logistic)
+end
+
+function calc_loss(backend::GPUBackend, state::SoftmaxLossLayerState)
+  calc_loss(backend, state.logistic)
+  state.loss = state.logistic.loss * state.layer.weight
+  return state.loss
+end
+
 function backward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
   diff = diffs[1]
   if isa(diff, CuTensorBlob)
@@ -13,20 +33,20 @@ function backward(backend::GPUBackend, state::SoftmaxLossLayerState, inputs::Vec
     if isa(state.logistic.weights_blob, NullBlob)
       weights = convert(Ptr{data_type}, 0)
     else
-      weights = state.logistic.weights_blob.ptr.p
+      weights = get_ptr(state.logistic.weights_blob).p
     end
 
     if data_type == Float32
-      kernel = backend.mocha.softmax_loss_backward_float
+      kernel = get_mocha(backend).softmax_loss_backward_float
     elseif data_type == Float64
-      kernel = backend.mocha.softmax_loss_backward_double
+      kernel = get_mocha(backend).softmax_loss_backward_double
     else
       error("Unsupported data type $data_type")
     end
     CUDA.launch(kernel, (x_block, y_block), (CUDA.THREADS_PER_BLOCK_X, 1),
-        (diff.ptr.p, inputs[2].ptr.p, weights, num, spatial_dim, prob_dim))
-    CuBLAS.scal(backend.cublas_ctx, length(diff), convert(data_type, state.layer.weight/(spatial_dim*num)),
-        diff.ptr, 1)
+        (get_ptr(diff).p, get_ptr(inputs[2]).p, weights, num, spatial_dim, prob_dim), get_stream(backend))
+    CuBLAS.scal(get_cublas_ctx(backend), length(diff), convert(data_type, state.layer.weight/(spatial_dim*num)),
+        get_ptr(diff), 1)
   end
 end
 

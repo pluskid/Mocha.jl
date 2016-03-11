@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 function forward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vector{Blob})
   pred = inputs[1]
   label = inputs[2]
@@ -13,15 +18,15 @@ function forward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vector
   end
 
   if data_type == Float32
-    kernel = backend.mocha.hinge_loss_forward_float
+    kernel = get_mocha(backend).hinge_loss_forward_float
   elseif data_type == Float64
-    kernel = backend.mocha.hinge_loss_forward_double
+    kernel = get_mocha(backend).hinge_loss_forward_double
   else
     error("Unsupported data type $data_type")
   end
 
   CUDA.launch(kernel, (x_block,1), (CUDA.THREADS_PER_BLOCK_X, 1),
-              (pred.ptr.p, label.ptr.p, n, state.loss_blob.ptr.p))
+              (get_ptr(pred).p, get_ptr(label).p, n, get_ptr(state.loss_blob).p), get_stream(backend))
 
   losses = Array(data_type, size(state.loss_blob)...)
   copy!(losses, state.loss_blob)
@@ -43,16 +48,16 @@ function backward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vecto
   const x_block = div(n + CUDA.THREADS_PER_BLOCK_X-1, CUDA.THREADS_PER_BLOCK_X)
 
   if data_type == Float32
-    kernel = backend.mocha.hinge_loss_backward_float
+    kernel = get_mocha(backend).hinge_loss_backward_float
   elseif data_type == Float64
-    kernel = backend.mocha.hinge_loss_backward_double
+    kernel = get_mocha(backend).hinge_loss_backward_double
   else
     error("Unsupported data type $data_type")
   end
 
-  const gradient1 :: CuPtr = isa(diffs[1], CuTensorBlob) ? diffs[1].ptr : CuPtr()
-  const gradient2 :: CuPtr = isa(diffs[2], CuTensorBlob) ? diffs[2].ptr : CuPtr()
+  const gradient1 :: CudaPtr = isa(diffs[1], CuTensorBlob) ? get_ptr(diffs[1]) : CudaPtr()
+  const gradient2 :: CudaPtr = isa(diffs[2], CuTensorBlob) ? get_ptr(diffs[2]) : CudaPtr()
 
   CUDA.launch(kernel, (x_block,1), (CUDA.THREADS_PER_BLOCK_X,1),
-              (pred.ptr.p, label.ptr.p, gradient1.p, gradient2.p, n, neg_weight))
+              (get_ptr(pred).p, get_ptr(label).p, gradient1.p, gradient2.p, n, neg_weight), get_stream(backend))
 end

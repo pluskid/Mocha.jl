@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 function forward(backend::GPUBackend, state::InnerProductLayerState, inputs::Vector{Blob})
   M = size(state.W, 2)   # target dim
   K = size(state.W, 1)   # source dim
@@ -7,11 +12,11 @@ function forward(backend::GPUBackend, state::InnerProductLayerState, inputs::Vec
     N = get_num(input)   # batch size
     output = state.blobs[i]
     # output = W^T * X
-    CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_T, CuBLAS.OP_N, M, N, K, convert(dtype, 1),
-                state.W.ptr, K, input.ptr, K, convert(dtype, 0), output.ptr, M)
+    CuBLAS.gemm(get_cublas_ctx(backend), CuBLAS.OP_T, CuBLAS.OP_N, M, N, K, convert(dtype, 1),
+                get_ptr(state.W), K, get_ptr(input), K, convert(dtype, 0), get_ptr(output), M)
     # output += bias
-    CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_N, M, N, 1, convert(dtype, 1),
-                state.b.ptr, M, state.bias_multipliers[i].ptr, 1, convert(dtype, 1), output.ptr, M)
+    CuBLAS.gemm(get_cublas_ctx(backend), CuBLAS.OP_N, CuBLAS.OP_N, M, N, 1, convert(dtype, 1),
+                get_ptr(state.b), M, get_ptr(state.bias_multipliers[i]), 1, convert(dtype, 1), get_ptr(output), M)
   end
 end
 
@@ -31,12 +36,12 @@ function backward(backend::GPUBackend, state::InnerProductLayerState, inputs::Ve
     ∂f_∂o = state.blobs_diff[i]
 
     if !state.frozen
-      CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_T, source_dim, target_dim, batch_size,
-          one(data_type), input.ptr, source_dim, ∂f_∂o.ptr, target_dim, zero_and_then_one, state.∇W.ptr, source_dim)
+      CuBLAS.gemm(get_cublas_ctx(backend), CuBLAS.OP_N, CuBLAS.OP_T, source_dim, target_dim, batch_size,
+          one(data_type), get_ptr(input), source_dim, get_ptr(∂f_∂o), target_dim, zero_and_then_one, get_ptr(state.∇W), source_dim)
 
       # ∂f/∂b = sum(∂f/∂o, 2)
-      CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_N, target_dim, 1, batch_size,
-          one(data_type), ∂f_∂o.ptr, target_dim, state.bias_multipliers[i].ptr, batch_size, zero_and_then_one, state.∇b.ptr, target_dim)
+      CuBLAS.gemm(get_cublas_ctx(backend), CuBLAS.OP_N, CuBLAS.OP_N, target_dim, 1, batch_size,
+          one(data_type), get_ptr(∂f_∂o), target_dim, get_ptr(state.bias_multipliers[i]), batch_size, zero_and_then_one, get_ptr(state.∇b), target_dim)
     end
 
     zero_and_then_one = convert(data_type, 1)
@@ -44,8 +49,8 @@ function backward(backend::GPUBackend, state::InnerProductLayerState, inputs::Ve
     # if back propagate down
     if isa(diffs[i], CuTensorBlob)
       # ∂f/∂x = W * [∂f/∂o]
-      CuBLAS.gemm(backend.cublas_ctx, CuBLAS.OP_N, CuBLAS.OP_N, source_dim, batch_size, target_dim,
-          convert(data_type, 1), state.W.ptr, source_dim, ∂f_∂o.ptr, target_dim, convert(data_type, 0), diffs[i].ptr, source_dim)
+      CuBLAS.gemm(get_cublas_ctx(backend), CuBLAS.OP_N, CuBLAS.OP_N, source_dim, batch_size, target_dim,
+          convert(data_type, 1), get_ptr(state.W), source_dim, get_ptr(∂f_∂o), target_dim, convert(data_type, 0), get_ptr(diffs[i]), source_dim)
     end
   end
 end

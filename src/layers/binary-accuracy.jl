@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 @defstruct BinaryAccuracyLayer Layer (
   name :: AbstractString = "binary-accuracy",
   report_error :: Bool = false,
@@ -7,6 +12,7 @@
 @characterize_layer(BinaryAccuracyLayer,
   is_sink    => true,
   has_stats  => true,
+  has_sync   => true,
 )
 
 type BinaryAccuracyLayerState <: LayerState

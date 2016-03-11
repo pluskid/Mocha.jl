@@ -1,5 +1,10 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 export Net
-export init, destroy, forward, forward_epoch, backward, forward_backward, get_epoch, check_bp_topology
+export init, destroy, forward, forward_epoch, async_forward, syncup_forward, get_loss, backward, forward_backward, get_epoch, check_bp_topology
 export get_layer, get_layer_state, freeze!, unfreeze!, freeze_all!, unfreeze_all!
 export dump_statistics, reset_statistics
 
@@ -17,6 +22,10 @@ type Net{T <: Backend}
 
   output_blobs   :: Dict{Symbol, Blob}
   diff_blobs     :: Dict{Symbol, Blob}
+  
+  param          :: Blob
+  grad           :: Blob
+  mean           :: Blob
 end
 
 import Base.show
@@ -108,6 +117,9 @@ function init(net::Net)
 end
 function destroy(net::Net)
   @debug("Destroying network $(net.name)")
+  destroy(net.param)
+  destroy(net.grad)
+  destroy(net.mean)
   for state in net.states
     shutdown(net.backend, state)
   end
@@ -141,9 +153,8 @@ function forward_epoch(net::Net)
   end
 end
 
-function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
-  obj_val = 0.0
-
+function async_forward(net::Net)
+  # forward the net asynchronously
   for i = 1:length(net.layers)
     forward(net.backend, net.states[i], net.blobs_forward[i])
 
@@ -152,24 +163,64 @@ function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
         forward(net.backend, net.layers[i].neuron, blob)
       end
     end
+  end
+end
 
-    if has_loss(net.layers[i])
-      obj_val += net.states[i].loss
+function need_sync(net::Net)
+  for i = length(net.layers):-1:1
+    if has_sync(net.layers[i])
+      return true
     end
+  end
+  return false
+end
 
-    #-- Whether or not computing regularizer forward does not affect the
-    #-- back propagation results. It just makes the objective function
-    #-- look more "consistent". To comment out the computation by default
-    #-- just to save computational resources.
-    #
-    # # handle regularization
-    # if has_param(net.layers[i])
-    #   for param in net.states[i].parameters
-    #     obj_val += forward(net.backend, param.regularizer, regu_coef, param.blob)
-    #   end
-    # end
+function syncup_forward(net::Net)
+  if need_sync(net)
+    sync(net.backend)
+    for i = 1:length(net.layers)
+      if has_sync(net.layers[i])
+        sync(net.backend, net.states[i])
+      end
+    end
+  end
+end
+
+function get_loss(net::Net)
+  obj_val = 0.0
+
+  for i = 1:length(net.layers)
+    if has_loss(net.layers[i])
+      obj_val += calc_loss(net.backend, net.states[i])
+    end
   end
 
+  return obj_val
+end
+
+function forward(net::Net, regu_coef :: AbstractFloat = 0.0)
+  for dev=1:net.backend.dev_count
+    set_dev(net.backend, dev - 1)
+    async_forward(net)
+  end
+
+  syncup_forward(net)
+  
+  obj_val = get_loss(net)
+
+  #-- Whether or not computing regularizer forward does not affect the
+  #-- back propagation results. It just makes the objective function
+  #-- look more "consistent". To comment out the computation by default
+  #-- just to save computational resources.
+  #
+  # for i = 1:length(net.layers)
+  # # handle regularization
+  #   if has_param(net.layers[i])
+  #     for param in net.states[i].parameters
+  #       obj_val += forward(net.backend, param.regularizer, regu_coef, param.blob)
+  #     end
+  #   end
+  # end
   return obj_val
 end
 
@@ -208,6 +259,9 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
   diff_blobs = Dict{Symbol,Blob}()
 
   @info("Setup layers...")
+  
+  total_param_length = 0
+  param_type = Any
   for i = 1:n
     layer = layers[i]
     # record if layers has any dependency
@@ -219,14 +273,23 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
       blob_bwd = Blob[]
     end
 
-    if has_param(layers[i])
-      params = registry_get(backend, param_key(layers[i]))
+    if has_param(layer)
+      params = registry_get(backend, param_key(layer))
     else
       params = nothing
     end
-    states[i] = setup(backend, layers[i], params, blob_fwd, blob_bwd)
-    if has_param(layers[i])
-      registry_put(backend, param_key(layers[i]), states[i].parameters)
+    states[i] = setup(backend, layer, params, blob_fwd, blob_bwd)
+    if has_param(layer)
+      registry_put(backend, param_key(layer), states[i].parameters)
+      total_param_length += sum([length(param.blob) for param in states[i].parameters])
+      if length(states[i].parameters) > 0
+        if param_type == Any
+          param_type = eltype(states[i].parameters[1].blob)
+        end
+        @assert param_type != Any
+        # ensure all parameters have same data type
+        map(param -> @assert(param_type == eltype(param.blob)), states[i].parameters)
+      end
     end
 
     if !is_sink(layer) && !is_inplace(layer)
@@ -247,9 +310,33 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
     blobs_forward[i] = blob_fwd
     blobs_backward[i] = blob_bwd
   end
+  
+  # assign single array to all learnable parameters
+  if (total_param_length > 0)
+    @assert param_type != Any
+    param_blob = make_blob(backend, param_type, total_param_length)
+    grad_blob = make_blob(backend, param_type, total_param_length)
+    mean = make_blob(backend, param_type, total_param_length)
+    offset = 0
+    for i = 1:n
+        layer = layers[i]
+        if (has_param(layer))
+            for param in states[i].parameters
+                replace_ptr(backend, param.blob, param_blob, offset)
+                replace_ptr(backend, param.gradient, grad_blob, offset)
+                offset += sizeof(param.blob)
+            end
+        end
+    end
+  else
+    param_blob = NullBlob()
+    grad_blob = NullBlob()
+    mean = NullBlob()
+  end
 
   @info("Network constructed!")
-  return Net(name, backend, layers, states, blobs_forward, blobs_backward, data_layers, output_blobs, diff_blobs)
+  return Net(name, backend, layers, states, blobs_forward, blobs_backward, data_layers, 
+                output_blobs, diff_blobs, param_blob, grad_blob, mean)
 end
 
 function topological_sort(layers :: Vector{Layer})

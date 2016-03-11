@@ -1,4 +1,10 @@
-export GPUBackend
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
+export GPUBackend, MultiGPUType
+export get_cublas_ctx, get_cudnn_ctx, get_stream, get_mocha
 
 macro defkernels(kernels...)
   field_defs = map(kernels) do ker
@@ -97,6 +103,8 @@ end
   elem_div_double,
   elem_div2_float,
   elem_div2_double,
+  elem_mean_float,
+  elem_mean_double,
   elem_pow_fi,
   elem_pow_di,
   elem_pow_ff,
@@ -146,25 +154,71 @@ end
 type GPUBackend <: AbstractGPUBackend
   param_registry :: ParameterRegistry
   initialized    :: Bool
-  cu_ctx         :: CUDA.CuContext
-  cublas_ctx     :: CuBLAS.Handle
-  cudnn_ctx      :: CuDNN.Handle
-
-  mocha          :: MochaKernels
+  cur_dev        :: CudaRT.CudaDevice
+  dev_count      :: Int
+  streams        :: Array{CudaRT.CudaStream}
+  cublas_ctxs    :: Array{CuBLAS.Handle}
+  cudnn_ctxs     :: Array{CuDNN.Handle}
+  mochas         :: Array{MochaKernels}
 
   GPUBackend() = new(ParameterRegistry(), false) # everything will be initialized later
+end
+
+function set_dev_id(device::CudaRT.CudaDevice, id::Int)
+  device.ordinal = id
+  CudaRT.set_device(device)
+end
+
+function set_dev_id(backend::GPUBackend, id::Int)
+  set_dev_id(backend.cur_dev, id)
+end
+
+function set_dev(backend::GPUBackend, id::Int)
+  set_dev_id(backend, id)
+  @inbounds CuBLAS.set_stream(backend.cublas_ctxs[id + 1], backend.streams[id + 1])
+  @inbounds CuDNN.set_stream(backend.cudnn_ctxs[id + 1], backend.streams[id + 1])
+end
+
+function get_cublas_ctx(backend::GPUBackend)
+  @inbounds return backend.cublas_ctxs[backend.cur_dev.ordinal + 1]
+end
+
+function get_cudnn_ctx(backend::GPUBackend)
+  @inbounds return backend.cudnn_ctxs[backend.cur_dev.ordinal + 1]
+end
+
+function get_stream(backend::GPUBackend)
+  @inbounds return backend.streams[backend.cur_dev.ordinal + 1]
+end
+
+function get_mocha(backend::GPUBackend)
+  @inbounds return backend.mochas[backend.cur_dev.ordinal + 1]
+end
+
+# sync all GPU's streams
+function sync(backend::GPUBackend)
+  for i=1:backend.dev_count
+    CudaRT.sync_stream(backend.streams[i])
+  end
 end
 
 function init(backend::GPUBackend)
   @assert backend.initialized == false
 
   @info("Initializing CuDNN backend...")
-  CUDA.init()
-  dev = CUDA.CuDevice(Config.cuda_dev_id)
-  backend.cu_ctx = CUDA.create_context(dev)
-  backend.cublas_ctx = CuBLAS.create()
-  backend.cudnn_ctx = CuDNN.create()
-  backend.mocha = MochaKernels()
+  backend.cur_dev = CudaRT.CudaDevice(0)
+  backend.dev_count = Config.cuda_dev_count
+  backend.streams = Array(CudaRT.CudaStream, backend.dev_count)
+  backend.cublas_ctxs = Array(CuBLAS.Handle, backend.dev_count)
+  backend.cudnn_ctxs = Array(CuDNN.Handle, backend.dev_count)
+  backend.mochas = Array(MochaKernels, backend.dev_count)
+  @inbounds for i=1:backend.dev_count
+    CudaRT.set_device(CudaDevice(i - 1))
+    backend.streams[i] = backend.dev_count == 1 ? CudaRT.cuda_null_stream() : CudaRT.create_stream()
+    backend.cublas_ctxs[i] = CuBLAS.create()
+    backend.cudnn_ctxs[i] = CuDNN.create()
+    backend.mochas[i] = MochaKernels()
+  end
   backend.initialized = true
   info("CuDNN backend initialized!")
 end
@@ -174,10 +228,21 @@ function shutdown(backend::GPUBackend)
 
   @info("Shutting down CuDNN backend...")
   # NOTE: destroy should be in reverse order of init
-  shutdown(backend.mocha)
-  CuDNN.destroy(backend.cudnn_ctx)
-  CuBLAS.destroy(backend.cublas_ctx)
-  CUDA.destroy(backend.cu_ctx)
+  map(shutdown, backend.mochas)
+  map(CuDNN.destroy, backend.cudnn_ctxs)
+  map(CuBLAS.destroy, backend.cublas_ctxs)
+  map(CudaRT.destroy, backend.streams)
   backend.initialized = false
   @info("CuDNN Backend shutdown finished!")
 end
+
+type MultiGPUType{T}
+  elems   :: Array{T}
+  cur_dev :: CudaRT.CudaDevice
+end
+function MultiGPUType{T}(backend::GPUBackend, dtype::Type{T})
+  elems = Array(T, backend.dev_count)
+  return MultiGPUType(elems, backend.cur_dev)
+end
+get_elem(multi :: MultiGPUType) = @inbounds return multi.elems[multi.cur_dev.ordinal + 1]
+ndev(multi :: MultiGPUType) = return length(multi.elems)

@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 # An Initializer is used to initialize network parameters
 export Initializer
 export ConstantInitializer
@@ -17,7 +22,7 @@ immutable ConstantInitializer <: Initializer
 end
 
 function init(initializer::ConstantInitializer, blob::Blob)
-  fill!(blob, initializer.value)
+  fill_all!(blob, initializer.value)
 end
 
 ################################################################################
@@ -38,7 +43,7 @@ function init(initializer::XavierInitializer, blob::Blob)
   fan_in = get_fea_size(blob)
   scale = sqrt(3.0 / fan_in)
   init_val = rand(eltype(blob), size(blob)) * 2scale - scale
-  copy!(blob, init_val)
+  copy_all!(blob, init_val)
 end
 
 immutable GaussianInitializer <: Initializer
@@ -50,7 +55,7 @@ GaussianInitializer(;mean=0.0, std=1.0) = GaussianInitializer(mean, std)
 function init(initializer::GaussianInitializer, blob::Blob)
   init_val = randn(size(blob)) * initializer.std + initializer.mean
   init_val = convert(Array{eltype(blob)}, init_val)
-  copy!(blob, init_val)
+  copy_all!(blob, init_val)
 end
 
 ####### Orthogonal Initializer ##############################################
@@ -73,5 +78,5 @@ function init(initializer::OrthogonalInitializer, blob::Blob)
   x = randn(flatshape)
   u, _, v = svd(x)
   x = (size(u) == flatshape) ? u : v
-  copy!(blob, convert(Array{eltype(blob)}, x*initializer.gain))
+  copy_all!(blob, convert(Array{eltype(blob)}, x*initializer.gain))
 end

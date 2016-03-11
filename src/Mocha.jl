@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 module Mocha
 
 include("compatibility.jl")
@@ -28,6 +33,7 @@ include("backend.jl")
 include("blob.jl")
 
 if Config.use_cuda
+  include("cuda/cudart.jl")
   include("cuda/cuda.jl")
   include("cuda/cublas.jl")
   include("cuda/cudnn.jl")
@@ -36,6 +42,7 @@ if Config.use_cuda
   include("cuda/utils/math.jl")
   include("cuda/utils/padded-copy.jl")
   include("cuda/utils/shifted-copy.jl")
+  include("cuda/utils/sync-mem.jl")
 end
 
 export DefaultBackend

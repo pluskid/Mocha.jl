@@ -1,8 +1,14 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 # a simplified CUDA module, adapted from github.com/JuliaGPU/CUDA.jl
 export CUDA
 module CUDA
 export CuPtr
 using Compat
+import ..CudaRT.CudaStream
 
 @windows? (
 begin
@@ -165,6 +171,20 @@ function free(p::CuPtr)
 end
 
 ############################################################
+# Pinned Host Memory allocation
+############################################################
+function cualloc_host(T::Type, len::Integer)
+  a = Ptr{Void}[0]
+  nbytes = round(Int, len) * sizeof(T)
+  @cucall(:cuMemAllocHost_v2, (Ptr{Ptr{Void}}, Csize_t), a, nbytes)
+  return a[1]
+end
+
+function cufree_host(p::Ptr{Void})
+  @cucall(:cuMemFreeHost, (Ptr{Void},), p)
+end
+
+############################################################
 # CUDA streams
 ############################################################
 immutable CuStream
@@ -241,7 +261,7 @@ using Compat
 
 # Stream management
 
-function launch(f::CuFunction, grid::CuDim, block::CuDim, args::Tuple; shmem_bytes::Int=4, stream::CuStream=null_stream())
+function launch(f::CuFunction, grid::CuDim, block::CuDim, args::Tuple, stream::CudaStream; shmem_bytes::Int=4)
   gx = get_dim_x(grid)
   gy = get_dim_y(grid)
   gz = get_dim_z(grid)
@@ -264,7 +284,7 @@ function launch(f::CuFunction, grid::CuDim, block::CuDim, args::Tuple; shmem_byt
       Ptr{Void},       # stream
       Ptr{Ptr{Void}},  # kernel parameters,
       Ptr{Ptr{Void}}), # extra parameters
-      f.handle, gx, gy, gz, tx, ty, tz, shmem_bytes, stream.handle, kernel_args, Ptr{Ptr{Void}}(0))
+      f.handle, gx, gy, gz, tx, ty, tz, shmem_bytes, stream, kernel_args, Ptr{Ptr{Void}}(0))
 end
 
 end # module CUDA

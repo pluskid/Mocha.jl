@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 
 function setup(backend::GPUBackend, layer::GaussianKLLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
@@ -22,9 +27,9 @@ function forward(backend::GPUBackend, state::GaussianKLLossLayerState, inputs::V
   copy!(log_sigma_tmp, sigma)
   CuVec.log!(backend, log_sigma_tmp)
 
-  Σμ²  = CuBLAS.dot(backend.cublas_ctx, data_type, n, mu.ptr, 1, mu.ptr, 1)
-  Σσ²  = CuBLAS.dot(backend.cublas_ctx, data_type, n, sigma.ptr, 1, sigma.ptr, 1)
-  logΣ = CuBLAS.dot(backend.cublas_ctx, data_type, n, log_sigma_tmp.ptr, 1, aux_ones.ptr, 1)
+  Σμ²  = CuBLAS.dot(get_cublas_ctx(backend), data_type, n, get_ptr(mu), 1, get_ptr(mu), 1)
+  Σσ²  = CuBLAS.dot(get_cublas_ctx(backend), data_type, n, get_ptr(sigma), 1, get_ptr(sigma), 1)
+  logΣ = CuBLAS.dot(get_cublas_ctx(backend), data_type, n, get_ptr(log_sigma_tmp), 1, get_ptr(aux_ones), 1)
   state.loss = 0.5(Σμ² + Σσ² - 2logΣ - n) * state.layer.weight / num
 
   # accumulate statistics

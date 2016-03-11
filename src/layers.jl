@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 export LayerState
 
 export HDF5DataLayer, MemoryDataLayer, AsyncHDF5DataLayer
@@ -101,6 +106,7 @@ export freeze!, unfreeze!, is_frozen
   is_inplace => false, # do inplace computation, does not has own top blobs
   has_loss   => false, # produce a loss
   has_stats  => false, # produce statistics
+  has_sync   => false, # (for GPU backend) need to sync between host and device at end of forward pass
 )
 
 function setup(backend::Backend, layer::Layer, shared_parameters, inputs::Vector{Blob}, diffs::Vector{Blob})

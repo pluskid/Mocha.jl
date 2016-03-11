@@ -1,3 +1,8 @@
+#=
+# Code change history:
+#     Zheng Li (zheng@bitfusion.io) at Bifusion.io Inc.   : Add multi-GPU support.
+#
+=#
 export dense2padded!, padded2dense!
 
 function dense2padded!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
@@ -11,16 +16,17 @@ function dense2padded!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
     z_block = round(Int, ceil(float(height)/CUDA.THREADS_PER_BLOCK_Z))
 
     if T == Float32
-      kernel = backend.mocha.dense_to_padded_float
+      kernel = get_mocha(backend).dense_to_padded_float
     elseif T == Float64
-      kernel = backend.mocha.dense_to_padded_double
+      kernel = get_mocha(backend).dense_to_padded_double
     else
       error("Unsupported data type $T for padded copy")
     end
     mirror = convert(Int, mirror)
     CUDA.launch(kernel, (x_block,y_block,z_block),
         (CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z),
-        (dst.ptr.p,src.ptr.p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num,mirror))
+        (get_ptr(dst).p,get_ptr(src).p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num,mirror),
+        get_stream(backend))
 end
 
 function padded2dense!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
@@ -34,16 +40,17 @@ function padded2dense!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
     z_block = round(Int, ceil(float(height)/CUDA.THREADS_PER_BLOCK_Z))
 
     if T == Float32
-      kernel = backend.mocha.padded_to_dense_float
+      kernel = get_mocha(backend).padded_to_dense_float
     elseif T == Float64
-      kernel = backend.mocha.padded_to_dense_double
+      kernel = get_mocha(backend).padded_to_dense_double
     else
       error("Unsupported data type $T for padded copy")
     end
     mirror = convert(Int, mirror)
     CUDA.launch(kernel, (x_block,y_block,z_block),
         (CUDA.THREADS_PER_BLOCK_X,CUDA.THREADS_PER_BLOCK_Y,CUDA.THREADS_PER_BLOCK_Z),
-        (dst.ptr.p,src.ptr.p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num, mirror))
+        (get_ptr(dst).p,get_ptr(src).p,width,height,pad_head[1],pad_head[2],pad_tail[1],pad_tail[2],chann_num, mirror),
+        get_stream(backend))
 end
 
 function dense2padded!{T}(backend::GPUBackend, dst::CuTensorBlob{T},
