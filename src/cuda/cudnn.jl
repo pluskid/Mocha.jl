@@ -336,7 +336,7 @@ function convolution_backward_filter{T<:AbstractFloat}(handle::Handle, alpha::T,
     beta::T, grad_desc::FilterDescriptor, grad::CuPtr)
   alpha_ptr = T[alpha]
   beta_ptr = T[beta]
-  @cudnncall(:cudnnConvolutionBackwardFilter, (Handle, Ptr{Void}, Tensor4dDescriptor, Ptr{Void},
+  @cudnncall(:cudnnConvolutionBackwardFilter_v2, (Handle, Ptr{Void}, Tensor4dDescriptor, Ptr{Void},
                                                Tensor4dDescriptor, Ptr{Void},
                                                ConvolutionDescriptor,
                                                Ptr{Void}, FilterDescriptor, Ptr{Void}),
@@ -348,12 +348,13 @@ function convolution_backward_data{T<:AbstractFloat}(handle::Handle, alpha::T, f
     beta::T, grad_desc::Tensor4dDescriptor, grad::CuPtr)
   alpha_ptr = T[alpha]
   beta_ptr = T[beta]
-  @cudnncall(:cudnnConvolutionBackwardData, (Handle, Ptr{Void}, FilterDescriptor, Ptr{Void},
+  @cudnncall(:cudnnConvolutionBackwardData_v2, (Handle, Ptr{Void}, FilterDescriptor, Ptr{Void},
                                             Tensor4dDescriptor, Ptr{Void},
                                             ConvolutionDescriptor,
                                             Ptr{Void},Tensor4dDescriptor,
                                             Ptr{Void}),
-             handle, alpha_ptr, filter_desc, filter.p, diff_desc, diff.p, conv, beta_ptr, grad_desc, grad.p)
+             handle, alpha_ptr, filter_desc, filter.p, diff_desc, diff.p, conv,
+             beta_ptr, grad_desc, grad.p)
 end
 
 
