@@ -11,6 +11,9 @@ end
 : # linux or mac
 begin
   const libcuda = Libdl.find_library(["libcuda"], [""])
+  if isempty(libcuda)
+    error("Libcuda not found via Libdl.find_library! Please check installation and ENV configuration")
+  end
 end)
 
 const driver_error_descriptions = @compat(Dict(

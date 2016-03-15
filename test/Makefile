@@ -13,10 +13,10 @@ test:
 	$(julia_cmd) runtests.jl
 
 test-ext:
-	bash -c "MOCHA_USE_NATIVE_EXT=true $(julia_cmd) runtests.jl"
+	MOCHA_USE_NATIVE_EXT=true $(julia_cmd) runtests.jl
 
 test-gpu:
-	bash -c "MOCHA_USE_CUDA=true $(julia_cmd) runtests.jl"
+	MOCHA_USE_CUDA=true $(julia_cmd) runtests.jl
 
 test-srun:
 	$(srun_cmd) bash -c "MOCHA_USE_CUDA=true $(julia_cmd) runtests.jl"
