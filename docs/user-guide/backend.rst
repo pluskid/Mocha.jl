@@ -169,7 +169,7 @@ a ``GPUBackend``. The environment variable needs to be set **before** loading
 Mocha. It is designed to use conditional loading so that the pure CPU backend
 can still run on machines which don't have a GPU device or don't have the CUDA
 library installed. If you have multiple GPU devices on one node, the environment
-variable ``MOCHA_GPU_DEVICE`` can be used to specify the device ID to use. The
+variable ``MOCHA_CUDA_DEVICE`` can be used to specify the device ID to use. The
 default device ID is ``0``.
 
 Recompiling Kernels
