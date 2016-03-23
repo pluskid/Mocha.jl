@@ -2,7 +2,7 @@
 
 [![Build Status](https://img.shields.io/travis/pluskid/Mocha.jl.svg?style=flat&branch=master)](https://travis-ci.org/pluskid/Mocha.jl)
 [![Documentation Status](https://readthedocs.org/projects/mochajl/badge/?version=latest)](http://mochajl.readthedocs.org/)
-[![Mocha](http://pkg.julialang.org/badges/Mocha_0.3.svg)](http://pkg.julialang.org/?pkg=Mocha&ver=0.3)
+[![Mocha](http://pkg.julialang.org/badges/Mocha_0.4.svg)](http://pkg.julialang.org/?pkg=Mocha&ver=0.4)
 [![Coverage Status](https://img.shields.io/coveralls/pluskid/Mocha.jl.svg?style=flat)](https://coveralls.io/r/pluskid/Mocha.jl?branch=master)
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE.md)
 <!--[![Build status](https://ci.appveyor.com/api/projects/status/342vcj5lj2jyegsp?svg=true)](https://ci.appveyor.com/project/pluskid/mocha-jl)-->

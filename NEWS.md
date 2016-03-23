@@ -1,6 +1,6 @@
 # News for Mocha Development
 
-## v0.1.1 2016.03.23
+## v0.1.2 2016.03.23
 
 * Infrastructure
   * Fix compatability with Julia v0.5
