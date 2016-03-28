@@ -38,7 +38,8 @@ show(io::IO, error::CuDNNError) = print(io, cudnn_error_description[error.code])
 
 @windows? (
 begin
-  const libcudnn = Libdl.find_library(["cudnn64_70.dll", "cudnn64_65.dll", "cudnn32_70.dll", "cudnn32_65.dll"], [""])
+  const libcudnn = Libdl.find_library(["cudnn64_70.dll", "cudnn64_65.dll", "cudnn32_70.dll",
+                                       "cudnn32_65.dll", "cudnn64_4.dll"], [""])
 end
 : # linux or mac
 begin
