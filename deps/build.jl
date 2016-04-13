@@ -1,6 +1,6 @@
 sources = ["im2col.cpp", "pooling.cpp"]
 
-compiler = "g++"
+compiler = get(ENV, "CXX", "g++")
 flags    = ["-fPIC", "-Wall", "-O3", "-shared"]
 libname  = "libmochaext.so"
 openmp   = "-fopenmp"
@@ -12,7 +12,8 @@ openmp   = "-fopenmp"
     println("install gcc.")
     println("")
     println("Disabling OpenMP. To force enable OpenMP, set MOCHA_FORCE_OMP environment")
-    println("variable.")
+    println("variable and set the CXX environment variable to the appropriate value")
+    println("to invoke GCC's g++ frontend, such as g++-5")
     println("")
     openmp = ""
   end
