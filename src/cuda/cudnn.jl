@@ -40,10 +40,12 @@ show(io::IO, error::CuDNNError) = print(io, cudnn_error_description[error.code])
 begin
   const libcudnn = Libdl.find_library(["cudnn64_70.dll", "cudnn64_65.dll", "cudnn32_70.dll",
                                        "cudnn32_65.dll", "cudnn64_4.dll"], [""])
+  @assert (libcudnn != "") "Could not find a CUDA neural net DLL [cudnn64_70.dll, cudnn64_65.dll, cudnn32_70.dll, cudnn32_65.dll, cudnn64_4.dll]. See: http://mochajl.readthedocs.io/en/latest/user-guide/backend.html#cuda-backend"
 end
 : # linux or mac
 begin
   const libcudnn = Libdl.find_library(["libcudnn"], [""])
+  @assert (libcudnn != "") "Could not find CUDA neural shared library [libcudnn]. See http://mochajl.readthedocs.io/en/latest/user-guide/backend.html#cuda-backend"
 end)
 
 macro cudnncall(fv, argtypes, args...)
