@@ -10,7 +10,7 @@ begin
 end
 : # linux or mac
 begin
-  const libcuda = Libdl.find_library(["libcuda"], [""])
+  const libcuda = Libdl.find_library(["libcuda","libcudart"], [""])
   if isempty(libcuda)
     error("Libcuda not found via Libdl.find_library! Please check installation and ENV configuration")
   end
