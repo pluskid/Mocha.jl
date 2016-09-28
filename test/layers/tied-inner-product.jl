@@ -12,13 +12,13 @@ function test_tied_inner_product_layer(backend::Backend, n_input, T, eps)
 
   println("    > Setup")
   registry_reset(backend)
-  layer_data = MemoryDataLayer(tops=[symbol("i-$i") for i = 1:n_input],
+  layer_data = MemoryDataLayer(tops=[Symbol("i-$i") for i = 1:n_input],
       batch_size=batch_size, data=inputs)
   layer_ip = InnerProductLayer(name="ip1", param_key=param_key,
-      tops=[symbol("ip1-$i") for i=1:n_input], bottoms=[symbol("i-$i") for i=1:n_input],
+      tops=[Symbol("ip1-$i") for i=1:n_input], bottoms=[Symbol("i-$i") for i=1:n_input],
       output_dim=hidden_dim)
   layer_ip2 = TiedInnerProductLayer(name="ip2", tied_param_key=param_key,
-      tops=[symbol("ip2-$i") for i=1:n_input], bottoms=[symbol("ip1-$i") for i=1:n_input])
+      tops=[Symbol("ip2-$i") for i=1:n_input], bottoms=[Symbol("ip1-$i") for i=1:n_input])
 
   net = Net("test-tied-ip", backend, [layer_data,layer_ip,layer_ip2])
   init(net)

@@ -5,14 +5,29 @@
 # Optimizing Recurrent Networks. arXiv:1212.0901 [cs.LG]
 
 
-# We'll reuse the SGD types for Nesterov, because all the parameters and state are the same
-const Nesterov = SGD
-typealias NesterovSolverState SGDSolverState
-typealias NesterovSolverSnapashot SGDSolverSnapshot
+immutable Nesterov <: SolverMethod
+end
+type NesterovSolverState <: InternalSolverState
+    learning_rate :: Float64
+    momentum      :: Float64
+    param_states  :: Vector{LayerState}
+    param_history :: Vector{Vector{Blob}}
+    last_momentum :: Float64
+end
+
+type NesterovSolverSnapshot <: SolverStateSnapshot
+    iteration     :: Int
+    obj_val       :: Float64
+    learning_rate :: Float64
+    momentum      :: Float64
+end
+
+#typealias NesterovSolverState SGDSolverState
+#typealias NesterovSolverSnapashot SGDSolverSnapshot
 
 
 function update(solver::Solver{Nesterov}, net::Net, state::SolverState{NesterovSolverState})
-    # TODO check if this is identical with sgd.jl update()?
+  # TODO check if this is identical with sgd.jl update()?
   for i = 1:length(state.internal.param_states)
     layer_state   = state.internal.param_states[i]
     history = state.internal.param_history[i]
