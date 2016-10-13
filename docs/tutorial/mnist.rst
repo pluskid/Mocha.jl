@@ -229,7 +229,7 @@ working plan, we provide it with some coffee breaks:
 
 .. code-block:: julia
 
-   setup_coffee_lounge(solver, save_into="$exp_dir/statistics.hdf5", every_n_iter=1000)
+   setup_coffee_lounge(solver, save_into="$exp_dir/statistics.jld", every_n_iter=1000)
 
 This sets up the coffee lounge, which holds data reported during coffee breaks.
 Here we also specify a file to save the information we accumulated in coffee breaks to disk.
