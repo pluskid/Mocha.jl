@@ -18,7 +18,7 @@ function setup(backend::Backend, layer::RandomMaskLayer, inputs::Vector{Blob}, d
   dropouts = Array(DropoutLayerState, length(inputs))
   for i = 1:length(inputs)
     dropout_layer = DropoutLayer(name="$(layer.name)-dropout-$i", auto_scale=false, ratio=layer.ratio,
-        bottoms=Symbol[symbol("$(layer.bottoms[i])-$i")])
+        bottoms=Symbol[Symbol("$(layer.bottoms[i])-$i")])
     dropouts[i] = setup(backend, dropout_layer, Blob[inputs[i]], Blob[diffs[i]])
   end
   return RandomMaskLayerState(layer, dropouts)

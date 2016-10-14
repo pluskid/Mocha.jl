@@ -12,7 +12,7 @@ function test_random_mask_layer(backend, T, eps)
   diff_blobs = Blob[make_blob(backend, inputs[i]) for i = 1:n_inputs]
 
   println("    > Setup")
-  layer = RandomMaskLayer(bottoms=[symbol("inputs-$i") for i = 1:n_inputs], ratio=ratio)
+  layer = RandomMaskLayer(bottoms=[Symbol("inputs-$i") for i = 1:n_inputs], ratio=ratio)
   state = setup(backend, layer, input_blobs, diff_blobs)
 
   println("    > Forward")

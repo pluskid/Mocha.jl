@@ -5,7 +5,7 @@ flags    = ["-fPIC", "-Wall", "-O3", "-shared"]
 libname  = "libmochaext.so"
 openmp   = "-fopenmp"
 
-@osx? begin
+@static is_apple() ? begin
   if !haskey(ENV, "MOCHA_FORCE_OMP")
     println("OpenMP is currently not officially supported by OS X Clang compiler yet.")
     println("(see http://clang-omp.github.io/ to install OpenMP clang extension, or")
