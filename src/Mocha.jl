@@ -90,6 +90,7 @@ include("solvers/sgd.jl")
 include("solvers/nesterov.jl")
 include("solvers/adam.jl")
 include("solvers/adagrad.jl")
+include("solvers/adadelta.jl")
 
 if Config.use_cuda
   include("cuda/solvers.jl")
