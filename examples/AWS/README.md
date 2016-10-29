@@ -21,7 +21,7 @@ For this example we are going to provision an instance type called *p2.xlarge* w
 
 **However,** AWS does not let brand new users launch *p2* or *g2* instances when you first open your account.  So you need to apply
 for access to GPU enabled machines by opening a support request.  From the AWS Console (after signing in) click on *support* in the
-top right hand corner and select *support center* from the dropdown menu.  When the support page opens up click on ![Create Case](/.create_case.png).  This will open up a form similar to the figure below.  Choose the region closest to your location and submit the request with the text and options suggested by the figure.
+top right hand corner and select *support center* from the dropdown menu.  When the support page opens up click on ![Create Case](./create_case.png).  This will open up a form similar to the figure below.  Choose the region closest to your location and submit the request with the text and options suggested by the figure.
 
 ![Support Request](./support_request.png)
 
