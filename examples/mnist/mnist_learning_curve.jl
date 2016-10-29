@@ -1,3 +1,5 @@
+#!/usr/local/bin/julia
+
 using PyPlot, JLD
 # Plot the learning curve for the MNIST tutorial to verify
 # the solver is progressing toward convergence
