@@ -19,13 +19,11 @@ When the support page opens up click on ![Create Case](./create_case.png).  This
 ## While you wait ![Wink](./smile.png)
 Approval of the support request might take a few days.  So while you wait let me suggest a few ways to sharpen your knowlege of AWS, Mocha, or Deep Learning 
 
-  #### Track 1 - Deep learning expert but new to AWS
-  Work through the EC2 tutorials for the few days so you learn how to launch and manage your instances.
+#### Track 1 - Deep learning expert but new to AWS
+Work through the EC2 tutorials for the few days so you learn how to launch and manage your instances.
 
-
-  #### Track 2 - Cloud comfortable but new to Mocha or Deep Learning
-  Since we are going to be using the CIFAR10 example later in this tutorial and training it in the cloud, why not download the original paper on the dataset and one of the first convolutional neural network implementations that threw the gates open to deep learning back in 2012.  Before this seminal paper neural networks deeper than one or two layers hidden layers were untrainable because the backpropogation of gradients from the output layer had lost their corrective strength by the time they reached the bottom layers of deep networks.  
-
+#### Track 2 - Cloud comfortable but new to Mocha or Deep Learning
+Since we are going to be using the CIFAR10 example later in this tutorial and training it in the cloud, why not download the original paper on the dataset and one of the first convolutional neural network implementations that threw the gates open to deep learning back in 2012.  Before this seminal paper neural networks deeper than one or two layers hidden layers were untrainable because the backpropogation of gradients from the output layer had lost their corrective strength by the time they reached the bottom layers of deep networks.  
 
 ## Provisioning the instance and the base image
 At this point you should have heard back from AWS that you are approved for *g2* and *p2* instance types. Now we need to launch a GPU instance with NVIDIA drivers and the Cuda components needed to work with the GPU.
@@ -71,11 +69,11 @@ At this point we need to install software that is not included in the base image
 
 `sudo apt-get install cmake hdf5-tools m4 libopenblas-base`
 
-**Note 3:* The package `hdf5-tools` is not required to install Julia, but is required to install Mocha later in this build.  So it is good to get `hdf5-tools` in place now. 
+**Note 3:** The package `hdf5-tools` is not required to install Julia, but is required to install Mocha later in this build.  So it is good to get `hdf5-tools` in place now. 
 
 Once these installs complete we are ready to install Julia.
 
-It is a solid practice to build a core component such as a programming language from its stable release unless you plan to contribute to the development of the language itself. For this tutorial we are trying to build a solid installation to Julia and Mocha to train Deep ConvNets.  So we want a stable release. To find a stable version and build against that version we will use the version control properties of `git`.
+It is a solid practice to build a core component such as a programming language from its stable release unless you plan to contribute to the development of the language itself. For this tutorial we are trying to build a solid installation of Julia and Mocha to train Deep ConvNets.  So we want a stable release. To find a stable version and build against that version we will use the version control properties of `git`.
 
 Change directory into the newly cloned julia folder with `cd julia`.  Then issue a `git status` command.  You should see git identifies this folder as a project under version control.  Now issue the `git tag` command.  This will provide a list of tagged releases similar to the list below:
 
@@ -92,17 +90,21 @@ v0.5.0-rc0
 v0.5.0-rc1  
 ```
 
-We do not want to use a release candidate  in the format `v0.X.0-rcX`.  Therefore,  `v0.5.0` might be a good choice, but as of Oct 016 there is a compatibility issue between Mocha and this version.  It is is not unusual in a quickly developing project like Julia and Mocha for compatiblity and dependency issues at the edge of the build tree to conflict.   So we will drop back and use `v0.4.7`.  Issue a git command to checkout the version we want to build, `git checkout v0.4.7`.  
+We do not want to use a release candidate  in the format `v0.X.0-rcX`.  Therefore,  `v0.5.0` might be a good choice, but as of Oct 2016 there is a compatibility issue between Mocha and this version.  It is is not unusual in a quickly developing project like Julia and Mocha for compatiblity and dependency conflicts at the edge of the build tree.   So we will drop back and use `v0.4.7`.  Issue a git command to checkout the version we want to build, `git checkout v0.4.7`.  
 
 Next, we want to take full advantage of all the CPUs on our instance when we build because this should make the build process go much faster. To find the number of available cores run `lscpu`.  See the link [here](http://unix.stackexchange.com/questions/218074/how-to-know-number-of-cores-of-a-system-in-linux) for a good explanation of the output of `lscpu`.  On the *p2.xlarge* instance there are  4 CPUs.
 
 Finally, build the julia executable with `sudo make -j N` where `N` is the number of CPUs on the cloud instance.    
 
-When the build completes in about 40 minutes take a look at the folder and notice that it now contains an executable named `julia`.  We want to link that executable into the PATH so issue this command, `sudo ln -s -f ~/julia/julia /usr/local/bin/julia`. This allows you to issue the `julia` command from anywhere and it will launch the REPL or invoke julia to run a program.
+When the build completes in about 40 minutes take a look at the folder and notice that it now contains an executable named `julia`.  We want to link that executable into the PATH so issue this command 
+
+`sudo ln -s -f ~/julia/julia /usr/local/bin/julia`. 
+
+This allows you to issue the `julia` command from anywhere and it will launch the REPL or invoke julia to run a program.
 
 Open the new executable with `julia` and run `Pkg.add("Mocha")`. Follow a successful Mocha installation with `Pkg.test("Mocha")`.
 
-God willin' and the crik don't rise (..as my Texan grandfather would say) you will get a successful Mocha test on AWS.  Now we need to enable GPU operations and test on the GPU backend.  Still in the Julia REPL issue `Pkg.dir("Mocha")` and make note of the Mocha directory.  Then exit out of the Julia REPL with `exit()`.
+*God willin' and the crik don't rise* (...as my Texan grandfather would say) you will get a successful Mocha test on AWS.  Now we need to configure the environment to use the GPU and test on the GPU backend.  Still in the Julia REPL issue `Pkg.dir("Mocha")` and make note of the Mocha directory.  Then exit out of the Julia REPL with `exit()`.
 
 Change into the Mocha directory and then `cd src/cuda/kernels`. Take a look at the files here and notice the `Makefile` that will build the cuda kernals used by Mocha.  Issue `make` to build these kernals with the NVIDIA Cuda Compiler (aka `nvcc`). 
 
@@ -112,8 +114,10 @@ Restart Julia with the `julia` command that is globally available now.  At the p
 
 ![Mocha GPU Test Output](./gpu_test_output.png)
 
-#### Build from scratch in apt-get based AMIs
-If you skipped ahead and want to run this automated from a script then follow these instruction:
+At this point you are ready to train the CIFAR10 example, so scroll on down to that section.
+
+### Build from a script
+If you skipped ahead and want to run an automated build then follow these instruction:
   * `cd ~`
   * `nano install_julia.sh`
 
@@ -171,3 +175,9 @@ that it only takes about 3 seconds to train 200 interations of backpropogation.
 Compared to my MacBook Pro this is about 28 times faster (19 min vs 530 min).
 
 ![Mocha GPU Results](./gpu_results.png)
+
+#### At the end of this tutorial you should have a good understanding of how to train Mocha networks in the cloud.  
+
+##Thank you for making the Mocha community so awesome!
+
+Report issues on this tutorial to our [GitHub Page](https://github.com/pluskid/Mocha.jl/issues) and we will get to them as soon as we can.
