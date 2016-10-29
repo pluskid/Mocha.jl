@@ -24,8 +24,8 @@ for access to GPU enabled machines by opening a support request.  From the AWS C
 top right hand corner and select *support center* from the dropdown menu.  When the support page opens up click on ![Create Case](./create_case.png).  This will open up a form similar to the figure below.  Choose the region closest to your location and submit the request with the text and options suggested by the figure.
 ![Support Request](./support_request.png)
 
-## While you wait
-Approval of the support request might take a few days.  So while you wait ![Wink](./smile.png) let me suggest a few ways to
+## While you wait ![Wink](./smile.png)
+Approval of the support request might take a few days.  So while you wait let me suggest a few ways to
 sharpen your knowlege of AWS, Mocha, or deep learning 
 
 #### Track 1 - Deep learning expert but new to AWS
@@ -70,7 +70,7 @@ Julia is new, which means that a lot of things that are annoying about other pro
 Julia is new, which also means that it is not pre-installed in very many AWS machine images (AMIs).  Note that I have tried the [Bitfusion Scientific Computing AMI]()
 
 #### Build from scratch in apt-get based AMIs
-[code language="bash"]
+```bash
 #! /bin/bash
 # Install build environment
 echo "*****************Setting up the Build Environment******************"
@@ -101,8 +101,7 @@ NUM_CPUS=$(lscpu | awk '/^CPU\(s\):/ {print $2}')
 echo "*****************Making Julia on $NUM_CPUS CPUs***************************"
 #Takes 30 minutes on a 4CPU p2.xlarge AWS instance
 sudo make -j $NUM_CPUS
-
-[/code]
+```
 
 When the build completes take a look at the folder and notice that it now
 contains an executable named `julia`.  We want to link that executable into
@@ -127,7 +126,7 @@ can issue `env` to see all environmental variables and you will see that our
 Mocha control variable has been added to the environment.
 
 Restart Julia with the `julia` command that is globally available now.  
-At the prompt issue `Pkg.test("Mocha").  Now the tests will restart but in the
+At the prompt issue `Pkg.test("Mocha")`.  Now the tests will restart but in the
 first few lines of the image below you will notice that `* CUDA enabled` caught
 the environment variable and is going to use the GPU backend to run the tests.
 If everything has been set up right then you should get the output below which
@@ -151,33 +150,7 @@ Compared to my MacBook Pro this is about 28 times faster (19 min vs 530 min).
 ![Mocha GPU Results](./gpu_results.png)
 
 
-#### Build from scratch in yum based AMIs
-```
-#! /bin/bash
-# Install build environment
-# The sed instruction allows the Extended Packages For
-# Enterprise Linux (epel) repository to get added to the yum package
-# manager. sed -i option edits in place.
-echo "*****************Setting up the Build Environment******************"
-sudo sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/epel.repo
-sudo yum -y update
-sudo yum -y upgrade
-# I need to check which of these are needed
-sudo yum -y install git gcc-gfortran clang m4 patch ncurses-devel python-devel
 
-#Set up Julia
-echo "*****************Cloning Julia*************************************"
-git clone https://github.com/JuliaLang/julia.git
-cd julia
-git checkout v0.4.7
-
-#Determine the number of CPUs to build on
-NUM_CPUS=$(lscpu | awk '/^CPU\(s\):/ {print $2}')
-
-echo "*****************Making Julia on $NUM_CPUS CPUs***************************"
-#Takes 30 minutes on a 4CPU p2.xlarge AWS instance
-time make -j $NUM_CPUS
-```
 
 
 install packages needed to build Julia from source with `sudo apt-get install g++ gfortran m4 cmake pkg-config git hdf5-tools`.  Note that `hdf5-tools` is not required to install Julia, but is required to install the `Mocha` package later in this build guide, and when Julia tries to call `sudo apt-get` from within the REPL it aborts in AWS.  So it is better to get `hdf5-tools` in place now. 
@@ -206,5 +179,30 @@ The build instructions also recommend running `make testall` before using the ex
 
 Once built, launch Julia and `Pkg.add("Mocha")`.  Once Mocha loads run `Pkg.test("Mocha")` to ensure that all components in the package are working.  I've had problems here and have solved them by removing Mocha, re-adding it and once I had to ensure the git branch was set to master instead of `<HEAD>`.  After Mocha finishes all of its tests then exit the Julia REPL.
 
-*[AMI]: Amazon Machine Image
-*[EC2]: Elastic Cloud Compute
+#### Build from scratch in yum based AMIs
+```
+#! /bin/bash
+# Install build environment
+# The sed instruction allows the Extended Packages For
+# Enterprise Linux (epel) repository to get added to the yum package
+# manager. sed -i option edits in place.
+echo "*****************Setting up the Build Environment******************"
+sudo sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/epel.repo
+sudo yum -y update
+sudo yum -y upgrade
+# I need to check which of these are needed
+sudo yum -y install git gcc-gfortran clang m4 patch ncurses-devel python-devel
+
+#Set up Julia
+echo "*****************Cloning Julia*************************************"
+git clone https://github.com/JuliaLang/julia.git
+cd julia
+git checkout v0.4.7
+
+#Determine the number of CPUs to build on
+NUM_CPUS=$(lscpu | awk '/^CPU\(s\):/ {print $2}')
+
+echo "*****************Making Julia on $NUM_CPUS CPUs***************************"
+#Takes 30 minutes on a 4CPU p2.xlarge AWS instance
+time make -j $NUM_CPUS
+```
