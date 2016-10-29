@@ -84,14 +84,17 @@ echo "*****************Setting up the Build Environment******************"
 # Running the update/upgrade on takes about 5 min
 sudo apt-get update
 sudo apt-get upgrade
-# Note I got asked about Docker upgrade on the Bitfusion AMI wich uses
-# Docker to manager other services in the AMI.  Choose option 'N' on this
-# question
+# Note 1: You will get asked about Docker upgrade on the Bitfusion AMI which
+# uses Docker to manager other services in the AMI.  Choose option 'N' on 
+# this question.
+# Note 2: You will also get asked about installs taking up space on the
+# drive.  To complete this tutorial you NOT need to configure anymore
+# storage on the instance than what is already provided with the default
+# image.  So say yes to these questions.
 
-# Takes less than a minute
 # Other packages required but already in this AMI are:
 # git g++ 
-# I have not tested the assertion from someone else's guide was that 
+# I have not tested the assertion from someone else's guide that 
 # the Julia build also requires
 # gfortran
 sudo apt-get install cmake hdf5-tools m4 libopenblas-base 
@@ -112,7 +115,7 @@ sudo make -j $NUM_CPUS
 
 When the build completes take a look at the folder and notice that it now
 contains an executable named `julia`.  We want to link that executable into
-the PATH so issue this command, `sudo ln -s -f ~/julia/julia /usr/local/bin/julia`
+the PATH so issue this command, `sudo ln -s -f ~/julia/julia /usr/local/bin/julia`. This allows you to issue the `julia` command from anywhere and it will launch the REPL or invoke julia to run a program.
 
 Open the new executable with `julia` and run `Pkg.add("Mocha")`.
 Follow a successful Mocha installation with `Pkg.test("Mocha")`.
@@ -132,8 +135,7 @@ backend.  At the ubuntu prompt enter `export MOCHA_USE_CUDA='true'`.  You
 can issue `env` to see all environmental variables and you will see that our
 Mocha control variable has been added to the environment.
 
-Restart Julia with the `julia` command that is globally available now.  
-At the prompt issue `Pkg.test("Mocha")`.  Now the tests will restart but in the
+Restart Julia with the `julia` command that is globally available now.  At the prompt issue `Pkg.test("Mocha")`.  Now the tests will restart but in the
 first few lines of the image below you will notice that `* CUDA enabled` caught
 the environment variable and is going to use the GPU backend to run the tests.
 If everything has been set up right then you should get the output below which
@@ -156,35 +158,29 @@ Compared to my MacBook Pro this is about 28 times faster (19 min vs 530 min).
 
 ![Mocha GPU Results](./gpu_results.png)
 
+The package `hdf5-tools` is not required to install Julia, but is required to install Mocha later in this build, and when Julia tries to call `sudo apt-get` from within the REPL it aborts in AWS.  So it is better to get `hdf5-tools` in place now. 
 
-
-
-
-install packages needed to build Julia from source with `sudo apt-get install g++ gfortran m4 cmake pkg-config git hdf5-tools`.  Note that `hdf5-tools` is not required to install Julia, but is required to install the `Mocha` package later in this build guide, and when Julia tries to call `sudo apt-get` from within the REPL it aborts in AWS.  So it is better to get `hdf5-tools` in place now. 
-
-Note that the version of Julia available in apt-get is just 0.2 which failed when I tried to run the `cifar10.jl` script.  So clone the git repo with `git clone git://github.com/JuliaLang/julia.git`.  This installs the source in a `/julia` directory.  
-
-I built Julia from the head of the master branch the first time and it failed to run `Pkg.test("Mocha")` later in the process.  So it is better practice to build a core component such as a programming language from its stable release unless you plan to contribute to the development of the language itself.  To find a stable version and build against that version we will use the version control properties of `git`.
+It is a solid practice to build a core component such as a programming language from its stable release unless you plan to contribute to the development of the language itself.  To find a stable version and build against that version we will use the version control properties of `git`.
 
 Change directory into the newly cloned julia folder with `cd julia`.  Then issue a `git status` command.  You should see git identifies this folder as a project under version control.  Now issue the `git tag` command.  This will provide a list of tagged releases similar to the list below:
-> v0.4.5  
-> v0.4.6  
-> v0.4.7  
-> v0.5.0  
-> v0.5.0-rc0  
-> v0.5.0-rc1  
 
-We want to use the last stable release not a release candidate `v0.X.0-rcX`.  So we issue a git command to checkout to the most recent stable branch which at the time I made this tutorial would be `git checkout v0.5.0`.  
+```
+.
+.
+.
+v0.4.5  
+v0.4.6  
+v0.4.7  
+v0.5.0  
+v0.5.0-rc0  
+v0.5.0-rc1  
+```
 
-We want to build Julia on the maximum number of cores available to the server. To find the number of available cores run `lscpu`.  See the link [here](http://unix.stackexchange.com/questions/218074/how-to-know-number-of-cores-of-a-system-in-linux) for a good explanation of the output of `lscpu`.  
+We want to use the last stable release not a release candidate `v0.X.0-rcX`.  This would push us to `v0.5.0`, but as of Oct 016 there is a compatibility issue between Mocha and this version.  It is is not unusual in a quickly developing project like Julia and Mocha for compatiblity and dependency issues at the edge of the buid tree to conflict so we will drop back and use `v0.4.7`.  Issue a git command to checkout to the most recent stable branch which at the time I made this tutorial would be `git checkout v0.4.7`.  
 
-Finally, build the julia executable with `sudo make -j N` where `N` is the number of CPUs on the cloud instance.  It took about ten minutes to build from source on a *p2.xlarge* AWS instance with 4 CPUs.
+We want to build Julia on the maximum number of cores available to the server. To find the number of available cores run `lscpu`.  See the link [here](http://unix.stackexchange.com/questions/218074/how-to-know-number-of-cores-of-a-system-in-linux) for a good explanation of the output of `lscpu`.  on the *p2.xlarge* instance there are  4 CPUs.
 
-Add a link to the `/usr/local/bin` directory that puts the `julia` executable in the path with the link command `sudo ln -f -s ~/julia/julia /usr/local/bin/julia`.  This allows you to issue the `julia` command from anywhere and it will launch the REPL or invoke julia to run a program.
-
-The build instructions also recommend running `make testall` before using the executable and this takes about ten minutes to run all the tests. 
-
-Once built, launch Julia and `Pkg.add("Mocha")`.  Once Mocha loads run `Pkg.test("Mocha")` to ensure that all components in the package are working.  I've had problems here and have solved them by removing Mocha, re-adding it and once I had to ensure the git branch was set to master instead of `<HEAD>`.  After Mocha finishes all of its tests then exit the Julia REPL.
+Finally, build the julia executable with `sudo make -j N` where `N` is the number of CPUs on the cloud instance.  
 
 #### Build from scratch in yum based AMIs
 ```
