@@ -19,9 +19,11 @@ Usage for AWS is dependent on two factors.  The type of computer you use, called
 For this example we are going to provision an instance type called *p2.xlarge* which contains one NVIDIA Tesla K80 GPU, and costs about
 90 cents per hour (as of Oct 2016).  Building the software and running the CIFAR10 training will take less than two hours.
 
-**However,** AWS does not let brand new users launch *p2* or *g2* instances when you first open your account.  So you need to apply
+**However, AWS does not let brand new users launch *p2* or *g2* instances when you first open your account.**  So you need to apply
 for access to GPU enabled machines by opening a support request.  From the AWS Console (after signing in) click on *support* in the
-top right hand corner and select *support center* from the dropdown menu.  When the support page opens up click on ![Create Case](./create_case.png).  This will open up a form similar to the figure below.  Choose the region closest to your location and submit the request with the text and options suggested by the figure.
+top right hand corner and select *support center* from the dropdown menu. 
+
+When the support page opens up click on ![Create Case](./create_case.png).  This will open up a form similar to the figure below.  Choose the region closest to your location and submit the request with the text and options suggested by the figure.
 
 ![Support Request](./support_request.png)
 
@@ -55,7 +57,9 @@ cloud instance can be quite a challenge.  To avoid this complication we are goin
 You can launch any AMI from the EC2 Management Console, but we will launch by clicking on this link for the [AWS Marketplace](https://aws.amazon.com/marketplace) and entering `Bitfusion Mobile Deep Learning` into the search bar.  Note that the commercially provided AMI costs another 9 cents per hour (Oct 2016 pricing), but the cost is well worth avoiding the headache of fighting the 
 NVIDA/CUDA/INSTANCE configuration challenge.  
 
-When the search results return click on the title of the AMI and it will take you to the configuration screen.  Select the Region where you were granted the *p2.xlarge* instance then click on ![Continue](./continue.png).
+When the search results return click on the title of the AMI and it will take you to the configuration screen.  Select the Region where you were granted the *p2.xlarge* instance.
+
+Then click on ![Continue](./continue.png).
 
 In the next screen ensure that you  choose *p2.xlarge* as the instance type and properly set the *Key pair* to a value in the dropdown menu where you have the private key stored locally, otherwise you will not be able to `ssh` into the new instance.
 
