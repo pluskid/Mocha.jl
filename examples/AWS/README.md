@@ -1,16 +1,42 @@
 # Mocha on Amazon Web Services (AWS)
 The real power of developing deep learning networks is only realized when you can test your ideas and run your models on powerful 
-compute platforms that can complete training in a fraction of the time it took only a few years ago.  Today state-of-the-art 
-machine learning algorithms are routinely run on cloud based compute that offers access to cutting edge GPU technology 
-for a very small of the cost required to buy the hardware and run it on your personal or company resources.
+compute platforms that complete training in a fraction of the time it took only a few years ago.  Today state-of-the-art 
+machine learning algorithms routinely run on cloud based compute that offers access to cutting edge GPU technology 
+for a tiny cost compared to buying the GPU hardware and running it in your personal or company servers.
 
-Amazon Web Services (AWS) is one of the most popular cloud based services that provides access to such powerful computers.  Since 
-Mocha and Julia are new I have not found an Amazon Machine Image (AMI) pre-configured to run Mocha in the cloud.  So this tutorial will
-show you how to take the CIFAR-10 example and get it running in the cloud.  Along the way you will learn how to interact with AWS in
-order to run any program you write in the cloud too.
+Amazon Web Services (AWS) is one of the most popular cloud based services that provides access to such powerful computers.  As Mocha
+and Julia mature I'm sure that a pre-configured Amazon Machine Image (AMI) will emerge to run Mocha in the cloud. Now, in October
+2016, such an AMI does not exist, but even when a pre-configured image for Mocha does become available I highly recommend following
+through this tutorial at least once so you understand how cloud resources are provisioned and configured.
+
+We are going to show you how to take the CIFAR-10 example and get it running in the cloud.  Along the way you will learn how to 
+interact with AWS and get a broader understanding of cloud architectures in general.
 
 ## Signing up for AWS
-Explain sign up and requesting a p2.xlarge instance
+The first task in getting up and running in AWS is to set up an account.  If you already have an Amazon.com shopping account these same credentials and methods of payment will get you into AWS.  If not, then sign up for an [account here](aws.amazon.com).  There is no charge for signing up for the account.
+
+Usage for AWS is dependent on two factors.  The type of computer you use, called the *instance type* and the hours you use it for.
+For this example we are going to provision an instance type called *p2.xlarge* which contains one NVIDIA Tesla K80 GPU, and costs about
+90 cents per hour (as of Oct 2016).  Building the software and running the CIFAR10 training will take less than two hours.
+
+**However,** AWS does not let brand new users start-up *p2* or *g2* instances when you first open your account.  So you need to apply
+for access to GPU enabled machines by opening a support request.  From the AWS Console (after signing in) click on *support* in the
+top right hand corner and select *support center* from the dropdown menu.  When the support page opens up click on ![Create Case](./create_case.png).  This will open up a form similar to the figure below.  Choose the region closest to your location and submit the request with the text and options suggested by the figure.
+![Support Request](./support_request.png)
+
+## While you wait
+Approval of the support request might take a few days.  So while you wait ![Wink](./smile.png) let me suggest a few ways to
+sharpen your knowlege of AWS, Mocha, or deep learning 
+
+#### Track 1 - Deep learning expert learning about AWS
+
+#### Track 2 - Cloud comfortable but new to Mocha or Deep Learning
+Since we are going to be using the CIFAR10 example later in this tutorial and training it in the cloud, why not 
+download the original paper on the dataset and one of the first convolutional neural network implementations
+that threw the gates open to deep learning back in 2012.  Before this seminal paper neural networks deeper than
+one or two layers were untrainable because the backpropogation of gradients from the output layer had lost their
+corrective strength by the time they reached the bottom layers of deep networks.  
+
 Might have to sign up and wait a few days.
 Work through the EC2 tutorials for the few days so you learn how to launch and manage your instances.
 Offer reading list suggestions and other tutorials to get done and then come back to this one.
