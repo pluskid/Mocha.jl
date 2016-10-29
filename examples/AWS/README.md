@@ -4,7 +4,7 @@ compute platforms that complete training in a fraction of the time it took only 
 machine learning algorithms routinely run on cloud based compute that offers access to cutting edge GPU technology 
 for a tiny cost compared to buying the GPU hardware and running it in your personal or company servers.
 
-Amazon Web Services (AWS) is one of the most popular cloud based services that provides access to such powerful computers.  As Mocha
+Amazon Web Services (AWS) is one of the most popular cloud based services that provide access to such powerful computers.  As Mocha
 and Julia mature I'm sure that a pre-configured Amazon Machine Image (AMI) will emerge to run Mocha in the cloud. Now, in October
 2016, such an AMI does not exist, but even when a pre-configured image for Mocha does become available I highly recommend following
 through this tutorial at least once so you understand how cloud resources are provisioned and configured.
@@ -13,19 +13,20 @@ We are going to show you how to take the CIFAR-10 example and get it running in 
 interact with AWS and get a broader understanding of cloud architectures in general.
 
 ## Signing up for AWS
-The first task in getting up and running in AWS is to set up an account.  If you already have an Amazon.com shopping account these same credentials and methods of payment will get you into AWS.  If not, then sign up for an [account here](aws.amazon.com).  There is no charge for signing up for the account.
+The first task in getting up and running in AWS is to set up an account.  If you already have an Amazon.com shopping account these same credentials and methods of payment will get you into AWS.  If not, then sign up for an [account here](https://aws.amazon.com). There is no charge for signing up for the account.
 
-Usage for AWS is dependent on two factors.  The type of computer you use, called the *instance type* and the hours you use it for.
+Usage for AWS is dependent on two factors.  The type of computer you use, called the *instance type*, and the hours you use it for.
 For this example we are going to provision an instance type called *p2.xlarge* which contains one NVIDIA Tesla K80 GPU, and costs about
 90 cents per hour (as of Oct 2016).  Building the software and running the CIFAR10 training will take less than two hours.
 
-**However,** AWS does not let brand new users start-up *p2* or *g2* instances when you first open your account.  So you need to apply
+**However,** AWS does not let brand new users launch *p2* or *g2* instances when you first open your account.  So you need to apply
 for access to GPU enabled machines by opening a support request.  From the AWS Console (after signing in) click on *support* in the
-top right hand corner and select *support center* from the dropdown menu.  When the support page opens up click on ![Create Case](./create_case.png).  This will open up a form similar to the figure below.  Choose the region closest to your location and submit the request with the text and options suggested by the figure.
+top right hand corner and select *support center* from the dropdown menu.  When the support page opens up click on ![Create Case](/.create_case.png).  This will open up a form similar to the figure below.  Choose the region closest to your location and submit the request with the text and options suggested by the figure.
+
 ![Support Request](./support_request.png)
 
-## While you wait
-Approval of the support request might take a few days.  So while you wait ![Wink](./smile.png) let me suggest a few ways to
+## While you wait ![Wink](./smile.png)
+Approval of the support request might take a few days.  So while you wait let me suggest a few ways to
 sharpen your knowlege of AWS, Mocha, or deep learning 
 
 #### Track 1 - Deep learning expert but new to AWS
@@ -49,28 +50,30 @@ The Amazon *p2* instance contains both a CPU and an [NVIDIA Tesla K80](http://ww
 in order to access the GPU the NVIDIA drivers for the P80 must be installed and the various elements of the NVIDIA development
 environment must also be installed.  This [blog post](https://aws.amazon.com/blogs/aws/new-p2-instance-type-for-amazon-ec2-up-to-16-gpus/) describes how to install these components from scratch, but I find that
 installing the correct NVIDIA driver and a compatible version of the Cuda Toolkit that is also compliant with the hardware on the
-cloud instance can be quite a challenge.  To avoid this complication we are going to launch an instance in tutorial from a commercially supported AMI available on the AWS marketplace.
+cloud instance can be quite a challenge.  To avoid this complication we are going to launch an instance in this tutorial from a commercially supported AMI available on the AWS marketplace.  
 
-#This needs fixing now that it works
-You can launch any AMI from the EC2 Management Console, but we will launch by clicking on this link for the [AWS Marketplace](aws.amazon.com/marketplace) and entering `Bitfusino Mobile Deep Learning` into the search bar.  Note that the commercially provided AMI costs another 9 cents per hour (Oct 2016 pricing).  I have tried the free [NVIDIA Cuda 7.5 AMI](https://aws.amazon.com/marketplace/pp/B01LZMLK1K) but much to my surprise the basic NVIDIA drivers were not installed.  When I ran `nvidia-smi` I got this reply:
-
+You can launch any AMI from the EC2 Management Console, but we will launch by clicking on this link for the [AWS Marketplace](https://aws.amazon.com/marketplace) and entering `Bitfusion Mobile Deep Learning` into the search bar.  Note that the commercially provided AMI costs another 9 cents per hour (Oct 2016 pricing), but the cost is well worth avoiding the headache of fighting the 
+NVIDA/CUDA/INSTANCE configuration challenge.  
 
 When the search results return click on the title of the AMI and it will take you to the configuration screen.  Select the Region where you were granted the *p2.xlarge* instance then click on ![Continue](./continue.png).
 
 In the next screen ensure that you  choose *p2.xlarge* as the instance type and properly set the *Key pair* to a value in the dropdown menu where you have the private key stored locally, otherwise you will not be able to `ssh` into the new instance.
 
 ## Verify NVIDIA Drivers and CUDA Toolkit are Working
-TODO: build a shell script that checks output from these two components
-`nvidia-smi`
+TODO: build a shell script that checks output from these two components  
+`nvidia-smi`  
 `which nvcc`
 
 ## Installing Julia
 Julia is new, which means that a lot of things that are annoying about other programming languages are "fixed" and sometimes even "FUN" in Julia.
 
-Julia is new, which also means that it is not pre-installed in very many AWS machine images (AMIs).  Note that I have tried the [Bitfusion Scientific Computing AMI]()
+Julia is new, which also means that it is not pre-installed in very many Amazon Machine Images (AMIs) so we will be building Julia
+from source.  Note that I have tried the [Bitfusion Scientific Computing AMI](https://aws.amazon.com/marketplace/pp/B00Z8C6ZQS) that
+includes Julia and NVIDIA drivers, but when I add Mocha, enable the GPU backend and run `Pkg.test("Mocha")` it fails with an error in
+`CuDNN.jl` file.
 
 #### Build from scratch in apt-get based AMIs
-[code language="bash"]
+```bash
 #! /bin/bash
 # Install build environment
 echo "*****************Setting up the Build Environment******************"
@@ -101,8 +104,7 @@ NUM_CPUS=$(lscpu | awk '/^CPU\(s\):/ {print $2}')
 echo "*****************Making Julia on $NUM_CPUS CPUs***************************"
 #Takes 30 minutes on a 4CPU p2.xlarge AWS instance
 sudo make -j $NUM_CPUS
-
-[/code]
+```
 
 When the build completes take a look at the folder and notice that it now
 contains an executable named `julia`.  We want to link that executable into
@@ -127,7 +129,7 @@ can issue `env` to see all environmental variables and you will see that our
 Mocha control variable has been added to the environment.
 
 Restart Julia with the `julia` command that is globally available now.  
-At the prompt issue `Pkg.test("Mocha").  Now the tests will restart but in the
+At the prompt issue `Pkg.test("Mocha")`.  Now the tests will restart but in the
 first few lines of the image below you will notice that `* CUDA enabled` caught
 the environment variable and is going to use the GPU backend to run the tests.
 If everything has been set up right then you should get the output below which
@@ -151,33 +153,7 @@ Compared to my MacBook Pro this is about 28 times faster (19 min vs 530 min).
 ![Mocha GPU Results](./gpu_results.png)
 
 
-#### Build from scratch in yum based AMIs
-```
-#! /bin/bash
-# Install build environment
-# The sed instruction allows the Extended Packages For
-# Enterprise Linux (epel) repository to get added to the yum package
-# manager. sed -i option edits in place.
-echo "*****************Setting up the Build Environment******************"
-sudo sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/epel.repo
-sudo yum -y update
-sudo yum -y upgrade
-# I need to check which of these are needed
-sudo yum -y install git gcc-gfortran clang m4 patch ncurses-devel python-devel
 
-#Set up Julia
-echo "*****************Cloning Julia*************************************"
-git clone https://github.com/JuliaLang/julia.git
-cd julia
-git checkout v0.4.7
-
-#Determine the number of CPUs to build on
-NUM_CPUS=$(lscpu | awk '/^CPU\(s\):/ {print $2}')
-
-echo "*****************Making Julia on $NUM_CPUS CPUs***************************"
-#Takes 30 minutes on a 4CPU p2.xlarge AWS instance
-time make -j $NUM_CPUS
-```
 
 
 install packages needed to build Julia from source with `sudo apt-get install g++ gfortran m4 cmake pkg-config git hdf5-tools`.  Note that `hdf5-tools` is not required to install Julia, but is required to install the `Mocha` package later in this build guide, and when Julia tries to call `sudo apt-get` from within the REPL it aborts in AWS.  So it is better to get `hdf5-tools` in place now. 
@@ -206,5 +182,30 @@ The build instructions also recommend running `make testall` before using the ex
 
 Once built, launch Julia and `Pkg.add("Mocha")`.  Once Mocha loads run `Pkg.test("Mocha")` to ensure that all components in the package are working.  I've had problems here and have solved them by removing Mocha, re-adding it and once I had to ensure the git branch was set to master instead of `<HEAD>`.  After Mocha finishes all of its tests then exit the Julia REPL.
 
-*[AMI]: Amazon Machine Image
-*[EC2]: Elastic Cloud Compute
+#### Build from scratch in yum based AMIs
+```
+#! /bin/bash
+# Install build environment
+# The sed instruction allows the Extended Packages For
+# Enterprise Linux (epel) repository to get added to the yum package
+# manager. sed -i option edits in place.
+echo "*****************Setting up the Build Environment******************"
+sudo sed -i 's/enabled=0/enabled=1/' /etc/yum.repos.d/epel.repo
+sudo yum -y update
+sudo yum -y upgrade
+# I need to check which of these are needed
+sudo yum -y install git gcc-gfortran clang m4 patch ncurses-devel python-devel
+
+#Set up Julia
+echo "*****************Cloning Julia*************************************"
+git clone https://github.com/JuliaLang/julia.git
+cd julia
+git checkout v0.4.7
+
+#Determine the number of CPUs to build on
+NUM_CPUS=$(lscpu | awk '/^CPU\(s\):/ {print $2}')
+
+echo "*****************Making Julia on $NUM_CPUS CPUs***************************"
+#Takes 30 minutes on a 4CPU p2.xlarge AWS instance
+time make -j $NUM_CPUS
+```
