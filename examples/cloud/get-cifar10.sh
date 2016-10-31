@@ -1,0 +1,1 @@
+../cifar10/get-cifar10.sh
