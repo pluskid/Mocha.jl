@@ -1,4 +1,4 @@
-Mocha on Amazon Web Services (AWS)
+Mocha in the Cloud
 ==================================
 
 The real power of developing deep learning networks is only realized
@@ -44,37 +44,52 @@ access to GPU enabled machines by opening a support request. From the
 AWS Console (after signing in) click on *Support* in the top right hand
 corner and select *Support Center* from the dropdown menu.
 
-When the support page opens up click on |Create Case|. This will open up
-a form similar to the figure below. Choose the region closest to your
-location and submit the request with the text and options suggested by
-the figure.
+When the support page opens up click on |Create Case|
+
+This will open up a form similar to the figure below. Choose the region 
+closest to your location and submit the request with the text and options 
+suggested by the figure.
 
 |Support Request|
 
-While you wait |Wink|
----------------------
 
-Approval of the support request might take a few days. So while you wait
-let me suggest a few ways to sharpen your knowlege of AWS, Mocha, or
-Deep Learning
+While you wait 
+--------------
+
+.. image:: images/smile.png
+   :align: left
+   :scale: 35%
+
+Approval of the support request might take a few days. So while you 
+wait let me suggest a few ways to sharpen your knowlege of AWS, Mocha, or Deep 
+Learning.
 
 Track 1 - Deep learning expert but new to AWS
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Work through the EC2 tutorials for the few days so you learn how to
-launch and manage your instances.
+Work through the `EC2 tutorials`_ for a few days so you learn how to
+launch and manage instances on AWS.  As a new AWS member consider taking 
+advantage of the free services tier and then these tutorials will not cost
+anything.
+
+.. _EC2 tutorials: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html
 
 Track 2 - Cloud comfortable but new to Mocha or Deep Learning
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Since we are going to be using the CIFAR10 example later in this
-tutorial and training it in the cloud, why not download the original
-paper on the dataset and one of the first convolutional neural network
-implementations that threw the gates open to deep learning back in 2012.
-Before this seminal paper neural networks deeper than one or two layers
-hidden layers were untrainable because the backpropogation of gradients
-from the output layer had lost their corrective strength by the time
-they reached the bottom layers of deep networks.
+tutorial and training it in the cloud, why not download the 
+paper on the dataset [1]_ which provides good insight into the challenges
+of training image classifiers.  Then take a look at this seminal paper [2]_
+on training one of the first convolutional neural network 
+implementations that threw the gates open to deep learning in 2012.
+Before this critical work neural networks deeper than one or two 
+hidden layers were untrainable because the backpropogation of gradients 
+lost their corrective strength by the time they reached the bottom layers 
+of deep networks.
+
+.. [1] Krizhevsky, Alex, and Geoffrey Hinton. "Learning multiple layers of features from tiny images." (2009).
+.. [2] Krizhevsky, Alex, Ilya Sutskever, and Geoffrey E. Hinton. "Imagenet classification with deep convolutional neural networks." Advances in neural information processing systems. 2012.
 
 Provisioning the instance and the base image
 --------------------------------------------
@@ -85,7 +100,7 @@ with NVIDIA drivers and the Cuda components needed to work with the GPU.
 
 First let me explain just a little about Cuda.
 
-The Amazon *p2* instance contains both a CPU and an `NVIDIA Tesla
+The Amazon *p2.xlarge* instance contains both a CPU and an `NVIDIA Tesla
 K80 <http://www.nvidia.com/object/tesla-servers.html>`__ GPU, but in
 order to access the GPU the NVIDIA drivers for the P80 must be installed
 and the various elements of the NVIDIA development environment must also
@@ -110,7 +125,7 @@ When the search results return click on the title of the AMI and it will
 take you to the configuration screen. Select the Region where you were
 granted the *p2.xlarge* instance.
 
-Then click on |Continue|.
+Then click on |Continue|
 
 In the next screen ensure that you choose *p2.xlarge* as the instance
 type and properly set the *Key pair* to a value in the dropdown menu
@@ -123,60 +138,71 @@ Verify NVIDIA Drivers and CUDA Toolkit are Working
 While you were waiting for your AWS instance limits to be raised I hope
 you took the time to launch a few free instances and worked through a
 few of the AWS tutorials. With that knowledge launch the new *p2.xlarge*
-instance and use
-``ssh -i ".ssh/<your key name>" ubunty@ec2.your-AWS-domain-address``
+instance and log into the cloud instance with
 
-| Before going any further we need to verify that the NVIDIA drivers and
-  the Cuda toolkit are both installed and in the path. Issue the
-  following two commands. If you get an error on either one then
-  terminate the instance and start over from the section above.
-| ``nvidia-smi``
-| ``nvcc --version``
-| Output should resemble the screenshot below:
-| |Bitfusion Splash|
+.. code::
+
+  ssh -i ".ssh/<your key name>" ubunty@ec2.your-AWS-domain-address
+
+Before going any further we need to verify that the NVIDIA drivers and the 
+Cuda toolkit are both installed and in the path. Issue the following two 
+commands. If you get an error on either one then terminate the instance 
+and start over from the section above.
+
+.. code::
+
+  nvidia-smi
+  nvcc --version
+
+Output should resemble the screenshot below:
+|Bitfusion Splash|
 
 Installing Julia
 ----------------
 
 Julia is new, which means that a lot of things that are annoying about
-other programming languages are **FUN in Julia**.
+other programming languages are fun and easy in Julia.
 
 Julia is new, which also means that it is not pre-installed in very many
 Amazon Machine Images (AMIs) so we will be building Julia from source.
 Note that I have tried the `Bitfusion Scientific Computing
 AMI <https://aws.amazon.com/marketplace/pp/B00Z8C6ZQS>`__ that includes
-Julia and NVIDIA drivers, but when I add Mocha, enable the GPU backend
+Julia and NVIDIA drivers, but when I add Mocha, enable the GPU backend,
 and run ``Pkg.test("Mocha")`` it fails with an error in the ``cudnn.jl``
 file.
 
-There is a bash script below will automate the build and configution of
-Julia on the Bitfusion AMI, but if you are new to AWS then I recommend
+There is a bash script below that will automate the build and configution 
+of Julia on the Bitfusion AMI, but if you are new to AWS then I recommend
 walking through the build process to better understand how to work with
-the cloud instance. I you are eager to quickly get set up and and start
+a cloud instance. If you are eager to quickly get set up and and start
 coding Mocha in the cloud then scroll to the script at the bottom of
 this tutorial.
 
-At this point I assume you have a shell to your instance and you have
+At this point I assume you have a shell on your instance and you have
 verified that the NVIDIA drivers and Cuda toolkit are installed and
 working. Now we are going to update all the base software on the
 instance. Issue the following lines of code one at a time.
 
-| ``sudo apt-get update``
-| ``sudo apt-get updgrade``
+.. code::
+
+  sudo apt-get update
+  sudo apt-get updgrade
 
 **Note 1:** You will get asked about a Docker upgrade on the Bitfusion
-AMI which uses Docker to manager other services in the AMI. Choose
-option 'N' on this question.
+AMI which uses Docker to manager other services on the image. Choose
+option `N` on this question.
 
 **Note 2:** You will also get asked about installs taking up space on
 the drive. To complete this tutorial you do NOT need to configure
-anymore storage on the instance than what is already provided with the
-default image. So answer yes to these questions.
+anymore storage on the instance than what is already provided as the
+default. So answer `Y` to these questions.
 
 At this point we need to install software that is not included in the
 base image, but required to build Julia from source code.
 
-``sudo apt-get install cmake hdf5-tools m4 libopenblas-base``
+.. code::
+  
+  sudo apt-get install cmake hdf5-tools m4 libopenblas-base
 
 **Note 3:** The package ``hdf5-tools`` is not required to install Julia,
 but is required to install Mocha later in this build. So it is good to
@@ -187,7 +213,7 @@ Once these installs complete we are ready to install Julia.
 It is a solid practice to build a core component such as a programming
 language from its stable release unless you plan to contribute to the
 development of the language itself. For this tutorial we are trying to
-build a solid installation of Julia and Mocha to train Deep ConvNets. So
+build a reliable installation of Julia and Mocha to train a Deep CNN. So
 we want a stable release. To find a stable version and build against
 that version we will use the version control properties of ``git``.
 
@@ -197,7 +223,7 @@ folder as a project under version control. Now issue the ``git tag``
 command. This will provide a list of tagged releases similar to the list
 below:
 
-::
+.. code-block:: bash
 
     v0.1.0
     .
@@ -212,7 +238,7 @@ below:
 
 We do not want to use a release candidate in the format ``v0.X.0-rcX``.
 Therefore, ``v0.5.0`` might be a good choice, but as of Oct 2016 there
-is a compatibility issue between Mocha and this version. It is is not
+is a compatibility issue between Mocha and this version. It is not
 unusual in a quickly developing project like Julia and Mocha for
 compatiblity and dependency conflicts at the edge of the build tree. So
 we will drop back and use ``v0.4.7``. Issue a git command to checkout
@@ -232,7 +258,9 @@ When the build completes in about 40 minutes take a look at the folder
 and notice that it now contains an executable named ``julia``. We want
 to link that executable into the PATH so issue this command
 
-``sudo ln -s -f ~/julia/julia /usr/local/bin/julia``.
+.. code::
+
+  sudo ln -s -f ~/julia/julia /usr/local/bin/julia
 
 This allows you to issue the ``julia`` command from anywhere and it will
 launch the REPL or invoke julia to run a program.
@@ -271,22 +299,22 @@ At this point you are ready to train the CIFAR10 example, so scroll on
 down to that section.
 
 Build from a script
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
-If you skipped ahead and want to run an automated build then follow
+If you skipped ahead and want to install Julia from a script that 
+automates all of the instruction in the preceding paragraphs then follow
 these instruction:
 
--  ``cd ~``
--  ``nano install_julia.sh``
+.. code::
+
+  cd ~
+  nano install_julia.sh
 
 Cut and paste the script below into the ``nano`` text window and save
-the file with ``CTRL+x``. Then issue the following commands to run the
-script:
+the file with ``CTRL+x``. 
 
--  ``chmod +x install_julia.sh``
--  ``sudo ./install_julia.sh``
-
-.. code:: bash
+.. code-block:: bash
+    :linenos:
 
     #! /bin/bash
     # Install build environment
@@ -322,30 +350,31 @@ script:
     #Takes 30 minutes on a 4CPU p2.xlarge AWS instance
     sudo make -j $NUM_CPUS
 
+Then issue the following commands to run the script:
+
+.. code::
+
+  chmod +x install_julia.sh``
+  sudo install_julia.sh``
+
 Running the CIFAR10 Test
 ------------------------
 
-| At this point the CIFAR10 example should run without any problems.
-  There are
-| links to the example files in the AWS example folder. Change directory
-  into
-| ``/path/to/Mocha/examples/AWS``. Run ``./get-cifar10.sh``. Once the
-  data
-| is downloaded you can run the example by issueing
-  ``julia cifar10.jl``.
+At this point the CIFAR10 example should run without any problems.
+There are links to the example files in the AWS example folder. Change directory
+into ``/path/to/Mocha/examples/AWS``. Run ``get-cifar10.sh``. Once the data
+is downloaded you can run the example by issuing
 
-| Once the example starts to run take note that the environment variable
-  we set
-| for ``Pkg.test("Mocha")`` is still in place so you should see
-  ``* CUDA enabled``
-| and that the ``DefaultBackend = Mocha.GPUBackend``. This is awesome
-  because
-| you are now going to train the CIFAR10 network in the cloud and you
-  will see
-| that it only takes about 3 seconds to train 200 interations of
-  backpropogation.
-| Compared to my MacBook Pro this is about 28 times faster (19 min vs
-  530 min).
+.. code::
+
+  julia cifar10.jl 
+
+Once the example starts to run take note that the environment variable we set
+for ``Pkg.test("Mocha")`` is still in place so you should see ``* CUDA enabled``
+and that the ``DefaultBackend = Mocha.GPUBackend``. This is awesome because
+you are now going to train the CIFAR10 network in the cloud and you will see
+that it only takes about 3 seconds to train 200 iterations of backpropogation.
+Compared to my MacBook Pro this is about 28 times faster (19 min vs 530 min).
 
 |Mocha GPU Results|
 
@@ -353,17 +382,14 @@ At the end of this tutorial you should have a good understanding of how to train
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Thank you for making the Mocha community so awesome!
-----------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Report issues on this tutorial to our `GitHub
-Page <https://github.com/pluskid/Mocha.jl/issues>`__ and we will get to
-them as soon as we can.
+Report issues on this tutorial to our `GitHub Page <https://github.com/pluskid/Mocha.jl/issues>`__ and we will get to them as soon as we can.
 
-.. |Create Case| image:: ./create_case.png
-.. |Support Request| image:: ./support_request.png
-.. |Wink| image:: ./smile.png
-.. |Continue| image:: ./continue.png
-.. |Bitfusion Splash| image:: ./bitfusion.png
-.. |Mocha GPU Test Output| image:: ./gpu_test_output.png
-.. |Mocha GPU Results| image:: ./gpu_results.png
+.. |Create Case| image:: images/create_case.png
+.. |Support Request| image:: images/support_request_border.png
+.. |Continue| image:: images/continue.png
+.. |Bitfusion Splash| image:: images/bitfusion.png
+.. |Mocha GPU Test Output| image:: images/gpu_test_output.png
+.. |Mocha GPU Results| image:: images/gpu_results.png
 
