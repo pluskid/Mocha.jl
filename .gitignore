@@ -23,3 +23,5 @@ src/cuda/kernels/*
 *~
 \#*\#
 .\#*
+
+*.DS*
