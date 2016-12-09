@@ -12,7 +12,16 @@
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/io.hpp"
-#include "caffe/vision_layers.hpp"
+#include "caffe/util/hdf5.hpp"
+#include "caffe/layer.hpp"
+#include "caffe/layers/conv_layer.hpp"
+#include "caffe/layers/lrn_layer.hpp"
+#include "caffe/layers/pooling_layer.hpp"
+#include "caffe/layers/relu_layer.hpp"
+#include "caffe/layers/sigmoid_layer.hpp"
+#include "caffe/layers/softmax_layer.hpp"
+#include "caffe/layers/tanh_layer.hpp"
+#include "caffe/layers/inner_product_layer.hpp"
 
 using namespace caffe;  // NOLINT(build/namespaces)
 
