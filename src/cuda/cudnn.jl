@@ -38,11 +38,14 @@ show(io::IO, error::CuDNNError) = print(io, cudnn_error_description[error.code])
 
 @windows? (
 begin
-  const libcudnn = Libdl.find_library(["cudnn64_70.dll", "cudnn64_65.dll", "cudnn32_70.dll", "cudnn32_65.dll"], [""])
+  const libcudnn = Libdl.find_library(["cudnn64_70.dll", "cudnn64_65.dll", "cudnn32_70.dll",
+                                       "cudnn32_65.dll", "cudnn64_4.dll"], [""])
+  @assert (libcudnn != "") "Could not find a CUDA neural net DLL [cudnn64_70.dll, cudnn64_65.dll, cudnn32_70.dll, cudnn32_65.dll, cudnn64_4.dll]. See: http://mochajl.readthedocs.io/en/latest/user-guide/backend.html#cuda-backend"
 end
 : # linux or mac
 begin
   const libcudnn = Libdl.find_library(["libcudnn"], [""])
+  @assert (libcudnn != "") "Could not find CUDA neural shared library [libcudnn]. See http://mochajl.readthedocs.io/en/latest/user-guide/backend.html#cuda-backend"
 end)
 
 macro cudnncall(fv, argtypes, args...)
@@ -157,25 +160,16 @@ function transform_tensor4d(handle::Handle, src_desc::Tensor4dDescriptor, src::C
 end
 
 
-# Tensor bias addition mode
-const CUDNN_ADD_IMAGE   = 0     # add one image to every feature maps of each input
-const CUDNN_ADD_SAME_HW = 0
-const CUDNN_ADD_FEATURE_MAP = 1 # add a set of feature maps to a batch of inputs : tensorBias has n=1 , same nb feature than Src/dest
-const CUDNN_ADD_SAME_CHW    = 1
-const CUDNN_ADD_SAME_C      = 2 # add a tensor of size 1,c,1,1 to every corresponding point of n,c,h,w input
-const CUDNN_ADD_FULL_TENSOR = 3 # add 2 tensors with same n,c,h,w
-
-function add_tensor4d{T<:AbstractFloat}(handle::Handle, mode::Int, alpha::T,
+function add_tensor{T<:AbstractFloat}(handle::Handle, alpha::T,
                                         bias_desc::Tensor4dDescriptor, bias::CuPtr,
                                         beta::T,
                                         srcdst_desc::Tensor4dDescriptor, srcdst::CuPtr)
-  @assert CUDNN_ADD_IMAGE <= mode <= CUDNN_ADD_FULL_TENSOR
   @assert typeof(alpha) == get_tensor4d_descriptor(bias_desc)[1]
   alpha_ptr = T[alpha]
   beta_ptr = T[beta]
 
-  @cudnncall(:cudnnAddTensor, (Handle, Cint, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}),
-            handle, mode, alpha_ptr, bias_desc, bias.p, beta_ptr, srcdst_desc, srcdst.p)
+  @cudnncall(:cudnnAddTensor, (Handle, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}, Ptr{Void}, Tensor4dDescriptor, Ptr{Void}),
+            handle, alpha_ptr, bias_desc, bias.p, beta_ptr, srcdst_desc, srcdst.p)
 end
 
 function set_tensor4d{T<:AbstractFloat}(handle::Handle, desc::Tensor4dDescriptor, data::CuPtr, val::T)
@@ -345,7 +339,7 @@ function convolution_backward_filter{T<:AbstractFloat}(handle::Handle, alpha::T,
     beta::T, grad_desc::FilterDescriptor, grad::CuPtr)
   alpha_ptr = T[alpha]
   beta_ptr = T[beta]
-  @cudnncall(:cudnnConvolutionBackwardFilter, (Handle, Ptr{Void}, Tensor4dDescriptor, Ptr{Void},
+  @cudnncall(:cudnnConvolutionBackwardFilter_v2, (Handle, Ptr{Void}, Tensor4dDescriptor, Ptr{Void},
                                                Tensor4dDescriptor, Ptr{Void},
                                                ConvolutionDescriptor,
                                                Ptr{Void}, FilterDescriptor, Ptr{Void}),
@@ -357,12 +351,13 @@ function convolution_backward_data{T<:AbstractFloat}(handle::Handle, alpha::T, f
     beta::T, grad_desc::Tensor4dDescriptor, grad::CuPtr)
   alpha_ptr = T[alpha]
   beta_ptr = T[beta]
-  @cudnncall(:cudnnConvolutionBackwardData, (Handle, Ptr{Void}, FilterDescriptor, Ptr{Void},
+  @cudnncall(:cudnnConvolutionBackwardData_v2, (Handle, Ptr{Void}, FilterDescriptor, Ptr{Void},
                                             Tensor4dDescriptor, Ptr{Void},
                                             ConvolutionDescriptor,
                                             Ptr{Void},Tensor4dDescriptor,
                                             Ptr{Void}),
-             handle, alpha_ptr, filter_desc, filter.p, diff_desc, diff.p, conv, beta_ptr, grad_desc, grad.p)
+             handle, alpha_ptr, filter_desc, filter.p, diff_desc, diff.p, conv,
+             beta_ptr, grad_desc, grad.p)
 end
 
 

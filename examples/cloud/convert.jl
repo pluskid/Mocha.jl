@@ -1,0 +1,1 @@
+../cifar10/convert.jl

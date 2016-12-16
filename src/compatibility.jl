@@ -11,7 +11,7 @@ elseif VERSION < v"0.5.0-dev+1915"
 else
   function blasfunc(name::Symbol)
     str_name = string(name)
-    fnc_symb = eval(:(Base.@blasfunc $str_name))
+    fnc_symb = eval(:(Base.BLAS.@blasfunc $str_name))
     fnc_name = string(fnc_symb)
     return fnc_name
   end

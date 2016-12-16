@@ -103,11 +103,11 @@ export freeze!, unfreeze!, is_frozen
   has_stats  => false, # produce statistics
 )
 
-function setup(backend::Backend, layer::Layer, shared_parameters, inputs::Vector{Blob}, diffs::Vector{Blob})
+function setup(backend::Backend, layer::Layer, inputs::Vector{Blob}, diffs::Vector{Blob})
   error("Not implemented, should setup layer state")
 end
 
-# Overload when there is no shared_parameters
+# Default overload when there is no shared_parameters
 function setup(backend::Backend, layer::Layer, shared_parameters, inputs::Vector{Blob}, diffs::Vector{Blob})
   setup(backend, layer, inputs, diffs)
 end

@@ -56,7 +56,7 @@ macro defstruct(name, super_name, fields)
   type_body = Expr(:block, field_defs...)
 
   # constructor
-  asserts = map(filter(i -> isdefined(field_asserts,i), 1:length(fields))) do i
+  asserts = map(filter(i -> isassigned(field_asserts,i), 1:length(fields))) do i
     :(@assert($(field_asserts[i])))
   end
   construct = Expr(:call, name, field_names...)

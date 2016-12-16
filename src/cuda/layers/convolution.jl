@@ -86,7 +86,7 @@ function forward(backend::GPUBackend, state::ConvolutionLayerState, inputs::Vect
           beta_dont_accumulate)
 
       # bias
-      CuDNN.add_tensor4d(backend.cudnn_ctx, CuDNN.CUDNN_ADD_SAME_C, alpha,
+      CuDNN.add_tensor(backend.cudnn_ctx, alpha,
           state.etc.bias_desc, CuPtr(state.bias.ptr.p + state.etc.bias_offset * (g-1)),
           beta_accumulate, state.etc.outputs_desc[i], output_ptr)
     end

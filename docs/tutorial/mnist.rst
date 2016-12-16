@@ -229,7 +229,7 @@ working plan, we provide it with some coffee breaks:
 
 .. code-block:: julia
 
-   setup_coffee_lounge(solver, save_into="$exp_dir/statistics.hdf5", every_n_iter=1000)
+   setup_coffee_lounge(solver, save_into="$exp_dir/statistics.jld", every_n_iter=1000)
 
 This sets up the coffee lounge, which holds data reported during coffee breaks.
 Here we also specify a file to save the information we accumulated in coffee breaks to disk.
@@ -442,3 +442,101 @@ This produces the output:
            1.2896479e-6
            4.2869314e-7
            4.600691e-6]
+
+Checking The Solver's Progress with Learning Curves
+-----------------------------------------------------------
+
+While a network is training we should verify that the optimization of the weights and biases is converging to a solution.  One of the best ways to do this is to plot the *Learning Curve* as the solver progresses through its iterations.  A neural network's *Learning Curve* is a plot of iterations along the :math:`x` axis and the value of the objective function along the :math:`y` axis.  Recall that the solver is trying to minimize the objective function so the value plotted along the :math:`y` axis should decrease over time.  The image below inludes the raw data from the neural network in this tutorial and a smoothed plot that uses a low pass filter of the data to take out high frequency noise.  More about noise in stochastic gradient descent later.  For now let's focus on generating a *Learning Curve* like the one here.
+
+.. image:: images/learning_curve.*
+
+Verifying convergence after a few thousand iterations is essential when develping neural networks on new datasets.  Some teams have waited hours (or days) for their network to complete training only to discover that the solver failed to converge and they need to retune their paramaters.  A quick look at the learning curve above after the first thousand iterations clearly shows that the algorithm is working and that letting it continue to train for the full 10,000 iterations will probably produce a good result.
+
+The data to plot the *Learning Curve* is conveniently saved as the solver progresses.  Recall that we set up the coffee lounge and a ``TrainingSummary()`` coffee break every 100 iterations in the ``mnist.jl`` file:
+
+.. code-block:: julia
+
+   exp_dir = "snapshots"
+   setup_coffee_lounge(solver, save_into="$exp_dir/statistics.jld", every_n_iter=1000)
+   add_coffee_break(solver, TrainingSummary(), every_n_iter=100)
+
+Given this data we can write a new Julia script to read the ``statistics.jld`` file and plot the learning curve while the solver continues to work.  The source code for plotting the learning curve is included in the examples folder and called ``mnist_learning_curve.jl``.
+
+In order to see the plot we need to use a plotting package.  The PyPlot package that implements matplotlib for Julia is adequate for this.  Use the standard ``Pkg.add("PyPlot")`` if you do not already have it.  We will also need to load the ``statistics.jld`` file using Julia's implementation of the HDF5 format which requires the JLD packge.
+
+.. code-block:: julia
+  
+  using PyPlot, JLD
+
+Next, we need to load the data.  This is not difficult, but requires some careful handling because the ``statistics.jld`` file is a Julia Dict that includes several sub-dictionaries.  You may need to adjust the path in the ``load("snapshots/statistics.jld")`` command so that it accurately reflects the path from where the code is running to the ``snapshots`` directory.
+
+.. code-block:: julia
+
+  stats = load("snapshots/statistics.jld")
+  # println(typeof(stats))
+
+  tables = stats["statistics"]
+  ov = tables["obj_val"]
+  xy = sort(collect(ov))
+  x = [i for (i,j) in xy]
+  y = [j for (i,j) in xy]
+  x = convert(Array{Int64}, x)
+  y = convert(Array{Float64}, y)
+
+From the code above we can see that the ``obj_val`` dictionary is available in the snapshot.  This dictionary gets appended every 100 iterations when the solver records a ``TrainingSummary()``.  Then those values get written to disk every 1000 iterations when the solve heads out to the coffee lounge for a break. Also note that ``stats`` is not a filehandle opened to the statistics file.  It is a ``Dict{ByteString,Any}``.  This is desired because we do not want the learning curve script to lock out the ``mnist.jl`` script from getting file handle access to the snapshots files.  You can uncomment ``println(typeof(stats))`` to verify that we do not have a file handle. At the end of this snippet we have a vector for :math:`x` and :math:`y`.  Now we need to plot them which is simply handled in the snippet below.
+
+.. code-block:: julia
+
+  raw = plot(x, y, linewidth=1, label="Raw")
+  xlabel("Iterations")
+  ylabel("Objective Value")
+  title("MNIST Learning Curve")
+  grid("on")
+
+The last thing we need to talk about is the noise we see in the blue line in the plot above.  Recall that we chose stochastic gradient descent (SGD) as the network solver in this line from the ``mnist.jl`` file:
+
+.. code-block:: julia
+
+   method = SGD()
+
+In pure gradient descent the solution moves closer to a minima each and every step; however, in order for the solver to do this it must compute the objective function for **every** training sample on **each** step.  In our case this would mean all 50,000 training samples must be processed through the network to compute the loss for one iteration of gradient descent.  This is computationally expensive and **slow**. Stochastic gradient descent avoids this performance penalty by computing the loss function on a subset of the training examples (batches of 64 in this example).  The downside of using SGD is that it sometimes takes steps in the wrong direction since it is optimizing globally on a small subset of the training examples.  These missteps create the noise in the blue line.  Therefore, we also create a plot that has been through a low pass filter to take out the noise which reveals the trend in the objective function.
+
+.. code-block:: julia
+
+  function low_pass{T <: Real}(x::Vector{T}, window::Int)
+      len = length(x)
+      y = Vector{Float64}(len)
+      for i in 1:len
+          # I want the mean of the first i terms up to width of window
+          # Putting some numbers to this with window 4 
+          # i win lo  hi
+          # 1  4  1   1  
+          # 2  4  1   2 
+          # 3  4  1   3 
+          # 4  4  1   4
+          # 5  4  1   5
+          # 6  4  2   6  => window starts to slide
+          lo = max(1, i - window)
+          hi = i
+          y[i] = mean(x[lo:hi])
+      end
+      return y
+  end
+
+There are other (purer) ways to implement a low pass filter but this is adequate to create a smoothed curve for analyzing the global direction of network training.  One appealing heuristics of this filter is that it outputs a solution for the first few data points consistent with the raw plot.  With the filter we can now generate a smoothed set of :math:`y` datapoints.
+
+.. code-block:: julia
+
+  window = Int64(round(length(xy)/4.0))
+  y_avg = low_pass(y, window)
+  avg = plot(x, y_avg, linewidth=2, label="Low Pass")
+  legend(handles=[raw; avg])
+  show()  #required to display the figure in non-interactive mode
+
+We declare ``window`` to be about one-quarter the length of the input to enforce a lot of smoothing.  Also note that we use the labels to create a legend on the graph.  Finally, this example places the ``low_pass`` function in the middle of the script which is not best practice, but the order presented here felt most appropriate for thinking through the different elements of the example.
+
+There are lots of great resources on the web for building and training neural networks and after this example you now know how to use Julia and Mocha to contruct, train, and validate one of the most famous convolutional neural networks.
+
+**Thank you for working all the way to the end of the MNIST tutorial!**
+
+

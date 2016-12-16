@@ -96,7 +96,7 @@ function pooling_forward(state, i, input::Array)
           hstart = max(1, hstart)
           wstart = max(1, wstart)
 
-          region = sub(input, wstart:wend, hstart:hend, c, n)
+          region = view(input, wstart:wend, hstart:hend, c, n)
           if isa(state.layer.pooling, Pooling.Max)
             index = indmax(region)
             mask[pw, ph, c, n] = index # note this is local index in region
@@ -137,7 +137,7 @@ function pooling_backward(state, i, input::Array, diff::Array, payload::Any)
           hstart = max(1, hstart)
           wstart = max(1, wstart)
 
-          region = sub(gradient, wstart:wend, hstart:hend, c, n)
+          region = view(gradient, wstart:wend, hstart:hend, c, n)
           if isa(state.layer.pooling, Pooling.Max)
             index = payload[pw, ph, c, n]
             region[index] += diff[pw, ph, c, n]
@@ -163,7 +163,7 @@ end
 
 function test_pooling_layer(backend::Backend)
   test_pooling_layer(backend, 4, Float64, 1e-7)
-  test_pooling_layer(backend, 3, Float32, 1e-3)
+  test_pooling_layer(backend, 2, Float32, 1e-3)
 end
 
 if test_cpu

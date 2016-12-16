@@ -1,5 +1,13 @@
 # News for Mocha Development
 
+## v0.1.2 2016.03.23
+
+* Infrastructure
+  * Fix compatability with Julia v0.5
+  * Fix compatability with cuDNN v4
+* Network
+  * Faster neurons (@uschmidt83)
+
 ## v0.1.1 2016.02.29
 
 * Infrastructure
