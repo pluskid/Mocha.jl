@@ -1,6 +1,10 @@
 # News for Mocha Development
 
-## v0.1.3 2016.12.16
+## v0.2.0 2016.12.16
+
+Tagged as 0.2.0 instead of 0.1.3 because Julia now does not support
+minor version update of packages when the requirements for Julia
+changes with major version numbering.
 
 * Infrastructure
   * Fix compatibility issues
