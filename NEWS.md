@@ -1,5 +1,10 @@
 # News for Mocha Development
 
+## v0.1.3 2016.12.16
+
+* Infrastructure
+  * Fix compatibility issues
+
 ## v0.1.2 2016.03.23
 
 * Infrastructure
