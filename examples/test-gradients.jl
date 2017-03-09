@@ -26,7 +26,7 @@ Y = Y + 0.01*randn(size(Y))
 ############################################################
 # Define network
 ############################################################
- backend = CPUBackend()
+backend = CPUBackend()
 init(backend)
 
 data_layer = MemoryDataLayer(batch_size=N, data=Array[X,Y])
