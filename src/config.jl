@@ -9,7 +9,7 @@ const use_native_extension_key = "MOCHA_USE_NATIVE_EXT"
 
 parseEnvInt(key; dflt=0) = begin
   try
-    parseint(ENV[key])
+    parse(Int, ENV[key])
   catch
     dflt
   end
