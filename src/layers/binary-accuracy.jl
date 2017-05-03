@@ -57,7 +57,7 @@ function forward(backend::CPUBackend, state::BinaryAccuracyLayerState, inputs::V
   threshold = convert(T, state.layer.threshold)
 
   for i=1:length(pred)
-    if (pred[i]>threshold) $ (label[i]>threshold)
+    if xor(pred[i]>threshold, label[i]>threshold)
       state.n_wrong += 1
     end
   end
