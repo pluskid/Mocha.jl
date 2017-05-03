@@ -31,7 +31,7 @@ type HDF5DataLayerState <: LayerState
     state = new(layer)
 
     sources = open(layer.source, "r") do s
-      map(strip, filter(l -> !isspace(l), readlines(s)))
+      map(strip, filter(l -> !all(isspace, l), readlines(s)))
     end
     @assert(length(sources) > 0)
     state.sources = sources
