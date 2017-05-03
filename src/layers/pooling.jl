@@ -25,10 +25,10 @@ function setup_etc(backend::CPUBackend, layer::PoolingLayer, inputs,
     pooled_width, pooled_height)
 
   if isa(layer.pooling, Pooling.Max)
-    masks = Array(Array, length(inputs))
+    masks = Array{Array}(length(inputs))
     for i = 1:length(inputs)
       width,height,channels,num = size(inputs[i])
-      masks[i] = Array(Csize_t, pooled_width[i], pooled_height[i], channels, num)
+      masks[i] = Array{Csize_t}(pooled_width[i], pooled_height[i], channels, num)
     end
     etc = masks
   else
@@ -38,10 +38,10 @@ function setup_etc(backend::CPUBackend, layer::PoolingLayer, inputs,
 end
 
 function setup(backend::Backend, layer::PoolingLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  blobs = Array(Blob, length(inputs))
-  blobs_diff = Array(Blob, length(inputs))
-  pw_all = Array(Int, length(inputs))
-  ph_all = Array(Int, length(inputs))
+  blobs = Array{Blob}(length(inputs))
+  blobs_diff = Array{Blob}(length(inputs))
+  pw_all = Array{Int}(length(inputs))
+  ph_all = Array{Int}(length(inputs))
   for i = 1:length(inputs)
     width,height,channels,num = size(inputs[i])
 

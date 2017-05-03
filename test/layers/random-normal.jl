@@ -21,7 +21,7 @@ function test_random_normal_layer(backend::Backend, T, eps)
                             eltype=T, batch_sizes=batch_sizes)
   state = setup(backend, layer, Blob[], Blob[])
 
-  layer_data = [Array(T, tuple(output_dims..., batch_sizes[i]))
+  layer_data = [Array{T}(tuple(output_dims..., batch_sizes[i]))
                 for i in 1:N]
 
   forward(backend, state, Blob[])
@@ -36,7 +36,7 @@ function test_random_normal_layer(backend::Backend, T, eps)
 
 
     # output should be different on subsequent calls
-  layer_data2 = [Array(T, tuple(output_dims..., batch_sizes[i]))
+  layer_data2 = [Array{T}(tuple(output_dims..., batch_sizes[i]))
                 for i in 1:N]
                     
   forward(backend, state, Blob[])

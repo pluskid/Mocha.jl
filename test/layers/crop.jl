@@ -8,7 +8,7 @@ function test_crop_layer(backend::Backend, do_mirror, n_input, T, eps)
   diff_blob = Blob[NullBlob() for i = 1:n_input]
 
   println("    > Setup")
-  layer = CropLayer(bottoms=Array(Symbol,n_input), tops=Array(Symbol,n_input),
+  layer = CropLayer(bottoms=Array{Symbol}(n_input), tops=Array{Symbol}(n_input),
       crop_size=crop_size, random_mirror=do_mirror)
   state = setup(backend, layer, input_blob, diff_blob)
 
@@ -41,7 +41,7 @@ function test_crop_layer_random(backend::Backend, do_mirror, n_input, T, eps)
   diff_blob = Blob[NullBlob() for i = 1:n_input]
 
   println("    > Setup")
-  layer = CropLayer(bottoms=Array(Symbol,n_input), tops=Array(Symbol,n_input), crop_size=crop_size,
+  layer = CropLayer(bottoms=Array{Symbol}(n_input), tops=Array{Symbol}(n_input), crop_size=crop_size,
       random_mirror=do_mirror, random_crop=true)
   state = setup(backend, layer, input_blob, diff_blob)
 

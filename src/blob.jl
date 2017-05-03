@@ -65,7 +65,7 @@ function show(io::IO, blob :: Blob)
 end
 
 function to_array(blob::Blob)
-  array = Array(eltype(blob), size(blob))
+  array = Array{eltype(blob)}(size(blob))
   copy!(array, blob)
   array
 end
@@ -128,7 +128,7 @@ end
 immutable CPUBlob{T <: AbstractFloat, N} <: Blob{T, N}
   data :: AbstractArray{T, N}
 end
-CPUBlob{N}(t :: Type, dims::NTuple{N,Int}) = CPUBlob(Array(t, dims))
+CPUBlob{N}(t :: Type, dims::NTuple{N,Int}) = CPUBlob(Array{t}(dims))
 
 function make_blob{N}(backend::CPUBackend, data_type::Type, dims::NTuple{N,Int})
   return CPUBlob(data_type, dims)

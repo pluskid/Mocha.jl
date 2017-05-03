@@ -10,7 +10,7 @@ function test_element_wise_layer(backend::Backend, op::ElementWiseFunctorType, j
   input_blobs = Blob[make_blob(backend, x) for x in inputs]
   diff_blobs = Blob[make_blob(backend, x) for x in inputs]
 
-  layer = ElementWiseLayer(bottoms=Array(Symbol, NArg), tops=[:result], operation=op)
+  layer = ElementWiseLayer(bottoms=Array{Symbol}(NArg), tops=[:result], operation=op)
   state = setup(backend, layer, input_blobs, diff_blobs)
 
   forward(backend, state, input_blobs)

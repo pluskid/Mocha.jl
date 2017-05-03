@@ -26,10 +26,10 @@ end
 function setup(backend::Backend, layer::SoftmaxLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
 
-  softmax_layer = SoftmaxLayer(tops=Array(Symbol, length(inputs)), bottoms=Array(Symbol, length(inputs)), dim=layer.dim)
+  softmax_layer = SoftmaxLayer(tops=Array{Symbol}(length(inputs)), bottoms=Array{Symbol}(length(inputs)), dim=layer.dim)
   softmax = setup(backend, softmax_layer, Blob[inputs[1]], Blob[])
 
-  logistic_layer = MultinomialLogisticLossLayer(bottoms=Array(Symbol, 2),
+  logistic_layer = MultinomialLogisticLossLayer(bottoms=Array{Symbol}(2),
       weights=layer.weights, normalize=layer.normalize, dim=layer.dim)
   logistic = setup(backend, logistic_layer, inputs, Blob[])
 

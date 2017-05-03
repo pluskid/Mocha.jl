@@ -17,8 +17,8 @@ function setup_etc(backend::GPUBackend, layer::PoolingLayer, inputs,
     error("TODO: pooling mode $(layer.pooling) not supported by CuDNN")
   end
   pooling_desc = CuDNN.create_pooling_descriptor(pooling_mode, layer.kernel, layer.stride, layer.pad)
-  inputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
-  outputs_desc = Array(CuDNN.Tensor4dDescriptor, length(inputs))
+  inputs_desc = Array{CuDNN.Tensor4dDescriptor}(length(inputs))
+  outputs_desc = Array{CuDNN.Tensor4dDescriptor}(length(inputs))
 
   for i = 1:length(inputs)
     width,height,channels,num = size(inputs[i])

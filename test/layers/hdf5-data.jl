@@ -47,7 +47,7 @@ function test_hdf5_data_layer(backend::Backend, async, T, eps)
   data = data * scale
 
   data_idx = map(x->1:x, data_dim)
-  layer_data = Array(eltype(data), tuple(data_dim..., batch_size))
+  layer_data = Array{eltype(data)}(tuple(data_dim..., batch_size))
   for i = 1:batch_size:size(data)[end]-batch_size+1
     forward(backend, state, Blob[])
     copy!(layer_data, state.blobs[1])

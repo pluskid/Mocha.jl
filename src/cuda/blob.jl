@@ -30,7 +30,7 @@ function copy!{T}(dst :: CuTensorBlob{T}, src :: CuTensorBlob{T})
   @CUDA.cucall(:cuMemcpy, (Ptr{Void}, Ptr{Void}, Cint), dst.ptr.p, src.ptr.p, length(dst)*sizeof(T))
 end
 function fill!{T}(dst :: CuTensorBlob{T}, val)
-  val_vec = Array(T, length(dst))
+  val_vec = Array{T}(length(dst))
   fill!(val_vec, val)
   copy!(dst, val_vec)
 end

@@ -13,7 +13,7 @@ function test_convolution_layer(backend::Backend, n_group, filter_w, filter_h, p
 
   layer = ConvolutionLayer(name="conv", kernel=(filter_w, filter_h), stride=(stride_w, stride_h),
       pad=(pad_w,pad_h), n_filter=n_filter, n_group=n_group,
-      tops=Array(Symbol,n_input), bottoms=Array(Symbol,n_input))
+      tops=Array{Symbol}(n_input), bottoms=Array{Symbol}(n_input))
 
   # convolution layer requires each input blob to be the same shape
   input = [rand(T, input_dims) for i = 1:n_input]
@@ -94,7 +94,7 @@ function convolution_forward(state, filter::Array, bias::Array, input::Array)
   o_g = round(Int, state.layer.n_filter / n_group)
   k_g = round(Int, channel / n_group)
 
-  output = Array(eltype(input), size(state.blobs[1]))
+  output = Array{eltype(input)}(size(state.blobs[1]))
   output[:] = 0
 
   for n = 1:num

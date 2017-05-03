@@ -17,7 +17,7 @@ type RandomNormalLayerState <: LayerState
     etc        :: Vector{Any}
 
     RandomNormalLayerState(backend::Backend, layer::RandomNormalLayer) = begin
-      blobs = Array(Blob, length(layer.tops))
+      blobs = Array{Blob}(length(layer.tops))
       for i = 1:length(blobs)
         dims = tuple(layer.output_dims..., layer.batch_sizes[i])
         blobs[i] = make_blob(backend, layer.eltype, dims...)

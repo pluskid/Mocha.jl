@@ -36,10 +36,10 @@ macro defstruct(name, super_name, fields)
   @assert length(fields) > 0
   name = esc(name)
 
-  field_defs     = Array(Expr, length(fields))     # :(field2 :: Int)
-  field_names    = Array(Symbol, length(fields))   # :field2
-  field_defaults = Array(Expr, length(fields))     # :(field2 :: Int = 0)
-  field_asserts  = Array(Expr, length(fields))     # :(field2 >= 0)
+  field_defs     = Array{Expr}(length(fields))     # :(field2 :: Int)
+  field_names    = Array{Symbol}(length(fields))   # :field2
+  field_defaults = Array{Expr}(length(fields))     # :(field2 :: Int = 0)
+  field_asserts  = Array{Expr}(length(fields))     # :(field2 >= 0)
 
   for i = 1:length(fields)
     field = fields[i]

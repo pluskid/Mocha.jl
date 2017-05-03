@@ -12,7 +12,7 @@ function test_index2onehot_layer(backend::Backend, tensor_dim, n_input, T, eps)
   input_blob = Blob[make_blob(backend, x) for x in input]
   diff_blob = Blob[NullBlob() for i = 1:n_input]
 
-  layer = Index2OnehotLayer(tops=Array(Symbol, n_input), bottoms=Array(Symbol, n_input),
+  layer = Index2OnehotLayer(tops=Array{Symbol}(n_input), bottoms=Array{Symbol}(n_input),
       dim=expand_dim, n_class=n_class)
   state = setup(backend, layer, input_blob, diff_blob)
 

@@ -43,31 +43,31 @@ function setup(backend::Backend, layer::LRNLayer, inputs::Vector{Blob}, diffs::V
     @assert ndims(inputs[i]) == 4
   end
 
-  split_layer = SplitLayer(no_copy=true, tops=Array(Symbol,2), bottoms=Array(Symbol,1))
+  split_layer = SplitLayer(no_copy=true, tops=Array{Symbol}(2), bottoms=Array{Symbol}(1))
   do_split = setup(backend, split_layer, inputs, diffs)
 
-  square_layer = PowerLayer(power=2, tops=Array(Symbol,1), bottoms=Array(Symbol,1))
+  square_layer = PowerLayer(power=2, tops=Array{Symbol}(1), bottoms=Array{Symbol}(1))
   do_square = setup(backend, square_layer,
       Blob[do_split.blobs[1]], Blob[do_split.blobs_diff[1]])
 
   pre_pad = div(layer.kernel-1,2)
   if isa(layer.mode, LRNMode.AcrossChannel)
     post_pad = layer.kernel - pre_pad - 1
-    pool_layer = ChannelPoolingLayer(tops=Array(Symbol,1), bottoms=Array(Symbol,1),
+    pool_layer = ChannelPoolingLayer(tops=Array{Symbol}(1), bottoms=Array{Symbol}(1),
         kernel=layer.kernel, stride=1, pad=(pre_pad,post_pad),
         pooling=Pooling.Mean(), channel_dim=layer.channel_dim)
   elseif isa(layer.mode, LRNMode.WithinChannel)
-    pool_layer = PoolingLayer(tops=Array(Symbol,1), bottoms=Array(Symbol,1),
+    pool_layer = PoolingLayer(tops=Array{Symbol}(1), bottoms=Array{Symbol}(1),
         kernel=(layer.kernel,layer.kernel), stride=(1,1), pad=(pre_pad,pre_pad),
         pooling=Pooling.Mean())
   end
   do_pool = setup(backend, pool_layer, do_square.blobs, do_square.blobs_diff)
 
-  power_layer = PowerLayer(tops=Array(Symbol,1), bottoms=Array(Symbol,1),
+  power_layer = PowerLayer(tops=Array{Symbol}(1), bottoms=Array{Symbol}(1),
       power=layer.power, scale=layer.scale, shift=layer.shift)
   do_power = setup(backend, power_layer, do_pool.blobs, do_pool.blobs_diff)
 
-  div_layer = ElementWiseLayer(tops=Array(Symbol,1), bottoms=Array(Symbol,2),
+  div_layer = ElementWiseLayer(tops=Array{Symbol}(1), bottoms=Array{Symbol}(2),
       operation = ElementWiseFunctors.Divide())
   do_div = setup(backend, div_layer,
       Blob[do_split.blobs[2],do_power.blobs[1]],
