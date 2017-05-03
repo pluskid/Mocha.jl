@@ -12,7 +12,7 @@ function test_accuracy_layer(backend::Backend, tensor_dim, T)
   input = rand(T, dims)
   input_blob = make_blob(backend, input)
 
-  label = abs(rand(Int, dims_label)) % dims[op_dim]
+  label = abs.(rand(Int, dims_label)) .% dims[op_dim]
   label = convert(Array{T}, label)
   label_blob = make_blob(backend, label)
 
