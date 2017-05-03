@@ -1,7 +1,7 @@
 function test_multinomial_logistic_loss_layer(backend::Backend, tensor_dim, class_weights, T, eps)
   println("-- Testing MultinomialLogisticLossLayer{$(class_weights[1]),$(class_weights[2])} on $(typeof(backend)){$T}...")
 
-  dims = abs(rand(Int,tensor_dim)) % 6 + 6
+  dims = rand(6:11, tensor_dim)
   if class_weights[1] != :no
     op_dim = tensor_dim-1
   else

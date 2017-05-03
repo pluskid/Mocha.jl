@@ -5,7 +5,7 @@ function test_hinge_loss_layer(backend::Backend, T, eps)
   # Prepare Data for Testing
   ############################################################
   tensor_dim = abs(rand(Int)) % 4 + 2
-  dims = tuple((abs(rand(Int,tensor_dim)) % 6 + 6)...)
+  dims = tuple(rand(6:11, tensor_dim)...)
   println("    > $dims")
   preds = rand(T, dims)*4-2
   labels = round(rand(T, dims))*2-1

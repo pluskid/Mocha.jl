@@ -3,7 +3,7 @@ function test_index2onehot_layer(backend::Backend, tensor_dim, n_input, T, eps)
 
   expand_dim = max(1, abs(rand(Int)) % tensor_dim)
   println("    > $tensor_dim-dimensional input, expanding along dimension $expand_dim")
-  dims = [abs(rand(Int,tensor_dim)) % 6 + 6 for i = 1:n_input]
+  dims = [rand(6:11, tensor_dim) for i in 1:n_input]
   for i = 1:n_input
     dims[i][expand_dim] = 1
   end

@@ -5,7 +5,7 @@ function test_concat_layer(backend::Backend, dim, T, eps)
   println("    > $tensor_dim-dimensional tensor")
 
   n_input = 3
-  dims_proto = abs(rand(Int, tensor_dim)) % 6 + 1
+  dims_proto = rand(1:6, tensor_dim)
   dims = [copy(dims_proto) for i = 1:n_input]
   for i = 1:n_input
     dims[i][dim] = abs(rand(Int)) % 5 + 1

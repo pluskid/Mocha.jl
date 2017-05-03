@@ -8,7 +8,7 @@ function test_hdf5_data_layer(backend::Backend, async, T, eps)
   ############################################################
   batch_size = 3
   tensor_dim = abs(rand(Int)) % 6 + 1
-  data_dim = tuple((abs(rand(Int, tensor_dim)) % 8 + 1)...)
+  data_dim = tuple(rand(1:8, tensor_dim)...)
   println("    > $data_dim")
 
   data_all = [rand(T, data_dim..., x) for x in [5 1 2]]

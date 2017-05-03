@@ -4,7 +4,7 @@ function test_softmax_layer(backend::Backend, tensor_dim, n_input, T, eps)
   norm_dim = max(1, abs(rand(Int)) % tensor_dim)
   println("    > $tensor_dim-dimensional input, normalize along dimension $norm_dim")
 
-  dims = [abs(rand(Int,tensor_dim)) % 6 + 6 for i = 1:n_input]
+  dims = [rand(6:11, tensor_dim) for i = 1:n_input]
   input = [rand(T, dims[i]...) for i = 1:n_input]
   input_blob = Blob[make_blob(backend, x) for x in input]
   diff_blob = Blob[make_blob(backend, x) for x in input]

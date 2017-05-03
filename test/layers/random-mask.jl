@@ -3,7 +3,7 @@ function test_random_mask_layer(backend, T, eps)
 
   n_inputs = 3
   tensor_dims = [abs(rand(Int)) % 6 + 1 for i = 1:n_inputs]
-  dims_all = [tuple((abs(rand(Int, tensor_dims[i])) % 8 + 1) ...) for i = 1:n_inputs]
+  dims_all = [tuple(rand(1:8, tensor_dims[i])...) for i in 1:n_inputs]
   println("    > $n_inputs input blobs with tensor dims $tensor_dims")
 
   ratio = min(abs(rand()) + 0.1, 0.9)

@@ -1,7 +1,7 @@
 function test_tied_inner_product_layer(backend::Backend, n_input, T, eps)
   println("-- Testing TiedInnerProductLayer on $(typeof(backend)){$T}...")
 
-  batch_size = abs(rand(Int)) % 10 + 5
+  batch_size = rand(5:14)
   orig_dim = 20
   hidden_dim = 10
 

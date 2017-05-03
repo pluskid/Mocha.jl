@@ -18,7 +18,7 @@ function test_pooling_layer(backend::Backend, pooling::PoolingFunction, has_padd
   stride_w    = 1
   stride_h    = 2
 
-  dims = [abs(rand(Int,4)) % 5 + 12 for i = 1:n_input]
+  dims = [rand(12:16, 4) for i =1:n_input]
   dims[1] = [input_w, input_h, input_chann, input_num]
   if isa(backend, AbstractGPUBackend)
     for i = 1:n_input

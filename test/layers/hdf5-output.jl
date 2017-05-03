@@ -7,7 +7,7 @@ function test_hdf5_output_layer(backend::Backend, T, eps)
   # Prepare Data for Testing
   ############################################################
   tensor_dim = abs(rand(Int)) % 4 + 2
-  dims = tuple((abs(rand(Int, tensor_dim)) % 8 + 1)...)
+  dims = tuple(rand(1:8, tensor_dim)...)
   println("    > $dims")
 
   input = rand(T, dims)

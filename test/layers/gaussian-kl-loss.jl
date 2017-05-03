@@ -4,8 +4,8 @@ function test_gaussian_kl_loss_layer(backend::Backend, T, eps)
   ############################################################
   # Prepare Data for Testing
   ############################################################
-  tensor_dim = abs(rand(Int)) % 4 + 2
-  dims = tuple((abs(rand(Int,tensor_dim)) % 6 + 6)...)
+  tensor_dim = rand(2:5)
+  dims = tuple(rand(6:11, tensor_dim)...)
   println("    > $dims")
   mus = rand(T, dims)
   sigmas = sqrt.(rand(T, dims).^2)

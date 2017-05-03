@@ -7,8 +7,8 @@ function test_random_normal_layer(backend::Backend, T, eps)
 
   batch_sizes = [100,200]
   N = length(batch_sizes)
-  tensor_dim = abs(rand(Int)) % 4 + 1
-  output_dims = abs(rand(Int, tensor_dim)) % 3 + 1
+  tensor_dim = rand(1:4)
+  output_dims = rand(1:3, tensor_dim)
   println("    > Random output ", tensor_dim, output_dims)
 
 

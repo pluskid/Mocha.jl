@@ -3,7 +3,7 @@ function test_argmax_layer(backend::Backend, n_input, tensor_dim, T, eps)
 
   println("    > $tensor_dim-dimensional tensor")
 
-  dims = [abs(rand(Int, tensor_dim)) % 6 + 1 for i = 1:n_input]
+  dims = [rand(1:6, tensor_dim) for i = 1:n_input]
   op_dim = max(abs(rand(Int)) % tensor_dim, 1)
   inputs = [rand(T, dims[i]...) for i = 1:n_input]
   input_blob = Blob[make_blob(backend, x) for x in inputs]

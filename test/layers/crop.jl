@@ -1,7 +1,7 @@
 function test_crop_layer(backend::Backend, do_mirror, n_input, T, eps)
   println("-- Testing CropLayer on $(typeof(backend)){$T} $(do_mirror ? "with mirror" : "")...")
 
-  dims = [abs(rand(Int,4)) % 7 + 7 for i = 1:n_input]
+  dims = [rand(7:13, 4) for i = 1:n_input]
   input = [rand(T, dims[i]...) for i = 1:n_input]
   crop_size = (7,5)
   input_blob = Blob[make_blob(backend, x) for x in input]
@@ -34,7 +34,7 @@ function test_crop_layer(backend::Backend, do_mirror, n_input, T, eps)
 end
 function test_crop_layer_random(backend::Backend, do_mirror, n_input, T, eps)
   println("-- Testing CropLayer{rnd} on $(typeof(backend)){$T} $(do_mirror ? "with mirror" : "")...")
-  dims = [abs(rand(Int,4)) % 3 + 9 for i = 1:n_input]
+  dims = [rand(9:11, 4) for i = 1:n_input]
   inputs = [rand(T, dims[i]...) for i = 1:n_input]
   crop_size = (9, 9)
   input_blob = Blob[make_blob(backend, x) for x in inputs]

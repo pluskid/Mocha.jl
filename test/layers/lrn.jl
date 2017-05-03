@@ -2,7 +2,7 @@ function test_lrn_layer(backend::Backend, mode::LRNModeType, tensor_dim, T, eps)
   println("-- Testing LRN($(typeof(mode))) on $(typeof(backend)){$T}...")
 
 
-  dims = tuple((abs(rand(Int,tensor_dim)) % 6 + 6)...)
+  dims = tuple(rand(6:11, tensor_dim)...)
   op_dim = max(abs(rand(Int)) % tensor_dim, 1)
 
   println("    > Setup with dims $dims")

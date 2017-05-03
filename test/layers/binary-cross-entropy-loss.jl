@@ -1,7 +1,7 @@
 function test_binary_crossentropy_loss_layer(backend::Backend, tensor_dim, T, eps)
   println("-- Testing BinaryCrossEntropyLossLayer on $(typeof(backend)){$T}...")
 
-  dims = abs(rand(Int,tensor_dim)) % 6 + 2
+  dims = rand(2:7, tensor_dim)
 
 
   println("    > $dims")

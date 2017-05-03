@@ -1,7 +1,7 @@
 function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, tensor_dim::Int, n_input, T, eps)
   println("-- Testing ChannelPooling($(typeof(pooling))) on $(typeof(backend)){$T}...")
 
-  dims = [abs(rand(Int, tensor_dim)) % 7 + 7 for i = 1:n_input]
+  dims = [rand(7:13, tensor_dim) for i = 1:n_input]
   op_dim = max(abs(rand(Int)) % tensor_dim, 1)
   pad = (2,2)
   kernel = 3

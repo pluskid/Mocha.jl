@@ -1,8 +1,7 @@
 function test_softlabel_softmax_loss_layer(backend::Backend, tensor_dim, T, eps)
   println("-- Testing SoftlabelSoftmaxLossLayer on $(typeof(backend)){$T}...")
 
-  dims = abs(rand(Int,tensor_dim)) % 6 + 6
-  dims = tuple(dims...)
+  dims = tuple(rand(6:11, tensor_dim)...)
   op_dim = max(abs(rand(Int)) % tensor_dim, 1)
   println("    > $dims (operate on dimension $op_dim)")
 

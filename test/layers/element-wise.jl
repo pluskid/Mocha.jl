@@ -2,7 +2,7 @@ function test_element_wise_layer(backend::Backend, op::ElementWiseFunctorType, j
   println("-- Testing ElementWiseLayer{$op} on $(typeof(backend)){$T}...")
 
   tensor_dim = abs(rand(Int)) % 6 + 1
-  dims = tuple((abs(rand(Int, tensor_dim)) % 8 + 1)...)
+  dims = tuple(rand(1:8, tensor_dim)...)
   println("    > $dims")
 
   NArg = get_num_args(op)
