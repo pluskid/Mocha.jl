@@ -4,7 +4,7 @@
   (tops :: Vector{Symbol} = Symbol[], length(tops) == length(bottoms)),
   (kernel :: Int = 1, kernel > 0),
   (stride :: Int = 1, stride > 0),
-  (pad :: NTuple{2, Int} = (0,0), all([pad...] .>= 0)),
+  (pad :: NTuple{2, Int} = (0,0), all(broadcast(>=, [pad...], 0))),
   (channel_dim :: Int = -2, channel_dim != 0),
   pooling :: PoolingFunction = Pooling.Max(),
 )
