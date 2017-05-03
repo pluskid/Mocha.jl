@@ -2,7 +2,7 @@ export Regularizer
 export NoRegu, L2Regu, L1Regu
 export forward, backward
 
-abstract Regularizer
+@compat abstract type Regularizer end
 
 immutable NoRegu <: Regularizer
   coefficient :: AbstractFloat # not used, just for consistent API

@@ -3,7 +3,7 @@ export init, enjoy, destroy
 export add_coffee_break, check_coffee_break, setup
 export update_statistics, get_statistics, save_statistics, shutdown
 
-abstract Coffee
+@compat abstract type Coffee end
 function init(::Coffee, ::Net) end
 # The first parameter will be a CoffeeLounge, we put Any here because
 # Julia do not have forward declaration
@@ -36,8 +36,8 @@ end
 ################################################################################
 using HDF5, JLD
 
-typealias StatisticsValue AbstractFloat
-typealias StatisticsRecords Dict{Int, StatisticsValue}
+const StatisticsValue = AbstractFloat
+const StatisticsRecords = Dict{Int, StatisticsValue}
 type CoffeeLounge
   filename          :: AbstractString
   save_every_n_iter :: Int

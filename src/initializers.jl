@@ -5,7 +5,7 @@ export XavierInitializer
 export GaussianInitializer
 export OrthogonalInitializer
 
-abstract Initializer # The root type of all initializer
+@compat abstract type Initializer end # The root type of all initializer
 
 immutable NullInitializer <: Initializer end
 function init(::NullInitializer, blob::Blob)

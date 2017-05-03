@@ -1,6 +1,6 @@
 export LRNModeType, LRNMode
 
-abstract LRNModeType
+@compat abstract type LRNModeType end
 module LRNMode
 import ..LRNModeType
 type AcrossChannel <: LRNModeType end

@@ -12,7 +12,7 @@ export make_blob, make_zero_blob, reshape_blob
 # either live in CPU memory or GPU memory or
 # whatever the backend is used to store the data.
 ############################################################
-abstract Blob{T, N}
+@compat abstract type Blob{T, N} end
 
 ############################################################
 # The following should be implemented for a

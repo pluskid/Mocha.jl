@@ -1,8 +1,8 @@
 export DataTransformerType, DataTransformerState, DataTransformers
 export setup, forward, shutdown
 
-abstract DataTransformerType
-abstract DataTransformerState
+@compat abstract type DataTransformerType end
+@compat abstract type DataTransformerState end
 
 module DataTransformers
 using ..Mocha

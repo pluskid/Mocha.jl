@@ -1,7 +1,7 @@
 export Constraint, NoCons, L2Cons
 export constrain!
 
-abstract Constraint
+@compat abstract type Constraint end
 
 immutable NoCons <: Constraint
   threshold  :: AbstractFloat  # not used, just for consistent API
