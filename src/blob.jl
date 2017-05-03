@@ -89,7 +89,7 @@ end
 ############################################################
 # A Dummy Blob type holding nothing
 ############################################################
-type NullBlob <: Blob
+type NullBlob <: Blob{Void, 0}
 end
 function fill!(dst :: NullBlob, val)
   # do nothing
