@@ -36,7 +36,7 @@ immutable XavierInitializer <: Initializer
 end
 function init(initializer::XavierInitializer, blob::Blob)
   fan_in = get_fea_size(blob)
-  scale = sqrt(3.0 / fan_in)
+  scale = convert(eltype(blob), sqrt(3.0 / fan_in))
   init_val = rand(eltype(blob), size(blob)) * 2scale - scale
   copy!(blob, init_val)
 end

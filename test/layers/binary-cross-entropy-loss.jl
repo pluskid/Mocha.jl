@@ -17,7 +17,7 @@ function test_binary_crossentropy_loss_layer(backend::Backend, tensor_dim, T, ep
   prob_blob = make_blob(backend, prob)
   label_blob = make_blob(backend, label)
   inputs = Blob[prob_blob, label_blob]
-  weight = 0.25
+  weight = T(0.25)
   layer = BinaryCrossEntropyLossLayer(bottoms=[:pred, :labels], weight=weight)
   state = setup(backend, layer, inputs, Blob[])
 

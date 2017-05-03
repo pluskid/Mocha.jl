@@ -31,7 +31,7 @@ function test_hdf5_data_layer(backend::Backend, async, T, eps)
   # Setup
   ############################################################
 
-  scale = rand()
+  scale = rand(T)
   if async
     layer = AsyncHDF5DataLayer(source = source_fn, tops = [:data], batch_size=batch_size, chunk_size=4,
         transformers=[(:data, DataTransformers.Scale(scale))])

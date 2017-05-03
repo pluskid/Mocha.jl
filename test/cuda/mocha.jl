@@ -5,7 +5,7 @@ function test_mocha_kernels(backend::Backend, data_type)
   eps = 1e-5
 
   h, w, c, n = (5, 6, 7, 128)
-  prob = abs(rand(data_type, (w,h,c,n))) + 0.1
+  prob = abs(rand(data_type, (w,h,c,n))) + convert(data_type, 0.1)
   label = abs(rand(Int, (w, h, 1, n))) % c
   label = convert(Array{data_type}, label)
 

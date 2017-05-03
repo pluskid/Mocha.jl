@@ -2,7 +2,7 @@ function test_relu_neuron(backend::Backend, T)
   println("-- Testing ReLU neuron on $(typeof(backend)){$T}...")
 
   eps = 1e-10
-  data = rand(T, 3,4,5,6) - 0.5
+  data = rand(T, 3,4,5,6) - convert(T, 0.5)
   data_blob = make_blob(backend, data)
   neuron0 = Neurons.ReLU()
   neuron1 = Neurons.ReLU(1e-6)

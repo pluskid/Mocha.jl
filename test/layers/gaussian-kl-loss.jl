@@ -13,7 +13,7 @@ function test_gaussian_kl_loss_layer(backend::Backend, T, eps)
   ############################################################
   # Setup
   ############################################################
-  weight = 1.1
+  weight = T(1.1)
   layer  = GaussianKLLossLayer(; bottoms=[:predictions, :labels], weight=weight)
   mu_blob  = make_blob(backend, T, dims)
   sigma_blob = make_blob(backend, T, dims)

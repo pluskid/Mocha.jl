@@ -1,7 +1,7 @@
 function test_exponential_neuron(backend::Backend, T, eps)
   println("-- Testing Exponential neuron on $(typeof(backend)){$T}...")
 
-  data = rand(T, 3,4,5,6) - 0.5
+  data = rand(T, 3,4,5,6) - convert(T, 0.5)
   data_blob = make_blob(backend, data)
   neuron = Neurons.Exponential()
 

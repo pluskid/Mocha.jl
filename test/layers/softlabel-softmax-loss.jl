@@ -6,11 +6,11 @@ function test_softlabel_softmax_loss_layer(backend::Backend, tensor_dim, T, eps)
   op_dim = max(abs(rand(Int)) % tensor_dim, 1)
   println("    > $dims (operate on dimension $op_dim)")
 
-  input = rand(T, dims) + 0.01
+  input = rand(T, dims) + convert(T, 0.01)
   input_blob = make_blob(backend, input)
   diff_blob = make_blob(backend, T, size(input))
 
-  labels = abs(rand(T, dims)) + 0.01
+  labels = abs.(rand(T, dims)) + convert(T, 0.01)
   labels = labels ./ sum(labels, op_dim)
   label_blob = make_blob(backend, labels)
 
