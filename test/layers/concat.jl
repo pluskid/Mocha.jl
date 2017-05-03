@@ -24,7 +24,7 @@ function test_concat_layer(backend::Backend, dim, T, eps)
 
   expected_output = cat(dim, inputs...)
   got_output = to_array(state.blobs[1])
-  @test all(abs(expected_output-got_output) .< eps)
+  @test all(abs.(expected_output-got_output) .< eps)
 
   println("    > Backward")
   top_diff = rand(T, size(expected_output))
@@ -34,7 +34,7 @@ function test_concat_layer(backend::Backend, dim, T, eps)
     copy!(inputs[i], grad_blobs[i])
   end
   got_grad_all = cat(dim, inputs...)
-  @test all(abs(top_diff - got_grad_all) .< eps)
+  @test all(abs.(top_diff - got_grad_all) .< eps)
 end
 
 function test_concat_layer(backend::Backend, T, eps)

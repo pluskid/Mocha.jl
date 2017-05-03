@@ -7,7 +7,7 @@ function test_blob_reshape(backend::Backend, T, eps)
   data2 = rand(T, size(blob2))
   copy!(blob2, data2)
   copy!(data, blob)
-  @test all(abs(data - reshape(data2,size(data))) .< eps)
+  @test all(abs.(data - reshape(data2,size(data))) .< eps)
 end
 
 function test_blob_reshape(backend::Backend)

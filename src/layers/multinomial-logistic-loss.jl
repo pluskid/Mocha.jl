@@ -93,7 +93,7 @@ function forward(backend::CPUBackend, state::MultinomialLogisticLossLayerState, 
 
   idx_all = map(1:length(dims)) do i
     if i == state.op_dim
-      round(Int, label) + 1
+      round.(Int, label) + 1
     else
       dim = dims[i]
       reshape(1:dim, [j == i? dim : 1 for j = 1:length(dims)]...)
@@ -101,9 +101,9 @@ function forward(backend::CPUBackend, state::MultinomialLogisticLossLayerState, 
   end
 
   if isa(state.weights_blob, NullBlob)
-    loss = sum(-log(max(broadcast_getindex(pred, idx_all...), 1e-20)))
+    loss = sum(-log.(max.(broadcast_getindex(pred, idx_all...), 1e-20)))
   else
-    loss = sum(-log(max(broadcast_getindex(pred, idx_all...), 1e-20)) .*
+    loss = sum(-log.(max.(broadcast_getindex(pred, idx_all...), 1e-20)) .*
         broadcast_getindex(state.weights_blob.data, idx_all...))
   end
   state.loss = state.layer.weight * loss / (prod(dims) / dims[state.op_dim])

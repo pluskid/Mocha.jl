@@ -15,7 +15,7 @@ function test_data_transformer(backend::Backend, T, eps)
   copy!(transformed, input_blob)
 
   input .-= mean_data
-  @test all(abs(transformed - input) .< eps)
+  @test all(abs.(transformed - input) .< eps)
   shutdown(backend, state)
 
   println("    > Scale")
@@ -26,7 +26,7 @@ function test_data_transformer(backend::Backend, T, eps)
   copy!(transformed, input_blob)
 
   input .*= scale
-  @test all(abs(transformed - input) .< eps)
+  @test all(abs.(transformed - input) .< eps)
   shutdown(backend, state)
 end
 

@@ -21,7 +21,7 @@ function test_lrn_layer(backend::Backend, mode::LRNModeType, tensor_dim, T, eps)
   expected_output = lrn_forward(input, state, op_dim)
   got_output = similar(input)
   copy!(got_output, state.blobs[1])
-  @test all(abs(got_output - expected_output) .< eps)
+  @test all(abs.(got_output - expected_output) .< eps)
 
   println("    > Backward")
   top_diff = rand(T, size(input))
@@ -30,7 +30,7 @@ function test_lrn_layer(backend::Backend, mode::LRNModeType, tensor_dim, T, eps)
   got_grad = zeros(T, size(input))
   copy!(got_grad, diff_blobs[1])
   expected_grad = lrn_backward(input, top_diff, state, op_dim)
-  @test all(abs(got_grad - expected_grad) .< eps)
+  @test all(abs.(got_grad - expected_grad) .< eps)
 
   shutdown(backend, state)
 end

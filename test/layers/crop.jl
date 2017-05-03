@@ -23,10 +23,10 @@ function test_crop_layer(backend::Backend, do_mirror, n_input, T, eps)
     expected_output = input[i][w_off+1:w_off+crop_size[1], h_off+1:h_off+crop_size[2],:,:]
     @test size(expected_output) == size(got_output)
     if do_mirror
-      @test all(abs(got_output - expected_output) .< eps) ||
-            all(abs(got_output - flipdim(expected_output,1)) .< eps)
+      @test all(abs.(got_output - expected_output) .< eps) ||
+            all(abs.(got_output - flipdim(expected_output,1)) .< eps)
     else
-      @test all(abs(got_output - expected_output) .< eps)
+      @test all(abs.(got_output - expected_output) .< eps)
     end
   end
 
@@ -56,9 +56,9 @@ function test_crop_layer_random(backend::Backend, do_mirror, n_input, T, eps)
     for i = 0:size(input,1)-crop_size[1]
       for j = 0:size(input,2)-crop_size[2]
         expected_output = input[i+1:i+crop_size[1], j+1:j+crop_size[2],:,:]
-        matched = matched | all(abs(got_output - expected_output) .< eps)
+        matched = matched | all(abs.(got_output - expected_output) .< eps)
         if do_mirror
-          matched = matched | all(abs(got_output - flipdim(expected_output,1)) .< eps)
+          matched = matched | all(abs.(got_output - flipdim(expected_output,1)) .< eps)
         end
       end
     end

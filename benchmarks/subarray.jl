@@ -131,9 +131,9 @@ pool_with_getidx() = pool_with_getidx(input, kernel)
 pool_with_iter() = pool_with_iter(input, kernel)
 pool_with_iter_cond() = pool_with_iter_cond(input, kernel)
 
-@assert all(abs(pool_with_subarray() - pool_with_iter()) .< 1e-10)
-@assert all(abs(pool_with_subarray() - pool_with_getidx()) .< 1e-10)
-@assert all(abs(pool_with_subarray() - pool_with_iter_cond()) .< 1e-10)
+@assert all(abs.(pool_with_subarray() - pool_with_iter()) .< 1e-10)
+@assert all(abs.(pool_with_subarray() - pool_with_getidx()) .< 1e-10)
+@assert all(abs.(pool_with_subarray() - pool_with_iter_cond()) .< 1e-10)
 
 println("Running benchmark")
 df = compare([pool_with_subarray, pool_with_iter, pool_with_iter_cond, pool_with_getidx], 10)

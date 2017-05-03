@@ -51,7 +51,7 @@ softmax_elem() = softmax_elem(input, o2)
 
 softmax_matrix()
 softmax_elem()
-@assert all(abs(o1-o2) .< 1e-10)
+@assert all(abs.(o1-o2) .< 1e-10)
 
 df = compare([softmax_matrix, softmax_elem], 50)
 println("$df")

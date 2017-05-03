@@ -11,7 +11,7 @@ function test_relu_neuron(backend::Backend, T)
   for (neuron, threshval) in [(neuron0, 0), (neuron1, 1e-6)]
     copy!(data_blob, data)
     forward(backend, neuron, data_blob)
-    expected_data = max(data, threshval)
+    expected_data = max.(data, threshval)
     got_data = zeros(T, size(data))
     copy!(got_data, data_blob)
     @test all(-eps .< got_data - expected_data .< eps)

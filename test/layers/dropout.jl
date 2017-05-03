@@ -21,7 +21,7 @@ function test_dropout_layer(backend::Backend, T, eps)
   rand_vals = zeros(T, size(input))
   copy!(rand_vals, state.rand_vals)
   expected_output = input .* (rand_vals .> ratio) / (1-ratio)
-  @test all(abs(got_output - expected_output) .< eps)
+  @test all(abs.(got_output - expected_output) .< eps)
 
   println("    > Backward")
   top_diff = rand(T, size(input))
@@ -30,7 +30,7 @@ function test_dropout_layer(backend::Backend, T, eps)
   expected_grad = top_diff .* (rand_vals .> ratio) / (1-ratio)
   got_grad = zeros(T, size(expected_grad))
   copy!(got_grad, diff_blob)
-  @test all(abs(got_grad - expected_grad) .< eps)
+  @test all(abs.(got_grad - expected_grad) .< eps)
 
   shutdown(backend, state)
 end

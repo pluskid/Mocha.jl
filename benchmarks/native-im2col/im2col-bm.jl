@@ -83,7 +83,7 @@ im2col_c() = im2col_native(img, col_buffer2, width, height, channels, kernel, pa
 im2col_jl()
 im2col_c()
 
-@assert all(abs(col_buffer-col_buffer2) .< 1e-10)
+@assert all(abs.(col_buffer-col_buffer2) .< 1e-10)
 
 df = compare([im2col_jl, im2col_c], 50)
 println("$df")

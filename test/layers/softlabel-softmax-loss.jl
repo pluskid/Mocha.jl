@@ -33,10 +33,10 @@ function test_softlabel_softmax_loss_layer(backend::Backend, tensor_dim, T, eps)
 
   for i = 1:dim_pre
     for j = 1:dim_post
-      pred = exp(canonical_input[i,:,j])
+      pred = exp.(canonical_input[i,:,j])
       pred /= sum(pred)
 
-      expected_loss += sum(-log(pred) .* canonical_label[i,:,j])
+      expected_loss += sum(-log.(pred) .* canonical_label[i,:,j])
       canonical_grad[i,:,j] = repmat(vec(pred), 1, dim_prob) * vec(canonical_label[i,:,j])
       canonical_grad[i,:,j] -= canonical_label[i,:,j]
     end

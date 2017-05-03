@@ -14,10 +14,10 @@ function test_element_wise_layer(backend::Backend, op::ElementWiseFunctorType, j
   state = setup(backend, layer, input_blobs, diff_blobs)
 
   forward(backend, state, input_blobs)
-  expected_res = jl_op(inputs...)
+  expected_res = jl_op.(inputs...)
   got_res = similar(inputs[1])
   copy!(got_res, state.blobs[1])
-  @test all(abs(got_res - expected_res) .< eps)
+  @test all(abs.(got_res - expected_res) .< eps)
 
   top_diff = rand(T, size(inputs[1]))
   copy!(state.blobs_diff[1], top_diff)
@@ -31,18 +31,18 @@ function test_element_wise_layer(backend::Backend, op::ElementWiseFunctorType, j
 
   if jl_op == (+)
     for i = 1:length(got_grads)
-      @test all(abs(got_grads[i] - top_diff) .< eps)
+      @test all(abs.(got_grads[i] - top_diff) .< eps)
     end
   elseif jl_op == (-)
-    @test all(abs(got_grads[1] - top_diff) .< eps)
-    @test all(abs(got_grads[2] + top_diff) .< eps)
-  elseif jl_op == (.*)
-    @test all(abs(got_grads[1] - top_diff.*inputs[2]) .< eps)
-    @test all(abs(got_grads[2] - top_diff.*inputs[1]) .< eps)
-  elseif jl_op == (./)
-    @test all(abs(got_grads[1] - top_diff./inputs[2]) .< eps)
-    #@test all(abs(got_grads[2] + top_diff.*inputs[1]./(inputs[2].*inputs[2])) .< eps)
-    @test all(abs(got_grads[2] + top_diff.*got_res./inputs[2]) .< eps)
+    @test all(abs.(got_grads[1] - top_diff) .< eps)
+    @test all(abs.(got_grads[2] + top_diff) .< eps)
+  elseif jl_op == (*)
+    @test all(abs.(got_grads[1] - top_diff.*inputs[2]) .< eps)
+    @test all(abs.(got_grads[2] - top_diff.*inputs[1]) .< eps)
+  elseif jl_op == (/)
+    @test all(abs.(got_grads[1] - top_diff./inputs[2]) .< eps)
+    #@test all(abs.(got_grads[2] + top_diff.*inputs[1]./(inputs[2].*inputs[2])) .< eps)
+    @test all(abs.(got_grads[2] + top_diff.*got_res./inputs[2]) .< eps)
   else
     error("Unknown operation $jl_op")
   end
@@ -53,8 +53,8 @@ end
 function test_element_wise_layer(backend::Backend, T, eps)
   for (functor,jl_op) in ((ElementWiseFunctors.Add(), (+)),
                           (ElementWiseFunctors.Subtract(),(-)),
-                          (ElementWiseFunctors.Multiply(), (.*)),
-                          (ElementWiseFunctors.Divide(), (./)))
+                          (ElementWiseFunctors.Multiply(), (*)),
+                          (ElementWiseFunctors.Divide(), (/)))
     test_element_wise_layer(backend, functor, jl_op, T, eps)
   end
 end

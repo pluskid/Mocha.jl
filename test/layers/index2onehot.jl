@@ -8,7 +8,7 @@ function test_index2onehot_layer(backend::Backend, tensor_dim, n_input, T, eps)
     dims[i][expand_dim] = 1
   end
   n_class = 6
-  input = [convert(Array{T}, abs(rand(Int, dims[i]...)) % n_class) for i = 1:n_input]
+  input = [convert(Array{T}, abs.(rand(Int, dims[i]...)) .% n_class) for i = 1:n_input]
   input_blob = Blob[make_blob(backend, x) for x in input]
   diff_blob = Blob[NullBlob() for i = 1:n_input]
 

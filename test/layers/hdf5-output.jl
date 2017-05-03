@@ -38,7 +38,7 @@ function test_hdf5_output_layer(backend::Backend, T, eps)
 
   @test size(expected_output) == size(got_output)
   @test eltype(expected_output) == eltype(got_output)
-  @test all(abs(expected_output-got_output) .< eps)
+  @test all(abs.(expected_output-got_output) .< eps)
 
   rm(output_fn)
 end

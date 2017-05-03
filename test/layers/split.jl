@@ -19,7 +19,7 @@ function test_split_layer(backend::Backend, T)
   got_output = zeros(T, size(input))
   for i = 1:2
     copy!(got_output, state.blobs[i])
-    @test all(abs(got_output - input) .< eps)
+    @test all(abs.(got_output - input) .< eps)
   end
 
   # modifying one split should not affect the other split
@@ -28,7 +28,7 @@ function test_split_layer(backend::Backend, T)
   corruption = rand(T, size(input))
   copy!(state.blobs[1], corruption)
   orig_data = to_array(state.blobs[2])
-  @test !all(abs(corruption - orig_data) .< eps)
+  @test !all(abs.(corruption - orig_data) .< eps)
 
   println("    > Backward")
   top_diff = Array{T}[rand(T, size(input)), rand(T, size(input))]
@@ -39,7 +39,7 @@ function test_split_layer(backend::Backend, T)
   expected_grad = top_diff[1] + top_diff[2]
   got_grad = zeros(T, size(expected_grad))
   copy!(got_grad, diff_blob)
-  @test all(abs(got_grad - expected_grad) .< eps)
+  @test all(abs.(got_grad - expected_grad) .< eps)
 
   shutdown(backend, state)
 end

@@ -7,7 +7,7 @@ function test_tanh_neuron(backend::Backend, T, eps)
 
   println("    > Forward")
   forward(backend, neuron, data_blob)
-  expected_data = (1 - exp(-2data)) ./ (1 + exp(-2data))
+  expected_data = (1 - exp.(-2data)) ./ (1 + exp.(-2data))
   got_data = zeros(T, size(data))
   copy!(got_data, data_blob)
 

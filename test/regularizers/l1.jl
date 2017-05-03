@@ -7,7 +7,7 @@ function test_l1_regularizer(backend::Backend, T, eps)
   regu = L1Regu(coef)
 
   loss = forward(backend, regu, 1.0, param_blob)
-  expected_loss = coef * sum(abs(param))
+  expected_loss = coef * sum(abs.(param))
   @test -eps < loss - expected_loss < eps
 
   grad_blob = make_zero_blob(backend, T, size(param))
@@ -15,7 +15,7 @@ function test_l1_regularizer(backend::Backend, T, eps)
   grad = zeros(T, size(param))
   copy!(grad, grad_blob)
 
-  @test all(-eps .< grad - coef*sign(param) .< eps)
+  @test all(-eps .< grad - coef*sign.(param) .< eps)
 end
 
 function test_l1_regularizer(backend::Backend)

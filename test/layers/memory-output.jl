@@ -18,8 +18,8 @@ function test_memory_output_layer(backend::Backend, T, eps)
   @test length(state.outputs) == length(inputs)
   for i = 1:length(inputs)
     @test length(state.outputs[i]) == 2
-    @test all(abs(state.outputs[i][1]-inputs[i]) .< eps)
-    @test all(abs(state.outputs[i][2]-inputs[i]) .< eps)
+    @test all(abs.(state.outputs[i][1] .- inputs[i]) .< eps)
+    @test all(abs.(state.outputs[i][2] .- inputs[i]) .< eps)
   end
 
   reset_outputs(state)
@@ -27,7 +27,7 @@ function test_memory_output_layer(backend::Backend, T, eps)
   @test length(state.outputs) == length(inputs)
   for i = 1:length(inputs)
     @test length(state.outputs[i]) == 1
-    @test all(abs(state.outputs[i][1]-inputs[i]) .< eps)
+    @test all(abs.(state.outputs[i][1] .- inputs[i]) .< eps)
   end
 
   shutdown(backend, state)

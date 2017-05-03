@@ -140,7 +140,7 @@ function update_parameters!(net::Net{CPUBackend}, method::Adam,
   # Correct bias and calculate effective stepsize for timestep t
   alpha_t = alpha * sqrt(1 - beta2^t) / (1 - beta1^t)
   # Update param <- param - alpha_t * m/(sqrt(v) + epsilon)
-  delta = m.data ./ (sqrt(v.data) .+ epsilon)
+  delta = m.data ./ (sqrt.(v.data) .+ epsilon)
   BLAS.axpy!(length(param_blob), convert(data_type, -alpha_t), pointer(delta), 1, pointer(param_blob.data), 1)
 
 end

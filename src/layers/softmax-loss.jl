@@ -56,7 +56,7 @@ function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vec
 
     idx_all = map(1:length(dims)) do i
       if i == state.logistic.op_dim
-        round(Int, label) + 1
+        round.(Int, label) .+ 1
       else
         dim = dims[i]
         reshape(1:dim, [j == i? dim : 1 for j = 1:length(dims)]...)

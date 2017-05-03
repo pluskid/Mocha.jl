@@ -54,7 +54,7 @@ function test_softmax_loss_layer(backend::Backend, tensor_dim, use_weights::Bool
   label = reshape(label, dim_pre, 1, dim_post)
   for i = 1:dim_pre
     for j = 1:dim_post
-      pred = exp(canonical_input[i,:,j])
+      pred = exp.(canonical_input[i,:,j])
       pred /= sum(pred)
       if isempty(weights)
         canonical_grad[i,:,j] = pred

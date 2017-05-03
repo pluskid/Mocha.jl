@@ -29,7 +29,7 @@ function test_softmax_layer(backend::Backend, tensor_dim, n_input, T, eps)
       for y = 1:dim_post
         preds = canonical_input[x,:,y]
         preds -= maximum(preds)
-        preds = exp(preds)
+        preds = exp.(preds)
         preds /= sum(preds)
         output[x,:,y] = preds
       end

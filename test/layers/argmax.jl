@@ -31,7 +31,7 @@ function test_argmax_layer(backend::Backend, n_input, tensor_dim, T, eps)
     end
 
     copy!(got_output, state.blobs[i])
-    @test all(abs(got_output - expected_output) .< eps)
+    @test all(abs.(got_output - expected_output) .< eps)
   end
 
   shutdown(backend, state)

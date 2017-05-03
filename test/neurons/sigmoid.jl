@@ -7,7 +7,7 @@ function test_sigmoid_neuron(backend::Backend, T, eps)
 
   println("    > Forward")
   forward(backend, neuron, data_blob)
-  expected_data = 1 ./ (1 + exp(-data))
+  expected_data = 1 ./ (1 + exp.(-data))
   got_data = zeros(T, size(data))
   copy!(got_data, data_blob)
 

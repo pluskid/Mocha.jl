@@ -150,7 +150,7 @@ function gradient_check(model::Net, epsilon::Float64, digit::Int, visual::Bool)
 
     # do actual comparison with `digit` numerical percision
     # ∇⁺ = round(∇⁺, 4); 	∇ = round(∇, 4)
-    idx = round( abs(∇ᵋ - ∇), digit ) .!= 0
+    idx = round.( abs.(∇ᵋ - ∇), digit ) .!= 0
     if visual
         δ = Array{Char}(length(idx));  fill!(δ,'.')
         δ[idx] = 'x'
@@ -159,7 +159,7 @@ function gradient_check(model::Net, epsilon::Float64, digit::Int, visual::Bool)
     end
     # return false if fail at any point
     # TODO: check if correct
-    sum( round( abs(∇ᵋ - ∇), digit) ) < epsilon
+    sum( round.( abs.(∇ᵋ - ∇), digit) ) < epsilon
 end
 
 

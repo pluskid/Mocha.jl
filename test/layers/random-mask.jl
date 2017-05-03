@@ -21,7 +21,7 @@ function test_random_mask_layer(backend, T, eps)
     rand_vals = to_array(state.dropouts[i].rand_vals)
     expected_output = inputs[i] .* (rand_vals .> ratio)
     got_output = to_array(input_blobs[i])
-    @test all(abs(got_output - expected_output) .< eps)
+    @test all(abs.(got_output - expected_output) .< eps)
   end
 
   println("    > Backward")
@@ -34,7 +34,7 @@ function test_random_mask_layer(backend, T, eps)
     rand_vals = to_array(state.dropouts[i].rand_vals)
     got_grad = to_array(diff_blobs[i])
     expected_grad = top_diffs[i] .* (rand_vals .> ratio)
-    @test all(abs(got_grad - expected_grad) .< eps)
+    @test all(abs.(got_grad - expected_grad) .< eps)
   end
 
   shutdown(backend, state)

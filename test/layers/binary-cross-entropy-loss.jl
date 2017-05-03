@@ -46,7 +46,7 @@ function test_binary_crossentropy_loss_layer(backend::Backend, tensor_dim, T, ep
 
   @test all(-eps .< 1 - grad_pred./diff .< eps)
 
-  grad_label = -weight * log(prob./(1-prob)) / dims[end]
+  grad_label = -weight * log.(prob./(1.-prob)) / dims[end]
   diff = similar(grad_pred)
   copy!(diff, diffs[2])
 
