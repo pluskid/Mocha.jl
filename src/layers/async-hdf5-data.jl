@@ -13,6 +13,7 @@ using HDF5
   is_source => true
 )
 
+const AsyncCommsType = @static VERSION < v"0.6-" ? Task : Channel
 
 type AsyncHDF5DataLayerState <: LayerState
   layer :: AsyncHDF5DataLayer
@@ -22,7 +23,7 @@ type AsyncHDF5DataLayerState <: LayerState
 
   sources        :: Vector{AbstractString}
 
-  io_task        :: Task
+  io_channel     :: AsyncCommsType
   stop_task      :: Bool
 
   AsyncHDF5DataLayerState(backend::Backend, layer::AsyncHDF5DataLayer) = begin
@@ -67,7 +68,8 @@ function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}
   state.stop_task = false
   close(h5_file)
 
-  function io_task_impl()
+
+  function io_task_impl(channel)
     # data blocks to produce
     data_blocks = Array[Array{eltype(x)}(size(x)) for x in state.blobs]
     n_done = 0
@@ -110,11 +112,19 @@ function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}
           curr_idx = 1
           while curr_idx <= n_chunk
             if n_done == layer.batch_size
-              produce(data_blocks)
+              @static if VERSION < v"0.6-"
+                produce(data_blocks)
+              else
+                put!(channel, data_blocks)
+              end
               if state.stop_task
                 @info("AsyncHDF5DataLayer: IO Task reaching the end...")
                 close(h5_file)
-                produce(nothing)
+                @static if VERSION < v"0.6-"
+                  produce(nothing)
+                else
+                  put!(channel, nothing)
+                end
                 return
               end
 
@@ -143,14 +153,19 @@ function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}
   end
 
   # start the IO task
-  state.io_task = Task(io_task_impl)
+  @static if VERSION < v"0.6-"
+    state.io_channel = Task(() -> io_task_impl(nothing))
+  else
+    state.io_channel = Channel(io_task_impl)
+  end
+  # state.io_task = Task(io_task_impl)
 
   return state
 end
 function shutdown(backend::Backend, state::AsyncHDF5DataLayerState)
   @info("AsyncHDF5DataLayer: Stopping IO task...")
   state.stop_task = true
-  while consume(state.io_task) != nothing
+  while take!(state.io_channel) != nothing
     # ignore everything
   end
 
@@ -159,7 +174,7 @@ function shutdown(backend::Backend, state::AsyncHDF5DataLayerState)
 end
 
 function forward(backend::Backend, state::AsyncHDF5DataLayerState, inputs::Vector{Blob})
-  data_blocks = consume(state.io_task)
+  data_blocks = take!(state.io_channel)
 
   for i = 1:length(state.blobs)
     copy!(state.blobs[i], data_blocks[i])
