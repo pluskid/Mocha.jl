@@ -93,7 +93,7 @@ function forward(backend::CPUBackend, state::MultinomialLogisticLossLayerState, 
 
   idx_all = map(1:length(dims)) do i
     if i == state.op_dim
-      round.(Int, label) + 1
+      map(x -> round(Int, x), label) .+ 1
     else
       dim = dims[i]
       reshape(1:dim, [j == i? dim : 1 for j = 1:length(dims)]...)
