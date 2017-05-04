@@ -13,7 +13,7 @@ using HDF5
   is_source => true
 )
 
-const AsyncCommsType = @static VERSION < v"0.6-" ? Task : Channel
+const AsyncCommsType = @static VERSION < v"0.6-" ? Task : Channel{Any}
 
 type AsyncHDF5DataLayerState <: LayerState
   layer :: AsyncHDF5DataLayer
