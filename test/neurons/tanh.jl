@@ -1,13 +1,13 @@
 function test_tanh_neuron(backend::Backend, T, eps)
   println("-- Testing Tanh neuron on $(typeof(backend)){$T}...")
 
-  data = rand(T, 3,4,5,6) - 0.5
+  data = rand(T, 3,4,5,6) - convert(T, 0.5)
   data_blob = make_blob(backend, data)
   neuron = Neurons.Tanh()
 
   println("    > Forward")
   forward(backend, neuron, data_blob)
-  expected_data = (1 - exp(-2data)) ./ (1 + exp(-2data))
+  expected_data = (1 - exp.(-2data)) ./ (1 + exp.(-2data))
   got_data = zeros(T, size(data))
   copy!(got_data, data_blob)
 

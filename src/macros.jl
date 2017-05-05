@@ -36,10 +36,10 @@ macro defstruct(name, super_name, fields)
   @assert length(fields) > 0
   name = esc(name)
 
-  field_defs     = Array(Expr, length(fields))     # :(field2 :: Int)
-  field_names    = Array(Symbol, length(fields))   # :field2
-  field_defaults = Array(Expr, length(fields))     # :(field2 :: Int = 0)
-  field_asserts  = Array(Expr, length(fields))     # :(field2 >= 0)
+  field_defs     = Array{Expr}(length(fields))     # :(field2 :: Int)
+  field_names    = Array{Symbol}(length(fields))   # :field2
+  field_defaults = Array{Expr}(length(fields))     # :(field2 :: Int = 0)
+  field_asserts  = Array{Expr}(length(fields))     # :(field2 >= 0)
 
   for i = 1:length(fields)
     field = fields[i]
@@ -95,6 +95,18 @@ macro defstruct(name, super_name, fields)
   end
 end
 
+@static if VERSION < v"0.6-"
+  function parse_property(prop)
+    @assert(isa(prop, Expr) && prop.head == :(=>), "Property should be: property_name => value")
+    prop.args[1], prop.args[2]
+  end
+else
+  function parse_property(prop)
+    @assert(isa(prop, Expr) && prop.head == :(call) && prop.args[1] == :(=>), "Property should be: property_name => value")
+    prop.args[2], prop.args[3]
+  end
+end
+
 #############################################################
 # A macro used to characterize a layer. Example
 #
@@ -105,12 +117,9 @@ end
 # )
 #############################################################
 macro characterize_layer(layer, properties...)
-  defs = Array(Expr, length(properties))
+  defs = Array{Expr}(length(properties))
   for (i,prop) in enumerate(properties)
-    @assert(isa(prop, Expr) && prop.head == :(=>), "Property should be: property_name => value")
-
-    prop_name = prop.args[1]
-    prop_val  = prop.args[2]
+    prop_name, prop_val = parse_property(prop)
     defs[i] = quote
       $(esc(prop_name))(::$(esc(layer))) = $prop_val
     end

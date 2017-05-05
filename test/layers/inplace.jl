@@ -53,7 +53,7 @@ function test_inplace_layer(backend::Backend, T, eps)
   #-- middle-term check
   got_output = similar(output)
   copy!(got_output, net.states[2].blobs[1])
-  @test all(abs(output - got_output) .< eps)
+  @test all(abs.(output - got_output) .< eps)
 
   #-- layer_ip2
   weight = zeros(T, size(net.states[5].W))
@@ -61,7 +61,7 @@ function test_inplace_layer(backend::Backend, T, eps)
   output = reshape(weight, size(weight,1), size(weight,2))' * output
   got_output = similar(output)
   copy!(got_output, net.states[5].blobs[1])
-  @test all(abs(output - got_output) .< eps)
+  @test all(abs.(output - got_output) .< eps)
 
   println("    > Backward")
   top_diff = rand(T, size(output))
@@ -86,7 +86,7 @@ function test_inplace_layer(backend::Backend, T, eps)
 
   got_grad = similar(grad)
   copy!(got_grad, net.states[2].blobs_diff[1])
-  @test all(abs(grad - got_grad) .< eps)
+  @test all(abs.(grad - got_grad) .< eps)
 
   destroy(net)
 end

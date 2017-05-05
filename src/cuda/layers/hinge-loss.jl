@@ -23,7 +23,7 @@ function forward(backend::GPUBackend, state::HingeLossLayerState, inputs::Vector
   CUDA.launch(kernel, (x_block,1), (CUDA.THREADS_PER_BLOCK_X, 1),
               (pred.ptr.p, label.ptr.p, n, state.loss_blob.ptr.p))
 
-  losses = Array(data_type, size(state.loss_blob)...)
+  losses = Array{data_type}(size(state.loss_blob)...)
   copy!(losses, state.loss_blob)
   state.loss = state.layer.weight * sum(losses[1:x_block]) / get_num(pred)
 

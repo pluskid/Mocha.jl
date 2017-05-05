@@ -40,7 +40,7 @@ function ImageClassifier(net::Net, softmax_blob_name::Symbol;
   end
 
   pred_blob = net.output_blobs[softmax_blob_name]
-  pred = Array(data_type, size(pred_blob))
+  pred = Array{data_type}(size(pred_blob))
 
   return ImageClassifier(net, channel_order, sp_order, grayscale, classes,
       data_layer, pred_blob, pred, data_type, batch_size, image_wh)
@@ -117,7 +117,7 @@ function preprocess(classifier::ImageClassifier, images::Vector{Image})
     if classifier.grayscale
       data2 = convert(Array{classifier.data_type}, data)
     else
-      data2 = Array(classifier.data_type, tuple(classifier.image_wh..., 3))
+      data2 = Array{classifier.data_type}(tuple(classifier.image_wh..., 3))
       for i = 1:3
         data2[:,:,i] = convert(Array{classifier.data_type},
             data[:,:,classifier.channel_order[i]])

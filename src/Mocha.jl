@@ -39,13 +39,8 @@ if Config.use_cuda
 end
 
 export DefaultBackend
-if Config.use_cuda
-  typealias DefaultBackend GPUBackend
-  const default_backend_type = "gpu"
-else
-  typealias DefaultBackend CPUBackend
-  const default_backend_type = "cpu"
-end
+const DefaultBackend = Config.use_cuda ? GPUBackend : CPUBackend
+const default_backend_type = Config.use_cuda ? "gpu" : "cpu"
 @show DefaultBackend
 
 include("initializers.jl")

@@ -104,7 +104,7 @@ pooling_native() = pooling_native(input, output2, mask2, kernel, pad, stride)
 # make sure results are correct
 pooling_julia()
 pooling_native()
-@assert all(abs(output1-output2) .< 1e-10)
+@assert all(abs.(output1-output2) .< 1e-10)
 @assert mask1 == mask2
 
 # compare performance

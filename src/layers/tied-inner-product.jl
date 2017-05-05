@@ -48,9 +48,9 @@ type TiedInnerProductLayerState <: LayerState
     @assert size(W, 2) == fea_size
     out_dim = size(W, 1)
 
-    blobs = Array(Blob, length(inputs))
-    blobs_diff = Array(Blob, length(inputs))
-    bias_multipliers = Array(Blob, length(inputs))
+    blobs = Array{Blob}(length(inputs))
+    blobs_diff = Array{Blob}(length(inputs))
+    bias_multipliers = Array{Blob}(length(inputs))
 
     for i = 1:length(inputs)
       nums = get_num(inputs[i])

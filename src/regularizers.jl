@@ -2,7 +2,7 @@ export Regularizer
 export NoRegu, L2Regu, L1Regu
 export forward, backward
 
-abstract Regularizer
+@compat abstract type Regularizer end
 
 immutable NoRegu <: Regularizer
   coefficient :: AbstractFloat # not used, just for consistent API
@@ -46,7 +46,7 @@ end
 # L1 regularization
 ############################################################
 function forward(backend::CPUBackend, regu :: L1Regu, global_regu::AbstractFloat, param :: Blob)
-  return regu.coefficient * global_regu * sum(abs(param.data))
+  return regu.coefficient * global_regu * sum(abs.(param.data))
 end
 function backward(backend::CPUBackend, regu :: L1Regu, global_regu::AbstractFloat, param :: Blob, gradient :: Blob)
   coef = convert(eltype(param), regu.coefficient * global_regu)

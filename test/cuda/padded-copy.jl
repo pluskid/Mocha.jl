@@ -14,7 +14,7 @@ function test_padded_copy(backend::Backend, T)
 
   got = padded[pad[1]+1:end-pad[1],pad[2]+1:end-pad[2],:,:]
 
-  @test all(abs(got - orig) .< eps)
+  @test all(abs.(got - orig) .< eps)
 
   padded = rand(T, size(padded))
   copy!(padded_blob, padded)
@@ -22,7 +22,7 @@ function test_padded_copy(backend::Backend, T)
   copy!(orig, orig_blob)
 
   expected = padded[pad[1]+1:end-pad[1],pad[2]+1:end-pad[2],:,:]
-  @test all(abs(expected - orig) .< eps)
+  @test all(abs.(expected - orig) .< eps)
 end
 
 function test_padded_copy(backend::Backend)

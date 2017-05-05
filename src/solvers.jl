@@ -5,10 +5,10 @@ export make_solver_parameters
 export init_solve, onestep_solve, finalize_solve
 import Base.Meta: quot
 
-abstract SolverMethod # An enum type to identify the solver in validation functions
+@compat abstract type SolverMethod end # An enum type to identify the solver in validation functions
 
-abstract InternalSolverState # All the state a solver needs to update an iteration
-typealias SolverParameters Dict{Symbol,Any}
+@compat abstract type InternalSolverState end # All the state a solver needs to update an iteration
+const SolverParameters = Dict{Symbol,Any}
 
 immutable Solver{T<:SolverMethod}
   method        :: T
@@ -36,7 +36,7 @@ end
 
 SolverState{T<:InternalSolverState}(internal::T) = SolverState{T}(0, Inf, Dict(), internal)
 
-abstract SolverStateSnapshot # Just the serializable part of the solver state, for snapshot files
+@compat abstract type SolverStateSnapshot end # Just the serializable part of the solver state, for snapshot files
 
 
 function make_solver_parameters(;kwargs...)

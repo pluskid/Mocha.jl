@@ -19,7 +19,7 @@ export forward, backward
 #   function.
 ############################################################
 
-abstract ActivationFunction
+@compat abstract type ActivationFunction end
 
 ############################################################
 # A module to hold built-in activation functions to avoid

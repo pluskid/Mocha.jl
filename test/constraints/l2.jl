@@ -4,7 +4,7 @@ function test_l2_constraint(backend::Backend, T, eps)
   # the l2 constraint to it
   n_filters = 5
   coef = 0.2
-  param = rand(T, 2,3,4,n_filters) - 0.5
+  param = rand(T, 2,3,4,n_filters) - convert(T, 0.5)
   param_after = zeros(T, size(param))
   param_blob = make_blob(backend, param)
 
@@ -20,7 +20,7 @@ function test_l2_constraint(backend::Backend, T, eps)
   # this is the same as above but for fully connected weights
   n_input = 10
   n_out   = 12
-  param = rand(T, n_input,n_out) - 0.5
+  param = rand(T, n_input,n_out) - convert(T, 0.5)
   param_after = zeros(T, size(param))
   param_blob = make_blob(backend, param)
 
@@ -35,7 +35,7 @@ function test_l2_constraint(backend::Backend, T, eps)
 
   # The case for bias
   len = 10
-  param = rand(T, len) - 0.5
+  param = rand(T, len) - convert(T, 0.5)
   param_after = similar(param)
   param_blob = make_blob(backend, param)
   cons = L2Cons(coef)

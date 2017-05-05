@@ -1,6 +1,6 @@
 export ElementWiseFunctorType, ElementWiseFunctors
 export get_num_args
-abstract ElementWiseFunctorType{NArg}
+@compat abstract type ElementWiseFunctorType{NArg} end
 
 get_num_args{NArg}(::ElementWiseFunctorType{NArg}) = NArg
 

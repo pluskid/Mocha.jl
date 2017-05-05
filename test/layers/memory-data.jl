@@ -6,7 +6,7 @@ function test_memory_data_layer(backend::Backend, T, eps)
   ############################################################
   batch_size = 6
   tensor_dim = abs(rand(Int)) % 6 + 1
-  data_dim = tuple((abs(rand(Int, tensor_dim)) % 6 + 1)...)
+  data_dim = tuple(rand(1:6, tensor_dim)...)
   println("    > $data_dim")
 
   data = rand(T, data_dim..., 9)
@@ -23,7 +23,7 @@ function test_memory_data_layer(backend::Backend, T, eps)
   state = setup(backend, layer, Blob[], Blob[])
 
   data_idx = map(x->1:x, data_dim)
-  layer_data = Array(eltype(data), tuple(data_dim..., batch_size))
+  layer_data = Array{eltype(data)}(tuple(data_dim..., batch_size))
 
   data_aug = cat(tensor_dim+1, data, data)
   data_aug .-= mean_data

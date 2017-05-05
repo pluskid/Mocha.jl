@@ -1,16 +1,15 @@
 function test_softlabel_softmax_loss_layer(backend::Backend, tensor_dim, T, eps)
   println("-- Testing SoftlabelSoftmaxLossLayer on $(typeof(backend)){$T}...")
 
-  dims = abs(rand(Int,tensor_dim)) % 6 + 6
-  dims = tuple(dims...)
+  dims = tuple(rand(6:11, tensor_dim)...)
   op_dim = max(abs(rand(Int)) % tensor_dim, 1)
   println("    > $dims (operate on dimension $op_dim)")
 
-  input = rand(T, dims) + 0.01
+  input = rand(T, dims) + convert(T, 0.01)
   input_blob = make_blob(backend, input)
   diff_blob = make_blob(backend, T, size(input))
 
-  labels = abs(rand(T, dims)) + 0.01
+  labels = abs.(rand(T, dims)) + convert(T, 0.01)
   labels = labels ./ sum(labels, op_dim)
   label_blob = make_blob(backend, labels)
 
@@ -33,10 +32,10 @@ function test_softlabel_softmax_loss_layer(backend::Backend, tensor_dim, T, eps)
 
   for i = 1:dim_pre
     for j = 1:dim_post
-      pred = exp(canonical_input[i,:,j])
+      pred = exp.(canonical_input[i,:,j])
       pred /= sum(pred)
 
-      expected_loss += sum(-log(pred) .* canonical_label[i,:,j])
+      expected_loss += sum(-log.(pred) .* canonical_label[i,:,j])
       canonical_grad[i,:,j] = repmat(vec(pred), 1, dim_prob) * vec(canonical_label[i,:,j])
       canonical_grad[i,:,j] -= canonical_label[i,:,j]
     end

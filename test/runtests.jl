@@ -1,3 +1,5 @@
+srand(100)
+
 if haskey(ENV, "MOCHA_USE_CUDA")
   const test_gpu = true
 else

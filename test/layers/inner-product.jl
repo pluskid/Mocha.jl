@@ -20,7 +20,7 @@ function test_inner_product_layer(backend::Backend, n_input, T, eps)
   # Setup
   ############################################################
   layer = InnerProductLayer(name="ip", output_dim=target_dim,
-      tops=Array(Symbol, n_input), bottoms=Array(Symbol, n_input))
+      tops=Array{Symbol}(n_input), bottoms=Array{Symbol}(n_input))
   inputs = Blob[make_blob(backend, x) for x in X]
   diffs = Blob[make_blob(backend, x) for x in X]
 

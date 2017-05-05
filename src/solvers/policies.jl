@@ -90,7 +90,7 @@ type Staged <: LearningRatePolicy
   curr_stage :: Int
 
   Staged(stages...) = begin
-    accum_stages = Array(@compat(Tuple{Int, LearningRatePolicy}), length(stages))
+    accum_stages = Array{@compat(Tuple{Int, LearningRatePolicy})}(length(stages))
     accum_iter = 0
     for i = 1:length(stages)
       (n, lrp) = stages[i]
@@ -183,7 +183,7 @@ type Staged <: MomentumPolicy
   curr_stage :: Int
 
   Staged(stages...) = begin
-    accum_stages = Array(@compat(Tuple{Int, MomentumPolicy}), length(stages))
+    accum_stages = Array{@compat(Tuple{Int, MomentumPolicy})}(length(stages))
     accum_iter = 0
     for i = 1:length(stages)
       (n, mmp) = stages[i]

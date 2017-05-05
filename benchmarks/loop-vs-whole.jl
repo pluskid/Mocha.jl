@@ -45,7 +45,7 @@ end
 input = rand(28, 28, 50, 128)
 i1 = relu_loop(input)
 i2 = relu_whole(input)
-@assert all(abs(i1-i2) .< 1e-10)
+@assert all(abs.(i1-i2) .< 1e-10)
 
 grad = rand(size(input))
 

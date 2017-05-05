@@ -18,7 +18,7 @@ function setup(backend::Backend, layer::CropLayer, inputs::Vector{Blob}, diffs::
     @assert isa(diffs[i], NullBlob) # Back-propagation for crop-layer is not implemented
   end
 
-  blobs = Array(Blob, length(inputs))
+  blobs = Array{Blob}(length(inputs))
   for i = 1:length(inputs)
     width, height, channels, num = size(inputs[i])
     @assert layer.crop_size[1] <= width && layer.crop_size[2] <= height

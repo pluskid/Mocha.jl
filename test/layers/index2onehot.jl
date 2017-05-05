@@ -3,16 +3,16 @@ function test_index2onehot_layer(backend::Backend, tensor_dim, n_input, T, eps)
 
   expand_dim = max(1, abs(rand(Int)) % tensor_dim)
   println("    > $tensor_dim-dimensional input, expanding along dimension $expand_dim")
-  dims = [abs(rand(Int,tensor_dim)) % 6 + 6 for i = 1:n_input]
+  dims = [rand(6:11, tensor_dim) for i in 1:n_input]
   for i = 1:n_input
     dims[i][expand_dim] = 1
   end
   n_class = 6
-  input = [convert(Array{T}, abs(rand(Int, dims[i]...)) % n_class) for i = 1:n_input]
+  input = [convert(Array{T}, abs.(rand(Int, dims[i]...)) .% n_class) for i = 1:n_input]
   input_blob = Blob[make_blob(backend, x) for x in input]
   diff_blob = Blob[NullBlob() for i = 1:n_input]
 
-  layer = Index2OnehotLayer(tops=Array(Symbol, n_input), bottoms=Array(Symbol, n_input),
+  layer = Index2OnehotLayer(tops=Array{Symbol}(n_input), bottoms=Array{Symbol}(n_input),
       dim=expand_dim, n_class=n_class)
   state = setup(backend, layer, input_blob, diff_blob)
 

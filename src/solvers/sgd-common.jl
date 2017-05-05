@@ -2,5 +2,5 @@ export SGD, Nesterov
 
 export LearningRatePolicy, MomentumPolicy, SGDSolverParameters
 
-abstract LearningRatePolicy
-abstract MomentumPolicy
+@compat abstract type LearningRatePolicy end
+@compat abstract type MomentumPolicy end
