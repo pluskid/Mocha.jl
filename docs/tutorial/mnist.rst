@@ -450,7 +450,7 @@ While a network is training we should verify that the optimization of the weight
 
 .. image:: images/learning_curve.*
 
-Verifying convergence after a few thousand iterations is essential when develping neural networks on new datasets.  Some teams have waited hours (or days) for their network to complete training only to discover that the solver failed to converge and they need to retune their paramaters.  A quick look at the learning curve above after the first thousand iterations clearly shows that the algorithm is working and that letting it continue to train for the full 10,000 iterations will probably produce a good result.
+Verifying convergence after a few thousand iterations is essential when developing neural networks on new datasets.  Some teams have waited hours (or days) for their network to complete training only to discover that the solver failed to converge and they need to retune their paramaters.  A quick look at the learning curve above after the first thousand iterations clearly shows that the algorithm is working and that letting it continue to train for the full 10,000 iterations will probably produce a good result.
 
 The data to plot the *Learning Curve* is conveniently saved as the solver progresses.  Recall that we set up the coffee lounge and a ``TrainingSummary()`` coffee break every 100 iterations in the ``mnist.jl`` file:
 
