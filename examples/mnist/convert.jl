@@ -40,9 +40,9 @@ for key in keys(datasets)
       idx = collect(idx)
       rp = randperm(length(idx))
 
-      img = readbytes(data_f, batch_size * h*w)
+      img = read(data_f, batch_size * h*w)
       img = convert(Array{Float32},img) / 256 # scale into [0,1)
-      class = readbytes(label_f, batch_size)
+      class = read(label_f, batch_size)
       class = convert(Array{Float32},class)
 
       for j = 1:length(idx)
