@@ -47,7 +47,7 @@ function dump_statistics(storage, state::SquareLossLayerState, show::Bool)
 
   if show
     loss = @sprintf("%.4f", state.loss_accum)
-    @info("  Square-loss (avg over $(state.n_accum)) = $loss")
+    m_info("  Square-loss (avg over $(state.n_accum)) = $loss")
   end
 end
 

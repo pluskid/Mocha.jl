@@ -115,8 +115,8 @@ loop_in_cond() = (loop_in_cond(input,kernel,:max),
                   loop_in_cond(input,kernel,:mean))
 maxpool1, meanpool1 = cond_in_loop()
 maxpool2, meanpool2 = cond_in_loop()
-@assert all(abs(maxpool1-maxpool2) .< 1e-10)
-@assert all(abs(meanpool1-meanpool2) .< 1e-10)
+@assert all(abs.(maxpool1-maxpool2) .< 1e-10)
+@assert all(abs.(meanpool1-meanpool2) .< 1e-10)
 
 println("Running benchmark")
 df = compare([loop_in_cond, cond_in_loop], 10)

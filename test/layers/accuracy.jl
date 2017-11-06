@@ -1,7 +1,7 @@
 function test_accuracy_layer(backend::Backend, tensor_dim, T)
   println("-- Testing AccuracyLayer on $(typeof(backend)){$T}...")
 
-  dims = abs(rand(Int,tensor_dim)) % 6 + 6
+  dims = rand(6:11, tensor_dim)
   op_dim = max(abs(rand(Int)) % tensor_dim, 1)
   dims_label = copy(dims); dims_label[op_dim] = 1
   dims = tuple(dims...)
@@ -12,7 +12,7 @@ function test_accuracy_layer(backend::Backend, tensor_dim, T)
   input = rand(T, dims)
   input_blob = make_blob(backend, input)
 
-  label = abs(rand(Int, dims_label)) % dims[op_dim]
+  label = abs.(rand(Int, dims_label)) .% dims[op_dim]
   label = convert(Array{T}, label)
   label_blob = make_blob(backend, label)
 

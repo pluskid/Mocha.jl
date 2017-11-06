@@ -25,6 +25,6 @@ function enjoy(lounge::CoffeeLounge, coffee::TrainingSummary, ::Net, state::Solv
     end
   end
 
-  @info(" TRAIN ", join(summaries, ' '))
+  m_info(" TRAIN ", join(summaries, ' '))
 
 end

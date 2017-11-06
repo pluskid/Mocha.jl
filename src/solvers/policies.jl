@@ -42,14 +42,14 @@ function decay_on_validation_listener(policy, key::AbstractString, coffee_lounge
     if (policy.higher_better && stats[index[end]] < stats[index[end-1]]) ||
       (!policy.higher_better && stats[index[end]] > stats[index[end-1]])
       # performance drop
-      Mocha.info(@sprintf("lr decay %e -> %e", policy.curr_lr, policy.curr_lr*policy.gamma))
+      m_info(@sprintf("lr decay %e -> %e", policy.curr_lr, policy.curr_lr*policy.gamma))
       policy.curr_lr *= policy.gamma
 
       # revert to a previously saved "good" snapshot
       if isa(policy.solver, Solver)
-        Mocha.info("reverting to previous saved snapshot")
+        m_info("reverting to previous saved snapshot")
         solver_state = load_snapshot(net, policy.solver.params[:load_from], state)
-        Mocha.info("snapshot at iteration $(solver_state.iter) loaded")
+        m_info("snapshot at iteration $(solver_state.iter) loaded")
         copy_solver_state!(state, solver_state)
       end
     end
@@ -90,7 +90,7 @@ type Staged <: LearningRatePolicy
   curr_stage :: Int
 
   Staged(stages...) = begin
-    accum_stages = Array(@compat(Tuple{Int, LearningRatePolicy}), length(stages))
+    accum_stages = Array{@compat(Tuple{Int, LearningRatePolicy})}(length(stages))
     accum_iter = 0
     for i = 1:length(stages)
       (n, lrp) = stages[i]
@@ -128,7 +128,7 @@ get_learning_rate(policy::LRPolicy.DecayOnValidation, state::SolverState) = begi
     if state.internal.learning_rate > 0
       # state.learning_rate is initialized to 0, if it is non-zero, then this might
       # be loaded from some saved snapshot, we try to align with that
-      @info("Switching to base learning rate $(state.specific.learning_rate)")
+      m_info("Switching to base learning rate $(state.specific.learning_rate)")
       policy.curr_lr = state.internal.learning_rate
     end
     policy.initialized = true
@@ -144,7 +144,7 @@ function get_learning_rate(policy::LRPolicy.Staged, state::SolverState)
     maxiter = policy.stages[policy.curr_stage][1]
     while state.iter >= maxiter && policy.curr_stage < length(policy.stages)
       policy.curr_stage += 1
-      @info("Staged learning rate policy: switching to stage $(policy.curr_stage)")
+      m_info("Staged learning rate policy: switching to stage $(policy.curr_stage)")
       maxiter = policy.stages[policy.curr_stage][1]
     end
   end
@@ -183,7 +183,7 @@ type Staged <: MomentumPolicy
   curr_stage :: Int
 
   Staged(stages...) = begin
-    accum_stages = Array(@compat(Tuple{Int, MomentumPolicy}), length(stages))
+    accum_stages = Array{@compat(Tuple{Int, MomentumPolicy})}(length(stages))
     accum_iter = 0
     for i = 1:length(stages)
       (n, mmp) = stages[i]
@@ -211,7 +211,7 @@ function get_momentum(policy::MomPolicy.Staged, state::SolverState)
     maxiter = policy.stages[policy.curr_stage][1]
     while state.iter >= maxiter && policy.curr_stage < length(policy.stages)
       policy.curr_stage += 1
-      @info("Staged momentum policy: switching to stage $(policy.curr_stage)")
+      m_info("Staged momentum policy: switching to stage $(policy.curr_stage)")
       maxiter = policy.stages[policy.curr_stage][1]
     end
   end

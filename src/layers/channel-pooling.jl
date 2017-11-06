@@ -4,7 +4,7 @@
   (tops :: Vector{Symbol} = Symbol[], length(tops) == length(bottoms)),
   (kernel :: Int = 1, kernel > 0),
   (stride :: Int = 1, stride > 0),
-  (pad :: NTuple{2, Int} = (0,0), all([pad...] .>= 0)),
+  (pad :: NTuple{2, Int} = (0,0), all(broadcast(>=, [pad...], 0))),
   (channel_dim :: Int = -2, channel_dim != 0),
   pooling :: PoolingFunction = Pooling.Max(),
 )
@@ -23,15 +23,15 @@ end
 
 function setup_etc(backend::CPUBackend, layer::ChannelPoolingLayer, inputs, blobs)
   if isa(layer.pooling, Pooling.Max)
-    masks = Array(Array, length(inputs))
+    masks = Array{Array}(length(inputs))
     for i = 1:length(inputs)
-      masks[i] = Array(Csize_t, size(blobs[i]))
+      masks[i] = Array{Csize_t}(size(blobs[i]))
     end
     etc = masks
   elseif isa(layer.pooling, Pooling.Mean)
-    integrals = Array(Array, length(inputs))
+    integrals = Array{Array}(length(inputs))
     for i = 1:length(inputs)
-      integrals[i] = Array(eltype(inputs[i]), size(inputs[i])[1:end-1])
+      integrals[i] = Array{eltype(inputs[i])}(size(inputs[i])[1:end-1])
     end
     etc = integrals
   else
@@ -41,10 +41,10 @@ function setup_etc(backend::CPUBackend, layer::ChannelPoolingLayer, inputs, blob
 end
 
 function setup(backend::Backend, layer::ChannelPoolingLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  pooled_chann_all = Array(Int, length(inputs))
-  blobs = Array(Blob, length(inputs))
-  blobs_diff = Array(Blob, length(inputs))
-  op_dims = Array(Int, length(inputs))
+  pooled_chann_all = Array{Int}(length(inputs))
+  blobs = Array{Blob}(length(inputs))
+  blobs_diff = Array{Blob}(length(inputs))
+  op_dims = Array{Int}(length(inputs))
 
   for i = 1:length(inputs)
     dim_total = ndims(inputs[i])

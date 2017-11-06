@@ -8,7 +8,7 @@ function test_hdf5_data_layer(backend::Backend, async, T, eps)
   ############################################################
   batch_size = 3
   tensor_dim = abs(rand(Int)) % 6 + 1
-  data_dim = tuple((abs(rand(Int, tensor_dim)) % 8 + 1)...)
+  data_dim = tuple(rand(1:8, tensor_dim)...)
   println("    > $data_dim")
 
   data_all = [rand(T, data_dim..., x) for x in [5 1 2]]
@@ -31,7 +31,7 @@ function test_hdf5_data_layer(backend::Backend, async, T, eps)
   # Setup
   ############################################################
 
-  scale = rand()
+  scale = rand(T)
   if async
     layer = AsyncHDF5DataLayer(source = source_fn, tops = [:data], batch_size=batch_size, chunk_size=4,
         transformers=[(:data, DataTransformers.Scale(scale))])
@@ -47,7 +47,7 @@ function test_hdf5_data_layer(backend::Backend, async, T, eps)
   data = data * scale
 
   data_idx = map(x->1:x, data_dim)
-  layer_data = Array(eltype(data), tuple(data_dim..., batch_size))
+  layer_data = Array{eltype(data)}(tuple(data_dim..., batch_size))
   for i = 1:batch_size:size(data)[end]-batch_size+1
     forward(backend, state, Blob[])
     copy!(layer_data, state.blobs[1])

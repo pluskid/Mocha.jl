@@ -1,12 +1,12 @@
 function setup_etc(backend::GPUBackend, layer::ChannelPoolingLayer, inputs, blobs)
   if isa(layer.pooling, Pooling.Max)
-    masks = Array(CuPtr, length(inputs))
+    masks = Array{CuPtr}(length(inputs))
     for i = 1:length(inputs)
       masks[i] = CUDA.cualloc(Csize_t, length(blobs[i]))
     end
     etc = masks
   elseif isa(layer.pooling, Pooling.Mean)
-    integrals = Array(CuPtr, length(inputs))
+    integrals = Array{CuPtr}(length(inputs))
     for i = 1:length(inputs)
       integrals[i] = CUDA.cualloc(eltype(inputs[i]), prod(size(inputs[i])[1:end-1]))
     end

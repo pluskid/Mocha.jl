@@ -62,14 +62,14 @@ function freeze!(net::Net) end
 function freeze!(net::Net, idx::Int...)
   for i in idx
     layer_state = get_layer_state(net, i)
-    @info("Freezing layer $(layer_state.layer.name) in network $(net.name)...")
+    m_info("Freezing layer $(layer_state.layer.name) in network $(net.name)...")
     freeze!(layer_state)
   end
 end
 function freeze!(net::Net, names::AbstractString...)
   for name in names
     layer_state = get_layer_state(net, name)
-    @info("Freezing layer $(layer_state.layer.name) in network $(net.name)...")
+    m_info("Freezing layer $(layer_state.layer.name) in network $(net.name)...")
     freeze!(layer_state)
   end
 end
@@ -93,13 +93,13 @@ function unfreeze_all!(net::Net)
 end
 
 function init(net::Net)
-  @debug("Init network $(net.name)")
+  m_debug("Init network $(net.name)")
   for i = 1:length(net.layers)
     state = net.states[i]
     if has_param(net.layers[i]) && !is_frozen(net.states[i])
       for param in state.parameters
         if !isa(param.initializer, NullInitializer)
-          @debug("Init parameter $(param.name) for layer $(net.layers[i].name)")
+          m_debug("Init parameter $(param.name) for layer $(net.layers[i].name)")
           init(param.initializer, param.blob)
         end
       end
@@ -107,7 +107,7 @@ function init(net::Net)
   end
 end
 function destroy(net::Net)
-  @debug("Destroying network $(net.name)")
+  m_debug("Destroying network $(net.name)")
   for state in net.states
     shutdown(net.backend, state)
   end
@@ -194,20 +194,20 @@ end
 
 
 Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
-  @info("Constructing net $name on $backend...")
-  @info("Topological sorting $(length(layers)) layers...")
+  m_info("Constructing net $name on $backend...")
+  m_info("Topological sorting $(length(layers)) layers...")
   layers = topological_sort(layers)
   data_layers = find(l -> is_source(l), layers)
 
   n = length(layers)
-  states = Array(LayerState, n)
-  blobs_forward = Array(Vector{Blob}, n)
-  blobs_backward = Array(Vector{Blob}, n)
+  states = Array{LayerState}(n)
+  blobs_forward = Array{Vector{Blob}}(n)
+  blobs_backward = Array{Vector{Blob}}(n)
 
   output_blobs = Dict{Symbol,Blob}()
   diff_blobs = Dict{Symbol,Blob}()
 
-  @info("Setup layers...")
+  m_info("Setup layers...")
   for i = 1:n
     layer = layers[i]
     # record if layers has any dependency
@@ -248,7 +248,7 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
     blobs_backward[i] = blob_bwd
   end
 
-  @info("Network constructed!")
+  m_info("Network constructed!")
   return Net(name, backend, layers, states, blobs_forward, blobs_backward, data_layers, output_blobs, diff_blobs)
 end
 

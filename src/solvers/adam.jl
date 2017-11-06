@@ -34,9 +34,9 @@ type AdamSolverStateSnapshot <: SolverStateSnapshot
 end
 
 function blobs_clone(blobs::Vector{Vector{Blob}})
-    out = Array(Vector{Array}, length(blobs))
+    out = Array{Vector{Array}}(length(blobs))
     for (i, vecblobs) in enumerate(blobs)
-        out[i] = [Array(eltype(b), size(b)) for b in vecblobs]
+        out[i] = [Array{eltype(b)}(size(b)) for b in vecblobs]
         for (dst, b) in zip(out[i], vecblobs)
             copy!(dst, b)
         end
@@ -76,8 +76,8 @@ end
 AdamSolverState(learning_rate::Float64, net::Net) = begin
     param_states = updatable_layer_states(net)
 
-    grad_1st_moment_est = Array(Vector{Blob}, length(param_states))
-    grad_2nd_moment_est = Array(Vector{Blob}, length(param_states))
+    grad_1st_moment_est = Array{Vector{Blob}}(length(param_states))
+    grad_2nd_moment_est = Array{Vector{Blob}}(length(param_states))
 
     for i = 1:length(param_states)
         layerstate = param_states[i]
@@ -140,7 +140,7 @@ function update_parameters!(net::Net{CPUBackend}, method::Adam,
   # Correct bias and calculate effective stepsize for timestep t
   alpha_t = alpha * sqrt(1 - beta2^t) / (1 - beta1^t)
   # Update param <- param - alpha_t * m/(sqrt(v) + epsilon)
-  delta = m.data ./ (sqrt(v.data) .+ epsilon)
+  delta = m.data ./ (sqrt.(v.data) .+ epsilon)
   BLAS.axpy!(length(param_blob), convert(data_type, -alpha_t), pointer(delta), 1, pointer(param_blob.data), 1)
 
 end

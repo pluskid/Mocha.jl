@@ -26,10 +26,10 @@ end
 function setup(backend::Backend, layer::SoftmaxLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
 
-  softmax_layer = SoftmaxLayer(tops=Array(Symbol, length(inputs)), bottoms=Array(Symbol, length(inputs)), dim=layer.dim)
+  softmax_layer = SoftmaxLayer(tops=Array{Symbol}(length(inputs)), bottoms=Array{Symbol}(length(inputs)), dim=layer.dim)
   softmax = setup(backend, softmax_layer, Blob[inputs[1]], Blob[])
 
-  logistic_layer = MultinomialLogisticLossLayer(bottoms=Array(Symbol, 2),
+  logistic_layer = MultinomialLogisticLossLayer(bottoms=Array{Symbol}(2),
       weights=layer.weights, normalize=layer.normalize, dim=layer.dim)
   logistic = setup(backend, logistic_layer, inputs, Blob[])
 
@@ -56,7 +56,7 @@ function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vec
 
     idx_all = map(1:length(dims)) do i
       if i == state.logistic.op_dim
-        round(Int, label) + 1
+        map(x -> round(Int, x), label) .+ 1
       else
         dim = dims[i]
         reshape(1:dim, [j == i? dim : 1 for j = 1:length(dims)]...)

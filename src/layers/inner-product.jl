@@ -48,9 +48,9 @@ type InnerProductLayerState <: LayerState
       @assert eltype(inputs[i]) == data_type
     end
 
-    blobs = Array(Blob, length(inputs))
-    blobs_diff = Array(Blob, length(inputs))
-    bias_multipliers = Array(Blob, length(inputs))
+    blobs = Array{Blob}(length(inputs))
+    blobs_diff = Array{Blob}(length(inputs))
+    bias_multipliers = Array{Blob}(length(inputs))
 
     for i = 1:length(inputs)
       nums = get_num(inputs[i])
@@ -68,7 +68,7 @@ type InnerProductLayerState <: LayerState
       @assert size(shared_params[1].blob) == (fea_size, out_dim)
       @assert eltype(shared_params[1].blob) == data_type
       @assert size(shared_params[2].blob) == (out_dim, 1)
-      @debug("InnerProductLayer($(layer.name)): sharing weights and bias")
+      m_debug("InnerProductLayer($(layer.name)): sharing weights and bias")
 
       param_weight, param_bias = [share_parameter(backend, param) for param in shared_params]
     else

@@ -13,7 +13,7 @@ function test_identity_layer(backend::Backend, T)
   println("    > Forward")
   forward(backend, state, Blob[input_blob])
   got_output = to_array(state.blobs[1])
-  @test all(abs(got_output-input) .< eps)
+  @test all(abs.(got_output-input) .< eps)
 
   shutdown(backend, state)
 end

@@ -3,14 +3,14 @@ function test_argmax_layer(backend::Backend, n_input, tensor_dim, T, eps)
 
   println("    > $tensor_dim-dimensional tensor")
 
-  dims = [abs(rand(Int, tensor_dim)) % 6 + 1 for i = 1:n_input]
+  dims = [rand(1:6, tensor_dim) for i = 1:n_input]
   op_dim = max(abs(rand(Int)) % tensor_dim, 1)
   inputs = [rand(T, dims[i]...) for i = 1:n_input]
   input_blob = Blob[make_blob(backend, x) for x in inputs]
   diff_blob = Blob[NullBlob() for i = 1:n_input]
 
   println("    > Setup")
-  layer = ArgmaxLayer(bottoms=Array(Symbol,n_input),tops=Array(Symbol,n_input),dim=op_dim)
+  layer = ArgmaxLayer(bottoms=Array{Symbol}(n_input),tops=Array{Symbol}(n_input),dim=op_dim)
   state = setup(backend, layer, input_blob, diff_blob)
 
   println("    > Forward")
@@ -31,7 +31,7 @@ function test_argmax_layer(backend::Backend, n_input, tensor_dim, T, eps)
     end
 
     copy!(got_output, state.blobs[i])
-    @test all(abs(got_output - expected_output) .< eps)
+    @test all(abs.(got_output - expected_output) .< eps)
   end
 
   shutdown(backend, state)

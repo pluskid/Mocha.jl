@@ -9,7 +9,7 @@ function test_reshape_layer(backend::Backend, n_input, T, eps)
   diff_blob  = Blob[make_blob(backend, x) for x in input]
 
   println("    > Setup")
-  layer = ReshapeLayer(bottoms=Array(Symbol,n_input), tops=Array(Symbol,n_input),
+  layer = ReshapeLayer(bottoms=Array{Symbol}(n_input), tops=Array{Symbol}(n_input),
       shape=(1,1,prod(dims[1][1:end-1])))
   state = setup(backend, layer, input_blob, diff_blob)
 
@@ -18,7 +18,7 @@ function test_reshape_layer(backend::Backend, n_input, T, eps)
   for i = 1:n_input
     got_output = zeros(T, size(input[i]))
     copy!(got_output, input_blob[i])
-    @test all(abs(got_output - input[i]) .< eps)
+    @test all(abs.(got_output - input[i]) .< eps)
   end
 
   println("    > Backward")
@@ -30,7 +30,7 @@ function test_reshape_layer(backend::Backend, n_input, T, eps)
   for i = 1:n_input
     got_grad = zeros(T, size(input[i]))
     copy!(got_grad, diff_blob[i])
-    @test all(abs(got_grad - top_diff[i]) .< eps)
+    @test all(abs.(got_grad - top_diff[i]) .< eps)
   end
 
   shutdown(backend, state)

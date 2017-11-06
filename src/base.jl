@@ -1,8 +1,8 @@
 export Layer, LayerState, AbstractParameter
 export copy_solver_state!
 
-abstract Layer
-abstract LayerState
+@compat abstract type Layer end
+@compat abstract type LayerState end
 
 # forward declaration
-abstract AbstractParameter
+@compat abstract type AbstractParameter end

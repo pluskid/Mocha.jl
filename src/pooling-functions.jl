@@ -1,6 +1,6 @@
 export PoolingFunction, Pooling
-abstract PoolingFunction
-abstract StdPoolingFunction <: PoolingFunction # built-in poolings
+@compat abstract type PoolingFunction end
+@compat abstract type StdPoolingFunction <: PoolingFunction end # built-in poolings
 
 module Pooling
 using ..Mocha.StdPoolingFunction

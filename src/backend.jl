@@ -1,8 +1,8 @@
 export Backend, CPUBackend, AbstractGPUBackend
 export init, shutdown, registry_reset, registry_put
 
-abstract Backend
-typealias ParameterRegistry Dict{AbstractString, Vector{AbstractParameter}}
+@compat abstract type Backend end
+const ParameterRegistry = Dict{AbstractString, Vector{AbstractParameter}}
 
 import Base.show
 export show
@@ -41,4 +41,4 @@ end
 # This is forward declaration to allow some code to compile
 # (especially testing codes) even if CUDA module is completely
 # disabled. See test/layers/pooling.jl for example.
-abstract AbstractGPUBackend <: Backend
+@compat abstract type AbstractGPUBackend <: Backend end

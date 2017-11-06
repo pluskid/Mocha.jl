@@ -1,7 +1,7 @@
 function test_multinomial_logistic_loss_layer(backend::Backend, tensor_dim, class_weights, T, eps)
   println("-- Testing MultinomialLogisticLossLayer{$(class_weights[1]),$(class_weights[2])} on $(typeof(backend)){$T}...")
 
-  dims = abs(rand(Int,tensor_dim)) % 6 + 6
+  dims = rand(6:11, tensor_dim)
   if class_weights[1] != :no
     op_dim = tensor_dim-1
   else
@@ -13,9 +13,9 @@ function test_multinomial_logistic_loss_layer(backend::Backend, tensor_dim, clas
   dims = tuple(dims...)
   channels = dims[op_dim]
 
-  prob = abs(rand(T, dims)) + 0.01
+  prob = abs.(rand(T, dims)) .+ 0.01
 
-  label = abs(rand(Int, dims_label)) % channels
+  label = abs.(rand(Int, dims_label)) .% channels
   label = convert(Array{T}, label)
 
   prob_blob = make_blob(backend, prob)
@@ -27,7 +27,7 @@ function test_multinomial_logistic_loss_layer(backend::Backend, tensor_dim, clas
   elseif class_weights[1] == :local
     weights = rand(T, channels)
   elseif class_weights[1] == :global
-    weights = round(1000*rand(T, dims[1:end-1]))/1000
+    weights = round.(1000*rand(T, dims[1:end-1]))/1000
   else
     @assert class_weights[1] == :no
     weights = []

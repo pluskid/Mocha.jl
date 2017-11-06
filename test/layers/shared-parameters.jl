@@ -29,7 +29,7 @@ function test_shared_parameters_layers(backend::Backend, layer_type, T, eps)
   @test net.layers[end] == layer_sub
   output = zeros(T, size(net.states[end].blobs[1]))
   copy!(output, net.states[end].blobs[1])
-  @test all(abs(output) .< eps)
+  @test all(abs.(output) .< eps)
 
   destroy(net)
 end

@@ -2,14 +2,14 @@ function test_memory_output_layer(backend::Backend, T, eps)
   println("-- Testing Memory Output Layer on $(typeof(backend)){$T}...")
 
   tensor_dim = abs(rand(Int)) % 4 + 2
-  dims = tuple((abs(rand(Int, tensor_dim)) % 8 + 1)...)
+  dims = tuple(rand(1:8, tensor_dim)...)
   println("    > $dims")
 
   inputs = Array[rand(T, dims), rand(T, dims)]
   input_blobs = Blob[make_blob(backend, x) for x in inputs]
 
   layer = MemoryOutputLayer(bottoms=[:input1, :input2])
-  state = setup(backend, layer, input_blobs, Array(Blob, length(inputs)))
+  state = setup(backend, layer, input_blobs, Array{Blob}(length(inputs)))
 
   # repeat 2 times
   forward(backend, state, input_blobs)
@@ -18,8 +18,8 @@ function test_memory_output_layer(backend::Backend, T, eps)
   @test length(state.outputs) == length(inputs)
   for i = 1:length(inputs)
     @test length(state.outputs[i]) == 2
-    @test all(abs(state.outputs[i][1]-inputs[i]) .< eps)
-    @test all(abs(state.outputs[i][2]-inputs[i]) .< eps)
+    @test all(abs.(state.outputs[i][1] .- inputs[i]) .< eps)
+    @test all(abs.(state.outputs[i][2] .- inputs[i]) .< eps)
   end
 
   reset_outputs(state)
@@ -27,7 +27,7 @@ function test_memory_output_layer(backend::Backend, T, eps)
   @test length(state.outputs) == length(inputs)
   for i = 1:length(inputs)
     @test length(state.outputs[i]) == 1
-    @test all(abs(state.outputs[i][1]-inputs[i]) .< eps)
+    @test all(abs.(state.outputs[i][1] .- inputs[i]) .< eps)
   end
 
   shutdown(backend, state)

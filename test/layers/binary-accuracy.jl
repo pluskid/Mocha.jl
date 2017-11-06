@@ -4,13 +4,13 @@ function test_binary_accuracy_layer(backend::Backend, tensor_dim, T, threshold, 
   ############################################################
   # Prepare Data for Testing
   ############################################################
-  dims = tuple((abs(rand(Int,tensor_dim)) % 6 + 6)...)
+  dims = tuple(rand(6:11, tensor_dim)...)
   println("    > $dims")
   if 0 == threshold
     preds = rand(T, dims)*4-2
-    labels = round(rand(T, dims))*2-1
+    labels = round.(rand(T, dims))*2-1
   elseif 0.5 == threshold
-    preds = round(rand(T, dims))
+    preds = round.(rand(T, dims))
     labels = rand(T, dims)
   else
     error("Threshold must be 0 or 0.5; was $threshold")

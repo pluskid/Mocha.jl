@@ -4,16 +4,16 @@ function test_gaussian_kl_loss_layer(backend::Backend, T, eps)
   ############################################################
   # Prepare Data for Testing
   ############################################################
-  tensor_dim = abs(rand(Int)) % 4 + 2
-  dims = tuple((abs(rand(Int,tensor_dim)) % 6 + 6)...)
+  tensor_dim = rand(2:5)
+  dims = tuple(rand(6:11, tensor_dim)...)
   println("    > $dims")
   mus = rand(T, dims)
-  sigmas = sqrt(rand(T, dims).^2)
+  sigmas = sqrt.(rand(T, dims).^2)
 
   ############################################################
   # Setup
   ############################################################
-  weight = 1.1
+  weight = T(1.1)
   layer  = GaussianKLLossLayer(; bottoms=[:predictions, :labels], weight=weight)
   mu_blob  = make_blob(backend, T, dims)
   sigma_blob = make_blob(backend, T, dims)
@@ -31,7 +31,7 @@ function test_gaussian_kl_loss_layer(backend::Backend, T, eps)
   forward(backend, state, inputs)
 
   n = length(mu_blob)
-  loss = 0.5(sum(mus.^2 + sigmas.^2 - 2log(sigmas)) - n)
+  loss = 0.5(sum(mus.^2 + sigmas.^2 - 2log.(sigmas)) - n)
   loss *= weight/get_num(mu_blob)
   @test -eps < loss-state.loss < eps
 

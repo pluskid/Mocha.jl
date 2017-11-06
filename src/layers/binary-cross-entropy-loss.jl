@@ -29,7 +29,7 @@ end
 function forward(backend::CPUBackend, state::BinaryCrossEntropyLossLayerState, inputs::Vector{Blob})
   pred = vec(inputs[1].data)
   label = vec(inputs[2].data)
-  loss = BLAS.dot(log(pred), label) + BLAS.dot(log1p(-pred), (1-label))
+  loss = BLAS.dot(log.(pred), label) + BLAS.dot(log1p.(-pred), (1-label))
 
   num = get_num(inputs[1])
   state.loss = state.layer.weight * -loss/num
@@ -58,7 +58,7 @@ function backward(backend::CPUBackend, state::BinaryCrossEntropyLossLayerState, 
   end
   diff = diffs[2]
   if isa(diff, CPUBlob)
-    dl_dlabel = log(pred ./ (1-pred))
+    dl_dlabel = log.(pred ./ (1-pred))
     erase!(diff) # is this correct? square-loss does it
     BLAS.axpy!(n, a, dl_dlabel, 1, diff.data, 1)
   end

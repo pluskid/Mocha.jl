@@ -36,7 +36,7 @@ out1 = zeros(crop_wh..., size(input,3), size(input,4))
 out2 = similar(out1)
 crop_loop(input, crop_wh, out1)
 crop_whole(input, crop_wh, out2)
-@assert all(abs(out1-out2) .< 1e-10)
+@assert all(abs.(out1-out2) .< 1e-10)
 
 crop_loop() = crop_loop(input, crop_wh, out1)
 crop_whole() = crop_whole(input, crop_wh, out2)

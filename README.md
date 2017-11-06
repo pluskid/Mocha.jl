@@ -9,13 +9,13 @@
 
 [Tutorials](http://mochajl.readthedocs.org/en/latest/#tutorials) | [Documentation](http://mochajl.readthedocs.org/) | [Release Notes](NEWS.md) | [Roadmap](https://github.com/pluskid/Mocha.jl/issues/22) | [Issues](https://github.com/pluskid/Mocha.jl/issues)
 
-Mocha is a Deep Learning framework for [Julia](http://julialang.org/), inspired by the C++ framework [Caffe](http://caffe.berkeleyvision.org/). Efficient implementations of general stochastic gradient solvers and common layers in Mocha could be used to train deep / shallow (convolutional) neural networks, with (optional) unsupervised pre-training via (stacked) auto-encoders. Some highlights:
+Mocha is a Deep Learning framework for [Julia](http://julialang.org/), inspired by the C++ framework [Caffe](http://caffe.berkeleyvision.org/). Efficient implementations of general stochastic gradient solvers and common layers in Mocha can be used to train deep / shallow (convolutional) neural networks, with (optional) unsupervised pre-training via (stacked) auto-encoders. Some highlights:
 
-- **Modular Architecture**: Mocha has a clean architecture with isolated components like network layers, activation functions, solvers, regularizers, initializers, etc. Built-in components are sufficient for typical deep (convolutional) neural network applications and more are being added in each release. All of them could be easily extended by adding custom sub-types.
-- **High-level Interface**: Mocha is written in [Julia](http://julialang.org/), a high-level dynamic programming language designed for scientific computing. Combining with the expressive power of Julia and other its package eco-system, playing with deep neural networks in Mocha is easy and intuitive. See for example our IJulia Notebook example of [using a pre-trained imagenet model to do image classification](http://nbviewer.ipython.org/github/pluskid/Mocha.jl/blob/master/examples/ijulia/ilsvrc12/imagenet-classifier.ipynb).
-- **Portability and Speed**: Mocha comes with multiple backend that could be switched transparently.
-  - The *pure Julia backend* is portable -- it runs on any platform that support Julia. This is reasonably fast on small models thanks to Julia's LLVM-based just-in-time (JIT) compiler and [Performance Annotations](http://julia.readthedocs.org/en/latest/manual/performance-tips/#performance-annotations), and could be very useful for prototyping.
-  - The *native extension backend* could be turned on when a C++ compiler is available. It runs 2~3 times faster than the pure Julia backend.
+- **Modular Architecture**: Mocha has a clean architecture with isolated components like network layers, activation functions, solvers, regularizers, initializers, etc. Built-in components are sufficient for typical deep (convolutional) neural network applications and more are being added in each release. All of them can be easily extended by adding custom sub-types.
+- **High-level Interface**: Mocha is written in [Julia](http://julialang.org/), a high-level dynamic programming language designed for scientific computing. Combining with the expressive power of Julia and its package eco-system, playing with deep neural networks in Mocha is easy and intuitive. See for example our IJulia Notebook example of [using a pre-trained imagenet model to do image classification](http://nbviewer.ipython.org/github/pluskid/Mocha.jl/blob/master/examples/ijulia/ilsvrc12/imagenet-classifier.ipynb).
+- **Portability and Speed**: Mocha comes with multiple backends that can be switched transparently.
+  - The *pure Julia backend* is portable -- it runs on any platform that supports Julia. This is reasonably fast on small models thanks to Julia's LLVM-based just-in-time (JIT) compiler and [Performance Annotations](http://julia.readthedocs.org/en/latest/manual/performance-tips/#performance-annotations), and can be very useful for prototyping.
+  - The *native extension backend* can be turned on when a C++ compiler is available. It runs 2~3 times faster than the pure Julia backend.
   - The *GPU backend* uses NVidia® [cuDNN](https://developer.nvidia.com/cuDNN), cuBLAS and customized CUDA kernels to provide highly efficient computation. 20~30 times or even more speedup could be observed on a modern GPU device, especially on larger models.
 - **Compatibility**: Mocha uses the widely adopted HDF5 format to store both datasets and model snapshots, making it easy to inter-operate with Matlab, Python (numpy) and other existing computational tools. Mocha also provides tools to import trained model snapshots from Caffe.
 - **Correctness**: the computational components in Mocha in all backends are extensively covered by unit-tests.
@@ -29,7 +29,7 @@ To install the release version, simply run
 Pkg.add("Mocha")
 ```
 
-in Julia console. To install the latest development version, run the following command instead:
+on the Julia console. To install the latest development version, run the following command instead:
 
 ```julia
 Pkg.clone("https://github.com/pluskid/Mocha.jl.git")
@@ -45,7 +45,7 @@ to verify that everything is functioning properly on your machine.
 
 ## Hello World
 
-Please refer to [the MNIST tutorial](http://mochajl.readthedocs.org/en/latest/tutorial/mnist.html) on how prepare the MNIST dataset for the following example. The complete code for this example is located at [`examples/mnist/mnist.jl`](examples/mnist/mnist.jl). See below for detailed documentation of other tutorials and user's guide.
+Please refer to [the MNIST tutorial](http://mochajl.readthedocs.org/en/latest/tutorial/mnist.html) on how to prepare the MNIST dataset for the following example. The complete code for this example is located at [`examples/mnist/mnist.jl`](examples/mnist/mnist.jl). See below for detailed documentation of other tutorials and user guide.
 
 ```julia
 using Mocha

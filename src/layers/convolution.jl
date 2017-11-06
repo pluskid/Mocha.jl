@@ -3,9 +3,9 @@
   param_key :: AbstractString = "",
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) > 0),
   (tops :: Vector{Symbol} = Symbol[], length(tops) == length(bottoms)),
-  (kernel :: NTuple{2,Int} = (1,1), all([kernel...] .> 0)),
-  (stride :: NTuple{2,Int} = (1,1), all([stride...] .> 0)),
-  (pad :: NTuple{2, Int} = (0,0), all([pad...] .>= 0)),
+  (kernel :: NTuple{2,Int} = (1,1), all(broadcast(>, [kernel...], 0))),
+  (stride :: NTuple{2,Int} = (1,1), all(broadcast(>, [stride...], 0))),
+  (pad :: NTuple{2, Int} = (0,0), all(broadcast(>=, [pad...], 0))),
   (n_filter :: Int = 1, n_filter > 0),
   (n_group :: Int = 1, n_group > 0),
   neuron :: ActivationFunction = Neurons.Identity(),
@@ -43,14 +43,14 @@ function setup_etc(backend::CPUBackend, layer::ConvolutionLayer, dtype, width, h
      layer.pad[1] == 0 && layer.pad[2] == 0
     col_buffer = NullBlob()
   else
-    col_buffer = CPUBlob(Array(dtype, width_out, height_out, channels*prod(layer.kernel), 1))
+    col_buffer = CPUBlob(Array{dtype}(width_out, height_out, channels*prod(layer.kernel), 1))
   end
   M = height_out * width_out
   N = div(layer.n_filter, layer.n_group)
   K = div(channels * layer.kernel[1] * layer.kernel[2], layer.n_group)
   bias_multiplier = make_blob(backend, dtype, M, 1, 1, 1)
   fill!(bias_multiplier, convert(dtype,1))
-  img_buffer = Array(dtype, width, height, channels)
+  img_buffer = Array{dtype}(width, height, channels)
   etc = CPUConvState(col_buffer, M, N, K, bias_multiplier, img_buffer)
   return etc
 end
@@ -88,8 +88,8 @@ type ConvolutionLayerState <: LayerState
       @assert dtype == eltype(inputs[i])
     end
 
-    blobs = Array(Blob, length(inputs))
-    blobs_diff = Array(Blob, length(inputs))
+    blobs = Array{Blob}(length(inputs))
+    blobs_diff = Array{Blob}(length(inputs))
 
     for i = 1:length(inputs)
       blobs[i] = make_blob(backend, dtype, width_out, height_out, layer.n_filter, batch_size)
@@ -101,7 +101,7 @@ type ConvolutionLayerState <: LayerState
       @assert shared_params[1].name == "filter" && shared_params[2].name == "bias"
       @assert size(shared_params[1].blob) == tuple(layer.kernel...,div(channels,layer.n_group),layer.n_filter)
       @assert eltype(shared_params[1].blob) == dtype
-      @debug("ConvolutionLayer($(layer.name)): sharing filters and bias")
+      m_debug("ConvolutionLayer($(layer.name)): sharing filters and bias")
 
       param_filter, param_bias = [share_parameter(backend, param) for param in shared_params]
     else

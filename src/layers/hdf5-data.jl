@@ -31,7 +31,7 @@ type HDF5DataLayerState <: LayerState
     state = new(layer)
 
     sources = open(layer.source, "r") do s
-      map(strip, filter(l -> !isspace(l), readlines(s)))
+      map(strip, filter(l -> !all(isspace, l), readlines(s)))
     end
     @assert(length(sources) > 0)
     state.sources = sources
@@ -56,8 +56,8 @@ type HDF5DataLayerState <: LayerState
       state.shuffle_idx = Int[]
     end
 
-    state.blobs = Array(Blob, length(layer.tops))
-    state.trans = Array(Vector{DataTransformerState}, length(layer.tops))
+    state.blobs = Array{Blob}(length(layer.tops))
+    state.trans = Array{Vector{DataTransformerState}}(length(layer.tops))
     transformers = convert(Vector{@compat(Tuple{Symbol, DataTransformerType})}, layer.transformers)
     for i = 1:length(state.blobs)
       dims = size(state.dsets[i])

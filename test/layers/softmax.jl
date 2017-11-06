@@ -4,12 +4,12 @@ function test_softmax_layer(backend::Backend, tensor_dim, n_input, T, eps)
   norm_dim = max(1, abs(rand(Int)) % tensor_dim)
   println("    > $tensor_dim-dimensional input, normalize along dimension $norm_dim")
 
-  dims = [abs(rand(Int,tensor_dim)) % 6 + 6 for i = 1:n_input]
+  dims = [rand(6:11, tensor_dim) for i = 1:n_input]
   input = [rand(T, dims[i]...) for i = 1:n_input]
   input_blob = Blob[make_blob(backend, x) for x in input]
   diff_blob = Blob[make_blob(backend, x) for x in input]
 
-  layer = SoftmaxLayer(tops=Array(Symbol,n_input), bottoms=Array(Symbol,n_input),
+  layer = SoftmaxLayer(tops=Array{Symbol}(n_input), bottoms=Array{Symbol}(n_input),
       dim=norm_dim-tensor_dim-1)
   state = setup(backend, layer, input_blob, diff_blob)
 
@@ -29,7 +29,7 @@ function test_softmax_layer(backend::Backend, tensor_dim, n_input, T, eps)
       for y = 1:dim_post
         preds = canonical_input[x,:,y]
         preds -= maximum(preds)
-        preds = exp(preds)
+        preds = exp.(preds)
         preds /= sum(preds)
         output[x,:,y] = preds
       end

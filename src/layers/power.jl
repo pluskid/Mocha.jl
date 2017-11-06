@@ -21,7 +21,7 @@ end
 
 function setup(backend::Backend, layer::PowerLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   blobs = Blob[make_blob(backend, eltype(x), size(x)) for x in inputs]
-  blobs_diff = Array(Blob, length(inputs))
+  blobs_diff = Array{Blob}(length(inputs))
   for i = 1:length(inputs)
     # if the bottom layer does not need back propagate, I don't need, either
     if isa(diffs[i], NullBlob)

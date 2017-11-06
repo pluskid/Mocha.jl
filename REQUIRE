@@ -1,5 +1,5 @@
-julia 0.5
+julia 0.6
 HDF5 0.7.0
 JLD 0.6.6
-Logging 0.3.1
 Compat 0.9.5
+Memento

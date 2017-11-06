@@ -1,7 +1,7 @@
 function test_tied_inner_product_layer(backend::Backend, n_input, T, eps)
   println("-- Testing TiedInnerProductLayer on $(typeof(backend)){$T}...")
 
-  batch_size = abs(rand(Int)) % 10 + 5
+  batch_size = rand(5:14)
   orig_dim = 20
   hidden_dim = 10
 
@@ -31,7 +31,7 @@ function test_tied_inner_product_layer(backend::Backend, n_input, T, eps)
   for i = 1:n_input
     expected_output = W * (W' * inputs[i] .+ b1) .+ b2
     got_output = to_array(net.states[3].blobs[i])
-    @test all(abs(expected_output - got_output) .< eps)
+    @test all(abs.(expected_output - got_output) .< eps)
   end
 
   println("    > Backward")
@@ -49,12 +49,12 @@ function test_tied_inner_product_layer(backend::Backend, n_input, T, eps)
 
   bias_grad = to_array(net.states[3].∇b)
   bias_grad_expected = sum([sum(top_diffs[i],2) for i = 1:n_input])
-  @test all(abs(bias_grad - bias_grad_expected) .< eps)
+  @test all(abs.(bias_grad - bias_grad_expected) .< eps)
 
   for i = 1:n_input
     back_grad = to_array(net.states[2].blobs_diff[i])
     back_grad_expected = W' * top_diffs[i]
-    @test all(abs(back_grad - back_grad_expected) .< eps)
+    @test all(abs.(back_grad - back_grad_expected) .< eps)
   end
 
   destroy(net)

@@ -48,9 +48,9 @@ type TiedInnerProductLayerState <: LayerState
     @assert size(W, 2) == fea_size
     out_dim = size(W, 1)
 
-    blobs = Array(Blob, length(inputs))
-    blobs_diff = Array(Blob, length(inputs))
-    bias_multipliers = Array(Blob, length(inputs))
+    blobs = Array{Blob}(length(inputs))
+    blobs_diff = Array{Blob}(length(inputs))
+    bias_multipliers = Array{Blob}(length(inputs))
 
     for i = 1:length(inputs)
       nums = get_num(inputs[i])
@@ -66,7 +66,7 @@ type TiedInnerProductLayerState <: LayerState
       @assert length(shared_params) == 1
       @assert shared_params[1].name == "bias"
       @assert size(shared_params[1].blob) == (out_dim, 1)
-      @debug("TiedInnerProductLayer($(layer.name)): sharing bias")
+      m_debug("TiedInnerProductLayer($(layer.name)): sharing bias")
 
       params = [share_parameter(backend, shared_params[1])]
     else

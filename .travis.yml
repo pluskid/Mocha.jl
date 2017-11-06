@@ -10,7 +10,9 @@ notifications:
   email: false
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'Pkg.init(); Pkg.clone(pwd()); Pkg.build("Mocha");'
+  # - julia -e 'Pkg.init(); Pkg.clone(pwd()); Pkg.build("Mocha");'
+  - julia -e 'Pkg.init(); Pkg.clone("https://github.com/rdeits/Logging.jl.git"); Pkg.checkout("Logging", "fix-0.6")'
+  - julia -e 'Pkg.clone(pwd()); Pkg.build("Mocha");'
   - julia -e 'Pkg.build("Mocha"); Pkg.test("Mocha", coverage=true)'
   - MOCHA_USE_NATIVE_EXT=true julia -e 'Pkg.build("Mocha"); Pkg.test("Mocha", coverage=true)'
 after_success:

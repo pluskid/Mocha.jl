@@ -1,7 +1,7 @@
 function test_binary_crossentropy_loss_layer(backend::Backend, tensor_dim, T, eps)
   println("-- Testing BinaryCrossEntropyLossLayer on $(typeof(backend)){$T}...")
 
-  dims = abs(rand(Int,tensor_dim)) % 6 + 2
+  dims = rand(2:7, tensor_dim)
 
 
   println("    > $dims")
@@ -17,7 +17,7 @@ function test_binary_crossentropy_loss_layer(backend::Backend, tensor_dim, T, ep
   prob_blob = make_blob(backend, prob)
   label_blob = make_blob(backend, label)
   inputs = Blob[prob_blob, label_blob]
-  weight = 0.25
+  weight = T(0.25)
   layer = BinaryCrossEntropyLossLayer(bottoms=[:pred, :labels], weight=weight)
   state = setup(backend, layer, inputs, Blob[])
 
@@ -46,7 +46,7 @@ function test_binary_crossentropy_loss_layer(backend::Backend, tensor_dim, T, ep
 
   @test all(-eps .< 1 - grad_pred./diff .< eps)
 
-  grad_label = -weight * log(prob./(1-prob)) / dims[end]
+  grad_label = -weight * log.(prob./(1.-prob)) / dims[end]
   diff = similar(grad_pred)
   copy!(diff, diffs[2])
 
