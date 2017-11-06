@@ -47,7 +47,7 @@ function dump_statistics(storage, state::AccuracyLayerState, show::Bool)
 
   if show
     accuracy = @sprintf("%.4f%%", state.accuracy*100)
-    @info("  Accuracy (avg over $(state.n_accum)) = $accuracy")
+    m_info("  Accuracy (avg over $(state.n_accum)) = $accuracy")
   end
 end
 

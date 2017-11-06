@@ -158,7 +158,7 @@ end
 function init(backend::GPUBackend)
   @assert backend.initialized == false
 
-  @info("Initializing CuDNN backend...")
+  m_info("Initializing CuDNN backend...")
   CUDA.init()
   dev = CUDA.CuDevice(Config.cuda_dev_id)
   backend.cu_ctx = CUDA.create_context(dev)
@@ -166,18 +166,18 @@ function init(backend::GPUBackend)
   backend.cudnn_ctx = CuDNN.create()
   backend.mocha = MochaKernels()
   backend.initialized = true
-  info("CuDNN backend initialized!")
+  m_info("CuDNN backend initialized!")
 end
 
 function shutdown(backend::GPUBackend)
   @assert backend.initialized == true
 
-  @info("Shutting down CuDNN backend...")
+  m_info("Shutting down CuDNN backend...")
   # NOTE: destroy should be in reverse order of init
   shutdown(backend.mocha)
   CuDNN.destroy(backend.cudnn_ctx)
   CuBLAS.destroy(backend.cublas_ctx)
   CUDA.destroy(backend.cu_ctx)
   backend.initialized = false
-  @info("CuDNN Backend shutdown finished!")
+  m_info("CuDNN Backend shutdown finished!")
 end

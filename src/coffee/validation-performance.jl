@@ -25,12 +25,12 @@ function enjoy(lounge::CoffeeLounge, coffee::ValidationPerformance, net::Net, st
   reset_statistics(coffee.validation_net)
   forward_epoch(coffee.validation_net)
 
-  @info("")
-  @info("## Performance on Validation Set after $(state.iter) iterations")
-  @info("---------------------------------------------------------")
+  m_info("")
+  m_info("## Performance on Validation Set after $(state.iter) iterations")
+  m_info("---------------------------------------------------------")
   dump_statistics(lounge, coffee.validation_net, show=true)
-  @info("---------------------------------------------------------")
-  @info("")
+  m_info("---------------------------------------------------------")
+  m_info("")
 
   # notify listeners
   for listener in coffee.listeners

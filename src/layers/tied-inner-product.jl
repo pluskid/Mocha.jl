@@ -66,7 +66,7 @@ type TiedInnerProductLayerState <: LayerState
       @assert length(shared_params) == 1
       @assert shared_params[1].name == "bias"
       @assert size(shared_params[1].blob) == (out_dim, 1)
-      @debug("TiedInnerProductLayer($(layer.name)): sharing bias")
+      m_debug("TiedInnerProductLayer($(layer.name)): sharing bias")
 
       params = [share_parameter(backend, shared_params[1])]
     else

@@ -56,7 +56,7 @@ function dump_statistics(storage, state::HingeLossLayerState, show::Bool)
 
     if show
         loss = @sprintf("%.4f", state.loss_accum)
-        @info("  Hinge-loss (avg over $(state.n_accum)) = $loss")
+        m_info("  Hinge-loss (avg over $(state.n_accum)) = $loss")
     end
 end
 

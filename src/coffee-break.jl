@@ -67,9 +67,9 @@ function setup(lounge::CoffeeLounge, state::SolverState, net::Net)
 
     if isfile(lounge.filename)
       if lounge.file_exists == :overwrite
-        @warn("Overwriting existing coffee lounge statistics in $(lounge.filename)")
+        m_warn("Overwriting existing coffee lounge statistics in $(lounge.filename)")
       elseif lounge.file_exists == :merge
-        @info("Merging existing coffee lounge statistics in $(lounge.filename)")
+        m_info("Merging existing coffee lounge statistics in $(lounge.filename)")
         lounge.statistics = jldopen(lounge.filename) do file
           read(file, "statistics")
         end

@@ -52,7 +52,7 @@ function dump_statistics(storage, state::GaussianKLLossLayerState, show::Bool)
 
   if show
     loss = @sprintf("%.4f", state.loss_accum)
-    @info("  GaussianKL-loss (avg over $(state.n_accum)) = $loss")
+    m_info("  GaussianKL-loss (avg over $(state.n_accum)) = $loss")
   end
 end
 

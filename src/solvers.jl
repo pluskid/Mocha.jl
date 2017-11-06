@@ -40,11 +40,11 @@ SolverState{T<:InternalSolverState}(internal::T) = SolverState{T}(0, Inf, Dict()
 
 
 function make_solver_parameters(;kwargs...)
-    localDict = @compat Dict(:max_iter => Inf,
-           :regu_coef => 0.0005,
-           :load_from => "")
-	merge(localDict,
-          SolverParameters(kwargs))
+  localDict = @compat Dict(:max_iter => Inf,
+                           :regu_coef => 0.0005,
+                           :load_from => "")
+  merge(localDict,
+        SolverParameters(kwargs))
 end
 
 function validate_parameters(params::SolverParameters, args...)
@@ -129,7 +129,7 @@ function load_snapshot(net::Net, path::AbstractString="", state=nothing)
     # from the beginning (iteration 0) as the solver state is not saved
     # in a HDF5 file
     if isfile(path)
-      @info("Loading existing model from $path")
+      m_info("Loading existing model from $path")
       h5open(path) do file
         load_network(file, net)
       end
@@ -153,7 +153,7 @@ function load_snapshot(net::Net, path::AbstractString="", state=nothing)
     end
 
     if !isempty(filename) && isfile(filename)
-      @info("Loading existing model from $filename")
+      m_info("Loading existing model from $filename")
       jldopen(filename) do file
         load_network(file, net)
         return solver_state(net, read(file, SOLVER_STATE_KEY))
@@ -177,7 +177,7 @@ end
 
 
 function init_solve(solver::Solver, net::Net)
-    @debug("#DEBUG Checking network topology for back-propagation")
+    m_debug("#DEBUG Checking network topology for back-propagation")
     check_bp_topology(net)
 
     state = solver_state(solver.method, net, solver.params)
@@ -188,7 +188,7 @@ function init_solve(solver::Solver, net::Net)
     init(net)
     state.obj_val = forward(net, solver.params[:regu_coef])
 
-    @debug("#DEBUG Initializing coffee breaks")
+    m_debug("#DEBUG Initializing coffee breaks")
     setup(solver.coffee_lounge, state, net)
 
     # coffee break for iteration 0, before everything starts
@@ -237,7 +237,7 @@ function solve(solver::Solver, net::Net)
 end
 
 function do_solve_loop(solver::Solver, net::Net, state::SolverState)
-  @debug("#DEBUG Entering solver loop")
+  m_debug("#DEBUG Entering solver loop")
   while !stop_condition_satisfied(solver, state, net)
     onestep_solve(solver,net,state)
 

@@ -24,7 +24,7 @@ function setup(backend::Backend, layer::HDF5OutputLayer, inputs::Vector{Blob}, d
     if !layer.force_overwrite
       error("HDF5OutputLayer: output file '$(layer.filename)' already exists")
     else
-      @warn("HDF5OutputLayer: output file '$(layer.filename)' already exists, overwriting")
+      m_warn("HDF5OutputLayer: output file '$(layer.filename)' already exists, overwriting")
     end
   end
   if length(layer.datasets) == 0
