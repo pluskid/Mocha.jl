@@ -83,7 +83,7 @@ function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::Ptr
       n, elem_size, src, incx, dest, incy)
 end
 function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::CuPtr, incy::Int)
-  set_vector(n, elem_size, src, incx, Compat.unsafe_convert(Ptr{Void}, dest.p), incy)
+  set_vector(n, elem_size, src, incx, Base.unsafe_convert(Ptr{Void}, dest.p), incy)
 end
 function set_vector{T}(src::Array{T}, incx::Int, dest::CuPtr, incy::Int)
   elem_size = sizeof(T)
@@ -98,7 +98,7 @@ set_vector{T}(src::Array{T}, dest::CuPtr) = set_vector(src, 1, dest, 1)
 ############################################################
 function get_vector(n::Int, elem_size::Int, src::CuPtr, incx::Int, dest::Ptr{Void}, incy::Int)
   @cublascall(:cublasGetVector, (Cint, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
-      n, elem_size, Compat.unsafe_convert(Ptr{Void}, src.p), incx, dest, incy)
+      n, elem_size, Base.unsafe_convert(Ptr{Void}, src.p), incx, dest, incy)
 end
 function get_vector{T}(src::CuPtr, incx::Int, dest::Array{T}, incy::Int)
   elem_size = sizeof(T)
@@ -116,7 +116,7 @@ for (fname, elty) in ((:cublasSscal_v2, :Float32),
                       (:cublasDscal_v2, :Float64))
   @eval begin
     function scal(handle::Handle, n::Int, alpha::$elty, x, incx::Int)
-      x = Compat.unsafe_convert(Ptr{Void}, x)
+      x = Base.unsafe_convert(Ptr{Void}, x)
       alpha_box = $elty[alpha]
       @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint),
                   handle, n, alpha_box, x, incx)
@@ -134,8 +134,8 @@ for (fname, elty) in ((:cublasSaxpy_v2, :Float32),
                       (:cublasDaxpy_v2, :Float64))
   @eval begin
     function axpy(handle::Handle, n::Int, alpha::$elty, x, incx::Int, y, incy::Int)
-      x = Compat.unsafe_convert(Ptr{Void}, x)
-      y = Compat.unsafe_convert(Ptr{Void}, y)
+      x = Base.unsafe_convert(Ptr{Void}, x)
+      y = Base.unsafe_convert(Ptr{Void}, y)
       alpha_box = $elty[alpha]
       @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint, Ptr{Void}, Cint),
                   handle, n, alpha_box, x, incx, y, incy)
@@ -171,8 +171,8 @@ for (fname, elty) in ((:cublasScopy_v2, :Float32),
                       (:cublasDcopy_v2, :Float64))
   @eval begin
     function copy(handle::Handle, ::Type{$elty}, n::Int, x, incx::Int, y, incy::Int)
-      x = Compat.unsafe_convert(Ptr{Void}, (x))
-      y = Compat.unsafe_convert(Ptr{Void}, (y))
+      x = Base.unsafe_convert(Ptr{Void}, (x))
+      y = Base.unsafe_convert(Ptr{Void}, (y))
       @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
                   handle, n, x, incx, y, incy)
     end
