@@ -269,15 +269,6 @@ function destroy_convolution_descriptor(desc::ConvolutionDescriptor)
   @cudnncall(:cudnnDestroyConvolutionDescriptor, (ConvolutionDescriptor,), desc)
 end
 
-# TODO: remove this, and path definition above
-#-- function get_output_tensor4d_dim(desc::ConvolutionDescriptor, path::Int)
-#--   @assert CUDNN_CONVOLUTION_FWD <= path <= CUDNN_CONVOLUTION_DATA_GRAD
-#--   n = Cint[0]; c = Cint[0]; h = Cint[0]; w = Cint[0]
-#--   @cudnncall(:cudnnGetOutputTensor4dDim, (ConvolutionDescriptor, Cint, Ptr{Void}, Ptr{Void}, Ptr{Void}, Ptr{Void}),
-#--              desc, path, n, c, h, w)
-#--   return (w[1], h[1], c[1], n[1])
-#-- end
-
 const CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM = 0
 const CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMPT_GEMM = 1
 const CUDNN_CONVOLUTION_FWD_ALGO_GEMM = 2
@@ -448,16 +439,6 @@ function create_pooling_descriptor(mode::Int, dims::NTuple{2,Int}, stride::NTupl
   return desc
 end
 
-#TODO: remove
-#-- function get_pooling_descriptor(desc::PoolingDescriptor)
-#--   mode = Cint[0]; nan_prop_opt = Cint[0]
-#--   h = Cint[0]; w = Cint[0]; stride_h = Cint[0]; stride_w = Cint[0]
-#--   @cudnncall(:cudnGetPoolingDescriptor, (PoolingDescriptor, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
-#--                                          Ptr{Cint}, Ptr{Cint}),
-#--              desc, mode, nan_prop_opt, h, w, stride_h, stride_w)
-#-- 
-#--   return (mode[1], (w,h), (stride_w, stride_h))
-#-- end
 function destroy_pooling_descriotpr(desc::PoolingDescriptor)
   @cudnncall(:cudnnDestroyPoolingDescriptor, (PoolingDescriptor,), desc)
 end
