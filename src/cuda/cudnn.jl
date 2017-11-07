@@ -36,19 +36,17 @@ const cudnn_error_description = @compat(Dict(
 import Base.show
 show(io::IO, error::CuDNNError) = print(io, cudnn_error_description[error.code])
 
-@windows? (
-begin
-  const libcudnn = Libdl.find_library(["cudnn64_70.dll", "cudnn64_65.dll", "cudnn32_70.dll",
-                                       "cudnn32_65.dll", "cudnn64_4.dll"], [""])
-  @assert (libcudnn != "") "Could not find a CUDA neural net DLL [cudnn64_70.dll, cudnn64_65.dll, cudnn32_70.dll, cudnn32_65.dll, cudnn64_4.dll]. See: http://mochajl.readthedocs.io/en/latest/user-guide/backend.html#cuda-backend"
-end
-: # linux or mac
-begin
+if is_windows()
+  const libcudnn = Libdl.find_library(["cudnn64_80.dll", "cudnn64_70.dll", "cudnn32_80.dll",
+                                       "cudnn32_70.dll"], [""])
+  @assert (libcudnn != "") "Could not find a CUDA neural net DLL [cudnn64_80.dll, cudnn64_70.dll, cudnn32_80.dll, cudnn32_70.dll]. See: http://mochajl.readthedocs.io/en/latest/user-guide/backend.html#cuda-backend"
+else
   const libcudnn = Libdl.find_library(["libcudnn"], [""])
   @assert (libcudnn != "") "Could not find CUDA neural shared library [libcudnn]. See http://mochajl.readthedocs.io/en/latest/user-guide/backend.html#cuda-backend"
-end)
+end
 
 macro cudnncall(fv, argtypes, args...)
+  args = map(esc, args)
   f = eval(fv)
   quote
     _curet = ccall( ($(Meta.quot(f)), $libcudnn), Cint, $argtypes, $(args...)  )
@@ -58,8 +56,8 @@ macro cudnncall(fv, argtypes, args...)
   end
 end
 
-typealias Handle Ptr{Void}
-typealias StreamHandle Ptr{Void}
+const Handle = Ptr{Void}
+const StreamHandle = Ptr{Void}
 
 function create()
   handle = Handle[0]
@@ -79,10 +77,10 @@ function get_stream(handle::Handle)
 end
 
 # Data structures to represent Image/Filter and the Neural Network Layer
-typealias Tensor4dDescriptor Ptr{Void}
-typealias ConvolutionDescriptor Ptr{Void}
-typealias PoolingDescriptor Ptr{Void}
-typealias FilterDescriptor Ptr{Void}
+const Tensor4dDescriptor = Ptr{Void}
+const ConvolutionDescriptor = Ptr{Void}
+const PoolingDescriptor = Ptr{Void}
+const FilterDescriptor = Ptr{Void}
 
 const CUDNN_DATA_FLOAT = 0
 const CUDNN_DATA_DOUBLE = 1
@@ -107,6 +105,10 @@ end
 
 const CUDNN_TENSOR_NCHW = 0    # row major (wStride = 1, hStride = w)
 const CUDNN_TENSOR_NHWC = 1    # feature maps interleaved ( cStride = 1 )
+
+# cudnnNanPropagation_t
+const CUDNN_NOT_PROPAGATE_NAN = 0
+const CUDNN_PROPAGATE_NAN = 1
 
 function create_tensor4d_descriptor()
   desc = Tensor4dDescriptor[0]
@@ -190,6 +192,10 @@ const CUDNN_CONVOLUTION_FWD         = 0 # Tensor Convolution function
 const CUDNN_CONVOLUTION_WEIGHT_GRAD = 1 # Weight Gradient update function
 const CUDNN_CONVOLUTION_DATA_GRAD   = 2 # Data Gradient update function
 
+# cudnn tensor format
+const CUDNN_TENSOR_NCHW = 0  # row major (wStride = 1, hStride = w)
+const CUDNN_TENSOR_NHWC = 1  # feature maps interleaved ( cStride = 1 )
+
 function create_filter_descriptor()
   desc = FilterDescriptor[0]
   @cudnncall(:cudnnCreateFilterDescriptor, (Ptr{FilterDescriptor},), desc)
@@ -197,8 +203,8 @@ function create_filter_descriptor()
 end
 function set_filter_descriptor{T<:AbstractFloat}(desc::FilterDescriptor, dtype::Type{T}, dims :: NTuple{4, Int})
   w,h,c,k = dims
-  @cudnncall(:cudnnSetFilter4dDescriptor, (FilterDescriptor, Cint, Cint, Cint, Cint, Cint),
-             desc, cudnn_data_type(dtype), k, c, h, w)
+  @cudnncall(:cudnnSetFilter4dDescriptor, (FilterDescriptor, Cint, Cint, Cint, Cint, Cint, Cint),
+             desc, cudnn_data_type(dtype), CUDNN_TENSOR_NCHW, k, c, h, w)
            end
 function create_filter_descriptor(dtype::Type, dims :: NTuple{4, Int})
   desc = create_filter_descriptor()
@@ -207,9 +213,10 @@ function create_filter_descriptor(dtype::Type, dims :: NTuple{4, Int})
 end
 function get_filter_descriptor(desc::FilterDescriptor)
   k = Cint[0]; c = Cint[0]; h = Cint[0]; w = Cint[0]
-  dtype = Cint[0]
-  @cudnncall(:cudnnGetFilterDescriptor, (FilterDescriptor,Ptr{Cint},Ptr{Cint},Ptr{Cint},Ptr{Cint},Ptr{Cint}),
-             desc, dtype, k, c, h, w)
+  dtype = Cint[0]; tensor_format = Cint[0]
+  @cudnncall(:cudnnGetFilterDescriptor, (FilterDescriptor,Ptr{Cint},Ptr{Cint},Ptr{Cint},Ptr{Cint},Ptr{Cint},Ptr{Cint}),
+             desc, dtype, tensor_format, k, c, h, w)
+  @assert tensor_format[1] == CUDNN_TENSOR_NCHW
   return (cudnn_data_type(dtype[1]), w[1], h[1], c[1], k[1])
 end
 function destroy_filter_descriptor(desc::FilterDescriptor)
@@ -262,13 +269,14 @@ function destroy_convolution_descriptor(desc::ConvolutionDescriptor)
   @cudnncall(:cudnnDestroyConvolutionDescriptor, (ConvolutionDescriptor,), desc)
 end
 
-function get_output_tensor4d_dim(desc::ConvolutionDescriptor, path::Int)
-  @assert CUDNN_CONVOLUTION_FWD <= path <= CUDNN_CONVOLUTION_DATA_GRAD
-  n = Cint[0]; c = Cint[0]; h = Cint[0]; w = Cint[0]
-  @cudnncall(:cudnnGetOutputTensor4dDim, (ConvolutionDescriptor, Cint, Ptr{Void}, Ptr{Void}, Ptr{Void}, Ptr{Void}),
-             desc, path, n, c, h, w)
-  return (w[1], h[1], c[1], n[1])
-end
+# TODO: remove this, and path definition above
+#-- function get_output_tensor4d_dim(desc::ConvolutionDescriptor, path::Int)
+#--   @assert CUDNN_CONVOLUTION_FWD <= path <= CUDNN_CONVOLUTION_DATA_GRAD
+#--   n = Cint[0]; c = Cint[0]; h = Cint[0]; w = Cint[0]
+#--   @cudnncall(:cudnnGetOutputTensor4dDim, (ConvolutionDescriptor, Cint, Ptr{Void}, Ptr{Void}, Ptr{Void}, Ptr{Void}),
+#--              desc, path, n, c, h, w)
+#--   return (w[1], h[1], c[1], n[1])
+#-- end
 
 const CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM = 0
 const CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_PRECOMPT_GEMM = 1
@@ -339,11 +347,29 @@ function convolution_backward_filter{T<:AbstractFloat}(handle::Handle, alpha::T,
     beta::T, grad_desc::FilterDescriptor, grad::CuPtr)
   alpha_ptr = T[alpha]
   beta_ptr = T[beta]
-  @cudnncall(:cudnnConvolutionBackwardFilter_v2, (Handle, Ptr{Void}, Tensor4dDescriptor, Ptr{Void},
-                                               Tensor4dDescriptor, Ptr{Void},
-                                               ConvolutionDescriptor,
-                                               Ptr{Void}, FilterDescriptor, Ptr{Void}),
-             handle, alpha_ptr, src_desc, src.p, diff_desc, diff.p, conv, beta_ptr, grad_desc, grad.p)
+
+  # XXX: properly query algorithm and allocate workspace
+  bwd_filter_algor = 0
+  workspace = C_NULL
+  workspace_size = 0
+
+  @cudnncall(:cudnnConvolutionBackwardFilter, 
+             (Handle, 
+              Ptr{Void},             # const void *alpha
+              Tensor4dDescriptor,    # const cudnnTensorDescriptor_t xDesc
+              Ptr{Void},             # const void *x
+              Tensor4dDescriptor,    # const cudnnTensorDescroptor_t dyDesc
+              Ptr{Void},             # const void *dy
+              ConvolutionDescriptor, # const cudnnConvolutionDescriptor_t 
+              Cint,                  # cudnnConvolutionBwdFilterAlgo_t
+              Ptr{Void},             # void *workSpace
+              Csize_t,               # size_t workSpaceSizeInBytes
+              Ptr{Void},             # const void *beta
+              FilterDescriptor,      # const cudnnFilterDescriptor_t dwDesc
+              Ptr{Void}),            # void *dw
+             handle, alpha_ptr, src_desc, src.p, diff_desc, diff.p, conv, 
+             bwd_filter_algor, workspace, workspace_size,
+             beta_ptr, grad_desc, grad.p)
 end
 
 function convolution_backward_data{T<:AbstractFloat}(handle::Handle, alpha::T, filter_desc::FilterDescriptor, filter::CuPtr,
@@ -351,12 +377,20 @@ function convolution_backward_data{T<:AbstractFloat}(handle::Handle, alpha::T, f
     beta::T, grad_desc::Tensor4dDescriptor, grad::CuPtr)
   alpha_ptr = T[alpha]
   beta_ptr = T[beta]
-  @cudnncall(:cudnnConvolutionBackwardData_v2, (Handle, Ptr{Void}, FilterDescriptor, Ptr{Void},
+
+  # XXX: properly query algorithm and allocate workspace
+  bwd_data_algor = 0
+  workspace = C_NULL
+  workspace_size = 0
+
+  @cudnncall(:cudnnConvolutionBackwardData, (Handle, Ptr{Void}, FilterDescriptor, Ptr{Void},
                                             Tensor4dDescriptor, Ptr{Void},
                                             ConvolutionDescriptor,
+                                            Cint, Ptr{Void}, Csize_t,
                                             Ptr{Void},Tensor4dDescriptor,
                                             Ptr{Void}),
              handle, alpha_ptr, filter_desc, filter.p, diff_desc, diff.p, conv,
+             bwd_data_algor, workspace, workspace_size,
              beta_ptr, grad_desc, grad.p)
 end
 
@@ -404,8 +438,8 @@ function set_pooling_descriptor(desc::PoolingDescriptor, mode::Int, dims::NTuple
   w,h = dims
   pad_w, pad_h = padding
   stride_w, stride_h = stride
-  @cudnncall(:cudnnSetPooling2dDescriptor, (PoolingDescriptor, Cint, Cint,Cint, Cint,Cint, Cint,Cint),
-             desc, mode, h,w, pad_w, pad_h, stride_h, stride_w)
+  @cudnncall(:cudnnSetPooling2dDescriptor, (PoolingDescriptor, Cint, Cint, Cint,Cint, Cint,Cint, Cint,Cint),
+             desc, mode, CUDNN_NOT_PROPAGATE_NAN, h,w, pad_w, pad_h, stride_h, stride_w)
 end
 
 function create_pooling_descriptor(mode::Int, dims::NTuple{2,Int}, stride::NTuple{2,Int}, padding::NTuple{2,Int})
@@ -414,14 +448,16 @@ function create_pooling_descriptor(mode::Int, dims::NTuple{2,Int}, stride::NTupl
   return desc
 end
 
-function get_pooling_descriptor(desc::PoolingDescriptor)
-  mode = Cint[0]
-  h = Cint[0]; w = Cint[0]; stride_h = Cint[0]; stride_w = Cint[0]
-  @cudnncall(:cudnGetPoolingDescriptor, (PoolingDescriptor, Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
-                                         Ptr{Cint}, Ptr{Cint}),
-             desc, mode, h, w, stride_h, stride_w)
-  return (mode[1], (w,h), (stride_w, stride_h))
-end
+#TODO: remove
+#-- function get_pooling_descriptor(desc::PoolingDescriptor)
+#--   mode = Cint[0]; nan_prop_opt = Cint[0]
+#--   h = Cint[0]; w = Cint[0]; stride_h = Cint[0]; stride_w = Cint[0]
+#--   @cudnncall(:cudnGetPoolingDescriptor, (PoolingDescriptor, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint},
+#--                                          Ptr{Cint}, Ptr{Cint}),
+#--              desc, mode, nan_prop_opt, h, w, stride_h, stride_w)
+#-- 
+#--   return (mode[1], (w,h), (stride_w, stride_h))
+#-- end
 function destroy_pooling_descriotpr(desc::PoolingDescriptor)
   @cudnncall(:cudnnDestroyPoolingDescriptor, (PoolingDescriptor,), desc)
 end

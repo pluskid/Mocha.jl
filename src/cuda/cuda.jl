@@ -4,17 +4,14 @@ module CUDA
 export CuPtr
 using Compat
 
-@windows? (
-begin
+if is_windows()
   const libcuda = Libdl.find_library(["nvcuda.dll"], [""])
-end
-: # linux or mac
-begin
+else
   const libcuda = Libdl.find_library(["libcuda","libcudart"], [""])
   if isempty(libcuda)
     error("Libcuda not found via Libdl.find_library! Please check installation and ENV configuration")
   end
-end)
+end
 
 const driver_error_descriptions = @compat(Dict(
   0 => "Success",
@@ -145,7 +142,7 @@ end
 ############################################################
 # Memory allocation
 ############################################################
-typealias CUdeviceptr Ptr{Void}
+const CUdeviceptr = Ptr{Void}
 
 type CuPtr
   p::CUdeviceptr
@@ -210,10 +207,10 @@ end
 immutable CuFunction
   handle::Ptr{Void}
 
-  function CuFunction(md::CuModule, name::ASCIIString)
+  function CuFunction(md::CuModule, name::String)
     a = Array{Ptr{Void}}(1)
     @cucall(:cuModuleGetFunction, (Ptr{Ptr{Void}}, Ptr{Void}, Ptr{Cchar}),
-    a, md.handle, name)
+            a, md.handle, name)
     new(a[1])
   end
 end
@@ -239,8 +236,7 @@ get_dim_z(g::Int) = 1
 get_dim_z(g::@compat(Tuple{Int, Int})) = 1
 get_dim_z(g::@compat(Tuple{Int, Int, Int})) = g[3]
 
-using Compat
-@compat typealias CuDim Union{Int, Tuple{Int, Int}, Tuple{Int, Int, Int}}
+const CuDim = Union{Int, Tuple{Int, Int}, Tuple{Int, Int, Int}}
 
 # Stream management
 

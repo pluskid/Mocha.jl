@@ -1,23 +1,24 @@
 export GPUBackend
 
 macro defkernels(kernels...)
+  kernel_names = map(string, kernels)
   field_defs = map(kernels) do ker
     :($ker :: CUDA.CuFunction)
   end
   type_body = Expr(:block, field_defs...)
 
-  field_inits = map(kernels) do ker
-    :(kernels.$ker = CUDA.CuFunction(mod, $(string(ker))))
+  field_inits = map(kernels, kernel_names) do ker, ker_name
+    :(kernels.$ker = CUDA.CuFunction(mod, $(ker_name)))
   end
   field_init_block = Expr(:block, field_inits...)
 
-  quote
-    type $(esc(:MochaKernels))
+  esc(quote
+    type MochaKernels
       mod :: CUDA.CuModule
 
       $type_body
 
-      $(esc(:MochaKernels))() = begin
+      MochaKernels() = begin
         mod_dir = joinpath(dirname(@__FILE__), "kernels")
         mod_path = joinpath(mod_dir, "kernels.ptx")
 
@@ -42,7 +43,7 @@ macro defkernels(kernels...)
         return kernels
       end
     end
-  end
+  end)
 end
 
 @defkernels(

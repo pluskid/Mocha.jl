@@ -34,19 +34,17 @@ const cublas_error_description = @compat(Dict(
 import Base.show
 show(io::IO, error::CuBLASError) = print(io, cublas_error_description[error.code])
 
-@windows? (
-begin
+if is_windows()
   const libcublas = Libdl.find_library(["cublas64_70.dll", "cublas64_65.dll",
       "cublas32_70.dll", "cublas32_65.dll", "cublas64_75.dll"], [""])
   @assert (libcublas != "") "Could not find cuBLAS DLL [cublas64_70.dll, cublas64_65.dll, cublas32_70.dll, cublas32_65.dll, cublas64_75.dll]. See: http://mochajl.readthedocs.io/en/latest/user-guide/backend.html#cuda-backend"
-end
-: # linux or mac
-begin
+else
   const libcublas = Libdl.find_library(["libcublas"], [""])
   @assert (libcublas != "") "Could not find cuBLAS DLL [libcublas]. See http://mochajl.readthedocs.io/en/latest/user-guide/backend.html#cuda-backend"
-end)
+end
 
 macro cublascall(fv, argtypes, args...)
+  args = map(esc, args)
   f = eval(fv)
   quote
     _curet = ccall( ($(Meta.quot(f)), $libcublas), Cint, $argtypes, $(args...)  )
@@ -56,8 +54,8 @@ macro cublascall(fv, argtypes, args...)
   end
 end
 
-typealias Handle Ptr{Void}
-typealias StreamHandle Ptr{Void}
+const Handle = Ptr{Void}
+const StreamHandle = Ptr{Void}
 
 function create()
   handle = Handle[0]
