@@ -3,8 +3,13 @@ language: julia
 os:
   - linux
   - osx
+osx_image: xcode8
 julia:
   - 0.6
+addons:
+  apt:
+    packages:
+    - hdf5-tools
 notifications:
   email: false
 script:
