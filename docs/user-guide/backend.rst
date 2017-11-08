@@ -131,12 +131,9 @@ free.
 
 .. note::
 
-   * cuDNN requires CUDA 6.5 to run.
-   * Mocha v0.0.1 ~ v0.0.4 use cuDNN 6.5 R1, which is only available on Linux
-     and Windows.
-   * Mocha v0.0.5 and higher uses cuDNN 6.5 v2, which is also
-     available on Mac OS X.
-   * cuDNN 6.5 v2 is **not** backward compatible with cuDNN 6.5 R1.
+   Mocha is tested on CUDA 8.0 and cuDNN 5.1 on Linux. Since cuDNN typically do not
+   keep backward compatibility in the APIs, it is not guaranteed to run on
+   different versions.
 
 Before using the CUDA backend, the Mocha kernels needs to be compiled. The kernels
 are located in ``src/cuda/kernels``. Please use ``Pkg.dir("Mocha")`` to find out
@@ -180,6 +177,4 @@ implementations might have changed. Mocha will compile the timestamps for the
 compiled kernel and the source files. An error will be raised if the compiled kernel
 file is found to be older than the kernel source files. Simply following the procedures
 above to compile the kernel again will solve this problem.
-
-
 

@@ -1,5 +1,11 @@
 # News for Mocha Development
 
+## v0.2.1 2017.11.07
+
+* Infrastructure
+  * Mocha is now compatible with (and requires) Julia 0.6
+  * Mocha is now updated for CUDA 8.0 and cuDNN 5.1 API changes
+
 ## v0.2.0 2016.12.16
 
 Tagged as 0.2.0 instead of 0.1.3 because Julia now does not support
