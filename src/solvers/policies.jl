@@ -128,7 +128,7 @@ get_learning_rate(policy::LRPolicy.DecayOnValidation, state::SolverState) = begi
     if state.internal.learning_rate > 0
       # state.learning_rate is initialized to 0, if it is non-zero, then this might
       # be loaded from some saved snapshot, we try to align with that
-      m_info("Switching to base learning rate $(state.specific.learning_rate)")
+      m_info("Switching to base learning rate $(state.internal.learning_rate)")
       policy.curr_lr = state.internal.learning_rate
     end
     policy.initialized = true

@@ -1,4 +1,5 @@
 using Memento
+export m_debug, m_info, m_notice, m_warn, m_error
 
 remove_handler(get_logger(Mocha), "console")
 add_handler(get_logger(Mocha),
