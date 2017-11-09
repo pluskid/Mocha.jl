@@ -35,7 +35,7 @@ import Base.show
 show(io::IO, error::CuBLASError) = print(io, cublas_error_description[error.code])
 
 if is_windows()
-  const libcublas = Libdl.find_library(["cublas64_70.dll", "cublas64_65.dll",
+  const libcublas = Libdl.find_library(["cublas64_80.dll", "cublas64_70.dll", "cublas64_65.dll",
       "cublas32_70.dll", "cublas32_65.dll", "cublas64_75.dll"], [""])
   @assert (libcublas != "") "Could not find cuBLAS DLL [cublas64_70.dll, cublas64_65.dll, cublas32_70.dll, cublas32_65.dll, cublas64_75.dll]. See: http://mochajl.readthedocs.io/en/latest/user-guide/backend.html#cuda-backend"
 else
