@@ -37,7 +37,7 @@ import Base.show
 show(io::IO, error::CuDNNError) = print(io, cudnn_error_description[error.code])
 
 if is_windows()
-  const libcudnn = Libdl.find_library(["cudnn64_80.dll", "cudnn64_70.dll", "cudnn32_80.dll",
+  const libcudnn = Libdl.find_library(["cudnn64_5.dll", "cudnn64_80.dll", "cudnn64_70.dll", "cudnn32_80.dll",
                                        "cudnn32_70.dll"], [""])
   @assert (libcudnn != "") "Could not find a CUDA neural net DLL [cudnn64_80.dll, cudnn64_70.dll, cudnn32_80.dll, cudnn32_70.dll]. See: http://mochajl.readthedocs.io/en/latest/user-guide/backend.html#cuda-backend"
 else
