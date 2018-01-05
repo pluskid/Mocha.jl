@@ -14,8 +14,7 @@ export RandomNormalLayer
 export GaussianKLLossLayer
 export setup, forward, backward, shutdown
 
-export get_param_key
-export reset_statistics, show_statistics
+export reset_statistics
 export freeze!, unfreeze!, is_frozen
 
 ############################################################
