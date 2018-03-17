@@ -1,5 +1,12 @@
 module Mocha
 
+using Memento
+
+const logger = getlogger(Mocha)
+
+# Necessary for folks to access the logger at runtime via getlogger if Mocha is precompiled
+__init__() = Memento.register(logger)
+
 include("compatibility.jl")
 include("logging.jl")
 include("config.jl")

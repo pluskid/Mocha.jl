@@ -2,4 +2,4 @@ julia 0.6
 HDF5 0.7.0
 JLD 0.6.6
 Compat 0.9.5
-Memento
+Memento 0.5
