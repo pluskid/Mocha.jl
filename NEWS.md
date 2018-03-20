@@ -1,5 +1,10 @@
 # News for Mocha Development
 
+## v0.3.1 2018.03.19
+
+* Infrastructure
+  * Fix compatability with Memento
+
 ## v0.3.0 2017.11.07
 
 Tagged as 0.3.0 instead of 0.2.1 because Julia now does not allow
