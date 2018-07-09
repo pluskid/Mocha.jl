@@ -1,4 +1,5 @@
 using Images # requires Package Images.jl
+using FileIO # requires Package FileIO.jl
 using Colors # requires Package Colors.jl
 using Mocha
 using Compat
@@ -57,17 +58,17 @@ end
 
 #-- Classify a bunch of images via filename
 function classify{T<:AbstractString}(classifier::ImageClassifier, filenames::Vector{T})
-  return classify(classifier, map(Images.imread, filenames))
+  return classify(classifier, map(FileIO.load, filenames))
 end
 
 #-- Classify a single image
-function classify(classifier::ImageClassifier, image::Image)
-  results = classify(classifier, Image[image])
+function classify(classifier::ImageClassifier, image::AbstractArray)
+  results = classify(classifier, Array[image])
   return results[1]
 end
 
 #-- Classify a bunch of images
-function classify(classifier::ImageClassifier, images::Vector{Image})
+function classify{T<:AbstractArray}(classifier::ImageClassifier, images::Vector{T})
   results = classify_batch(classifier, images, 1)
   idx = classifier.batch_size+1
   while idx <= length(images)
@@ -83,30 +84,24 @@ end
 # Implementations
 ################################################################################
 #-- Propress images
-function preprocess(classifier::ImageClassifier, images::Vector{Image})
+function preprocess{T<:AbstractArray}(classifier::ImageClassifier, images::Vector{T})
   map(images) do image
     if (width(img), height(img)) != classifier.image_wh
       error("Image size ($(width(img)),$(height(img))) does not match the network input $(classifier.image_wh), and Julia does not have imresize yet........")
     end
 
     if classifier.grayscale
-      if colorspace(image) != "Gray"
-        image = convert(Image{Gray}, image)
+      if ~(eltype(image) <: ColorTypes.Gray)
+        image = convert(Array{Gray}, image)
       end
     else
-      image = convert(Image{RGB}, image)
-      image = separate(image) # separate color channels
+      image = convert(Array{RGB}, image)
+      image = permutedims(channelview(image), [2,3,1]) # separate color channels
     end
 
-    data = convert(Array, image)
+    data = convert(Array{Float32}, image)
     data = reshape(data, size(data,1),size(data,2),size(data,3))
-    if spatialorder(image) == ["x","y"]
-      # row major
-    elseif spatialorder(image) == ["y","x"]
-      data = permutedims(data, (2,1,3)) # permute to row-major
-    else
-      error("Unknown spatialorder: $(spatialorder(image))")
-    end
+    data = permutedims(data, (2,1,3)) # permute to row-major
 
     # now data is in canonical row-major RGB/Gray format
     if classifier.sp_order != (1,2)
@@ -129,7 +124,7 @@ function preprocess(classifier::ImageClassifier, images::Vector{Image})
 end
 
 #-- Classify a batch or less
-function classify_batch(classifier::ImageClassifier, images::Vector{Image}, idx::Int)
+function classify_batch{T<:AbstractArray}(classifier::ImageClassifier, images::Vector{T}, idx::Int)
   #-- prepare the data
   idx_end = min(idx+classifier.batch_size-1, length(images))
   images = preprocess(classifier, images[idx:idx_end])
