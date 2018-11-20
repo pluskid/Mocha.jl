@@ -1,5 +1,6 @@
 name = "Mocha"
-uuid = "8ac9dfb8-ec70-11e8-02ea-0ddc18c31797"
+uuid = "f17d6557-5fdd-57bf-a30c-27e301b4ff87"
+repo = "https://github.com/pluskid/Mocha.jl.git"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
