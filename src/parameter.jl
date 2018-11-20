@@ -1,7 +1,7 @@
 export Parameter
 export make_parameter, share_parameter
 
-type Parameter <: AbstractParameter
+struct Parameter <: AbstractParameter
   name          :: AbstractString
   blob          :: Blob
   gradient      :: Blob
@@ -17,8 +17,8 @@ end
 Parameter(name,blob,gradient,initializer,regularizer,constraint,lr) =
     Parameter(name, blob, gradient, initializer, regularizer, constraint, lr, RefCounter(1))
 
-function make_parameter{N}(backend::Backend, name::AbstractString, data_type::Type, dims::NTuple{N,Int},
-    init::Initializer, regu::Regularizer, cons::Constraint, lr::AbstractFloat)
+function make_parameter(backend::Backend, name::AbstractString, data_type::Type, dims::NTuple{N,Int},
+    init::Initializer, regu::Regularizer, cons::Constraint, lr::AbstractFloat) where {N}
 
   blob = make_blob(backend, data_type, dims)
   grad = make_blob(backend, data_type, dims)

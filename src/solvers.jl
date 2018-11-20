@@ -16,7 +16,7 @@ struct Solver{T<:SolverMethod}
   coffee_lounge :: Any # forward declaration
 end
 
-Solver{T}(method::T, params::SolverParameters) = begin
+Solver(method::T, params::SolverParameters) where {T} = begin
     validate_parameters(method, params)
     Solver(method, params, CoffeeLounge())
 end

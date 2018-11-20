@@ -54,8 +54,8 @@ macro cublascall(fv, argtypes, args...)
   end
 end
 
-const Handle = Ptr{Void}
-const StreamHandle = Ptr{Void}
+const Handle = Ptr{Nothing}
+const StreamHandle = Ptr{Nothing}
 
 function create()
   handle = Handle[0]
@@ -78,17 +78,17 @@ end
 ############################################################
 # Copy a vector from host to device
 ############################################################
-function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::Ptr{Void}, incy::Int)
-  @cublascall(:cublasSetVector, (Cint, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
+function set_vector(n::Int, elem_size::Int, src::Ptr{Nothing}, incx::Int, dest::Ptr{Nothing}, incy::Int)
+  @cublascall(:cublasSetVector, (Cint, Cint, Ptr{Nothing}, Cint, Ptr{Nothing}, Cint),
       n, elem_size, src, incx, dest, incy)
 end
-function set_vector(n::Int, elem_size::Int, src::Ptr{Void}, incx::Int, dest::CuPtr, incy::Int)
-  set_vector(n, elem_size, src, incx, Base.unsafe_convert(Ptr{Void}, dest.p), incy)
+function set_vector(n::Int, elem_size::Int, src::Ptr{Nothing}, incx::Int, dest::CuPtr, incy::Int)
+  set_vector(n, elem_size, src, incx, Base.unsafe_convert(Ptr{Nothing}, dest.p), incy)
 end
 function set_vector{T}(src::Array{T}, incx::Int, dest::CuPtr, incy::Int)
   elem_size = sizeof(T)
   n = length(src)
-  src_buf = convert(Ptr{Void}, pointer(src))
+  src_buf = convert(Ptr{Nothing}, pointer(src))
   set_vector(n, elem_size, src_buf, incx, dest, incy)
 end
 set_vector{T}(src::Array{T}, dest::CuPtr) = set_vector(src, 1, dest, 1)
@@ -96,14 +96,14 @@ set_vector{T}(src::Array{T}, dest::CuPtr) = set_vector(src, 1, dest, 1)
 ############################################################
 # Copy a vector from device to host
 ############################################################
-function get_vector(n::Int, elem_size::Int, src::CuPtr, incx::Int, dest::Ptr{Void}, incy::Int)
-  @cublascall(:cublasGetVector, (Cint, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
-      n, elem_size, Base.unsafe_convert(Ptr{Void}, src.p), incx, dest, incy)
+function get_vector(n::Int, elem_size::Int, src::CuPtr, incx::Int, dest::Ptr{Nothing}, incy::Int)
+  @cublascall(:cublasGetVector, (Cint, Cint, Ptr{Nothing}, Cint, Ptr{Nothing}, Cint),
+      n, elem_size, Base.unsafe_convert(Ptr{Nothing}, src.p), incx, dest, incy)
 end
 function get_vector{T}(src::CuPtr, incx::Int, dest::Array{T}, incy::Int)
   elem_size = sizeof(T)
   n = length(dest)
-  dest_buf = convert(Ptr{Void}, pointer(dest))
+  dest_buf = convert(Ptr{Nothing}, pointer(dest))
   get_vector(n, elem_size, src, incx, dest_buf, incy)
 end
 get_vector{T}(src::CuPtr, dest::Array{T}) = get_vector(src, 1, dest, 1)
@@ -116,9 +116,9 @@ for (fname, elty) in ((:cublasSscal_v2, :Float32),
                       (:cublasDscal_v2, :Float64))
   @eval begin
     function scal(handle::Handle, n::Int, alpha::$elty, x, incx::Int)
-      x = Base.unsafe_convert(Ptr{Void}, x)
+      x = Base.unsafe_convert(Ptr{Nothing}, x)
       alpha_box = $elty[alpha]
-      @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint),
+      @cublascall($(string(fname)), (Handle, Cint, Ptr{Nothing}, Ptr{Nothing}, Cint),
                   handle, n, alpha_box, x, incx)
     end
     function scal(handle::Handle, n::Int, alpha::$elty, x::CuPtr, incx::Int)
@@ -134,10 +134,10 @@ for (fname, elty) in ((:cublasSaxpy_v2, :Float32),
                       (:cublasDaxpy_v2, :Float64))
   @eval begin
     function axpy(handle::Handle, n::Int, alpha::$elty, x, incx::Int, y, incy::Int)
-      x = Base.unsafe_convert(Ptr{Void}, x)
-      y = Base.unsafe_convert(Ptr{Void}, y)
+      x = Base.unsafe_convert(Ptr{Nothing}, x)
+      y = Base.unsafe_convert(Ptr{Nothing}, y)
       alpha_box = $elty[alpha]
-      @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Ptr{Void}, Cint, Ptr{Void}, Cint),
+      @cublascall($(string(fname)), (Handle, Cint, Ptr{Nothing}, Ptr{Nothing}, Cint, Ptr{Nothing}, Cint),
                   handle, n, alpha_box, x, incx, y, incy)
     end
     function axpy(handle::Handle, n::Int, alpha::$elty, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
@@ -154,7 +154,7 @@ for (fname, elty) in ((:cublasSdot_v2, :Float32),
   @eval begin
     function dot(handle::Handle, ::Type{$elty}, n::Int, x::CuPtr, incx::Int, y::CuPtr, incy::Int)
       result = $elty[0]
-      @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint, Ptr{Void}),
+      @cublascall($(string(fname)), (Handle, Cint, Ptr{Nothing}, Cint, Ptr{Nothing}, Cint, Ptr{Nothing}),
                   handle, n, x.p, incx, y.p, incy, result)
       return result[1]
     end
@@ -171,9 +171,9 @@ for (fname, elty) in ((:cublasScopy_v2, :Float32),
                       (:cublasDcopy_v2, :Float64))
   @eval begin
     function copy(handle::Handle, ::Type{$elty}, n::Int, x, incx::Int, y, incy::Int)
-      x = Base.unsafe_convert(Ptr{Void}, (x))
-      y = Base.unsafe_convert(Ptr{Void}, (y))
-      @cublascall($(string(fname)), (Handle, Cint, Ptr{Void}, Cint, Ptr{Void}, Cint),
+      x = Base.unsafe_convert(Ptr{Nothing}, (x))
+      y = Base.unsafe_convert(Ptr{Nothing}, (y))
+      @cublascall($(string(fname)), (Handle, Cint, Ptr{Nothing}, Cint, Ptr{Nothing}, Cint),
                   handle, n, x, incx, y, incy)
     end
   end
@@ -203,8 +203,8 @@ for (fname, elty) in ((:cublasSgemm_v2, :Float32),
   @eval begin
     function gemm_impl(handle::Handle, trans_a::Int, trans_b::Int, m::Int, n::Int, k::Int,
         alpha_box::Array{$elty}, A::CuPtr, lda::Int, B::CuPtr, ldb::Int, beta_box::Array{$elty}, C::CuPtr, ldc::Int)
-      @cublascall($(string(fname)), (Handle, Cint,Cint, Cint,Cint,Cint, Ptr{Void},
-                  Ptr{Void},Cint, Ptr{Void},Cint, Ptr{Void}, Ptr{Void},Cint),
+      @cublascall($(string(fname)), (Handle, Cint,Cint, Cint,Cint,Cint, Ptr{Nothing},
+                  Ptr{Nothing},Cint, Ptr{Nothing},Cint, Ptr{Nothing}, Ptr{Nothing},Cint),
                   handle, trans_a, trans_b, m, n, k, alpha_box, A.p, lda, B.p, ldb, beta_box, C.p, ldc)
     end
   end

@@ -54,7 +54,7 @@ function im2col_native(img::Array{Float64}, col::Array{Float64}, width::Int, hei
   pad_w, pad_h = pad
   stride_w, stride_h = stride
 
-  ccall(func_handle, Void,
+  ccall(func_handle, Nothing,
       (Ptr{Float64},Ptr{Float64}, Cint, Cint, Cint,
       Cint, Cint, # kernel
       Cint, Cint, # pad

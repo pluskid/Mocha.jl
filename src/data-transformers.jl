@@ -24,7 +24,7 @@ end # module DataTransformers
 ################################################################################
 # Subtract Mean
 ################################################################################
-type SubMeanState <: DataTransformerState
+struct SubMeanState <: DataTransformerState
   transformer :: DataTransformers.SubMean
   mean_blob   :: Blob
   multiplier  :: Blob
@@ -67,7 +67,7 @@ end
 ################################################################################
 # Scale
 ################################################################################
-type ScaleState{T} <: DataTransformerState
+struct ScaleState{T} <: DataTransformerState
   transformer :: DataTransformers.Scale
   scale       :: T
 end

@@ -117,7 +117,7 @@ struct CuDevice
 end
 
 struct CuContext
-  handle::Ptr{Void}
+  handle::Ptr{Nothing}
 end
 
 const CTX_SCHED_AUTO  = 0x00
@@ -128,21 +128,21 @@ const CTX_MAP_HOST = 0x08
 const CTX_LMEM_RESIZE_TO_MAX = 0x10
 
 function create_context(dev::CuDevice, flags::Integer)
-  a = Array{Ptr{Void}}(1)
-  @cucall(:cuCtxCreate_v2, (Ptr{Ptr{Void}}, Cuint, Cint), a, flags, dev.handle)
+  a = Array{Ptr{Nothing}}(1)
+  @cucall(:cuCtxCreate_v2, (Ptr{Ptr{Nothing}}, Cuint, Cint), a, flags, dev.handle)
   return CuContext(a[1])
 end
 
 create_context(dev::CuDevice) = create_context(dev, 0)
 
 function destroy(ctx::CuContext)
-  @cucall(:cuCtxDestroy_v2, (Ptr{Void},), ctx.handle)
+  @cucall(:cuCtxDestroy_v2, (Ptr{Nothing},), ctx.handle)
 end
 
 ############################################################
 # Memory allocation
 ############################################################
-const CUdeviceptr = Ptr{Void}
+const CUdeviceptr = Ptr{Nothing}
 
 type CuPtr
   p::CUdeviceptr
@@ -168,21 +168,21 @@ end
 # CUDA streams
 ############################################################
 struct CuStream
-  handle::Ptr{Void}
+  handle::Ptr{Nothing}
   blocking::Bool
   priority::Int
 end
 
 function null_stream()
-  CuStream(convert(Ptr{Void}, 0), true, 0)
+  CuStream(convert(Ptr{Nothing}, 0), true, 0)
 end
 
 function destroy(s::CuStream)
-  @cucall(:cuStreamDestroy_v2, (Ptr{Void},), s.handle)
+  @cucall(:cuStreamDestroy_v2, (Ptr{Nothing},), s.handle)
 end
 
 function synchronize(s::CuStream)
-  @cucall(:cuStreamSynchronize, (Ptr{Void},), s.handle)
+  @cucall(:cuStreamSynchronize, (Ptr{Nothing},), s.handle)
 end
 
 
@@ -190,26 +190,26 @@ end
 # PTX Module and Function
 ############################################################
 struct CuModule
-  handle::Ptr{Void}
+  handle::Ptr{Nothing}
 
   function CuModule(filename::AbstractString)
-    a = Array{Ptr{Void}}(1)
-    @cucall(:cuModuleLoad, (Ptr{Ptr{Void}}, Ptr{Cchar}), a, filename)
+    a = Array{Ptr{Nothing}}(1)
+    @cucall(:cuModuleLoad, (Ptr{Ptr{Nothing}}, Ptr{Cchar}), a, filename)
     new(a[1])
   end
 end
 
 function unload(md::CuModule)
-  @cucall(:cuModuleUnload, (Ptr{Void},), md.handle)
+  @cucall(:cuModuleUnload, (Ptr{Nothing},), md.handle)
 end
 
 
 struct CuFunction
-  handle::Ptr{Void}
+  handle::Ptr{Nothing}
 
   function CuFunction(md::CuModule, name::String)
-    a = Array{Ptr{Void}}(1)
-    @cucall(:cuModuleGetFunction, (Ptr{Ptr{Void}}, Ptr{Void}, Ptr{Cchar}),
+    a = Array{Ptr{Nothing}}(1)
+    @cucall(:cuModuleGetFunction, (Ptr{Ptr{Nothing}}, Ptr{Nothing}, Ptr{Cchar}),
             a, md.handle, name)
     new(a[1])
   end
@@ -252,7 +252,7 @@ function launch(f::CuFunction, grid::CuDim, block::CuDim, args::Tuple; shmem_byt
   kernel_args = [cubox(arg) for arg in args]
 
   @cucall(:cuLaunchKernel, (
-      Ptr{Void},       # function
+      Ptr{Nothing},       # function
       Cuint,           # grid dim x
       Cuint,           # grid dim y
       Cuint,           # grid dim z
@@ -260,10 +260,10 @@ function launch(f::CuFunction, grid::CuDim, block::CuDim, args::Tuple; shmem_byt
       Cuint,           # block dim y
       Cuint,           # block dim z
       Cuint,           # shared memory bytes,
-      Ptr{Void},       # stream
-      Ptr{Ptr{Void}},  # kernel parameters,
-      Ptr{Ptr{Void}}), # extra parameters
-      f.handle, gx, gy, gz, tx, ty, tz, shmem_bytes, stream.handle, kernel_args, Ptr{Ptr{Void}}(0))
+      Ptr{Nothing},       # stream
+      Ptr{Ptr{Nothing}},  # kernel parameters,
+      Ptr{Ptr{Nothing}}), # extra parameters
+      f.handle, gx, gy, gz, tx, ty, tz, shmem_bytes, stream.handle, kernel_args, Ptr{Ptr{Nothing}}(0))
 end
 
 end # module CUDA

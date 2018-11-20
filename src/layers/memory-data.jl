@@ -10,7 +10,7 @@
   is_source => true
 )
 
-type MemoryDataLayerState <: LayerState
+struct MemoryDataLayerState <: LayerState
   layer :: MemoryDataLayer
   blobs :: Vector{Blob}
   epoch :: Int

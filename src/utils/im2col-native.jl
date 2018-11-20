@@ -18,7 +18,7 @@ end
 function im2col_impl(img::Ptr{Float32}, col::Ptr{Float32}, width::Int, height::Int, channels::Int,
     kernel_w::Int, kernel_h::Int, pad_w::Int, pad_h::Int, stride_w::Int, stride_h::Int)
 
-  ccall(IM2COL_FLOAT_HANDLE, Void, (Ptr{Float32}, Ptr{Float32}, Cint, Cint, Cint,
+  ccall(IM2COL_FLOAT_HANDLE, Nothing, (Ptr{Float32}, Ptr{Float32}, Cint, Cint, Cint,
         Cint, Cint, # kernel
         Cint, Cint, # pad
         Cint, Cint, # stride
@@ -27,7 +27,7 @@ end
 function im2col_impl(img::Ptr{Float64}, col::Ptr{Float64}, width::Int, height::Int, channels::Int,
     kernel_w::Int, kernel_h::Int, pad_w::Int, pad_h::Int, stride_w::Int, stride_h::Int)
 
-  ccall(IM2COL_DOUBLE_HANDLE, Void, (Ptr{Float64}, Ptr{Float64}, Cint, Cint, Cint,
+  ccall(IM2COL_DOUBLE_HANDLE, Nothing, (Ptr{Float64}, Ptr{Float64}, Cint, Cint, Cint,
         Cint, Cint, # kernel
         Cint, Cint, # pad
         Cint, Cint, # stride
@@ -51,7 +51,7 @@ end
 function col2im_impl(col::Ptr{Float32}, img::Ptr{Float32}, width::Int, height::Int, channels::Int,
     kernel_w::Int, kernel_h::Int, pad_w::Int, pad_h::Int, stride_w::Int, stride_h::Int)
 
-  ccall(COL2IM_FLOAT_HANDLE, Void, (Ptr{Float32}, Ptr{Float32}, Cint, Cint, Cint,
+  ccall(COL2IM_FLOAT_HANDLE, Nothing, (Ptr{Float32}, Ptr{Float32}, Cint, Cint, Cint,
         Cint, Cint, # kernel
         Cint, Cint, # pad
         Cint, Cint, # stride
@@ -60,7 +60,7 @@ end
 function col2im_impl(col::Ptr{Float64}, img::Ptr{Float64}, width::Int, height::Int, channels::Int,
     kernel_w::Int, kernel_h::Int, pad_w::Int, pad_h::Int, stride_w::Int, stride_h::Int)
 
-  ccall(COL2IM_DOUBLE_HANDLE, Void, (Ptr{Float64}, Ptr{Float64}, Cint, Cint, Cint,
+  ccall(COL2IM_DOUBLE_HANDLE, Nothing, (Ptr{Float64}, Ptr{Float64}, Cint, Cint, Cint,
         Cint, Cint, # kernel
         Cint, Cint, # pad
         Cint, Cint, # stride

@@ -26,8 +26,8 @@ end
 # L2 norm constraint on the weights
 ############################################################
 
-function apply_l2_cons!{T <: AbstractFloat}(backend::CPUBackend, blob::CPUBlob{T},
-                                            threshold::AbstractFloat, ninputs::Int, nunits::Int)
+function apply_l2_cons!(backend::CPUBackend, blob::CPUBlob{T},
+                                            threshold::AbstractFloat, ninputs::Int, nunits::Int) where {T <: AbstractFloat}
   param = reshape(blob.data, (ninputs, nunits))
   # we constrain each column vector
   for i = 1:nunits

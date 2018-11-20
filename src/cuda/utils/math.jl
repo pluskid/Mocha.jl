@@ -13,8 +13,8 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
   for name in [:add, :sub, :mul, :div, :div2]
     @eval begin
       function $(Symbol("$(name)!"))(backend::GPUBackend, ::Type{$dtype}, X, Y, len::Int)
-        X = convert(Ptr{Void},X)
-        Y = convert(Ptr{Void},Y)
+        X = convert(Ptr{Nothing},X)
+        Y = convert(Ptr{Nothing},Y)
         cuda_dim = cuda_geometry(len)
         kernel = backend.mocha.$(Symbol("elem_$(name)_$ctype"))
         CUDA.launch(kernel, cuda_dim..., (X, Y, len))
@@ -25,7 +25,7 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
   # define add_scal!
   @eval begin
     function add_scal!(backend::GPUBackend, ::Type{$dtype}, X, Y, len::Int)
-      X = convert(Ptr{Void}, X)
+      X = convert(Ptr{Nothing}, X)
       Y = convert($dtype, Y)
       cuda_dim = cuda_geometry(len)
       kernel = backend.mocha.$(Symbol("add_scal_$ctype"))
@@ -36,7 +36,7 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
   # define log!
   @eval begin
     function log!(backend::GPUBackend, ::Type{$dtype}, X, len::Int)
-      X = convert(Ptr{Void}, X)
+      X = convert(Ptr{Nothing}, X)
       cuda_dim = cuda_geometry(len)
       kernel = backend.mocha.$(Symbol("elem_log_$ctype"))
       CUDA.launch(kernel, cuda_dim..., (X,len))
@@ -46,7 +46,7 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
   # define exp!
   @eval begin
     function exp!(backend::GPUBackend, ::Type{$dtype}, X, len::Int)
-      X = convert(Ptr{Void}, X)
+      X = convert(Ptr{Nothing}, X)
       cuda_dim = cuda_geometry(len)
       kernel = backend.mocha.$(Symbol("elem_exp_$ctype"))
       CUDA.launch(kernel, cuda_dim..., (X,len))
@@ -56,7 +56,7 @@ for (ctype, dtype) in [(:float, Float32), (:double, Float64)]
   # define mul_scal!
   @eval begin
     function mul_scal!(backend::GPUBackend, ::Type{$dtype}, X, Y, len::Int)
-      X = convert(Ptr{Void}, X)
+      X = convert(Ptr{Nothing}, X)
       Y = convert($dtype, Y)
       cuda_dim = cuda_geometry(len)
       kernel = backend.mocha.$(Symbol("mul_scal_$ctype"))
@@ -95,7 +95,7 @@ for (postfix, dt1, dt2) in [(:fi, Float32, Int), (:di, Float64, Int),
                             (:ff, Float32, Float32), (:dd, Float64, Float64)]
   @eval begin
     function pow!(backend::GPUBackend, ::Type{$dt1}, X, Y::$dt2, len::Int)
-      X = convert(Ptr{Void}, X)
+      X = convert(Ptr{Nothing}, X)
       cuda_dim = cuda_geometry(len)
       kernel = backend.mocha.$(Symbol("elem_pow_$postfix"))
       CUDA.launch(kernel, cuda_dim..., (X,Y,len))

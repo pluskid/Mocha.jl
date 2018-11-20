@@ -1,11 +1,11 @@
-function im2col{T}(img::Array{T}, n::Int, col::Array{T}, width::Int, height::Int, channels::Int,
-    kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
+function im2col(img::Array{T}, n::Int, col::Array{T}, width::Int, height::Int, channels::Int,
+    kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int}) where {T}
 
   im2col_impl(img[:,:,:,n], col, width, height, channels, kernel, pad, stride)
 end
 
-function im2col_impl{T}(img::Array{T}, col::Array{T}, width::Int, height::Int, channels::Int,
-    kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
+function im2col_impl(img::Array{T}, col::Array{T}, width::Int, height::Int, channels::Int,
+    kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int}) where {T}
 
   kernel_w, kernel_h = kernel
   pad_w, pad_h = pad
@@ -34,15 +34,15 @@ function im2col_impl{T}(img::Array{T}, col::Array{T}, width::Int, height::Int, c
   end
 end
 
-function col2im{T}(col::Array{T}, img::Array{T}, n::Int, img_buf::Array{T}, width::Int, height::Int, channels::Int,
-    kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
+function col2im(col::Array{T}, img::Array{T}, n::Int, img_buf::Array{T}, width::Int, height::Int, channels::Int,
+    kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int}) where {T}
 
   col2im_impl(col, img_buf, width, height, channels, kernel, pad, stride)
   img[:,:,:,n] = img_buf
 end
 
-function col2im_impl{T}(col::Array{T}, img::Array{T}, width::Int, height::Int, channels::Int,
-    kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
+function col2im_impl(col::Array{T}, img::Array{T}, width::Int, height::Int, channels::Int,
+    kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int}) where {T}
 
   kernel_w, kernel_h = kernel
   pad_w, pad_h = pad
