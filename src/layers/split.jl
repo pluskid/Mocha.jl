@@ -24,13 +24,13 @@ function setup(backend::Backend, layer::SplitLayer, inputs::Vector{Blob}, diffs:
     # directly re-use the input blob
     blobs = Blob[inputs[1] for i = 1:N]
   else
-    blobs = Array{Blob}(N)
+    blobs = Array{Blob}(undef,N)
     blobs[1] = inputs[1]
     for i = 2:N
       blobs[i] = make_blob(backend, eltype(inputs[1]), size(inputs[1]))
     end
   end
-  blobs_diff = Array{Blob}(N)
+  blobs_diff = Array{Blob}(undef,N)
   blobs_diff[1] = diffs[1] # re-use the first backward blob
   for i = 2:N
     if isa(diffs[1], NullBlob)

@@ -16,7 +16,7 @@ function test_concat_layer(backend::Backend, dim, T, eps)
   input_blobs = Blob[make_blob(backend, x) for x in inputs]
   grad_blobs = Blob[make_blob(backend, x) for x in inputs]
 
-  layer = ConcatLayer(dim=dim, bottoms=Array{Symbol}(n_input), tops=[:concat])
+  layer = ConcatLayer(dim=dim, bottoms=Array{Symbol}(undef,n_input), tops=[:concat])
   state = setup(backend, layer, input_blobs, grad_blobs)
 
   println("    > Forward")

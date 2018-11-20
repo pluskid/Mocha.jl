@@ -39,7 +39,7 @@ end
 # space, where unrolling becomes trivial
 # it left as an exercise for the reader
 function unroll_parameters( model::Net )
-    theta = Array{Float64}() # initial state is one length ??? weird
+    theta = Array{Float64}(undef,0) # initial state is one length ??? weird
     for l = 1:length(model.layers)
         if Mocha.has_param(model.layers[l])
 
@@ -56,7 +56,7 @@ function unroll_parameters( model::Net )
 end
 
 function unroll_gradients( model::Net )
-    theta = Array{Float64}() # initial state is one length ??? weird
+    theta = Array{Float64}(undef,0) # initial state is one length ??? weird
     for l = 1:length(model.layers)
         if Mocha.has_param(model.layers[l])
             for m in model.states[l].parameters
@@ -152,7 +152,7 @@ function gradient_check(model::Net, epsilon::Float64, digit::Int, visual::Bool)
     # ∇⁺ = round(∇⁺, 4); 	∇ = round(∇, 4)
     idx = round.( abs.(∇ᵋ - ∇), digit ) .!= 0
     if visual
-        δ = Array{Char}(length(idx));  fill!(δ,'.')
+        δ = Array{Char}(undef,length(idx));  fill!(δ,'.')
         δ[idx] = 'x'
         show(model, δ)
         #show(model,round(∇ᵋ,digit) ); show(model,round(∇,digit))

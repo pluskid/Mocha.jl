@@ -200,9 +200,9 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
   data_layers = find(l -> is_source(l), layers)
 
   n = length(layers)
-  states = Array{LayerState}(n)
-  blobs_forward = Array{Vector{Blob}}(n)
-  blobs_backward = Array{Vector{Blob}}(n)
+  states = Array{LayerState}(undef,n)
+  blobs_forward = Array{Vector{Blob}}(undef,n)
+  blobs_backward = Array{Vector{Blob}}(undef,n)
 
   output_blobs = Dict{Symbol,Blob}()
   diff_blobs = Dict{Symbol,Blob}()

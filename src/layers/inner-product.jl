@@ -48,9 +48,9 @@ struct InnerProductLayerState <: LayerState
       @assert eltype(inputs[i]) == data_type
     end
 
-    blobs = Array{Blob}(length(inputs))
-    blobs_diff = Array{Blob}(length(inputs))
-    bias_multipliers = Array{Blob}(length(inputs))
+    blobs = Array{Blob}(undef,length(inputs))
+    blobs_diff = Array{Blob}(undef,length(inputs))
+    bias_multipliers = Array{Blob}(undef,length(inputs))
 
     for i = 1:length(inputs)
       nums = get_num(inputs[i])

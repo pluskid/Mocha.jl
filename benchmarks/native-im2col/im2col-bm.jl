@@ -74,7 +74,7 @@ img = rand(width, height, channels)
 
 width_out  = div(width  + 2*pad[1]-kernel[1], stride[1]) + 1
 height_out = div(height + 2*pad[2]-kernel[2], stride[2]) + 1
-col_buffer = Array{Float64}(width_out, height_out, channels*prod(kernel))
+col_buffer = Array{Float64}(undef,width_out, height_out, channels*prod(kernel))
 col_buffer2 = zeros(size(col_buffer))
 
 im2col_jl() = im2col(img, col_buffer, width, height, channels, kernel, pad, stride)

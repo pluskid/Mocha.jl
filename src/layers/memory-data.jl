@@ -20,8 +20,8 @@ struct MemoryDataLayerState <: LayerState
   shuffle_idx :: Vector{Int}
 
   MemoryDataLayerState(backend::Backend, layer::MemoryDataLayer) = begin
-    blobs = Array{Blob}(length(layer.tops))
-    trans = Array{Vector{DataTransformerState}}(length(layer.tops))
+    blobs = Array{Blob}(undef,length(layer.tops))
+    trans = Array{Vector{DataTransformerState}}(undef,length(layer.tops))
     transformers = convert(Vector{@compat(Tuple{Symbol, DataTransformerType})}, layer.transformers)
     for i = 1:length(blobs)
       dims = tuple(size(layer.data[i])[1:end-1]..., layer.batch_size)

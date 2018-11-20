@@ -10,7 +10,7 @@ function test_argmax_layer(backend::Backend, n_input, tensor_dim, T, eps)
   diff_blob = Blob[NullBlob() for i = 1:n_input]
 
   println("    > Setup")
-  layer = ArgmaxLayer(bottoms=Array{Symbol}(n_input),tops=Array{Symbol}(n_input),dim=op_dim)
+  layer = ArgmaxLayer(bottoms=Array{Symbol}(undef,n_input),tops=Array{Symbol}(undef,n_input),dim=op_dim)
   state = setup(backend, layer, input_blob, diff_blob)
 
   println("    > Forward")

@@ -9,7 +9,7 @@ function test_softmax_layer(backend::Backend, tensor_dim, n_input, T, eps)
   input_blob = Blob[make_blob(backend, x) for x in input]
   diff_blob = Blob[make_blob(backend, x) for x in input]
 
-  layer = SoftmaxLayer(tops=Array{Symbol}(n_input), bottoms=Array{Symbol}(n_input),
+  layer = SoftmaxLayer(tops=Array{Symbol}(undef,n_input), bottoms=Array{Symbol}(undef,n_input),
       dim=norm_dim-tensor_dim-1)
   state = setup(backend, layer, input_blob, diff_blob)
 

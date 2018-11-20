@@ -22,9 +22,9 @@ function setup_etc(backend::GPUBackend, layer::ConvolutionLayer, dtype, width, h
       div(channels,layer.n_group), div(layer.n_filter,layer.n_group)))
   bias_desc = CuDNN.create_tensor4d_descriptor(dtype, (1,1,div(layer.n_filter,layer.n_group),1))
 
-  inputs_desc = Array{CuDNN.Tensor4dDescriptor}(length(inputs))
-  outputs_desc = Array{CuDNN.Tensor4dDescriptor}(length(inputs))
-  conv_desc = Array{CuDNN.ConvolutionDescriptor}(length(inputs))
+  inputs_desc = Array{CuDNN.Tensor4dDescriptor}(undef,length(inputs))
+  outputs_desc = Array{CuDNN.Tensor4dDescriptor}(undef,length(inputs))
+  conv_desc = Array{CuDNN.ConvolutionDescriptor}(undef,length(inputs))
   for i = 1:length(inputs)
     inputs_desc[i] = CuDNN.create_tensor4d_descriptor(dtype, (width,height,div(channels,layer.n_group),batch_size),
         (1, width, width*height, width*height*channels))

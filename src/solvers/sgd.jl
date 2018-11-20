@@ -52,7 +52,7 @@ end
 SGDSolverState(net::Net, learning_rate::Float64, momentum::Float64) = begin
   param_states = updatable_layer_states(net)
 
-  param_history = Array{Vector{Blob}}(length(param_states))
+  param_history = Array{Vector{Blob}}(undef,length(param_states))
 
   for i = 1:length(param_states)
     state = param_states[i]

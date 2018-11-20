@@ -37,8 +37,8 @@ struct AsyncHDF5DataLayerState <: LayerState
     state.epoch = 0
 
     # empty array, will be constructed in setup
-    state.blobs = Array{Blob}(length(layer.tops))
-    state.trans = Array{Vector{DataTransformerState}}(length(layer.tops))
+    state.blobs = Array{Blob}(undef,length(layer.tops))
+    state.trans = Array{Vector{DataTransformerState}}(undef,length(layer.tops))
 
     return state
   end
@@ -71,7 +71,7 @@ function setup(backend::Backend, layer::AsyncHDF5DataLayer, inputs::Vector{Blob}
 
   function io_task_impl(channel)
     # data blocks to produce
-    data_blocks = Array[Array{eltype(x)}(size(x)) for x in state.blobs]
+    data_blocks = Array[Array{eltype(x)}(undef,size(x)) for x in state.blobs]
     n_done = 0
 
     while true

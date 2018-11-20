@@ -13,8 +13,8 @@ struct ArgmaxLayerState <: LayerState
 end
 
 function setup(backend::Backend, layer::ArgmaxLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  dims = Array{Int}(length(inputs))
-  blobs = Array{Blob}(length(inputs))
+  dims = Array{Int}(undef,length(inputs))
+  blobs = Array{Blob}(undef,length(inputs))
   for i = 1:length(inputs)
     total_dim = ndims(inputs[i])
     dim = layer.dim < 0 ? layer.dim + total_dim + 1 : layer.dim

@@ -7,7 +7,7 @@ function test_power_layer(backend::Backend, scale, shift, power, n_input, T, eps
   input_blob = Blob[make_blob(backend, x) for x in input]
   grad_blob = Blob[make_blob(backend, x) for x in input]
 
-  layer = PowerLayer(tops=Array{Symbol}(n_input), bottoms=Array{Symbol}(n_input),
+  layer = PowerLayer(tops=Array{Symbol}(undef,n_input), bottoms=Array{Symbol}(undef,n_input),
       scale=scale, shift=shift, power=power)
   state = setup(backend, layer, input_blob, grad_blob)
 

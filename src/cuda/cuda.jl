@@ -128,7 +128,7 @@ const CTX_MAP_HOST = 0x08
 const CTX_LMEM_RESIZE_TO_MAX = 0x10
 
 function create_context(dev::CuDevice, flags::Integer)
-  a = Array{Ptr{Nothing}}(1)
+  a = Array{Ptr{Nothing}}(undef,1)
   @cucall(:cuCtxCreate_v2, (Ptr{Ptr{Nothing}}, Cuint, Cint), a, flags, dev.handle)
   return CuContext(a[1])
 end
@@ -193,7 +193,7 @@ struct CuModule
   handle::Ptr{Nothing}
 
   function CuModule(filename::AbstractString)
-    a = Array{Ptr{Nothing}}(1)
+    a = Array{Ptr{Nothing}}(undef,1)
     @cucall(:cuModuleLoad, (Ptr{Ptr{Nothing}}, Ptr{Cchar}), a, filename)
     new(a[1])
   end
@@ -208,7 +208,7 @@ struct CuFunction
   handle::Ptr{Nothing}
 
   function CuFunction(md::CuModule, name::String)
-    a = Array{Ptr{Nothing}}(1)
+    a = Array{Ptr{Nothing}}(undef,1)
     @cucall(:cuModuleGetFunction, (Ptr{Ptr{Nothing}}, Ptr{Nothing}, Ptr{Cchar}),
             a, md.handle, name)
     new(a[1])
