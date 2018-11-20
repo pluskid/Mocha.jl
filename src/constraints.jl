@@ -3,13 +3,13 @@ export constrain!
 
 @compat abstract type Constraint end
 
-immutable NoCons <: Constraint
+struct NoCons <: Constraint
   threshold  :: AbstractFloat  # not used, just for consistent API
   every_n_iter :: Int          # also not used
 end
 NoCons() = NoCons(0.0, 0)
 
-immutable L2Cons <: Constraint
+struct L2Cons <: Constraint
   threshold    :: AbstractFloat
   every_n_iter :: Int
 end

@@ -15,7 +15,7 @@ const CUBLAS_STATUS_INTERNAL_ERROR  = 14
 const CUBLAS_STATUS_NOT_SUPPORTED   = 15
 const CUBLAS_STATUS_LICENSE_ERROR   = 16
 
-immutable CuBLASError <: Exception
+struct CuBLASError <: Exception
   code :: Int
 end
 using Compat

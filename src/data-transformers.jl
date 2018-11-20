@@ -8,7 +8,7 @@ module DataTransformers
 using ..Mocha
 using Compat
 
-immutable SubMean <: DataTransformerType
+struct SubMean <: DataTransformerType
   mean_file :: AbstractString
   mean_blob :: Blob
 end

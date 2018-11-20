@@ -73,7 +73,7 @@ const driver_error_descriptions = @compat(Dict(
   999 => "Unknown error"
 ))
 
-immutable CuDriverError <: Exception
+struct CuDriverError <: Exception
   code::Int
 end
 
@@ -103,7 +103,7 @@ cubox{T}(x::T) = T[x]
 ############################################################
 # Device and Context
 ############################################################
-immutable CuDevice
+struct CuDevice
   ordinal::Cint
   handle::Cint
 
@@ -116,7 +116,7 @@ immutable CuDevice
   end
 end
 
-immutable CuContext
+struct CuContext
   handle::Ptr{Void}
 end
 
@@ -167,7 +167,7 @@ end
 ############################################################
 # CUDA streams
 ############################################################
-immutable CuStream
+struct CuStream
   handle::Ptr{Void}
   blocking::Bool
   priority::Int
@@ -189,7 +189,7 @@ end
 ############################################################
 # PTX Module and Function
 ############################################################
-immutable CuModule
+struct CuModule
   handle::Ptr{Void}
 
   function CuModule(filename::AbstractString)
@@ -204,7 +204,7 @@ function unload(md::CuModule)
 end
 
 
-immutable CuFunction
+struct CuFunction
   handle::Ptr{Void}
 
   function CuFunction(md::CuModule, name::String)

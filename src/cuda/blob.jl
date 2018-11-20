@@ -3,7 +3,7 @@ using .CUDA
 export CuBlobDescriptor, CuPODBlobDescriptor, CuTensorBlobDescriptor, CuFilterBlobDescriptor
 export CuTensorBlob
 
-immutable CuTensorBlob{T<:AbstractFloat,N} <: Blob{T,N}
+struct CuTensorBlob{T<:AbstractFloat,N} <: Blob{T,N}
   ptr   :: CuPtr
   shape :: NTuple{N, Int}
   len   :: Int

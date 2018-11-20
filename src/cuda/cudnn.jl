@@ -16,7 +16,7 @@ const  CUDNN_STATUS_EXECUTION_FAILED = 8
 const  CUDNN_STATUS_NOT_SUPPORTED    = 9
 const  CUDNN_STATUS_LICENSE_ERROR    = 10
 
-immutable CuDNNError <: Exception
+struct CuDNNError <: Exception
   code :: Int
 end
 using Compat

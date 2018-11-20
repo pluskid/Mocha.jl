@@ -4,16 +4,16 @@ export forward, backward
 
 @compat abstract type Regularizer end
 
-immutable NoRegu <: Regularizer
+struct NoRegu <: Regularizer
   coefficient :: AbstractFloat # not used, just for consistent API
 end
 NoRegu() = NoRegu(0.0)
 
-immutable L2Regu <: Regularizer
+struct L2Regu <: Regularizer
   coefficient :: AbstractFloat
 end
 
-immutable L1Regu <: Regularizer
+struct L1Regu <: Regularizer
   coefficient :: AbstractFloat
 end
 
