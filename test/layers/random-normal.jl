@@ -21,14 +21,14 @@ function test_random_normal_layer(backend::Backend, T, eps)
                             eltype=T, batch_sizes=batch_sizes)
   state = setup(backend, layer, Blob[], Blob[])
 
-  layer_data = [Array(tuple(output_dims..., batch_sizes[i])) where {T}
+  layer_data = [Array{T}(undef,tuple(output_dims..., batch_sizes[i]))
                 for i in 1:N]
 
   forward(backend, state, Blob[])
   for i in 1:N
       copy!(layer_data[i], state.blobs[i])
       @test (abs(mean(layer_data[i])) < 4e-1)
-      @test all(-1000 .< layer_data[i] .< 1000)      
+      @test all(-1000 .< layer_data[i] .< 1000)
   end
 
     # we should have sample from zero mean, unit stddev in state.blobs[1]
@@ -36,9 +36,9 @@ function test_random_normal_layer(backend::Backend, T, eps)
 
 
     # output should be different on subsequent calls
-  layer_data2 = [Array(tuple(output_dims..., batch_sizes[i])) where {T}
+  layer_data2 = [Array{T}(undef,tuple(output_dims..., batch_sizes[i]))
                 for i in 1:N]
-                    
+
   forward(backend, state, Blob[])
   for i in 1:N
       copy!(layer_data2[i], state.blobs[i])
@@ -59,7 +59,7 @@ end
 if test_gpu
   test_random_normal_layer(backend_gpu)
 end
- 
+
 if test_cpu
   test_random_normal_layer(backend_cpu)
 end
