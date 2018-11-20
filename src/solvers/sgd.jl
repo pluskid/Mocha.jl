@@ -1,6 +1,6 @@
 export SGD
 
-immutable SGD <: SolverMethod
+struct SGD <: SolverMethod
 end
 
 const defaultDict = @compat Dict(:lr_policy => LRPolicy.Fixed(0.01), :mom_policy => MomPolicy.Fixed(0.))

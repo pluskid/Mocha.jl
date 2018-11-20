@@ -14,7 +14,7 @@ immutable SubMean <: DataTransformerType
 end
 SubMean(;mean_file="", mean_blob=NullBlob()) = SubMean(mean_file, mean_blob)
 
-immutable Scale <: DataTransformerType
+struct Scale <: DataTransformerType
   scale :: AbstractFloat
 end
 Scale(;scale=1.0) = Scale(scale)

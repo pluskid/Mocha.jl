@@ -7,7 +7,7 @@
 
 export Adagrad
 
-immutable Adagrad <: SolverMethod
+struct Adagrad <: SolverMethod
 end
 
 make_solver_parameters(method::Adagrad; kwargs...)=

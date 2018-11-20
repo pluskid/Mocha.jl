@@ -10,7 +10,7 @@ import Base.Meta: quot
 @compat abstract type InternalSolverState end # All the state a solver needs to update an iteration
 const SolverParameters = Dict{Symbol,Any}
 
-immutable Solver{T<:SolverMethod}
+struct Solver{T<:SolverMethod}
   method        :: T
   params        :: SolverParameters
   coffee_lounge :: Any # forward declaration

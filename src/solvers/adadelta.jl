@@ -5,7 +5,7 @@
 
 export Adadelta
 
-immutable Adadelta <: SolverMethod
+struct Adadelta <: SolverMethod
 end
 
 make_solver_parameters(method::Adadelta; kwargs...) =

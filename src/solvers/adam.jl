@@ -1,6 +1,6 @@
 export Adam
 
-immutable Adam <: SolverMethod
+struct Adam <: SolverMethod
 end
 
 function make_solver_parameters(solver::Adam; kwargs...)

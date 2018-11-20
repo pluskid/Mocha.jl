@@ -5,7 +5,7 @@
 # Optimizing Recurrent Networks. arXiv:1212.0901 [cs.LG]
 
 
-immutable Nesterov <: SolverMethod
+struct Nesterov <: SolverMethod
 end
 type NesterovSolverState <: InternalSolverState
     learning_rate :: Float64

@@ -125,7 +125,7 @@ end
 ############################################################
 # A Blob for CPU Computation
 ############################################################
-immutable CPUBlob{T <: AbstractFloat, N} <: Blob{T, N}
+struct CPUBlob{T <: AbstractFloat, N} <: Blob{T, N}
   data :: AbstractArray{T, N}
 end
 CPUBlob{N}(t :: Type, dims::NTuple{N,Int}) = CPUBlob(Array{t}(dims))
