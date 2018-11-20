@@ -56,22 +56,22 @@ macro defstruct(name, super_name, fields)
   type_body = Expr(:block, field_defs...)
 
   # constructor
-  asserts = map(filter(i -> isassigned(field_asserts,i), 1:length(fields))) do i
-    :(@assert($(field_asserts[i])))
-  end
-  construct = Expr(:call, name, field_names...)
-  ctor_body = Expr(:block, asserts..., construct)
-  ctor_def = Expr(:call, name, Expr(:parameters, field_defaults...))
-  ctor = Expr(:(=), ctor_def, ctor_body)
-
-  # for copy constructor
-  field_assigns = Expr(:block, [:(params[symbol($(esc(string(fname))))] = proto.$fname) for fname in field_names]...)
-  field_expose = Expr(:block, [:($(esc(fname)) = params[symbol($(esc(string(fname))))]) for fname in field_names]...)
-  assert_block = Expr(:block, asserts...)
-  obj_construct = Expr(:call, name, field_names...)
-  copy_fname = esc(:copy)
-
   quote
+    asserts = map(filter(i -> isassigned(field_asserts,i), 1:length(fields))) do i
+      :(@assert($(field_asserts[i])))
+    end
+    construct = Expr(:call, name, field_names...)
+    ctor_body = Expr(:block, asserts..., construct)
+    ctor_def = Expr(:call, name, Expr(:parameters, field_defaults...))
+    ctor = Expr(:(=), ctor_def, ctor_body)
+
+    # for copy constructor
+    field_assigns = Expr(:block, [:(params[symbol($(esc(string(fname))))] = proto.$fname) for fname in field_names]...)
+    field_expose = Expr(:block, [:($(esc(fname)) = params[symbol($(esc(string(fname))))]) for fname in field_names]...)
+    assert_block = Expr(:block, asserts...)
+    obj_construct = Expr(:call, name, field_names...)
+    copy_fname = esc(:copy)
+
     immutable $(name) <: $super_name
       $type_body
     end
