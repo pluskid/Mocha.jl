@@ -1,0 +1,9 @@
+name = "Mocha"
+uuid = "8ac9dfb8-ec70-11e8-02ea-0ddc18c31797"
+
+[deps]
+Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
+HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
+JLD = "4138dd39-2aa7-5051-a626-17a0bb65d9c8"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Memento = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"

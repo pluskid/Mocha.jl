@@ -1,20 +1,20 @@
 export RawBLAS
 
 module RawBLAS
-using Base.LinAlg # force built-in BLAS library initialization
-using ..Mocha.blasfunc
+using LinearAlgebra # force built-in BLAS library initialization
+using ..Mocha: blasfunc
 using Compat
 
 for (gemm, elty) in ((:dgemm_, Float64), (:sgemm_, Float32))
   @eval begin
     function gemm!(transA::Char, transB::Char, M::Int, N::Int, K::Int, alpha::$elty,
         A, lda, B, ldb, beta::$elty, C, ldc)
-      ccall(($(blasfunc(gemm)), Base.libblas_name), Void,
-          (Ptr{UInt8}, Ptr{UInt8}, Ptr{Base.LinAlg.BlasInt}, Ptr{Base.LinAlg.BlasInt},
-          Ptr{Base.LinAlg.BlasInt}, Ptr{$elty}, Ptr{$elty}, Ptr{Base.LinAlg.BlasInt},
-          Ptr{$elty}, Ptr{Base.LinAlg.BlasInt}, Ptr{$elty}, Ptr{$elty},
-          Ptr{Base.LinAlg.BlasInt}),
-          &transA, &transB, &M, &N, &K, &alpha, A, &lda, B, &ldb, &beta, C, &ldc)
+      ccall(($(blasfunc(gemm)), Base.libblas_name), Nothing,
+          (Ptr{UInt8}, Ptr{UInt8}, Ptr{LinearAlgebra.BlasInt}, Ptr{LinearAlgebra.BlasInt},
+          Ptr{LinearAlgebra.BlasInt}, Ptr{$elty}, Ptr{$elty}, Ptr{LinearAlgebra.BlasInt},
+          Ptr{$elty}, Ptr{LinearAlgebra.BlasInt}, Ptr{$elty}, Ptr{$elty},
+          Ptr{LinearAlgebra.BlasInt}),
+          Ref(transA), Ref(transB), Ref(M), Ref(N), Ref(K), Ref(alpha), A, Ref(lda), B, Ref(ldb), Ref(beta), C, Ref(ldc))
     end
 
     function gemm!(transA::Char, transB::Char, M::Int, N::Int, K::Int, alpha::$elty,
@@ -30,11 +30,11 @@ end
 for (gemv, elty) in ((:dgemv_, Float64), (:sgemv_, Float32))
   @eval begin
     function gemv!(trans::Char, M::Int, N::Int, alpha::$elty, A, lda, x, incx, beta::$elty, y, incy)
-      ccall(($(blasfunc(gemv)), Base.libblas_name), Void,
-          (Ptr{UInt8}, Ptr{Base.LinAlg.BlasInt}, Ptr{Base.LinAlg.BlasInt}, Ptr{$elty},
-          Ptr{$elty}, Ptr{Base.LinAlg.BlasInt}, Ptr{$elty}, Ptr{Base.LinAlg.BlasInt},
-          Ptr{$elty}, Ptr{$elty}, Ptr{Base.LinAlg.BlasInt}),
-          &trans, &M, &N, &alpha, A, &lda, x, &incx, &beta, y, &incy)
+      ccall(($(blasfunc(gemv)), Base.libblas_name), Nothing,
+          (Ptr{UInt8}, Ptr{LinearAlgebra.BlasInt}, Ptr{LinearAlgebra.BlasInt}, Ptr{$elty},
+          Ptr{$elty}, Ptr{LinearAlgebra.BlasInt}, Ptr{$elty}, Ptr{LinearAlgebra.BlasInt},
+          Ptr{$elty}, Ptr{$elty}, Ptr{LinearAlgebra.BlasInt}),
+          Ref(trans), Ref(M), Ref(N), Ref(alpha), A, Ref(lda), x, Ref(incx), Ref(beta), y, Ref(incy))
     end
     function gemv!(trans::Char, M::Int, N::Int, alpha::$elty, A, x, beta::$elty, y)
       lda = M
