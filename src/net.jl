@@ -3,7 +3,7 @@ export init, destroy, forward, forward_epoch, backward, forward_backward, get_ep
 export get_layer, get_layer_state, freeze!, unfreeze!, freeze_all!, unfreeze_all!
 export dump_statistics, reset_statistics
 
-type Net{T <: Backend}
+struct Net{T <: Backend}
   name           :: AbstractString
   backend        :: T
 

@@ -20,7 +20,7 @@
                     has_stats => true,
                     )
 
-type GaussianKLLossLayerState{T, B<:Blob} <: LayerState
+struct GaussianKLLossLayerState{T, B<:Blob} <: LayerState
   layer      :: GaussianKLLossLayer
   loss       :: T
   loss_accum :: T

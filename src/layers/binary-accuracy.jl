@@ -9,7 +9,7 @@
   has_stats  => true,
 )
 
-type BinaryAccuracyLayerState <: LayerState
+struct BinaryAccuracyLayerState <: LayerState
   layer :: BinaryAccuracyLayer
 
   accuracy :: Float64

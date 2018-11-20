@@ -21,20 +21,20 @@ Solver(method::T, params::SolverParameters) where {T} = begin
     Solver(method, params, CoffeeLounge())
 end
 
-type SolverState{T<:InternalSolverState}
+struct SolverState{T<:InternalSolverState}
   iter               :: Int
   obj_val            :: Float64
   losses             :: Dict
   internal           :: T
 end
-function copy_solver_state!{T<:InternalSolverState}(dst::SolverState{T}, src::SolverState{T})
+function copy_solver_state!(dst::SolverState{T}, src::SolverState{T}) where {T<:InternalSolverState}
   dst.iter = src.iter
   dst.obj_val = src.obj_val
   dst.losses = src.losses
   dst.internal = src.internal
 end
 
-SolverState{T<:InternalSolverState}(internal::T) = SolverState{T}(0, Inf, Dict(), internal)
+SolverState(internal::T) where {T<:InternalSolverState} = SolverState{T}(0, Inf, Dict(), internal)
 
 @compat abstract type SolverStateSnapshot end # Just the serializable part of the solver state, for snapshot files
 
@@ -108,7 +108,7 @@ function solver_state(solver::SolverMethod, net::Net, params::SolverParameters) 
     error("solver_state is not implemented for the solver type $(typeof(solver)), net type $(typeof(net)), and params type $(typeof(params))")
 end
 
-function update{T}(solver::Solver{T}, net::Net, state::SolverState) # should do one iteration of update
+function update(solver::Solver{T}, net::Net, state::SolverState) where {T} # should do one iteration of update
     error("update is not implemented for the solver type $(typeof(solver)), net type $(typeof(net)), and state type $(typeof(state))")
 end
 function shutdown(state::SolverState) # should shutdown the solver

@@ -80,7 +80,7 @@ end
 # This function reproduces the feed-forward part of the model above, layers 12-13,
 # as a simple function
 
-asarray{T}(blob::CuTensorBlob{T}) = begin
+asarray(blob::CuTensorBlob{T}) where {T} = begin
   arr = zeros(T, blob.shape)
   copy!(arr, blob)
   return arr

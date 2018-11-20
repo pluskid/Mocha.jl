@@ -1,4 +1,4 @@
-type CuDNNSoftmaxState
+struct CuDNNSoftmaxState
   inputs_desc  :: Vector{CuDNN.Tensor4dDescriptor}
   outputs_desc :: Vector{CuDNN.Tensor4dDescriptor}
 end

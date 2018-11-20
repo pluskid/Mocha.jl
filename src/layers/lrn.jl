@@ -3,8 +3,8 @@ export LRNModeType, LRNMode
 @compat abstract type LRNModeType end
 module LRNMode
 import ..LRNModeType
-type AcrossChannel <: LRNModeType end
-type WithinChannel <: LRNModeType end
+struct AcrossChannel <: LRNModeType end
+struct WithinChannel <: LRNModeType end
 end # module LRNMode
 
 ################################################################################
@@ -25,7 +25,7 @@ end # module LRNMode
   can_do_bp => true
 )
 
-type LRNLayerState <: LayerState
+struct LRNLayerState <: LayerState
   layer      :: LRNLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}

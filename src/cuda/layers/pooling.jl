@@ -1,4 +1,4 @@
-type CuDNNPoolingState
+struct CuDNNPoolingState
   pooling_desc :: CuDNN.PoolingDescriptor
   inputs_desc  :: Vector{CuDNN.Tensor4dDescriptor}
   outputs_desc :: Vector{CuDNN.Tensor4dDescriptor}

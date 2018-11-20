@@ -9,7 +9,7 @@
   has_stats  => true,
 )
 
-type AccuracyLayerState <: LayerState
+struct AccuracyLayerState <: LayerState
   layer :: AccuracyLayer
 
   op_dim   :: Int

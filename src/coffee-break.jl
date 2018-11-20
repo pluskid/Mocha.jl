@@ -10,7 +10,7 @@ function init(::Coffee, ::Net) end
 function enjoy(::Any, ::Coffee, ::Net, ::SolverState) end
 function destroy(::Coffee, ::Net) end
 
-type CoffeeBreak
+struct CoffeeBreak
   coffee        :: Coffee
   every_n_iter  :: Int
   every_n_epoch :: Int
@@ -38,7 +38,7 @@ using HDF5, JLD
 
 const StatisticsValue = AbstractFloat
 const StatisticsRecords = Dict{Int, StatisticsValue}
-type CoffeeLounge
+struct CoffeeLounge
   filename          :: AbstractString
   save_every_n_iter :: Int
   file_exists       :: Symbol # :overwrite, :panic, :merge

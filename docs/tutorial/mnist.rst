@@ -391,19 +391,19 @@ Using Saved Snapshots for Prediction
 Often you want to use a network previously trained with Mocha to make individual predictions. Earlier during the training process snapshots of the network state were saved every 5000 iterations, and these can be reloaded at a later time. To do this we first need a network with the same shape and configuration as the one used for training, except instead we supply a ``MemoryDataLayer`` instead of a ``HDF5DataLayer``, and a ``SoftmaxLayer`` instead of a ``SoftmaxLossLayer``:
 
 .. code-block:: julia
-   
+
    using Mocha
    backend = CPUBackend()
    init(backend)
-   
+
    mem_data = MemoryDataLayer(name="data", tops=[:data], batch_size=1,
        data=Array[zeros(Float32, 28, 28, 1, 1)])
    softmax_layer = SoftmaxLayer(name="prob", tops=[:prob], bottoms=[:ip2])
 
    # define common_layers as earlier
-   
+
    run_net = Net("imagenet", backend, [mem_data, common_layers..., softmax_layer])
-   
+
 Note that ``common_layers`` has the same definition as above, and that we specifically pass a ``Float32`` array to the ``MemoryDataLayer`` so that it will match the ``Float32`` data type used in the MNIST HDF5 training dataset. Next we fill in this network with the learned parameters from the final training snapshot:
 
 .. code-block:: julia
@@ -424,7 +424,7 @@ Now we are ready to make predictions using our trained model. A simple way to ac
    println()
    println("Label probability vector:")
    println(run_net.output_blobs[:prob].data)
-   
+
 This produces the output:
 
 .. code-block:: text
@@ -465,7 +465,7 @@ Given this data we can write a new Julia script to read the ``statistics.jld`` f
 In order to see the plot we need to use a plotting package.  The PyPlot package that implements matplotlib for Julia is adequate for this.  Use the standard ``Pkg.add("PyPlot")`` if you do not already have it.  We will also need to load the ``statistics.jld`` file using Julia's implementation of the HDF5 format which requires the JLD packge.
 
 .. code-block:: julia
-  
+
   using PyPlot, JLD
 
 Next, we need to load the data.  This is not difficult, but requires some careful handling because the ``statistics.jld`` file is a Julia Dict that includes several sub-dictionaries.  You may need to adjust the path in the ``load("snapshots/statistics.jld")`` command so that it accurately reflects the path from where the code is running to the ``snapshots`` directory.
@@ -503,16 +503,16 @@ In pure gradient descent the solution moves closer to a minima each and every st
 
 .. code-block:: julia
 
-  function low_pass{T <: Real}(x::Vector{T}, window::Int)
+  function low_pass(x::Vector{T}, window::Int) where {T <: Real}
       len = length(x)
       y = Vector{Float64}(len)
       for i in 1:len
           # I want the mean of the first i terms up to width of window
-          # Putting some numbers to this with window 4 
+          # Putting some numbers to this with window 4
           # i win lo  hi
-          # 1  4  1   1  
-          # 2  4  1   2 
-          # 3  4  1   3 
+          # 1  4  1   1
+          # 2  4  1   2
+          # 3  4  1   3
           # 4  4  1   4
           # 5  4  1   5
           # 6  4  2   6  => window starts to slide
@@ -538,5 +538,3 @@ We declare ``window`` to be about one-quarter the length of the input to enforce
 There are lots of great resources on the web for building and training neural networks and after this example you now know how to use Julia and Mocha to contruct, train, and validate one of the most famous convolutional neural networks.
 
 **Thank you for working all the way to the end of the MNIST tutorial!**
-
-

@@ -1,7 +1,8 @@
 export Blob
 export CPUBlob, NullBlob
 
-import Base: eltype, size, length, ndims, copy!, fill!, show, randn!
+import Base: eltype, size, length, ndims, copy!, fill!, show
+import Random: randn!
 export       eltype, size, length, ndims, copy!, fill!, erase!, show
 export get_num, get_height, get_width, get_fea_size, to_array
 export make_blob, make_zero_blob, reshape_blob
@@ -87,7 +88,7 @@ function randn!(dst :: Blob) # should fill dst with iid standard normal variates
 end
 
 ############################################################
-# A Dummy Blob type holding nothing
+# A Dummy Blob struct holding nothing
 ############################################################
 struct NullBlob <: Blob{Nothing, 0}
 end
@@ -128,7 +129,7 @@ end
 struct CPUBlob{T <: AbstractFloat, N} <: Blob{T, N}
   data :: AbstractArray{T, N}
 end
-CPUBlob(t :: Type, dims::NTuple{N,Int}) where {N} = CPUBlob(Array{t}(dims)) 
+CPUBlob(t :: Type, dims::NTuple{N,Int}) where {N} = CPUBlob(Array{t}(dims))
 
 function make_blob(backend::CPUBackend, data_type::Type, dims::NTuple{N,Int}) where {N}
   return CPUBlob(data_type, dims)

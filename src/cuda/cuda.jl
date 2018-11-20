@@ -144,7 +144,7 @@ end
 ############################################################
 const CUdeviceptr = Ptr{Nothing}
 
-type CuPtr
+struct CuPtr
   p::CUdeviceptr
 
   CuPtr() = new(convert(CUdeviceptr, 0))

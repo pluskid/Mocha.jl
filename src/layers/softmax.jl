@@ -11,7 +11,7 @@
   can_do_bp => true,
 )
 
-type SoftmaxLayerState <: LayerState
+struct SoftmaxLayerState <: LayerState
   layer      :: SoftmaxLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}

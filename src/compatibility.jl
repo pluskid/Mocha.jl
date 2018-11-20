@@ -24,4 +24,3 @@ else
     return fnc_name
   end
 end
-export blasfunc

@@ -15,7 +15,7 @@
   has_stats => true,
 )
 
-type SquareLossLayerState{T} <: LayerState
+struct SquareLossLayerState{T} <: LayerState
   layer      :: SquareLossLayer
   loss       :: T
 

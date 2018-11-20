@@ -1,4 +1,4 @@
-type MockResource
+struct MockResource
   resource :: Vector{Int}
   rc       :: RefCounter
 end

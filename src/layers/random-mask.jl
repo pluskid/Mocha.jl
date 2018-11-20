@@ -8,7 +8,7 @@
   is_inplace => true,
 )
 
-type RandomMaskLayerState <: LayerState
+struct RandomMaskLayerState <: LayerState
   layer      :: RandomMaskLayer
 
   dropouts   :: Vector{DropoutLayerState}

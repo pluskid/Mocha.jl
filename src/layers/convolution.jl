@@ -24,7 +24,7 @@
   can_do_bp  => true
 )
 
-type CPUConvState
+struct CPUConvState
   col_buffer      :: Blob
   M               :: Int
   N               :: Int
@@ -55,7 +55,7 @@ function setup_etc(backend::CPUBackend, layer::ConvolutionLayer, dtype, width, h
   return etc
 end
 
-type ConvolutionLayerState <: LayerState
+struct ConvolutionLayerState <: LayerState
   layer      :: ConvolutionLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}

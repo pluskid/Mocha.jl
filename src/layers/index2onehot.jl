@@ -6,7 +6,7 @@
   (n_class :: Int = 0, n_class > 0)
 )
 
-type Index2OnehotLayerState <: LayerState
+struct Index2OnehotLayerState <: LayerState
   layer :: Index2OnehotLayer
   blobs :: Vector{Blob}
 

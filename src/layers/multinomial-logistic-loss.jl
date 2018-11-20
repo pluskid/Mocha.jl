@@ -14,7 +14,7 @@
   is_sink  => true,
 )
 
-type MultinomialLogisticLossLayerState{T} <: LayerState
+struct MultinomialLogisticLossLayerState{T} <: LayerState
   layer :: MultinomialLogisticLossLayer
   loss  :: T
 
@@ -96,7 +96,7 @@ function forward(backend::CPUBackend, state::MultinomialLogisticLossLayerState, 
       map(x -> round(Int, x), label) .+ 1
     else
       dim = dims[i]
-      reshape(1:dim, [j == i? dim : 1 for j = 1:length(dims)]...)
+      reshape(1:dim, [j == i ? dim : 1 for j = 1:length(dims)]...)
     end
   end
 
@@ -111,4 +111,3 @@ end
 
 function backward(backend::Backend, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
-

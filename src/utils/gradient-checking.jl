@@ -177,7 +177,7 @@ end
 ###############################################################
 function test_gradients(net::Net; epsilon=1e-6, digit=6, visual=true )
     return  typeof(net.backend) == Mocha.CPUBackend  ?
-         gradient_check( net, epsilon, digit, visual ) :false
+         gradient_check( net, epsilon, digit, visual ) : false
 end
 
 

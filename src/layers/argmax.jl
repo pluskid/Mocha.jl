@@ -5,7 +5,7 @@
   (bottoms :: Vector{Symbol} = Symbol[], length(bottoms) == length(tops)),
 )
 
-type ArgmaxLayerState <: LayerState
+struct ArgmaxLayerState <: LayerState
   layer :: ArgmaxLayer
   blobs :: Vector{Blob}
 

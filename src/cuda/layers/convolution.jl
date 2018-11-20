@@ -1,4 +1,4 @@
-type CuDNNConvState
+struct CuDNNConvState
   inputs_desc   :: Vector{CuDNN.Tensor4dDescriptor}
   outputs_desc  :: Vector{CuDNN.Tensor4dDescriptor}
   conv_desc     :: Vector{CuDNN.ConvolutionDescriptor}

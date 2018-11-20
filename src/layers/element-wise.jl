@@ -2,17 +2,17 @@ export ElementWiseFunctorType, ElementWiseFunctors
 export get_num_args
 @compat abstract type ElementWiseFunctorType{NArg} end
 
-get_num_args{NArg}(::ElementWiseFunctorType{NArg}) = NArg
+get_num_args(::ElementWiseFunctorType{NArg}) where {NArg} = NArg
 
 module ElementWiseFunctors
 using ..Mocha
-type Add <: ElementWiseFunctorType{2}
+struct Add <: ElementWiseFunctorType{2}
 end
-type Subtract <: ElementWiseFunctorType{2}
+struct Subtract <: ElementWiseFunctorType{2}
 end
-type Multiply <: ElementWiseFunctorType{2}
+struct Multiply <: ElementWiseFunctorType{2}
 end
-type Divide <: ElementWiseFunctorType{2}
+struct Divide <: ElementWiseFunctorType{2}
 end
 end # module ElementWiseFunctors
 
@@ -29,7 +29,7 @@ end # module ElementWiseFunctors
   can_do_bp => true
 )
 
-type ElementWiseLayerState{Op<:ElementWiseFunctorType} <: LayerState
+struct ElementWiseLayerState{Op<:ElementWiseFunctorType} <: LayerState
   layer      :: ElementWiseLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}
@@ -59,7 +59,7 @@ for (functor, op) in ((ElementWiseFunctors.Add, (+)),
     # I'm getting the following warning unless I extract the for loop
     # as a separate function with clear type annotations.
     # Warning: could not attach metadata for @simd loop.
-    function functor_impl{T}(::$functor, input1::Array{T}, input2::Array{T}, output::Array{T})
+    function functor_impl(::$functor, input1::Array{T}, input2::Array{T}, output::Array{T}) where {T}
       len = length(input1)
       @simd for i = 1:len
         @inbounds output[i] = $op(input1[i], input2[i])
@@ -120,4 +120,3 @@ function backward(backend::CPUBackend, state::ElementWiseLayerState{ElementWiseF
     BLAS.scal!(length(diffs[2]), convert(eltype(diffs[2]),-1), diffs[2].data, 1)
   end
 end
-

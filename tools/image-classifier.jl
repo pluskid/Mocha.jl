@@ -4,7 +4,7 @@ using Colors # requires Package Colors.jl
 using Mocha
 using Compat
 
-type ImageClassifier
+struct ImageClassifier
   net           :: Net
   channel_order :: NTuple{3,Int} # The channel order of the trained net, (1,2,3) means RGB
   sp_order      :: NTuple{2,Int} # The spatial order (1,2) means width-height (row major)

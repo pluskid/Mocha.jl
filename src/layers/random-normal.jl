@@ -11,7 +11,7 @@
   is_source => true
 )
 
-type RandomNormalLayerState <: LayerState
+struct RandomNormalLayerState <: LayerState
     layer :: RandomNormalLayer
     blobs :: Vector{Blob}
     etc        :: Vector{Any}

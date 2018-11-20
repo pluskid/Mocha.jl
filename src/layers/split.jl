@@ -11,7 +11,7 @@
   can_do_bp => true
 )
 
-type SplitLayerState{N} <: LayerState
+struct SplitLayerState{N} <: LayerState
   layer      :: SplitLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}
@@ -57,7 +57,7 @@ function forward(backend::Backend, state::SplitLayerState, inputs::Vector{Blob})
   end
 end
 
-function backward{N}(backend::CPUBackend, state::SplitLayerState{N}, inputs::Vector{Blob}, diffs::Vector{Blob})
+function backward(backend::CPUBackend, state::SplitLayerState{N}, inputs::Vector{Blob}, diffs::Vector{Blob}) where {N}
   if !isa(diffs[1], NullBlob)
     diff = diffs[1]
     len = length(diff)
@@ -67,4 +67,3 @@ function backward{N}(backend::CPUBackend, state::SplitLayerState{N}, inputs::Vec
     end
   end
 end
-

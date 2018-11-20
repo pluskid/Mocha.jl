@@ -16,7 +16,7 @@
   has_neuron => true
 )
 
-type TiedInnerProductLayerState <: LayerState
+struct TiedInnerProductLayerState <: LayerState
   layer      :: TiedInnerProductLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}

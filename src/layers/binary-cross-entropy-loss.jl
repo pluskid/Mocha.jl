@@ -12,7 +12,7 @@
   can_do_bp => true,
 )
 
-type BinaryCrossEntropyLossLayerState{T} <: LayerState
+struct BinaryCrossEntropyLossLayerState{T} <: LayerState
   layer :: BinaryCrossEntropyLossLayer
   loss  :: T
 end

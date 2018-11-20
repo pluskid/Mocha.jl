@@ -13,7 +13,7 @@
   has_neuron => true
 )
 
-type PoolingLayerState <: LayerState
+struct PoolingLayerState <: LayerState
   layer      :: PoolingLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}

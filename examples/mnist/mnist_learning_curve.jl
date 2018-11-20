@@ -23,16 +23,16 @@ ylabel("Objective Value")
 title("MNIST Learning Curve")
 grid("on")
 
-function low_pass{T <: Real}(x::Vector{T}, window::Int)
+function low_pass(x::Vector{T}, window::Int) where {T <: Real}
   len = length(x)
   y = Vector{Float64}(len)
   for i in 1:len
       # I want the mean of the first i terms up to width of window
-      # Putting some numbers to this with window 4 
+      # Putting some numbers to this with window 4
       # i win lo  hi
-      # 1  4  1   1  
-      # 2  4  1   2 
-      # 3  4  1   3 
+      # 1  4  1   1
+      # 2  4  1   2
+      # 3  4  1   3
       # 4  4  1   4
       # 5  4  1   5
       # 6  4  2   6  => window starts to slide

@@ -11,7 +11,7 @@
   is_sink   => true,
 )
 
-type WassersteinLossLayerState{T} <: LayerState
+struct WassersteinLossLayerState{T} <: LayerState
   layer :: WassersteinLossLayer
   loss  :: T
 

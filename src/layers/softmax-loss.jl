@@ -15,7 +15,7 @@
   is_sink   => true
 )
 
-type SoftmaxLossLayerState{T} <: LayerState
+struct SoftmaxLossLayerState{T} <: LayerState
   layer    :: SoftmaxLossLayer
   loss     :: T
 
@@ -59,7 +59,7 @@ function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vec
         map(x -> round(Int, x), label) .+ 1
       else
         dim = dims[i]
-        reshape(1:dim, [j == i? dim : 1 for j = 1:length(dims)]...)
+        reshape(1:dim, [j == i ? dim : 1 for j = 1:length(dims)]...)
       end
     end
 
@@ -80,4 +80,3 @@ function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vec
     Vec.mul_scal!(diff.data, state.layer.weight * dims[state.logistic.op_dim]/prod(dims))
   end
 end
-

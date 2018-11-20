@@ -42,7 +42,7 @@ solver = Solver(method, params)
 setup_coffee_lounge(solver, save_into="$exp_dir/statistics.jld", every_n_iter=1000)
 
 # a dummy demo of user-defined coffe break
-type DummyCoffee <: Coffee
+struct DummyCoffee <: Coffee
 end
 function Mocha.enjoy(lounge::CoffeeLounge, coffee::DummyCoffee, ::Net, ::SolverState)
   println("See also src/coffee/*.jl for implementation of built-in coffee breaks")

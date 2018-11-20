@@ -19,7 +19,7 @@ using Benchmark
 # | 2   | "im2col_c"  | 0.00514862  | 6.19335  | 50           |
 ################################################################################
 
-function im2col{T}(img::Array{T}, col::Array{T}, width::Int, height::Int, channels::Int, kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
+function im2col(img::Array{T}, col::Array{T}, width::Int, height::Int, channels::Int, kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int}) where {T}
   kernel_w, kernel_h = kernel
   pad_w, pad_h = pad
   stride_w, stride_h = stride

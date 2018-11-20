@@ -12,7 +12,7 @@
   can_do_bp => true,
 )
 
-type ChannelPoolingLayerState <: LayerState
+struct ChannelPoolingLayerState <: LayerState
   layer      :: ChannelPoolingLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}

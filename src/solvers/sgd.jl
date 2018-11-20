@@ -10,7 +10,7 @@ make_solver_parameters(method::SGD; kwargs...) = merge(make_solver_parameters(),
                                                        defaultDict,
                                                        SolverParameters(kwargs))
 
-type SGDSolverState <: InternalSolverState
+struct SGDSolverState <: InternalSolverState
     learning_rate :: Float64
     momentum      :: Float64
     param_states  :: Vector{LayerState}
@@ -18,7 +18,7 @@ type SGDSolverState <: InternalSolverState
     last_momentum :: Float64
 end
 
-type SGDSolverSnapshot <: SolverStateSnapshot
+struct SGDSolverSnapshot <: SolverStateSnapshot
     iteration     :: Int
     obj_val       :: Float64
     learning_rate :: Float64

@@ -8,7 +8,7 @@ export reset_outputs
   is_sink => true
 )
 
-type MemoryOutputLayerState <: LayerState
+struct MemoryOutputLayerState <: LayerState
   layer   :: MemoryOutputLayer
   outputs :: Vector{Vector{Array}}
 end

@@ -8,7 +8,7 @@
   can_do_bp  => true
 )
 
-type ConcatLayerState <: LayerState
+struct ConcatLayerState <: LayerState
   layer      :: ConcatLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}

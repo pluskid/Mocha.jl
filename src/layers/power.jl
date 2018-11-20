@@ -13,7 +13,7 @@
   can_do_bp => true
 )
 
-type PowerLayerState <: LayerState
+struct PowerLayerState <: LayerState
   layer      :: PowerLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}
