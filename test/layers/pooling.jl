@@ -1,5 +1,5 @@
 function test_pooling_layer(backend::Backend, pooling::PoolingFunction, has_padding::Bool, n_input, T, eps)
-  println("-- Testing Pooling($(typeof(pooling))) $(has_padding? "with padding":"") on $(typeof(backend)){$T}...")
+  println("-- Testing Pooling($(typeof(pooling))) $(has_padding ? "with padding" : "") on $(typeof(backend)){$T}...")
   println("    > Setup")
 
   if has_padding
@@ -96,9 +96,9 @@ function pooling_forward(state, i, input::Array)
           hstart = max(1, hstart)
           wstart = max(1, wstart)
 
-          region = view(input, wstart:wend, hstart:hend, c, n)
+          region = reshape(view(input, wstart:wend, hstart:hend, c, n), :)
           if isa(state.layer.pooling, Pooling.Max)
-            index = indmax(region)
+            index = argmax(region)
             mask[pw, ph, c, n] = index # note this is local index in region
             output[pw, ph, c, n] = region[index]
           elseif isa(state.layer.pooling, Pooling.Mean)
@@ -137,12 +137,12 @@ function pooling_backward(state, i, input::Array, diff::Array, payload::Any)
           hstart = max(1, hstart)
           wstart = max(1, wstart)
 
-          region = view(gradient, wstart:wend, hstart:hend, c, n)
+          region = reshape(view(gradient, wstart:wend, hstart:hend, c, n), :)
           if isa(state.layer.pooling, Pooling.Max)
             index = payload[pw, ph, c, n]
             region[index] += diff[pw, ph, c, n]
           elseif isa(state.layer.pooling, Pooling.Mean)
-            region[:] += diff[pw, ph, c, n] / kernel_size
+            region[:] .+= diff[pw, ph, c, n] / kernel_size
           else
             error("Unknown pooling $(state.layer.pooling)")
           end

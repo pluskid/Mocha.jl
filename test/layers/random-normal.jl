@@ -1,3 +1,6 @@
+import Statistics: mean
+import LinearAlgebra: norm
+
 function test_random_normal_layer(backend::Backend, T, eps)
   println("-- Testing RandomNormal Layer on $(typeof(backend)){$T}...")
 

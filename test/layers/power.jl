@@ -14,7 +14,7 @@ function test_power_layer(backend::Backend, scale, shift, power, n_input, T, eps
   forward(backend, state, input_blob)
 
   for i = 1:n_input
-    output = (scale * input[i] + shift) .^ power
+    output = (scale .* input[i] .+ shift) .^ power
     got_output = zeros(T, size(output))
     copy!(got_output, state.blobs[i])
 
@@ -29,7 +29,7 @@ function test_power_layer(backend::Backend, scale, shift, power, n_input, T, eps
   backward(backend, state, input_blob, grad_blob)
 
   for i = 1:n_input
-    grad = power * scale * (scale * input[i] + shift) .^ (power - 1) .* top_diff[i]
+    grad = power .* scale .* (scale .* input[i] .+ shift) .^ (power - 1) .* top_diff[i]
     got_grad = zeros(T, size(grad))
     copy!(got_grad, grad_blob[i])
     @test all(-eps .< got_grad - grad .< eps)

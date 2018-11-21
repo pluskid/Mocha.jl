@@ -1,3 +1,5 @@
+import LinearAlgebra
+
 function test_softmax_layer(backend::Backend, tensor_dim, n_input, T, eps)
   println("-- Testing SoftmaxLayer on $(typeof(backend)){$T}...")
 
@@ -28,9 +30,9 @@ function test_softmax_layer(backend::Backend, tensor_dim, n_input, T, eps)
     for x = 1:dim_pre
       for y = 1:dim_post
         preds = canonical_input[x,:,y]
-        preds -= maximum(preds)
+        preds .-= maximum(preds)
         preds = exp.(preds)
-        preds /= sum(preds)
+        preds ./= sum(preds)
         output[x,:,y] = preds
       end
     end
@@ -62,7 +64,7 @@ function test_softmax_layer(backend::Backend, tensor_dim, n_input, T, eps)
       for y = 1:dim_post
         topdiff0 = canonical_topdiff[x,:,y]
         output0 = canonical_output[x,:,y]
-        grad[x,:,y] = topdiff0.*output0 - dot(vec(topdiff0), vec(output0))*output0
+        grad[x,:,y] = topdiff0.*output0 .- LinearAlgebra.dot(vec(topdiff0), vec(output0))*output0
       end
     end
 
