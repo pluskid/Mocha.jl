@@ -38,7 +38,7 @@ end
 # L2 regularization
 ############################################################
 function forward(backend::CPUBackend, regu :: L2Regu, global_regu::AbstractFloat, param :: Blob)
-  return regu.coefficient * global_regu * vecnorm(param.data)^2
+  return regu.coefficient * global_regu * LinearAlgebra.norm(param.data)^2
 end
 function backward(backend::CPUBackend, regu :: L2Regu, global_regu::AbstractFloat, param :: Blob, gradient :: Blob)
   LinearAlgebra.BLAS.axpy!(length(param), convert(eltype(param), 2 * regu.coefficient * global_regu), pointer(param.data), 1, pointer(gradient.data), 1)

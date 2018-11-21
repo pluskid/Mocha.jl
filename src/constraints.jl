@@ -1,3 +1,5 @@
+import LinearAlgebra
+
 export Constraint, NoCons, L2Cons
 export constrain!
 
@@ -32,11 +34,11 @@ function apply_l2_cons!(backend::CPUBackend, blob::CPUBlob{T},
   # we constrain each column vector
   for i = 1:nunits
     # compute norm and scale using blas
-    norm = vecnorm(param[:, i])
+    norm = LinearAlgebra.norm(param[:, i])
     if norm > threshold
       scale_factor =  (1. / norm) * threshold
       offset = sizeof(T) * (i-1) * ninputs
-      BLAS.scal!(ninputs, convert(T, scale_factor), pointer(param) + offset, 1)
+      LinearAlgebra.BLAS.scal!(ninputs, convert(T, scale_factor), pointer(param) + offset, 1)
     end
   end
 end

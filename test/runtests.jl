@@ -60,16 +60,16 @@ end
 ############################################################
 # Activation Functions
 ############################################################
-include("neurons/relu.jl")
-include("neurons/sigmoid.jl")
-include("neurons/tanh.jl")
-include("neurons/exponential.jl")
+#- include("neurons/relu.jl")
+#- include("neurons/sigmoid.jl")
+#- include("neurons/tanh.jl")
+#- include("neurons/exponential.jl")
 
 ############################################################
 # Regularizers
 ############################################################
-include("regularizers/l2.jl")
-include("regularizers/l1.jl")
+#- include("regularizers/l2.jl")
+#- include("regularizers/l1.jl")
 
 ############################################################
 # Constraints
