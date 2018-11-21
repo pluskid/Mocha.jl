@@ -1,3 +1,5 @@
+import LinearAlgebra
+
 export DataTransformerType, DataTransformerState, DataTransformers
 export setup, forward, shutdown
 
@@ -75,7 +77,7 @@ function setup(backend::Backend, transformer::DataTransformers.Scale, input::Blo
   return ScaleState(transformer, convert(eltype(input), transformer.scale))
 end
 function forward(backend::CPUBackend, state::ScaleState, input::Blob)
-  BLAS.scal!(length(input.data), state.scale, input.data, 1)
+  LinearAlgebra.BLAS.scal!(length(input.data), state.scale, input.data, 1)
 end
 function shutdown(backend::Backend, state::ScaleState)
 end
