@@ -23,7 +23,7 @@ function temp_filename()
 end
 
 function glob(path::AbstractString, pattern::Regex; sort_by :: Symbol = :none)
-  list = filter(x -> ismatch(pattern, x), readdir(path))
+  list = filter(x -> occursin(pattern, x), readdir(path))
   if sort_by == :none
     return list
   elseif sort_by == :name

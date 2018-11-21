@@ -1,3 +1,5 @@
+import LinearAlgebra
+
 @defstruct InnerProductLayer Layer (
   (name :: AbstractString = "", !isempty(name)),
   param_key :: AbstractString = "",
@@ -122,10 +124,10 @@ function forward(backend::CPUBackend, state::InnerProductLayerState, inputs::Vec
     N = get_num(input)   # batch size
     output = state.blobs[i]
     # output = W^T * X
-    BLAS.gemm!('T', 'N', one(dtype), state.W.data,
+    LinearAlgebra.BLAS.gemm!('T', 'N', one(dtype), state.W.data,
                 reshape(input.data, (K,N)), zero(dtype), output.data)
     # output += bias
-    BLAS.gemm!('N', 'N', one(dtype), state.b.data,
+    LinearAlgebra.BLAS.gemm!('N', 'N', one(dtype), state.b.data,
                 state.bias_multipliers[i].data, one(dtype), output.data)
   end
 end
@@ -146,11 +148,11 @@ function backward(backend::CPUBackend, state::InnerProductLayerState, inputs::Ve
     ∂f_∂o = state.blobs_diff[i]
 
     if !state.frozen
-      BLAS.gemm!('N', 'T', one(data_type), reshape(input.data, (source_dim, batch_size)),
+      LinearAlgebra.BLAS.gemm!('N', 'T', one(data_type), reshape(input.data, (source_dim, batch_size)),
                  ∂f_∂o.data, zero_and_then_one, state.∇W.data)
 
       # ∂f/∂b = sum(∂f/∂o, 2)
-      BLAS.gemm!('N', 'N', one(data_type), ∂f_∂o.data,
+      LinearAlgebra.BLAS.gemm!('N', 'N', one(data_type), ∂f_∂o.data,
                  reshape(state.bias_multipliers[i].data, (batch_size, 1)),
                  zero_and_then_one, state.∇b.data)
     end
@@ -160,7 +162,7 @@ function backward(backend::CPUBackend, state::InnerProductLayerState, inputs::Ve
     # if back propagate down
     if isa(diffs[i], CPUBlob)
       # ∂f/∂x = W * [∂f/∂o]
-      BLAS.gemm!('N', 'N', one(data_type), state.W.data,
+      LinearAlgebra.BLAS.gemm!('N', 'N', one(data_type), state.W.data,
                  ∂f_∂o.data, zero(data_type),
                  reshape(diffs[i].data, (source_dim, batch_size)))
     end

@@ -10,7 +10,7 @@
   is_source => true
 )
 
-struct MemoryDataLayerState <: LayerState
+mutable struct MemoryDataLayerState <: LayerState
   layer :: MemoryDataLayer
   blobs :: Vector{Blob}
   epoch :: Int

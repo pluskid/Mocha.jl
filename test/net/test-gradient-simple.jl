@@ -2,7 +2,7 @@
 function test_simple_net_gradient(backend)
     println("-- Testing gradients on simple network (example for gradient checking code)")
 
-    srand(12345678)
+    Random.seed!(12345678)
     ############################################################
     # Prepare Random Data
     ############################################################
@@ -29,7 +29,7 @@ function test_simple_net_gradient(backend)
     loss_layer = SquareLossLayer(name="loss", bottoms=[:b, :label] )
 
 
-    net = Net("TEST", backend, [w1,w2, loss_layer, data_layer])
+    net = Net("TEST", backend, [w1, w2, loss_layer, data_layer])
 
     # epsilon:     milage may vary 1e-4 - 1e-8
     # digit:       compare this many digits to check for 'identity'

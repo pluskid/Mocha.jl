@@ -39,14 +39,14 @@ end
 ############################################################
 # Network
 ############################################################
-include("net/topology.jl")
-include("net/test-gradient-simple.jl")
+#- include("net/topology.jl")
+#- include("net/test-gradient-simple.jl")
 
 ############################################################
 # Utilities functions
 ############################################################
-include("utils/ref-count.jl")
-include("utils/glob.jl")
+#- include("utils/ref-count.jl")
+#- include("utils/glob.jl")
 include("utils/blas.jl")
 include("utils/blob-reshape.jl")
 

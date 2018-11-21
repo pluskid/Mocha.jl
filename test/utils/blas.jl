@@ -1,3 +1,5 @@
+import LinearAlgebra
+
 function test_raw_blas(T)
   println("-- Testing RawBLAS{$T} Utilities")
 
@@ -9,7 +11,7 @@ function test_raw_blas(T)
   C = rand(T, M, N)
   C2 = rand(T, M, N)
   RawBLAS.gemm!('N', 'T', M, N, K, convert(T,1.0), A, M, B, N, convert(T,0.0), C, M)
-  BLAS.gemm!('N', 'T', convert(T,1.0), A, B, convert(T,0.0), C2)
+  LinearAlgebra.BLAS.gemm!('N', 'T', convert(T,1.0), A, B, convert(T,0.0), C2)
 
   @test all(abs.(C - C2) .< eps)
 

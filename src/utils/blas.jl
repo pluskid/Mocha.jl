@@ -9,8 +9,10 @@ for (gemm, elty) in ((:dgemm_, Float64), (:sgemm_, Float32))
   @eval begin
     function gemm!(transA::Char, transB::Char, M::Int, N::Int, K::Int, alpha::$elty,
         A, lda, B, ldb, beta::$elty, C, ldc)
+      transA = convert(Cuchar, transA)
+      transB = convert(Cuchar, transB)
       ccall(($(blasfunc(gemm)), Base.libblas_name), Nothing,
-          (Ptr{UInt8}, Ptr{UInt8}, Ptr{LinearAlgebra.BlasInt}, Ptr{LinearAlgebra.BlasInt},
+          (Ptr{Cuchar}, Ptr{Cuchar}, Ptr{LinearAlgebra.BlasInt}, Ptr{LinearAlgebra.BlasInt},
           Ptr{LinearAlgebra.BlasInt}, Ptr{$elty}, Ptr{$elty}, Ptr{LinearAlgebra.BlasInt},
           Ptr{$elty}, Ptr{LinearAlgebra.BlasInt}, Ptr{$elty}, Ptr{$elty},
           Ptr{LinearAlgebra.BlasInt}),
@@ -30,6 +32,7 @@ end
 for (gemv, elty) in ((:dgemv_, Float64), (:sgemv_, Float32))
   @eval begin
     function gemv!(trans::Char, M::Int, N::Int, alpha::$elty, A, lda, x, incx, beta::$elty, y, incy)
+      trans = convert(Cuchar, trans)
       ccall(($(blasfunc(gemv)), Base.libblas_name), Nothing,
           (Ptr{UInt8}, Ptr{LinearAlgebra.BlasInt}, Ptr{LinearAlgebra.BlasInt}, Ptr{$elty},
           Ptr{$elty}, Ptr{LinearAlgebra.BlasInt}, Ptr{$elty}, Ptr{LinearAlgebra.BlasInt},
