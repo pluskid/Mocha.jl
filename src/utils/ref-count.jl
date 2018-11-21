@@ -5,7 +5,7 @@ import Base.dec
 
 export RefCounter, inc, dec, ref
 
-struct RefCounter
+mutable struct RefCounter
   count :: Int
 end
 

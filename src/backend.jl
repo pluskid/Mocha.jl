@@ -32,7 +32,7 @@ function registry_get(backend::Backend, key::AbstractString)
   return get(backend.param_registry, key, nothing)
 end
 
-struct CPUBackend <: Backend
+mutable struct CPUBackend <: Backend
   param_registry :: ParameterRegistry
 
   CPUBackend() = new(ParameterRegistry())

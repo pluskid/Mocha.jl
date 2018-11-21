@@ -1,7 +1,7 @@
 function test_adam_solver(backend)
     println("-- Testing simple Adam solver call")
     registry_reset(backend)
-    srand(12345678)
+    Random.seed!(12345678)
     ############################################################
     # Prepare Random Data
     ############################################################

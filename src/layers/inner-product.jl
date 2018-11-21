@@ -20,7 +20,7 @@
   has_neuron => true
 )
 
-struct InnerProductLayerState <: LayerState
+mutable struct InnerProductLayerState <: LayerState
   layer      :: InnerProductLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}

@@ -1,4 +1,5 @@
-srand(100)
+using Random
+Random.seed!(100)
 
 if haskey(ENV, "MOCHA_USE_CUDA")
   const test_gpu = true
@@ -8,7 +9,7 @@ end
 const test_cpu   = true
 
 using Mocha
-using Base.Test
+using Test
 
 if test_cpu
   backend_cpu = CPUBackend()
@@ -32,8 +33,8 @@ end
 ############################################################
 # Solvers
 ############################################################
-include("solvers/test-adam-solver.jl")
-include("solvers/test-sgd-solver.jl")
+#- include("solvers/test-adam-solver.jl")
+#- include("solvers/test-sgd-solver.jl")
 
 ############################################################
 # Network

@@ -129,7 +129,7 @@ end
 struct CPUBlob{T <: AbstractFloat, N} <: Blob{T, N}
   data :: AbstractArray{T, N}
 end
-CPUBlob(t :: Type, dims::NTuple{N,Int}) where {N} = CPUBlob(undef,Array{t}(undef,dims))
+CPUBlob(t :: Type, dims::NTuple{N,Int}) where {N} = CPUBlob(Array{t}(undef, dims))
 
 function make_blob(backend::CPUBackend, data_type::Type, dims::NTuple{N,Int}) where {N}
   return CPUBlob(data_type, dims)
