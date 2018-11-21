@@ -95,7 +95,7 @@ function convolution_forward(state, filter::Array, bias::Array, input::Array)
   k_g = round(Int, channel / n_group)
 
   output = Array{eltype(input)}(undef,size(state.blobs[1]))
-  output[:] = 0
+  fill!(output, 0)
 
   for n = 1:num
     for g = 1:n_group
