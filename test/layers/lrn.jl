@@ -51,7 +51,7 @@ function lrn_forward_across_channel(input::Array{T}, state, op_dim) where {T}
       cstart = max(1, cstart)
 
       tmp = canonical_input[:,cstart:cend,n].^2 * (state.layer.scale / state.layer.kernel)
-      tmp = (sum(tmp, 2) + state.layer.shift) .^ state.layer.power
+      tmp = (sum(tmp, dims=2) .+ state.layer.shift) .^ state.layer.power
       canonical_output[:,c,n] = canonical_input[:,c,n] ./ tmp
     end
   end
@@ -113,7 +113,7 @@ function lrn_backward_across_channel(input::Array{T}, top_diff::Array{T}, state,
       cstart = max(1, cstart)
 
       tmp = canonical_input[:,cstart:cend,n].^2 * (state.layer.scale / state.layer.kernel)
-      tmp = (sum(tmp, 2) + state.layer.shift)
+      tmp = (sum(tmp, dims=2) .+ state.layer.shift)
 
       canonical_output[:,c,n] += tmp .^ (-state.layer.power) .* canonical_diff[:,c,n]
 

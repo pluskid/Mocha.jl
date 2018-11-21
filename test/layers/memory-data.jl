@@ -25,7 +25,7 @@ function test_memory_data_layer(backend::Backend, T, eps)
   data_idx = map(x->1:x, data_dim)
   layer_data = Array{eltype(data)}(undef,tuple(data_dim..., batch_size))
 
-  data_aug = cat(tensor_dim+1, data, data)
+  data_aug = cat(data, data, dims=tensor_dim+1)
   data_aug .-= mean_data
   forward(backend, state, Blob[])
   copy!(layer_data, state.blobs[1])

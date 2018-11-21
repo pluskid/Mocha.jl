@@ -56,7 +56,7 @@ end
 
 function test_power_layer(backend::Backend)
   test_power_layer(backend, 3, Float32, 8e-2)
-  test_power_layer(backend, 3, Float64, 1e-8)
+  test_power_layer(backend, 3, Float64, 1e-7)
 end
 
 if test_cpu
