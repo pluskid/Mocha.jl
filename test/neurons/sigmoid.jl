@@ -1,13 +1,13 @@
 function test_sigmoid_neuron(backend::Backend, T, eps)
   println("-- Testing Sigmoid neuron on $(typeof(backend)){$T}...")
 
-  data = rand(T, 3,4,5,6) - convert(T, 0.5)
+  data = rand(T, 3,4,5,6) .- convert(T, 0.5)
   data_blob = make_blob(backend, data)
   neuron = Neurons.Sigmoid()
 
   println("    > Forward")
   forward(backend, neuron, data_blob)
-  expected_data = 1 ./ (1 + exp.(-data))
+  expected_data = 1 ./ (1 .+ exp.(-data))
   got_data = zeros(T, size(data))
   copy!(got_data, data_blob)
 
@@ -18,7 +18,7 @@ function test_sigmoid_neuron(backend::Backend, T, eps)
   grad_blob = make_blob(backend, grad)
   backward(backend, neuron, data_blob, grad_blob)
 
-  expected_grad = grad .* (expected_data .* (1-expected_data))
+  expected_grad = grad .* (expected_data .* (1 .- expected_data))
   got_grad = zeros(T, size(expected_grad))
   copy!(got_grad, grad_blob)
 

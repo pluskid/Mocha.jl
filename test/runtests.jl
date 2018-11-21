@@ -33,8 +33,8 @@ end
 ############################################################
 # Solvers
 ############################################################
-#- include("solvers/test-adam-solver.jl")
-#- include("solvers/test-sgd-solver.jl")
+#+ include("solvers/test-adam-solver.jl")
+#+ include("solvers/test-sgd-solver.jl")
 
 ############################################################
 # Network
@@ -47,8 +47,8 @@ end
 ############################################################
 #- include("utils/ref-count.jl")
 #- include("utils/glob.jl")
-include("utils/blas.jl")
-include("utils/blob-reshape.jl")
+#- include("utils/blas.jl")
+#- include("utils/blob-reshape.jl")
 
 if test_gpu
   include("cuda/padded-copy.jl")
