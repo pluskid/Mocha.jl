@@ -13,7 +13,7 @@ using HDF5
 )
 
 
-struct HDF5DataLayerState <: LayerState
+mutable struct HDF5DataLayerState <: LayerState
   layer :: HDF5DataLayer
   blobs :: Vector{Blob}
   epoch :: Int

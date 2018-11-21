@@ -15,7 +15,7 @@ using HDF5
 
 const AsyncCommsType = @static VERSION < v"0.6-" ? Task : Channel{Any}
 
-struct AsyncHDF5DataLayerState <: LayerState
+mutable struct AsyncHDF5DataLayerState <: LayerState
   layer :: AsyncHDF5DataLayer
   blobs :: Vector{Blob}
   epoch :: Int

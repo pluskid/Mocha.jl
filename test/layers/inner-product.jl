@@ -54,7 +54,7 @@ function test_inner_product_layer(backend::Backend, n_input, T, eps)
   top_diff = [reshape(top_diff[i], target_dim, batch_size[i]) for i = 1:n_input]
   bias_grad = similar(b)
   copy!(bias_grad, state.∇b)
-  bias_grad_expected = sum([sum(top_diff[i],2) for i = 1:n_input])
+  bias_grad_expected = sum([sum(top_diff[i], dims=2) for i = 1:n_input])
   @test all(-eps .< vec(bias_grad) - vec(bias_grad_expected) .< eps)
 
   X_mat = [reshape(X[i], orig_dim, batch_size[i]) for i = 1:n_input]
