@@ -16,7 +16,7 @@ validate_parameters(solver::Adam, params::SolverParameters) = begin
     validate_parameters(params, :lr_policy, :beta1, :beta2, :epsilon)
 end
 
-struct AdamSolverState <: InternalSolverState
+mutable struct AdamSolverState <: InternalSolverState
   param_states        :: Vector{LayerState}
   grad_1st_moment_est :: Vector{Vector{Blob}} # Exponentially weighted moving average - biased estimate of 1st moment of gradient
   grad_2nd_moment_est :: Vector{Vector{Blob}} # Exponentially weighted moving average - biased estimate of raw 2nd moment of gradient

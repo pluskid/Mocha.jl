@@ -7,7 +7,7 @@
 
 struct Nesterov <: SolverMethod
 end
-struct NesterovSolverState <: InternalSolverState
+mutable struct NesterovSolverState <: InternalSolverState
     learning_rate :: Float64
     momentum      :: Float64
     param_states  :: Vector{LayerState}
@@ -15,7 +15,7 @@ struct NesterovSolverState <: InternalSolverState
     last_momentum :: Float64
 end
 
-struct NesterovSolverSnapshot <: SolverStateSnapshot
+mutable struct NesterovSolverSnapshot <: SolverStateSnapshot
     iteration     :: Int
     obj_val       :: Float64
     learning_rate :: Float64

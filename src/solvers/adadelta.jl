@@ -13,13 +13,13 @@ make_solver_parameters(method::Adadelta; kwargs...) =
 
 validate_parameters(method::Adadelta, params::SolverParameters) = validate_parameters(params, :rho, :eps)
 
-struct AdadeltaSolverState <: InternalSolverState
+mutable struct AdadeltaSolverState <: InternalSolverState
     param_states  :: Vector{LayerState}
     gradients_sq :: Vector{Vector{Blob}}
     deltas_sq :: Vector{Vector{Blob}}
 end
 
-struct AdadeltaSolverSnapshot <: SolverStateSnapshot
+mutable struct AdadeltaSolverSnapshot <: SolverStateSnapshot
     iteration     :: Int
     obj_val       :: Float64
 end

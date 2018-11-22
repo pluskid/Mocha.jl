@@ -10,7 +10,7 @@ import Base.Meta: quot
 @compat abstract type InternalSolverState end # All the state a solver needs to update an iteration
 const SolverParameters = Dict{Symbol,Any}
 
-struct Solver{T<:SolverMethod}
+mutable struct Solver{T<:SolverMethod}
   method        :: T
   params        :: SolverParameters
   coffee_lounge :: Any # forward declaration
@@ -21,7 +21,7 @@ Solver(method::T, params::SolverParameters) where {T} = begin
     Solver(method, params, CoffeeLounge())
 end
 
-struct SolverState{T<:InternalSolverState}
+mutable struct SolverState{T<:InternalSolverState}
   iter               :: Int
   obj_val            :: Float64
   losses             :: Dict

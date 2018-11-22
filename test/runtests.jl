@@ -40,16 +40,16 @@ include("solvers/test-sgd-solver.jl")
 ############################################################
 # Network
 ############################################################
-#- include("net/topology.jl")
-#- include("net/test-gradient-simple.jl")
+include("net/topology.jl")
+include("net/test-gradient-simple.jl")
 
 ############################################################
 # Utilities functions
 ############################################################
-#- include("utils/ref-count.jl")
-#- include("utils/glob.jl")
-#- include("utils/blas.jl")
-#- include("utils/blob-reshape.jl")
+include("utils/ref-count.jl")
+include("utils/glob.jl")
+include("utils/blas.jl")
+include("utils/blob-reshape.jl")
 
 if test_gpu
   include("cuda/padded-copy.jl")
@@ -61,21 +61,21 @@ end
 ############################################################
 # Activation Functions
 ############################################################
-#- include("neurons/relu.jl")
-#- include("neurons/sigmoid.jl")
-#- include("neurons/tanh.jl")
-#- include("neurons/exponential.jl")
+include("neurons/relu.jl")
+include("neurons/sigmoid.jl")
+include("neurons/tanh.jl")
+include("neurons/exponential.jl")
 
 ############################################################
 # Regularizers
 ############################################################
-#- include("regularizers/l2.jl")
-#- include("regularizers/l1.jl")
+include("regularizers/l2.jl")
+include("regularizers/l1.jl")
 
 ############################################################
 # Constraints
 ############################################################
-#- include("constraints/l2.jl")
+include("constraints/l2.jl")
 
 ############################################################
 # Data Transformers

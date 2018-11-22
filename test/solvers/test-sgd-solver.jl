@@ -1,7 +1,9 @@
+import Random
+
 function test_sgd_solver(backend)
     println("-- Testing simple SGD solver call")
     registry_reset(backend)
-    srand(12345678)
+    Random.seed!(12345678)
     ############################################################
     # Prepare Random Data
     ############################################################

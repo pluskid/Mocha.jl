@@ -38,7 +38,7 @@ using HDF5, JLD
 
 const StatisticsValue = AbstractFloat
 const StatisticsRecords = Dict{Int, StatisticsValue}
-struct CoffeeLounge
+mutable struct CoffeeLounge
   filename          :: AbstractString
   save_every_n_iter :: Int
   file_exists       :: Symbol # :overwrite, :panic, :merge

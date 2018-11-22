@@ -15,12 +15,12 @@ make_solver_parameters(method::Adagrad; kwargs...)=
 
 validate_parameters(method::Adagrad, params::SolverParameters) = validate_parameters(params, :gamma, :epsilon)
 
-struct AdagradSolverState <: InternalSolverState
+mutable struct AdagradSolverState <: InternalSolverState
     param_states  :: Vector{LayerState}
     param_history :: Vector{Vector{Blob}}
 end
 
-struct AdagradSolverSnapshot <: SolverStateSnapshot
+mutable struct AdagradSolverSnapshot <: SolverStateSnapshot
     iteration     :: Int
     obj_val       :: Float64
 end
