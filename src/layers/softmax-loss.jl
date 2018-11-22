@@ -15,7 +15,7 @@
   is_sink   => true
 )
 
-struct SoftmaxLossLayerState{T} <: LayerState
+mutable struct SoftmaxLossLayerState{T} <: LayerState
   layer    :: SoftmaxLossLayer
   loss     :: T
 
@@ -67,15 +67,15 @@ function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vec
       copy!(diff, state.softmax.blobs[1])
     else
       copy!(diff, state.softmax.blobs[1].data .*
-          broadcast_getindex(state.logistic.weights_blob.data, idx_all...))
+            getindex.((state.logistic.weights_blob.data,), idx_all...))
     end
 
     diff_data = reshape(diff.data, dims)
     if isa(state.logistic.weights_blob, NullBlob)
-      broadcast_setindex!(diff_data, broadcast_getindex(diff_data, idx_all...)-1, idx_all...)
+      setindex!.((diff_data,), getindex.((diff_data,), idx_all...) .- 1, idx_all...)
     else
-      broadcast_setindex!(diff_data, broadcast_getindex(diff_data, idx_all...) .-
-          broadcast_getindex(state.logistic.weights_blob.data, idx_all...), idx_all...)
+      setindex!.((diff_data,), getindex.((diff_data,), idx_all...) .-
+                 getindex.((state.logistic.weights_blob.data,), idx_all...), idx_all...)
     end
     Vec.mul_scal!(diff.data, state.layer.weight * dims[state.logistic.op_dim]/prod(dims))
   end

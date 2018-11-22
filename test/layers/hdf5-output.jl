@@ -31,7 +31,7 @@ function test_hdf5_output_layer(backend::Backend, T, eps)
 
   shutdown(backend, state)
 
-  expected_output = cat(tensor_dim, input, input, input)
+  expected_output = cat(input, input, input, dims=tensor_dim)
   got_output = h5open(output_fn, "r") do h5
     read(h5, "foobar")
   end

@@ -16,7 +16,7 @@
     has_stats => true,
 )
 
-struct HingeLossLayerState{T} <: LayerState
+mutable struct HingeLossLayerState{T} <: LayerState
     layer :: HingeLossLayer
     loss  :: T
 

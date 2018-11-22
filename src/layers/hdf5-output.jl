@@ -11,7 +11,7 @@ using HDF5
   is_sink => true
 )
 
-struct HDF5OutputLayerState <: LayerState
+mutable struct HDF5OutputLayerState <: LayerState
   layer  :: HDF5OutputLayer
   file   :: HDF5File
   buffer :: Vector{Array}

@@ -38,12 +38,12 @@ function test_gaussian_kl_loss_layer(backend::Backend, T, eps)
 
   backward(backend, state, inputs, diffs)
   grad = mus
-  grad *= weight/get_num(mu_blob)
+  grad *= weight / get_num(mu_blob)
   diff = similar(grad)
   copy!(diff, diffs[1])
   @test all(-eps .< grad - diff .< eps)
 
-  grad = sigmas - 1./sigmas
+  grad = sigmas - 1 ./ sigmas
   grad *= weight/get_num(mu_blob)
   diff = similar(grad)
   copy!(diff, diffs[2])

@@ -10,7 +10,7 @@
   is_sink => true
 )
 
-struct SoftlabelSoftmaxLossLayerState{T} <: LayerState
+mutable struct SoftlabelSoftmaxLossLayerState{T} <: LayerState
   layer :: SoftlabelSoftmaxLossLayer
   loss  :: T
 

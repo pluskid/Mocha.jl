@@ -26,6 +26,7 @@ end
 # or modifying unit-tests
 function test_dir(dir)
   map(reverse(Mocha.glob(dir, r".*\.jl$", sort_by=:mtime))) do file
+    println("-- $dir/$file")
     include("$dir/$file")
   end
 end
@@ -33,8 +34,8 @@ end
 ############################################################
 # Solvers
 ############################################################
-#+ include("solvers/test-adam-solver.jl")
-#+ include("solvers/test-sgd-solver.jl")
+include("solvers/test-adam-solver.jl")
+include("solvers/test-sgd-solver.jl")
 
 ############################################################
 # Network

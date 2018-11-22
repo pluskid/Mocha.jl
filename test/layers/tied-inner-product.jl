@@ -48,7 +48,7 @@ function test_tied_inner_product_layer(backend::Backend, n_input, T, eps)
   backward(net)
 
   bias_grad = to_array(net.states[3].∇b)
-  bias_grad_expected = sum([sum(top_diffs[i],2) for i = 1:n_input])
+  bias_grad_expected = sum([sum(top_diffs[i], dims=2) for i = 1:n_input])
   @test all(abs.(bias_grad - bias_grad_expected) .< eps)
 
   for i = 1:n_input

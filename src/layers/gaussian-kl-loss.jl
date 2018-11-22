@@ -7,20 +7,17 @@
 # to the standard Gaussian N(0,I).
 ############################################################
 
-@defstruct GaussianKLLossLayer Layer (
-                                      name :: AbstractString = "gauss-kl-loss",
+@defstruct GaussianKLLossLayer Layer (name :: AbstractString = "gauss-kl-loss",
                                       (weight :: AbstractFloat = 1.0, weight >= 0),
-                                      (bottoms :: Vector{Symbol} = Symbol[:mu, :sigma], length(bottoms) == 2),
-                                      )
+                                      (bottoms :: Vector{Symbol} = Symbol[:mu, :sigma], length(bottoms) == 2))
 
 @characterize_layer(GaussianKLLossLayer,
                     has_loss  => true,
                     can_do_bp => true,
                     is_sink   => true,
-                    has_stats => true,
-                    )
+                    has_stats => true)
 
-struct GaussianKLLossLayerState{T, B<:Blob} <: LayerState
+mutable struct GaussianKLLossLayerState{T, B<:Blob} <: LayerState
   layer      :: GaussianKLLossLayer
   loss       :: T
   loss_accum :: T

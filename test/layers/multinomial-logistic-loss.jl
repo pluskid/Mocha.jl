@@ -45,7 +45,7 @@ function test_multinomial_logistic_loss_layer(backend::Backend, tensor_dim, clas
     weights = repeat(reshape(weights, new_shape...), inner=rep_shape)
   end
   if class_weights[2] == :local
-    weights = weights .* (channels ./ sum(weights,op_dim))
+    weights = weights .* (channels ./ sum(weights, dims=op_dim))
   elseif class_weights[2] == :global
     weights = weights * (prod(dims[1:end-1]) / sum(weights))
   else
