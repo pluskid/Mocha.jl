@@ -63,7 +63,7 @@ end
 
 #-- Classify a single image
 function classify(classifier::ImageClassifier, image::AbstractArray)
-  results = classify(classifier, Array[image])
+  results = classify(classifier, [image])
   return results[1]
 end
 
