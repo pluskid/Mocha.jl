@@ -26,7 +26,7 @@ function test_argmax_layer(backend::Backend, n_input, tensor_dim, T, eps)
     output = reshape(expected_output, pre_dim, 1, post_dim)
     for x = 1:pre_dim
       for z = 1:post_dim
-        output[x,1,z] = indmax(input[x,:,z])-1
+        output[x,1,z] = argmax(input[x,:,z])-1
       end
     end
 

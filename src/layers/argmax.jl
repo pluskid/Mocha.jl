@@ -36,7 +36,7 @@ function forward(backend::CPUBackend, state::ArgmaxLayerState, inputs::Vector{Bl
     pre_dim, mid_dim, post_dim = split_dims(input, state.dims[i])
     for x = 0:pre_dim-1
       for z = 0:post_dim-1
-        idx = Int[x + pre_dim*(y + mid_dim*z) for y=0:mid_dim-1] + 1
+        idx = Int[x + pre_dim*(y + mid_dim*z) for y=0:mid_dim-1] .+ 1
         maxc = 1
         @inbounds maxval = input[idx[1]]
         for y = 2:length(idx)
