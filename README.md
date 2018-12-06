@@ -1,3 +1,9 @@
+**Update Dec. 2018**: Mocha.jl is now deprecated. The latest version works with Julia v0.6. If you have existing legacy codebase with Mocha that you want to updates for Julia v1.0, the pull request [255](https://github.com/pluskid/Mocha.jl/pull/255) contains fixes for CPU backend only that have all the unit tests passed under Julia v1.0. 
+
+The development of Mocha.jl happens in relative early days of Julia. Now that both Julia and the ecosystem has evolved significantly, and with some exciting new tech such as writing GPU kernels directly in Julia and general auto-differentiation supports, the Mocha codebase becomes excessively old and primitive. Reworking Mocha with new technologies requires some non-trivial efforts, and new exciting solutions already exist nowadays, it is a good time for the retirement of Mocha.jl.
+
+If you are interested in doing deep learning with Julia, please check out some alternative packages that are more up-to-date and actively maintained. In particular, there are [Knet.jl](https://github.com/denizyuret/Knet.jl) and [Flux.jl](https://github.com/FluxML/Flux.jl) for pure-Julia solutions, and [MXNet.jl](https://github.com/dmlc/MXNet.jl) and [Tensorflow.jl](https://github.com/malmaud/TensorFlow.jl) for wrapper to existing deep learning systems.
+
 # Mocha
 
 [![Build Status](https://img.shields.io/travis/pluskid/Mocha.jl.svg?style=flat&branch=master)](https://travis-ci.org/pluskid/Mocha.jl)
