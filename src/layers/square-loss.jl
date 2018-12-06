@@ -1,3 +1,5 @@
+import LinearAlgebra
+
 ############################################################
 # Square Loss
 #
@@ -15,7 +17,7 @@
   has_stats => true,
 )
 
-type SquareLossLayerState{T} <: LayerState
+mutable struct SquareLossLayerState{T} <: LayerState
   layer      :: SquareLossLayer
   loss       :: T
 
@@ -59,8 +61,9 @@ function forward(backend::CPUBackend, state::SquareLossLayerState, inputs::Vecto
   n = length(pred)
 
   copy!(state.pred_copy, pred)
-  BLAS.axpy!(n, convert(data_type, -1), label.data, 1, state.pred_copy.data, 1)
-  state.loss = state.layer.weight * 0.5/get_num(pred)*BLAS.dot(state.pred_copy.data, state.pred_copy.data)
+  LinearAlgebra.BLAS.axpy!(n, convert(data_type, -1), label.data, 1, state.pred_copy.data, 1)
+  state.loss = state.layer.weight * 0.5/get_num(pred)*LinearAlgebra.BLAS.dot(state.pred_copy.data, 
+                                                                             state.pred_copy.data)
 
   # accumulate statistics
   state.loss_accum = (state.loss_accum*state.n_accum + state.loss*get_num(pred)) / (state.n_accum+get_num(pred))
@@ -78,14 +81,14 @@ function backward(backend::CPUBackend, state::SquareLossLayerState, inputs::Vect
     num = get_num(pred)
 
     erase!(diff)
-    BLAS.axpy!(n, convert(data_type, state.layer.weight/num), pred.data, 1, diff.data, 1)
-    BLAS.axpy!(n, convert(data_type, -state.layer.weight/num), label.data, 1, diff.data, 1)
+    LinearAlgebra.BLAS.axpy!(n, convert(data_type, state.layer.weight/num), pred.data, 1, diff.data, 1)
+    LinearAlgebra.BLAS.axpy!(n, convert(data_type, -state.layer.weight/num), label.data, 1, diff.data, 1)
   end
 
   # the "label" also needs gradient
   if isa(diffs[2], CPUBlob)
     copy!(diffs[2], diff)
-    BLAS.scal!(n, -one(data_type), diffs[2].data, 1)
+    LinearAlgebra.BLAS.scal!(n, -one(data_type), diffs[2].data, 1)
   end
 end
 

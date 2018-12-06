@@ -7,7 +7,7 @@
 
 export Adagrad
 
-immutable Adagrad <: SolverMethod
+struct Adagrad <: SolverMethod
 end
 
 make_solver_parameters(method::Adagrad; kwargs...)=
@@ -15,12 +15,12 @@ make_solver_parameters(method::Adagrad; kwargs...)=
 
 validate_parameters(method::Adagrad, params::SolverParameters) = validate_parameters(params, :gamma, :epsilon)
 
-type AdagradSolverState <: InternalSolverState
+mutable struct AdagradSolverState <: InternalSolverState
     param_states  :: Vector{LayerState}
     param_history :: Vector{Vector{Blob}}
 end
 
-type AdagradSolverSnapshot <: SolverStateSnapshot
+mutable struct AdagradSolverSnapshot <: SolverStateSnapshot
     iteration     :: Int
     obj_val       :: Float64
 end
@@ -41,7 +41,7 @@ end
 AdagradSolverState(net::Net) = begin
   param_states = updatable_layer_states(net)
 
-  param_history = Array{Vector{Blob}}(length(param_states))
+  param_history = Array{Vector{Blob}}(undef,length(param_states))
 
   for i = 1:length(param_states)
     state = param_states[i]

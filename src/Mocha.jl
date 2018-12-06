@@ -1,6 +1,7 @@
 module Mocha
 
 using Memento
+using Printf, Random
 
 const logger = getlogger(Mocha)
 

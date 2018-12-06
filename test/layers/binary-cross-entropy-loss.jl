@@ -27,7 +27,7 @@ function test_binary_crossentropy_loss_layer(backend::Backend, tensor_dim, T, ep
 
   for i = 1:prod(dims)
       expected_loss += -log(vec(prob)[i])*vec(label)[i]
-      expected_loss += -log(1 - vec(prob)[i])*vec(1 - label)[i]
+      expected_loss += -log(1 .- vec(prob)[i])*vec(1 .- label)[i]
   end
 
   expected_loss /= dims[end]
@@ -39,14 +39,14 @@ function test_binary_crossentropy_loss_layer(backend::Backend, tensor_dim, T, ep
   diff_blob1  = make_blob(backend, prob)
   diffs = Blob[diff_blob1, diff_blob2]
   backward(backend, state, inputs, diffs)
-  grad_pred = -weight * (label./prob - (1-label)./(1-prob) ) / dims[end]
+  grad_pred = -weight * (label./prob - (1 .- label)./(1 .- prob) ) / dims[end]
   diff = similar(grad_pred)
 
   copy!(diff, diffs[1])
 
-  @test all(-eps .< 1 - grad_pred./diff .< eps)
+  @test all(-eps .< 1 .- grad_pred./diff .< eps)
 
-  grad_label = -weight * log.(prob./(1.-prob)) / dims[end]
+  grad_label = -weight * log.(prob./(1 .- prob)) / dims[end]
   diff = similar(grad_pred)
   copy!(diff, diffs[2])
 

@@ -26,31 +26,31 @@ export forward, backward
 # messy namespace
 ############################################################
 module Neurons
-using ..Mocha.ActivationFunction
+using ..Mocha: ActivationFunction
 # Identity
-type Identity <: ActivationFunction
+struct Identity <: ActivationFunction
 end
 
 # Rectified-Linear: ReLU(eps)(x) = max(x,eps)
-type ReLU <: ActivationFunction
+struct ReLU <: ActivationFunction
   epsilon::Float64 # optional floor value, default zero
 end
 ReLU() = ReLU(0.0)
 
 # Exponential: Exponential(x) = exp(x)
-type Exponential <: ActivationFunction
+struct Exponential <: ActivationFunction
 end
 
 # Leaky Rectified-Linear: LReLU(x) = x > 0 ? x : 0.01x
-type LReLU <: ActivationFunction
+struct LReLU <: ActivationFunction
 end
 
 # Sigmoid: Sigmoid(x) = 1 / (1 + exp(-x))
-type Sigmoid <: ActivationFunction
+struct Sigmoid <: ActivationFunction
 end
 
 # Sigmoid: Tanh(x) = (1 + exp(-2x)) / (1 + exp(-2x))
-type Tanh <: ActivationFunction
+struct Tanh <: ActivationFunction
 end
 end # module Neurons
 

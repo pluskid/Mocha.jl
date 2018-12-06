@@ -15,7 +15,7 @@
   is_sink   => true
 )
 
-type SoftmaxLossLayerState{T} <: LayerState
+mutable struct SoftmaxLossLayerState{T} <: LayerState
   layer    :: SoftmaxLossLayer
   loss     :: T
 
@@ -26,10 +26,10 @@ end
 function setup(backend::Backend, layer::SoftmaxLossLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
   data_type = eltype(inputs[1])
 
-  softmax_layer = SoftmaxLayer(tops=Array{Symbol}(length(inputs)), bottoms=Array{Symbol}(length(inputs)), dim=layer.dim)
+  softmax_layer = SoftmaxLayer(tops=Array{Symbol}(undef,length(inputs)), bottoms=Array{Symbol}(undef,length(inputs)), dim=layer.dim)
   softmax = setup(backend, softmax_layer, Blob[inputs[1]], Blob[])
 
-  logistic_layer = MultinomialLogisticLossLayer(bottoms=Array{Symbol}(2),
+  logistic_layer = MultinomialLogisticLossLayer(bottoms=Array{Symbol}(undef,2),
       weights=layer.weights, normalize=layer.normalize, dim=layer.dim)
   logistic = setup(backend, logistic_layer, inputs, Blob[])
 
@@ -59,7 +59,7 @@ function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vec
         map(x -> round(Int, x), label) .+ 1
       else
         dim = dims[i]
-        reshape(1:dim, [j == i? dim : 1 for j = 1:length(dims)]...)
+        reshape(1:dim, [j == i ? dim : 1 for j = 1:length(dims)]...)
       end
     end
 
@@ -67,17 +67,16 @@ function backward(backend::CPUBackend, state::SoftmaxLossLayerState, inputs::Vec
       copy!(diff, state.softmax.blobs[1])
     else
       copy!(diff, state.softmax.blobs[1].data .*
-          broadcast_getindex(state.logistic.weights_blob.data, idx_all...))
+            getindex.((state.logistic.weights_blob.data,), idx_all...))
     end
 
     diff_data = reshape(diff.data, dims)
     if isa(state.logistic.weights_blob, NullBlob)
-      broadcast_setindex!(diff_data, broadcast_getindex(diff_data, idx_all...)-1, idx_all...)
+      setindex!.((diff_data,), getindex.((diff_data,), idx_all...) .- 1, idx_all...)
     else
-      broadcast_setindex!(diff_data, broadcast_getindex(diff_data, idx_all...) .-
-          broadcast_getindex(state.logistic.weights_blob.data, idx_all...), idx_all...)
+      setindex!.((diff_data,), getindex.((diff_data,), idx_all...) .-
+                 getindex.((state.logistic.weights_blob.data,), idx_all...), idx_all...)
     end
     Vec.mul_scal!(diff.data, state.layer.weight * dims[state.logistic.op_dim]/prod(dims))
   end
 end
-

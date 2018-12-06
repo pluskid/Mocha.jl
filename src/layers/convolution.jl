@@ -24,7 +24,7 @@
   can_do_bp  => true
 )
 
-type CPUConvState
+mutable struct CPUConvState
   col_buffer      :: Blob
   M               :: Int
   N               :: Int
@@ -43,19 +43,19 @@ function setup_etc(backend::CPUBackend, layer::ConvolutionLayer, dtype, width, h
      layer.pad[1] == 0 && layer.pad[2] == 0
     col_buffer = NullBlob()
   else
-    col_buffer = CPUBlob(Array{dtype}(width_out, height_out, channels*prod(layer.kernel), 1))
+    col_buffer = CPUBlob(Array{dtype}(undef,width_out, height_out, channels*prod(layer.kernel), 1))
   end
   M = height_out * width_out
   N = div(layer.n_filter, layer.n_group)
   K = div(channels * layer.kernel[1] * layer.kernel[2], layer.n_group)
   bias_multiplier = make_blob(backend, dtype, M, 1, 1, 1)
   fill!(bias_multiplier, convert(dtype,1))
-  img_buffer = Array{dtype}(width, height, channels)
+  img_buffer = Array{dtype}(undef,width, height, channels)
   etc = CPUConvState(col_buffer, M, N, K, bias_multiplier, img_buffer)
   return etc
 end
 
-type ConvolutionLayerState <: LayerState
+mutable struct ConvolutionLayerState <: LayerState
   layer      :: ConvolutionLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}
@@ -88,8 +88,8 @@ type ConvolutionLayerState <: LayerState
       @assert dtype == eltype(inputs[i])
     end
 
-    blobs = Array{Blob}(length(inputs))
-    blobs_diff = Array{Blob}(length(inputs))
+    blobs = Array{Blob}(undef,length(inputs))
+    blobs_diff = Array{Blob}(undef,length(inputs))
 
     for i = 1:length(inputs)
       blobs[i] = make_blob(backend, dtype, width_out, height_out, layer.n_filter, batch_size)

@@ -5,7 +5,7 @@
 
 export Adadelta
 
-immutable Adadelta <: SolverMethod
+struct Adadelta <: SolverMethod
 end
 
 make_solver_parameters(method::Adadelta; kwargs...) =
@@ -13,13 +13,13 @@ make_solver_parameters(method::Adadelta; kwargs...) =
 
 validate_parameters(method::Adadelta, params::SolverParameters) = validate_parameters(params, :rho, :eps)
 
-type AdadeltaSolverState <: InternalSolverState
+mutable struct AdadeltaSolverState <: InternalSolverState
     param_states  :: Vector{LayerState}
     gradients_sq :: Vector{Vector{Blob}}
     deltas_sq :: Vector{Vector{Blob}}
 end
 
-type AdadeltaSolverSnapshot <: SolverStateSnapshot
+mutable struct AdadeltaSolverSnapshot <: SolverStateSnapshot
     iteration     :: Int
     obj_val       :: Float64
 end
@@ -41,8 +41,8 @@ end
 AdadeltaSolverState(net::Net) = begin
   param_states = updatable_layer_states(net)
 
-  gradients_sq = Array{Vector{Blob}}(length(param_states))
-  deltas_sq = Array{Vector{Blob}}(length(param_states))
+  gradients_sq = Array{Vector{Blob}}(undef,length(param_states))
+  deltas_sq = Array{Vector{Blob}}(undef,length(param_states))
 
   for i = 1:length(param_states)
     state = param_states[i]

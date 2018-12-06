@@ -63,7 +63,7 @@ For example
 
 .. code-block:: julia
 
-   type PoolingLayerState <: LayerState
+   struct PoolingLayerState <: LayerState
      layer      :: PoolingLayer
      blobs      :: Vector{Blob}
      blobs_diff :: Vector{Blob}

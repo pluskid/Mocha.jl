@@ -9,7 +9,7 @@
   has_stats  => true,
 )
 
-type AccuracyLayerState <: LayerState
+mutable struct AccuracyLayerState <: LayerState
   layer :: AccuracyLayer
 
   op_dim   :: Int
@@ -60,8 +60,8 @@ function forward(backend::CPUBackend, state::AccuracyLayerState, inputs::Vector{
   accuracy = 0.0
   for i = 0:dim_pre-1
     for j = 0:dim_post-1
-      idx = Int[i + dim_pre*(k + dim_prob*j) for k=0:dim_prob-1] + 1
-      @inbounds if round(Int, label[i + dim_pre*j + 1])+1 == indmax(pred[idx])
+      idx = Int[i + dim_pre*(k + dim_prob*j) for k=0:dim_prob-1] .+ 1
+      @inbounds if round(Int, label[i + dim_pre*j + 1])+1 == argmax(pred[idx])
         accuracy += 1.0
       end
     end

@@ -1,4 +1,5 @@
-srand(100)
+using Random
+Random.seed!(100)
 
 if haskey(ENV, "MOCHA_USE_CUDA")
   const test_gpu = true
@@ -8,7 +9,7 @@ end
 const test_cpu   = true
 
 using Mocha
-using Base.Test
+using Test
 
 if test_cpu
   backend_cpu = CPUBackend()
@@ -25,6 +26,7 @@ end
 # or modifying unit-tests
 function test_dir(dir)
   map(reverse(Mocha.glob(dir, r".*\.jl$", sort_by=:mtime))) do file
+    println("-- $dir/$file")
     include("$dir/$file")
   end
 end

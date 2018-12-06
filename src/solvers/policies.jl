@@ -10,24 +10,25 @@ export LRPolicy, get_learning_rate, MomPolicy, get_momentum
 module LRPolicy
 using ..Mocha
 using Compat
-type Fixed <: LearningRatePolicy
+using Printf
+struct Fixed <: LearningRatePolicy
   base_lr :: AbstractFloat
 end
 
 # base_lr * gamma ^ (floor(iter / stepsize))
-type Step <: LearningRatePolicy
+struct Step <: LearningRatePolicy
   base_lr  :: AbstractFloat
   gamma    :: AbstractFloat
   stepsize :: Int
 end
 
 # base_lr * gamma ^ iter
-type Exp <: LearningRatePolicy
+struct Exp <: LearningRatePolicy
   base_lr :: AbstractFloat
   gamma   :: AbstractFloat
 end
 
-type Inv <: LearningRatePolicy
+struct Inv <: LearningRatePolicy
   base_lr :: AbstractFloat
   gamma   :: AbstractFloat
   power   :: AbstractFloat
@@ -56,7 +57,7 @@ function decay_on_validation_listener(policy, key::AbstractString, coffee_lounge
   end
 end
 
-type DecayOnValidation <: LearningRatePolicy
+struct DecayOnValidation <: LearningRatePolicy
   gamma       :: AbstractFloat
 
   key           :: AbstractString
@@ -85,12 +86,12 @@ type DecayOnValidation <: LearningRatePolicy
 end
 
 using Compat
-type Staged <: LearningRatePolicy
+struct Staged <: LearningRatePolicy
   stages     :: Vector{@compat(Tuple{Int, LearningRatePolicy})}
   curr_stage :: Int
 
   Staged(stages...) = begin
-    accum_stages = Array{@compat(Tuple{Int, LearningRatePolicy})}(length(stages))
+    accum_stages = Array{@compat(Tuple{Int, LearningRatePolicy})}(undef,length(stages))
     accum_iter = 0
     for i = 1:length(stages)
       (n, lrp) = stages[i]
@@ -156,21 +157,21 @@ end
 ############################################################
 
 module MomPolicy
-using ..Mocha.MomentumPolicy
+using ..Mocha: MomentumPolicy
 using Compat
-type Fixed <: MomentumPolicy
+struct Fixed <: MomentumPolicy
   base_mom :: AbstractFloat
 end
 
 # min(base_mom * gamma ^ (floor(iter / stepsize)), max_mom)
-type Step <: MomentumPolicy
+struct Step <: MomentumPolicy
   base_mom :: AbstractFloat
   gamma    :: AbstractFloat
   stepsize :: Int
   max_mom  :: AbstractFloat
 end
 
-type Linear <: MomentumPolicy
+struct Linear <: MomentumPolicy
   base_mom :: AbstractFloat
   gamma    :: AbstractFloat
   stepsize :: Int
@@ -178,12 +179,12 @@ type Linear <: MomentumPolicy
 end
 
 using Compat
-type Staged <: MomentumPolicy
+struct Staged <: MomentumPolicy
   stages     :: Vector{@compat(Tuple{Int, MomentumPolicy})}
   curr_stage :: Int
 
   Staged(stages...) = begin
-    accum_stages = Array{@compat(Tuple{Int, MomentumPolicy})}(length(stages))
+    accum_stages = Array{@compat(Tuple{Int, MomentumPolicy})}(undef,length(stages))
     accum_iter = 0
     for i = 1:length(stages)
       (n, mmp) = stages[i]

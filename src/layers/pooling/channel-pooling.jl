@@ -1,7 +1,7 @@
 ################################################################################
 # Pooling in channels
 ################################################################################
-function max_channel_pooling_forward{T}(input::Array{T,3}, output::Array{T,3}, mask::Array{Csize_t,3}, layer)
+function max_channel_pooling_forward(input::Array{T,3}, output::Array{T,3}, mask::Array{Csize_t,3}, layer) where {T}
   spatial_dim, channels, num = size(input)
   pooled_chann = size(output, 2)
 
@@ -30,7 +30,7 @@ function max_channel_pooling_forward{T}(input::Array{T,3}, output::Array{T,3}, m
   end
 end
 
-function mean_channel_pooling_forward{T}(input::Array{T,3}, output::Array{T,3}, integral::Array{T}, layer)
+function mean_channel_pooling_forward(input::Array{T,3}, output::Array{T,3}, integral::Array{T}, layer) where {T}
   spatial_dim_T, channels, num = size(input)
   pooled_chann = size(output, 2)
   one = convert(T, 1)
@@ -73,7 +73,7 @@ function mean_channel_pooling_forward{T}(input::Array{T,3}, output::Array{T,3}, 
   end
 end
 
-function max_channel_pooling_backward{T}(input::Array{T,3}, output::Array{T,3}, mask::Array{Csize_t,3}, layer)
+function max_channel_pooling_backward(input::Array{T,3}, output::Array{T,3}, mask::Array{Csize_t,3}, layer) where {T}
   spatial_dim, channels, num = size(input)
   pooled_chann = size(output, 2)
 
@@ -91,7 +91,7 @@ function max_channel_pooling_backward{T}(input::Array{T,3}, output::Array{T,3}, 
   end
 end
 
-function mean_channel_pooling_backward{T}(input::Array{T,3}, output::Array{T,3}, layer)
+function mean_channel_pooling_backward(input::Array{T,3}, output::Array{T,3}, layer) where {T}
   spatial_dim_T, channels, num = size(input)
   pooled_chann = size(output, 2)
   scale = 1/convert(T, layer.kernel)
@@ -119,4 +119,3 @@ function mean_channel_pooling_backward{T}(input::Array{T,3}, output::Array{T,3},
     end
   end
 end
-

@@ -1,7 +1,7 @@
 export ValidationPerformance
 export register
 
-type ValidationPerformance <: Coffee
+struct ValidationPerformance <: Coffee
   validation_net :: Net
 
   ValidationPerformance(net::Net) = new(net, Function[])

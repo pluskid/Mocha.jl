@@ -8,14 +8,14 @@
   is_inplace => true,
 )
 
-type RandomMaskLayerState <: LayerState
+struct RandomMaskLayerState <: LayerState
   layer      :: RandomMaskLayer
 
   dropouts   :: Vector{DropoutLayerState}
 end
 
 function setup(backend::Backend, layer::RandomMaskLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  dropouts = Array{DropoutLayerState}(length(inputs))
+  dropouts = Array{DropoutLayerState}(undef,length(inputs))
   for i = 1:length(inputs)
     dropout_layer = DropoutLayer(name="$(layer.name)-dropout-$i", auto_scale=false, ratio=layer.ratio,
         bottoms=Symbol[Symbol("$(layer.bottoms[i])-$i")])

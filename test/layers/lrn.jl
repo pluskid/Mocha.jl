@@ -35,7 +35,7 @@ function test_lrn_layer(backend::Backend, mode::LRNModeType, tensor_dim, T, eps)
   shutdown(backend, state)
 end
 
-function lrn_forward_across_channel{T}(input::Array{T}, state, op_dim)
+function lrn_forward_across_channel(input::Array{T}, state, op_dim) where {T}
   output = similar(input)
   pre_dim, chann_dim, post_dim = split_dims(input, op_dim)
   pre_pad = div(state.layer.kernel-1,2)
@@ -51,14 +51,14 @@ function lrn_forward_across_channel{T}(input::Array{T}, state, op_dim)
       cstart = max(1, cstart)
 
       tmp = canonical_input[:,cstart:cend,n].^2 * (state.layer.scale / state.layer.kernel)
-      tmp = (sum(tmp, 2) + state.layer.shift) .^ state.layer.power
+      tmp = (sum(tmp, dims=2) .+ state.layer.shift) .^ state.layer.power
       canonical_output[:,c,n] = canonical_input[:,c,n] ./ tmp
     end
   end
 
   return output
 end
-function lrn_forward_within_channel{T}(input::Array{T}, state)
+function lrn_forward_within_channel(input::Array{T}, state) where {T}
   output = similar(input)
   width, height, channels, num = size(input)
   pooled_width = width; pooled_height = height
@@ -86,7 +86,7 @@ function lrn_forward_within_channel{T}(input::Array{T}, state)
 
   return output
 end
-function lrn_forward{T}(input::Array{T}, state, op_dim)
+function lrn_forward(input::Array{T}, state, op_dim) where {T}
   if isa(state.layer.mode, LRNMode.AcrossChannel)
     lrn_forward_across_channel(input, state, op_dim)
   elseif isa(state.layer.mode, LRNMode.WithinChannel)
@@ -96,7 +96,7 @@ function lrn_forward{T}(input::Array{T}, state, op_dim)
   end
 end
 
-function lrn_backward_across_channel{T}(input::Array{T}, top_diff::Array{T}, state, op_dim)
+function lrn_backward_across_channel(input::Array{T}, top_diff::Array{T}, state, op_dim) where {T}
   output = zeros(T, size(input))
   pre_dim, chann_dim, post_dim = split_dims(input, op_dim)
   pre_pad = div(state.layer.kernel-1,2)
@@ -113,7 +113,7 @@ function lrn_backward_across_channel{T}(input::Array{T}, top_diff::Array{T}, sta
       cstart = max(1, cstart)
 
       tmp = canonical_input[:,cstart:cend,n].^2 * (state.layer.scale / state.layer.kernel)
-      tmp = (sum(tmp, 2) + state.layer.shift)
+      tmp = (sum(tmp, dims=2) .+ state.layer.shift)
 
       canonical_output[:,c,n] += tmp .^ (-state.layer.power) .* canonical_diff[:,c,n]
 
@@ -126,7 +126,7 @@ function lrn_backward_across_channel{T}(input::Array{T}, top_diff::Array{T}, sta
 
   return output
 end
-function lrn_backward_within_channel{T}(input::Array{T}, top_diff::Array{T}, state)
+function lrn_backward_within_channel(input::Array{T}, top_diff::Array{T}, state) where {T}
   output = zeros(T, size(input))
   width, height, channels, num = size(input)
   pooled_width = width; pooled_height = height
@@ -160,7 +160,7 @@ function lrn_backward_within_channel{T}(input::Array{T}, top_diff::Array{T}, sta
   return output
 end
 
-function lrn_backward{T}(input::Array{T}, top_diff::Array{T}, state, op_dim)
+function lrn_backward(input::Array{T}, top_diff::Array{T}, state, op_dim) where {T}
   if isa(state.layer.mode, LRNMode.AcrossChannel)
     lrn_backward_across_channel(input, top_diff, state, op_dim)
   elseif isa(state.layer.mode, LRNMode.WithinChannel)

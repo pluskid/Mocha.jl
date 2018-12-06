@@ -19,7 +19,7 @@ using Benchmark
 # | 2   | "im2col_c"  | 0.00514862  | 6.19335  | 50           |
 ################################################################################
 
-function im2col{T}(img::Array{T}, col::Array{T}, width::Int, height::Int, channels::Int, kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int})
+function im2col(img::Array{T}, col::Array{T}, width::Int, height::Int, channels::Int, kernel::NTuple{2,Int}, pad::NTuple{2,Int}, stride::NTuple{2,Int}) where {T}
   kernel_w, kernel_h = kernel
   pad_w, pad_h = pad
   stride_w, stride_h = stride
@@ -54,7 +54,7 @@ function im2col_native(img::Array{Float64}, col::Array{Float64}, width::Int, hei
   pad_w, pad_h = pad
   stride_w, stride_h = stride
 
-  ccall(func_handle, Void,
+  ccall(func_handle, Nothing,
       (Ptr{Float64},Ptr{Float64}, Cint, Cint, Cint,
       Cint, Cint, # kernel
       Cint, Cint, # pad
@@ -74,7 +74,7 @@ img = rand(width, height, channels)
 
 width_out  = div(width  + 2*pad[1]-kernel[1], stride[1]) + 1
 height_out = div(height + 2*pad[2]-kernel[2], stride[2]) + 1
-col_buffer = Array{Float64}(width_out, height_out, channels*prod(kernel))
+col_buffer = Array{Float64}(undef,width_out, height_out, channels*prod(kernel))
 col_buffer2 = zeros(size(col_buffer))
 
 im2col_jl() = im2col(img, col_buffer, width, height, channels, kernel, pad, stride)

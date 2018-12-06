@@ -3,7 +3,7 @@ using .CUDA
 export CuBlobDescriptor, CuPODBlobDescriptor, CuTensorBlobDescriptor, CuFilterBlobDescriptor
 export CuTensorBlob
 
-immutable CuTensorBlob{T<:AbstractFloat,N} <: Blob{T,N}
+struct CuTensorBlob{T<:AbstractFloat,N} <: Blob{T,N}
   ptr   :: CuPtr
   shape :: NTuple{N, Int}
   len   :: Int
@@ -27,15 +27,15 @@ function copy!{T}(dst :: Array{T}, src :: CuTensorBlob{T})
 end
 function copy!{T}(dst :: CuTensorBlob{T}, src :: CuTensorBlob{T})
   @assert length(dst) == length(src)
-  @CUDA.cucall(:cuMemcpy, (Ptr{Void}, Ptr{Void}, Cint), dst.ptr.p, src.ptr.p, length(dst)*sizeof(T))
+  @CUDA.cucall(:cuMemcpy, (Ptr{Nothing}, Ptr{Nothing}, Cint), dst.ptr.p, src.ptr.p, length(dst)*sizeof(T))
 end
 function fill!{T}(dst :: CuTensorBlob{T}, val)
-  val_vec = Array{T}(length(dst))
+  val_vec = Array{T}(undef,length(dst))
   fill!(val_vec, val)
   copy!(dst, val_vec)
 end
 function erase!{T}(dst :: CuTensorBlob{T})
-  @CUDA.cucall(:cuMemsetD8_v2, (Ptr{Void}, Cuchar, Csize_t), dst.ptr.p, 0, length(dst)*sizeof(T))
+  @CUDA.cucall(:cuMemsetD8_v2, (Ptr{Nothing}, Cuchar, Csize_t), dst.ptr.p, 0, length(dst)*sizeof(T))
 end
 
 function make_blob{N}(backend::GPUBackend, data_type::Type, dims::NTuple{N,Int})
@@ -51,4 +51,3 @@ function destroy(blob :: CuTensorBlob)
     blob.ptr.p = 0
   end
 end
-

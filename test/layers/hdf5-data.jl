@@ -42,12 +42,12 @@ function test_hdf5_data_layer(backend::Backend, async, T, eps)
   state = setup(backend, layer, Blob[], Blob[])
   @test state.epoch == 0
 
-  data = cat(tensor_dim+1, data_all...)
-  data = cat(tensor_dim+1, data, data, data)
+  data = cat(data_all..., dims=tensor_dim+1)
+  data = cat(data, data, data, dims=tensor_dim+1)
   data = data * scale
 
   data_idx = map(x->1:x, data_dim)
-  layer_data = Array{eltype(data)}(tuple(data_dim..., batch_size))
+  layer_data = Array{eltype(data)}(undef,tuple(data_dim..., batch_size))
   for i = 1:batch_size:size(data)[end]-batch_size+1
     forward(backend, state, Blob[])
     copy!(layer_data, state.blobs[1])
@@ -128,7 +128,7 @@ end
 function test_hdf5_data_layer_shuffle(backend::Backend, batch_size, n, T)
   # do not run (non-async) HDF5 data layer shuffling on windows, because it is implemented
   # with memmap, which is not working properly on Windows.
-  @static is_windows() ? nothing : test_hdf5_data_layer_shuffle(backend, batch_size, false, n, T)
+  @static Sys.iswindows() ? nothing : test_hdf5_data_layer_shuffle(backend, batch_size, false, n, T)
 
   test_hdf5_data_layer_shuffle(backend, batch_size, true, n, T)
 end

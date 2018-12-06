@@ -2,7 +2,7 @@ function test_l1_regularizer(backend::Backend, T, eps)
   println("-- Testing L1 regularizer on $(typeof(backend)){$T}...")
 
   coef = rand()
-  param = rand(T, 2,3,4,5) - convert(T, 0.5)
+  param = rand(T, 2,3,4,5) .- convert(T, 0.5)
   param_blob = make_blob(backend, param)
   regu = L1Regu(coef)
 

@@ -1,6 +1,6 @@
 export SGD
 
-immutable SGD <: SolverMethod
+struct SGD <: SolverMethod
 end
 
 const defaultDict = @compat Dict(:lr_policy => LRPolicy.Fixed(0.01), :mom_policy => MomPolicy.Fixed(0.))
@@ -10,7 +10,7 @@ make_solver_parameters(method::SGD; kwargs...) = merge(make_solver_parameters(),
                                                        defaultDict,
                                                        SolverParameters(kwargs))
 
-type SGDSolverState <: InternalSolverState
+mutable struct SGDSolverState <: InternalSolverState
     learning_rate :: Float64
     momentum      :: Float64
     param_states  :: Vector{LayerState}
@@ -18,7 +18,7 @@ type SGDSolverState <: InternalSolverState
     last_momentum :: Float64
 end
 
-type SGDSolverSnapshot <: SolverStateSnapshot
+mutable struct SGDSolverSnapshot <: SolverStateSnapshot
     iteration     :: Int
     obj_val       :: Float64
     learning_rate :: Float64
@@ -52,7 +52,7 @@ end
 SGDSolverState(net::Net, learning_rate::Float64, momentum::Float64) = begin
   param_states = updatable_layer_states(net)
 
-  param_history = Array{Vector{Blob}}(length(param_states))
+  param_history = Array{Vector{Blob}}(undef,length(param_states))
 
   for i = 1:length(param_states)
     state = param_states[i]

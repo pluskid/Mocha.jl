@@ -7,12 +7,12 @@ export OrthogonalInitializer
 
 @compat abstract type Initializer end # The root type of all initializer
 
-immutable NullInitializer <: Initializer end
+struct NullInitializer <: Initializer end
 function init(::NullInitializer, blob::Blob)
   # do nothing
 end
 
-immutable ConstantInitializer <: Initializer
+struct ConstantInitializer <: Initializer
   value
 end
 
@@ -32,16 +32,16 @@ end
 # For a ND-tensor blob parameter, the product of the 1 ~ (N-1) dimensions
 # are considered as fan-in, and the last dimension is considered as fan-out.
 ################################################################################
-immutable XavierInitializer <: Initializer
+struct XavierInitializer <: Initializer
 end
 function init(initializer::XavierInitializer, blob::Blob)
   fan_in = get_fea_size(blob)
   scale = convert(eltype(blob), sqrt(3.0 / fan_in))
-  init_val = rand(eltype(blob), size(blob)) * 2scale - scale
+  init_val = rand(eltype(blob), size(blob)) .* 2scale .- scale
   copy!(blob, init_val)
 end
 
-immutable GaussianInitializer <: Initializer
+struct GaussianInitializer <: Initializer
   mean :: AbstractFloat
   std  :: AbstractFloat
 end
@@ -59,7 +59,7 @@ end
 #
 #############################################################################
 
-immutable OrthogonalInitializer <: Initializer
+struct OrthogonalInitializer <: Initializer
   gain::AbstractFloat
 end
 OrthogonalInitializer() = OrthogonalInitializer(1.0) # but use OrthogonalInitializer(sqrt(2)) for ReLU units

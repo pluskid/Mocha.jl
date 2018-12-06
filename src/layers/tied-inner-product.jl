@@ -16,7 +16,7 @@
   has_neuron => true
 )
 
-type TiedInnerProductLayerState <: LayerState
+mutable struct TiedInnerProductLayerState <: LayerState
   layer      :: TiedInnerProductLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}
@@ -48,9 +48,9 @@ type TiedInnerProductLayerState <: LayerState
     @assert size(W, 2) == fea_size
     out_dim = size(W, 1)
 
-    blobs = Array{Blob}(length(inputs))
-    blobs_diff = Array{Blob}(length(inputs))
-    bias_multipliers = Array{Blob}(length(inputs))
+    blobs = Array{Blob}(undef,length(inputs))
+    blobs_diff = Array{Blob}(undef,length(inputs))
+    bias_multipliers = Array{Blob}(undef,length(inputs))
 
     for i = 1:length(inputs)
       nums = get_num(inputs[i])

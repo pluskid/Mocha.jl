@@ -77,7 +77,7 @@ function pooling_native(input::Array, output::Array, mask::Array, kernel, pad, s
   pooled_width  = int(ceil(float(width +2*pad[1]-kernel[1]) / stride[1]))+1
   pooled_height = int(ceil(float(height+2*pad[2]-kernel[2]) / stride[2]))+1
 
-  ccall(func_handle, Void, (Ptr{Float64}, Ptr{Float64}, Ptr{Csize_t}, Cint, Cint, Cint, Cint,
+  ccall(func_handle, Nothing, (Ptr{Float64}, Ptr{Float64}, Ptr{Csize_t}, Cint, Cint, Cint, Cint,
         Cint, Cint, # pooled_width, pooled_height
         Cint, Cint, Cint, Cint, Cint, Cint, # kernel, pad, stride
       ), input, output, mask, width, height, channels, num, pooled_width, pooled_height,

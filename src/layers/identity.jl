@@ -10,7 +10,7 @@
   can_do_bp => true
 )
 
-type IdentityLayerState <: LayerState
+struct IdentityLayerState <: LayerState
   layer      :: IdentityLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}

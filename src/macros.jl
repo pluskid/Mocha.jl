@@ -36,10 +36,10 @@ macro defstruct(name, super_name, fields)
   @assert length(fields) > 0
   name = esc(name)
 
-  field_defs     = Array{Expr}(length(fields))     # :(field2 :: Int)
-  field_names    = Array{Symbol}(length(fields))   # :field2
-  field_defaults = Array{Expr}(length(fields))     # :(field2 :: Int = 0)
-  field_asserts  = Array{Expr}(length(fields))     # :(field2 >= 0)
+  field_defs     = Array{Expr}(undef,length(fields))     # :(field2 :: Int)
+  field_names    = Array{Symbol}(undef,length(fields))   # :field2
+  field_defaults = Array{Expr}(undef,length(fields))     # :(field2 :: Int = 0)
+  field_asserts  = Array{Expr}(undef,length(fields))     # :(field2 >= 0)
 
   for i = 1:length(fields)
     field = fields[i]
@@ -56,6 +56,7 @@ macro defstruct(name, super_name, fields)
   type_body = Expr(:block, field_defs...)
 
   # constructor
+  
   asserts = map(filter(i -> isassigned(field_asserts,i), 1:length(fields))) do i
     :(@assert($(field_asserts[i])))
   end
@@ -72,7 +73,7 @@ macro defstruct(name, super_name, fields)
   copy_fname = esc(:copy)
 
   quote
-    immutable $(name) <: $super_name
+    struct $(name) <: $super_name
       $type_body
     end
 
@@ -117,7 +118,7 @@ end
 # )
 #############################################################
 macro characterize_layer(layer, properties...)
-  defs = Array{Expr}(length(properties))
+  defs = Array{Expr}(undef,length(properties))
   for (i,prop) in enumerate(properties)
     prop_name, prop_val = parse_property(prop)
     defs[i] = quote

@@ -12,14 +12,14 @@ function test_softmax_loss_layer(backend::Backend, tensor_dim, use_weights::Bool
   dims_label = tuple(dims_label...)
   println("    > $dims (operate on dimension $op_dim)")
 
-  input = rand(T, dims) + convert(T, 0.01)
+  input = rand(T, dims) .+ convert(T, 0.01)
 
   input_blob = make_blob(backend, input)
   diff_blob = make_blob(backend, T, size(input))
 
   if use_weights
-    weights = rand(T, dims[1:end-1]) + convert(T, 0.1)
-    weights = weights .* (dims[op_dim] ./ sum(weights,op_dim))
+    weights = rand(T, dims[1:end-1]) .+ convert(T, 0.1)
+    weights = weights .* (dims[op_dim] ./ sum(weights, dims=op_dim))
   else
     weights = []
   end

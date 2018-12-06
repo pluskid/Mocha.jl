@@ -1,6 +1,6 @@
 export Adam
 
-immutable Adam <: SolverMethod
+struct Adam <: SolverMethod
 end
 
 function make_solver_parameters(solver::Adam; kwargs...)
@@ -16,7 +16,7 @@ validate_parameters(solver::Adam, params::SolverParameters) = begin
     validate_parameters(params, :lr_policy, :beta1, :beta2, :epsilon)
 end
 
-type AdamSolverState <: InternalSolverState
+mutable struct AdamSolverState <: InternalSolverState
   param_states        :: Vector{LayerState}
   grad_1st_moment_est :: Vector{Vector{Blob}} # Exponentially weighted moving average - biased estimate of 1st moment of gradient
   grad_2nd_moment_est :: Vector{Vector{Blob}} # Exponentially weighted moving average - biased estimate of raw 2nd moment of gradient
@@ -24,7 +24,7 @@ type AdamSolverState <: InternalSolverState
   learning_rate       :: Float64
 end
 
-type AdamSolverStateSnapshot <: SolverStateSnapshot
+struct AdamSolverStateSnapshot <: SolverStateSnapshot
     iter                :: Int
     obj_val             :: Float64
     grad_1st_moment_est :: Vector{Vector{Array}}
@@ -34,9 +34,9 @@ type AdamSolverStateSnapshot <: SolverStateSnapshot
 end
 
 function blobs_clone(blobs::Vector{Vector{Blob}})
-    out = Array{Vector{Array}}(length(blobs))
+    out = Array{Vector{Array}}(undef,length(blobs))
     for (i, vecblobs) in enumerate(blobs)
-        out[i] = [Array{eltype(b)}(size(b)) for b in vecblobs]
+        out[i] = [Array{eltype(b)}(undef,size(b)) for b in vecblobs]
         for (dst, b) in zip(out[i], vecblobs)
             copy!(dst, b)
         end
@@ -76,8 +76,8 @@ end
 AdamSolverState(learning_rate::Float64, net::Net) = begin
     param_states = updatable_layer_states(net)
 
-    grad_1st_moment_est = Array{Vector{Blob}}(length(param_states))
-    grad_2nd_moment_est = Array{Vector{Blob}}(length(param_states))
+    grad_1st_moment_est = Array{Vector{Blob}}(undef,length(param_states))
+    grad_2nd_moment_est = Array{Vector{Blob}}(undef,length(param_states))
 
     for i = 1:length(param_states)
         layerstate = param_states[i]

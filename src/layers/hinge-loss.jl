@@ -16,7 +16,7 @@
     has_stats => true,
 )
 
-type HingeLossLayerState{T} <: LayerState
+mutable struct HingeLossLayerState{T} <: LayerState
     layer :: HingeLossLayer
     loss  :: T
 
@@ -82,12 +82,12 @@ function forward(backend::CPUBackend, state::HingeLossLayerState, inputs::Vector
 end
 
 function backward(backend::CPUBackend, state::HingeLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
-  const pred = inputs[1]
-  const label = inputs[2]
+  pred = inputs[1]
+  label = inputs[2]
 
-  const data_type = eltype(pred)
-  const n = length(pred)
-  const num = get_num(pred)
+  data_type = eltype(pred)
+  n = length(pred)
+  num = get_num(pred)
 
   if isa(diffs[1], CPUBlob)
     erase!(diffs[1])

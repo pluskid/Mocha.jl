@@ -1,13 +1,15 @@
+import LinearAlgebra
+
 function test_l2_regularizer(backend::Backend, T, eps)
   println("-- Testing L2 regularizer on $(typeof(backend)){$T}...")
 
   coef = rand()
-  param = rand(T, 2,3,4,5) - convert(T, 0.5)
+  param = rand(T, 2,3,4,5) .- convert(T, 0.5)
   param_blob = make_blob(backend, param)
   regu = L2Regu(coef)
 
   loss = forward(backend, regu, 1.0, param_blob)
-  expected_loss = coef * vecnorm(param)^2
+  expected_loss = coef * LinearAlgebra.norm(param)^2
   @test -eps < loss - expected_loss < eps
 
   grad_blob = make_zero_blob(backend, T, size(param))

@@ -7,8 +7,8 @@ function test_hinge_loss_layer(backend::Backend, T, eps)
   tensor_dim = abs(rand(Int)) % 4 + 2
   dims = tuple(rand(6:11, tensor_dim)...)
   println("    > $dims")
-  preds = rand(T, dims)*4-2
-  labels = round.(rand(T, dims))*2-1
+  preds = rand(T, dims) .* 4 .- 2
+  labels = round.(rand(T, dims)) .* 2 .- 1
   errs_mask = preds.*labels .< one(T)
 
   ############################################################

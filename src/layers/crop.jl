@@ -7,7 +7,7 @@
   (tops :: Vector{Symbol} = [], length(tops) == length(bottoms))
 )
 
-type CropLayerState <: LayerState
+struct CropLayerState <: LayerState
   layer      :: CropLayer
   blobs      :: Vector{Blob}
 end
@@ -18,7 +18,7 @@ function setup(backend::Backend, layer::CropLayer, inputs::Vector{Blob}, diffs::
     @assert isa(diffs[i], NullBlob) # Back-propagation for crop-layer is not implemented
   end
 
-  blobs = Array{Blob}(length(inputs))
+  blobs = Array{Blob}(undef,length(inputs))
   for i = 1:length(inputs)
     width, height, channels, num = size(inputs[i])
     @assert layer.crop_size[1] <= width && layer.crop_size[2] <= height
@@ -33,7 +33,7 @@ function shutdown(backend::Backend, state::CropLayerState)
   map(destroy, state.blobs)
 end
 
-function crop_blob{T}(input::Array{T}, output::Array{T}, crop_size::NTuple{2,Int}, offsets::NTuple{2,Int})
+function crop_blob(input::Array{T}, output::Array{T}, crop_size::NTuple{2,Int}, offsets::NTuple{2,Int}) where {T}
   crop_w = crop_size[1]; w_off = offsets[1]
   crop_h = crop_size[2]; h_off = offsets[2]
   num = size(input, 4); channels = size(input, 3)
@@ -48,7 +48,7 @@ function crop_blob{T}(input::Array{T}, output::Array{T}, crop_size::NTuple{2,Int
     end
   end
 end
-function mirror_crop_blob{T}(input::Array{T}, output::Array{T}, crop_size::NTuple{2,Int}, offsets::NTuple{2,Int})
+function mirror_crop_blob(input::Array{T}, output::Array{T}, crop_size::NTuple{2,Int}, offsets::NTuple{2,Int}) where {T}
   crop_w = crop_size[1]; w_off = offsets[1]
   crop_h = crop_size[2]; h_off = offsets[2]
   num = size(input, 4); channels = size(input, 3)

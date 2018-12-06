@@ -19,7 +19,7 @@
   is_inplace => true
 )
 
-type DropoutLayerState{T} <: LayerState
+struct DropoutLayerState{T} <: LayerState
   layer      :: DropoutLayer
   rand_vals  :: Blob
 
@@ -51,7 +51,7 @@ function shutdown(backend::Backend, state::DropoutLayerState)
   destroy_etc(backend, state)
 end
 
-function dropout_forward{T}(input::Array{T}, rand_vals::Array{T}, ratio::T, scale::T)
+function dropout_forward(input::Array{T}, rand_vals::Array{T}, ratio::T, scale::T) where {T}
   len = length(input)
   @simd for i = 1:len
     @inbounds input[i] = input[i] * (rand_vals[i] > ratio) * scale
@@ -62,7 +62,7 @@ function forward(backend::CPUBackend, state::DropoutLayerState, inputs::Vector{B
   dropout_forward(inputs[1].data, state.rand_vals.data, state.ratio, state.scale)
 end
 
-function dropout_backward{T}(grad::Array{T}, rand_vals::Array{T}, ratio::T, scale::T)
+function dropout_backward(grad::Array{T}, rand_vals::Array{T}, ratio::T, scale::T) where {T}
   len = length(grad)
   @simd for i = 1:len
     @inbounds grad[i] = grad[i] * (rand_vals[i] > ratio) * scale
@@ -73,4 +73,3 @@ function backward(backend::CPUBackend, state::DropoutLayerState, inputs::Vector{
     dropout_backward(diffs[1].data, state.rand_vals.data, state.ratio, state.scale)
   end
 end
-

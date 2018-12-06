@@ -13,7 +13,7 @@ macro defkernels(kernels...)
   field_init_block = Expr(:block, field_inits...)
 
   esc(quote
-    type MochaKernels
+    struct MochaKernels
       mod :: CUDA.CuModule
 
       $type_body
@@ -144,7 +144,7 @@ function shutdown(mocha :: MochaKernels)
   CUDA.unload(mocha.mod)
 end
 
-type GPUBackend <: AbstractGPUBackend
+struct GPUBackend <: AbstractGPUBackend
   param_registry :: ParameterRegistry
   initialized    :: Bool
   cu_ctx         :: CUDA.CuContext

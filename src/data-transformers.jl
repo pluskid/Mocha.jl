@@ -1,3 +1,5 @@
+import LinearAlgebra
+
 export DataTransformerType, DataTransformerState, DataTransformers
 export setup, forward, shutdown
 
@@ -8,13 +10,13 @@ module DataTransformers
 using ..Mocha
 using Compat
 
-immutable SubMean <: DataTransformerType
+struct SubMean <: DataTransformerType
   mean_file :: AbstractString
   mean_blob :: Blob
 end
 SubMean(;mean_file="", mean_blob=NullBlob()) = SubMean(mean_file, mean_blob)
 
-immutable Scale <: DataTransformerType
+struct Scale <: DataTransformerType
   scale :: AbstractFloat
 end
 Scale(;scale=1.0) = Scale(scale)
@@ -24,7 +26,7 @@ end # module DataTransformers
 ################################################################################
 # Subtract Mean
 ################################################################################
-type SubMeanState <: DataTransformerState
+struct SubMeanState <: DataTransformerState
   transformer :: DataTransformers.SubMean
   mean_blob   :: Blob
   multiplier  :: Blob
@@ -67,7 +69,7 @@ end
 ################################################################################
 # Scale
 ################################################################################
-type ScaleState{T} <: DataTransformerState
+struct ScaleState{T} <: DataTransformerState
   transformer :: DataTransformers.Scale
   scale       :: T
 end
@@ -75,7 +77,7 @@ function setup(backend::Backend, transformer::DataTransformers.Scale, input::Blo
   return ScaleState(transformer, convert(eltype(input), transformer.scale))
 end
 function forward(backend::CPUBackend, state::ScaleState, input::Blob)
-  BLAS.scal!(length(input.data), state.scale, input.data, 1)
+  LinearAlgebra.BLAS.scal!(length(input.data), state.scale, input.data, 1)
 end
 function shutdown(backend::Backend, state::ScaleState)
 end

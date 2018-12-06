@@ -1,3 +1,5 @@
+import LinearAlgebra: norm
+
 function test_square_loss_layer(backend::Backend, T, eps)
   println("-- Testing SquareLossLayer on $(typeof(backend)){$T}...")
 
@@ -26,7 +28,7 @@ function test_square_loss_layer(backend::Backend, T, eps)
 
   forward(backend, state, inputs)
 
-  loss = 0.5*vecnorm(preds-labels)^2 / dims[end]
+  loss = 0.5*norm(preds-labels)^2 / dims[end]
   @test -eps < loss-state.loss < eps
 
   backward(backend, state, inputs, diffs)

@@ -1,19 +1,21 @@
+import LinearAlgebra
+
 export Regularizer
 export NoRegu, L2Regu, L1Regu
 export forward, backward
 
 @compat abstract type Regularizer end
 
-immutable NoRegu <: Regularizer
+struct NoRegu <: Regularizer
   coefficient :: AbstractFloat # not used, just for consistent API
 end
 NoRegu() = NoRegu(0.0)
 
-immutable L2Regu <: Regularizer
+struct L2Regu <: Regularizer
   coefficient :: AbstractFloat
 end
 
-immutable L1Regu <: Regularizer
+struct L1Regu <: Regularizer
   coefficient :: AbstractFloat
 end
 
@@ -36,10 +38,10 @@ end
 # L2 regularization
 ############################################################
 function forward(backend::CPUBackend, regu :: L2Regu, global_regu::AbstractFloat, param :: Blob)
-  return regu.coefficient * global_regu * vecnorm(param.data)^2
+  return regu.coefficient * global_regu * LinearAlgebra.norm(param.data)^2
 end
 function backward(backend::CPUBackend, regu :: L2Regu, global_regu::AbstractFloat, param :: Blob, gradient :: Blob)
-  BLAS.axpy!(length(param), convert(eltype(param), 2 * regu.coefficient * global_regu), pointer(param.data), 1, pointer(gradient.data), 1)
+  LinearAlgebra.BLAS.axpy!(length(param), convert(eltype(param), 2 * regu.coefficient * global_regu), pointer(param.data), 1, pointer(gradient.data), 1)
 end
 
 ############################################################

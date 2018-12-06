@@ -1,6 +1,6 @@
 export TrainingSummary
 
-type TrainingSummary <: Coffee
+struct TrainingSummary <: Coffee
   statistic_names :: Vector{Any}
 
   #Default Constructor

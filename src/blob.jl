@@ -1,7 +1,8 @@
 export Blob
 export CPUBlob, NullBlob
 
-import Base: eltype, size, length, ndims, copy!, fill!, show, randn!
+import Base: eltype, size, length, ndims, copy!, fill!, show
+import Random: randn!
 export       eltype, size, length, ndims, copy!, fill!, erase!, show
 export get_num, get_height, get_width, get_fea_size, to_array
 export make_blob, make_zero_blob, reshape_blob
@@ -21,11 +22,11 @@ export make_blob, make_zero_blob, reshape_blob
 # and mainly for components that do not need
 # to know the underlying backend (e.g. Filler).
 ############################################################
-function eltype{T}(blob :: Blob{T})
+function eltype(blob :: Blob{T}) where {T}
   T
 end
 
-function ndims{T,N}(blob :: Blob{T,N})
+function ndims(blob :: Blob{T,N}) where {T,N}
   N
 end
 function size(blob :: Blob) # should return the size of data
@@ -34,7 +35,7 @@ end
 function destroy(blob :: Blob) # should destroy the blob
   error("destroy not implemented for type $(typeof(blob))")
 end
-function size{T,N}(blob :: Blob{T,N}, dim :: Int)
+function size(blob :: Blob{T,N}, dim :: Int) where {T,N}
   if dim < 0
     dim = N+1 + dim
   end
@@ -65,7 +66,7 @@ function show(io::IO, blob :: Blob)
 end
 
 function to_array(blob::Blob)
-  array = Array{eltype(blob)}(size(blob))
+  array = Array{eltype(blob)}(undef,size(blob))
   copy!(array, blob)
   array
 end
@@ -87,9 +88,9 @@ function randn!(dst :: Blob) # should fill dst with iid standard normal variates
 end
 
 ############################################################
-# A Dummy Blob type holding nothing
+# A Dummy Blob struct holding nothing
 ############################################################
-type NullBlob <: Blob{Void, 0}
+struct NullBlob <: Blob{Nothing, 0}
 end
 function fill!(dst :: NullBlob, val)
   # do nothing
@@ -109,7 +110,7 @@ function make_blob(backend::Backend, data::Array)
   copy!(blob, data)
   return blob
 end
-function make_zero_blob{N}(backend::Backend, data_type::Type, dims::NTuple{N,Int})
+function make_zero_blob(backend::Backend, data_type::Type, dims::NTuple{N,Int}) where {N}
   blob = make_blob(backend, data_type, dims)
   erase!(blob)
   return blob
@@ -125,16 +126,16 @@ end
 ############################################################
 # A Blob for CPU Computation
 ############################################################
-immutable CPUBlob{T <: AbstractFloat, N} <: Blob{T, N}
+struct CPUBlob{T <: AbstractFloat, N} <: Blob{T, N}
   data :: AbstractArray{T, N}
 end
-CPUBlob{N}(t :: Type, dims::NTuple{N,Int}) = CPUBlob(Array{t}(dims))
+CPUBlob(t :: Type, dims::NTuple{N,Int}) where {N} = CPUBlob(Array{t}(undef, dims))
 
-function make_blob{N}(backend::CPUBackend, data_type::Type, dims::NTuple{N,Int})
+function make_blob(backend::CPUBackend, data_type::Type, dims::NTuple{N,Int}) where {N}
   return CPUBlob(data_type, dims)
 end
 
-function reshape_blob{T,N1,N2}(backend::CPUBackend, blob::CPUBlob{T,N1}, dims::NTuple{N2,Int})
+function reshape_blob(backend::CPUBackend, blob::CPUBlob{T,N1}, dims::NTuple{N2,Int}) where {T,N1,N2}
   @assert prod(dims) == length(blob)
   return CPUBlob{T,N2}(reshape(blob.data, dims))
 end
@@ -144,21 +145,21 @@ end
 
 size(blob::CPUBlob) = size(blob.data)
 
-function copy!{T}(dst :: Array{T}, src :: CPUBlob{T})
+function copy!(dst :: Array{T}, src :: CPUBlob{T}) where {T}
   @assert length(dst) == length(src)
   dst[:] = src.data[:]
 end
-function copy!{T}(dst :: CPUBlob{T}, src :: Array{T})
+function copy!(dst :: CPUBlob{T}, src :: Array{T}) where {T}
   @assert length(dst) == length(src)
   dst.data[:] = src[:]
 end
-function copy!{T}(dst :: CPUBlob{T}, src :: CPUBlob{T})
+function copy!(dst :: CPUBlob{T}, src :: CPUBlob{T}) where {T}
   dst.data[:] = src.data[:]
 end
-function fill!{T}(dst :: CPUBlob{T}, src)
+function fill!(dst :: CPUBlob{T}, src) where {T}
   fill!(dst.data, src)
 end
-function randn!{T}(dst :: CPUBlob{T})
+function randn!(dst :: CPUBlob{T}) where {T}
   randn!(dst.data)
 end
 

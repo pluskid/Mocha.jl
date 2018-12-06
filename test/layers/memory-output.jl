@@ -9,7 +9,7 @@ function test_memory_output_layer(backend::Backend, T, eps)
   input_blobs = Blob[make_blob(backend, x) for x in inputs]
 
   layer = MemoryOutputLayer(bottoms=[:input1, :input2])
-  state = setup(backend, layer, input_blobs, Array{Blob}(length(inputs)))
+  state = setup(backend, layer, input_blobs, Array{Blob}(undef,length(inputs)))
 
   # repeat 2 times
   forward(backend, state, input_blobs)

@@ -7,14 +7,14 @@ function test_power_layer(backend::Backend, scale, shift, power, n_input, T, eps
   input_blob = Blob[make_blob(backend, x) for x in input]
   grad_blob = Blob[make_blob(backend, x) for x in input]
 
-  layer = PowerLayer(tops=Array{Symbol}(n_input), bottoms=Array{Symbol}(n_input),
+  layer = PowerLayer(tops=Array{Symbol}(undef,n_input), bottoms=Array{Symbol}(undef,n_input),
       scale=scale, shift=shift, power=power)
   state = setup(backend, layer, input_blob, grad_blob)
 
   forward(backend, state, input_blob)
 
   for i = 1:n_input
-    output = (scale * input[i] + shift) .^ power
+    output = (scale .* input[i] .+ shift) .^ power
     got_output = zeros(T, size(output))
     copy!(got_output, state.blobs[i])
 
@@ -29,7 +29,7 @@ function test_power_layer(backend::Backend, scale, shift, power, n_input, T, eps
   backward(backend, state, input_blob, grad_blob)
 
   for i = 1:n_input
-    grad = power * scale * (scale * input[i] + shift) .^ (power - 1) .* top_diff[i]
+    grad = power .* scale .* (scale .* input[i] .+ shift) .^ (power - 1) .* top_diff[i]
     got_grad = zeros(T, size(grad))
     copy!(got_grad, grad_blob[i])
     @test all(-eps .< got_grad - grad .< eps)
@@ -56,7 +56,7 @@ end
 
 function test_power_layer(backend::Backend)
   test_power_layer(backend, 3, Float32, 8e-2)
-  test_power_layer(backend, 3, Float64, 1e-8)
+  test_power_layer(backend, 3, Float64, 1e-7)
 end
 
 if test_cpu

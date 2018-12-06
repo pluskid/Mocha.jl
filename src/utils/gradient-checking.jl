@@ -39,24 +39,22 @@ end
 # space, where unrolling becomes trivial
 # it left as an exercise for the reader
 function unroll_parameters( model::Net )
-    theta = Array{Float64}() # initial state is one length ??? weird
+    theta = Array{Float64}(undef, 0) # initial state is one length ??? weird
     for l = 1:length(model.layers)
         if Mocha.has_param(model.layers[l])
 
             for m in model.states[l].parameters
                 θ = m.blob.data
-                size =  length(θ)
-                theta = [ theta; reshape(θ, size, 1)]
+                len = length(θ)
+                theta = [ theta; reshape(θ, len, 1) ]
             end
         end
     end
-    # note the begining, work around the first element
-    # is fluke
-    return theta[2:end]
+    return vec(theta)
 end
 
 function unroll_gradients( model::Net )
-    theta = Array{Float64}() # initial state is one length ??? weird
+    theta = Array{Float64}(undef, 0) # initial state is one length ??? weird
     for l = 1:length(model.layers)
         if Mocha.has_param(model.layers[l])
             for m in model.states[l].parameters
@@ -66,23 +64,21 @@ function unroll_gradients( model::Net )
             end
         end
     end
-    # note the begining, work around as the first element
-    # is fluke
-    return theta[2:end]
+    return vec(theta)
 end
 
 #################################################
 # updates model paramaters by copying
 #
-function update_θ!(model,θᵢ)
+function update_θ!(model, θᵢ)
     pos = 1
     for l = 1:length(model.layers)
         if Mocha.has_param(model.layers[l])
 
             for m in model.states[l].parameters
                 θ = m.blob.data
-                len =  length(θ)
-                Base.copy!(θ, reshape( θᵢ[pos:(pos+len-1)], size(θ) ))
+                len = length(θ)
+                Base.copyto!(θ, reshape( θᵢ[pos:(pos+len-1)], size(θ) ))
                 pos += len
             end
         end
@@ -106,10 +102,10 @@ function  hypothesis_and_gradient( model::Net )
     update_θ!(model,θᵢ)           # update model parameters
     backward(model)               # compute gradients
     ∇ = unroll_gradients(model)   # retrieve them from model state
-    Base.copy!(∇ᵢ,∇)              # and update them
+    Base.copyto!(∇ᵢ,∇)            # and update them
   end
 
-  return (J,θ,grad!)
+  return (J, θ, grad!)
 end
 
 
@@ -128,8 +124,8 @@ function compute_finite_difference( J::Function, g!::Function, θ::Vector{Float6
 
   # iterate through cost function and calculate slope
   for i=1:length(θ)
-    Base.copy!(θ⁺,θ);  θ⁺[i] = θ⁺[i] + ε;
-    Base.copy!(θ⁻,θ);  θ⁻[i] = θ⁻[i] - ε;
+    Base.copyto!(θ⁺,θ);  θ⁺[i] = θ⁺[i] + ε;
+    Base.copyto!(θ⁻,θ);  θ⁻[i] = θ⁻[i] - ε;
     ∇ᵋ[i] = ( J(θ⁺) - J(θ⁻) ) / 2ε
   end
   return (∇ᵋ,∇)
@@ -145,21 +141,21 @@ end
 
 function gradient_check(model::Net, epsilon::Float64, digit::Int, visual::Bool)
     # create objective that computes grad( θ ), and cost( θ )
-    (J,θ, grad) = hypothesis_and_gradient( model::Net )
+    (J, θ, grad) = hypothesis_and_gradient( model::Net )
     ∇ᵋ,∇ = compute_finite_difference( J, grad, θ )
 
     # do actual comparison with `digit` numerical percision
     # ∇⁺ = round(∇⁺, 4); 	∇ = round(∇, 4)
-    idx = round.( abs.(∇ᵋ - ∇), digit ) .!= 0
+    idx = round.( abs.(∇ᵋ - ∇), digits=digit ) .!= 0
     if visual
-        δ = Array{Char}(length(idx));  fill!(δ,'.')
+        δ = Array{Char}(undef,length(idx));  fill!(δ,'.')
         δ[idx] = 'x'
         show(model, δ)
-        #show(model,round(∇ᵋ,digit) ); show(model,round(∇,digit))
+        #show(model,round(∇ᵋ, digits=digit) ); show(model,round(∇, digits=digit))
     end
     # return false if fail at any point
     # TODO: check if correct
-    sum( round.( abs.(∇ᵋ - ∇), digit) ) < epsilon
+    sum( round.( abs.(∇ᵋ - ∇), digits=digit) ) < epsilon
 end
 
 
@@ -177,7 +173,7 @@ end
 ###############################################################
 function test_gradients(net::Net; epsilon=1e-6, digit=6, visual=true )
     return  typeof(net.backend) == Mocha.CPUBackend  ?
-         gradient_check( net, epsilon, digit, visual ) :false
+         gradient_check( net, epsilon, digit, visual ) : false
 end
 
 

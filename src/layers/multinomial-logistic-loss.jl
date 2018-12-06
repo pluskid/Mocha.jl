@@ -14,7 +14,7 @@
   is_sink  => true,
 )
 
-type MultinomialLogisticLossLayerState{T} <: LayerState
+mutable struct MultinomialLogisticLossLayerState{T} <: LayerState
   layer :: MultinomialLogisticLossLayer
   loss  :: T
 
@@ -60,7 +60,7 @@ function setup(backend::Backend, layer::MultinomialLogisticLossLayer, inputs::Ve
     weights = convert(Array{data_type}, weights)
 
     if layer.normalize == :local
-      weights = weights .* (dims[op_dim] ./ sum(weights, op_dim))
+      weights = weights .* (dims[op_dim] ./ sum(weights, dims=op_dim))
     elseif layer.normalize == :global
       for i = 1:dims[end]
         idx = map(x -> 1:x, dims[1:end-1])
@@ -96,19 +96,18 @@ function forward(backend::CPUBackend, state::MultinomialLogisticLossLayerState, 
       map(x -> round(Int, x), label) .+ 1
     else
       dim = dims[i]
-      reshape(1:dim, [j == i? dim : 1 for j = 1:length(dims)]...)
+      reshape(1:dim, [j == i ? dim : 1 for j = 1:length(dims)]...)
     end
   end
 
   if isa(state.weights_blob, NullBlob)
-    loss = sum(-log.(max.(broadcast_getindex(pred, idx_all...), 1e-20)))
+    loss = sum(-log.(max.(getindex.((pred,), idx_all...), 1e-20)))
   else
-    loss = sum(-log.(max.(broadcast_getindex(pred, idx_all...), 1e-20)) .*
-        broadcast_getindex(state.weights_blob.data, idx_all...))
+    loss = sum(-log.(max.(getindex.((pred,), idx_all...), 1e-20)) .*
+               getindex.((state.weights_blob.data,), idx_all...))
   end
   state.loss = state.layer.weight * loss / (prod(dims) / dims[state.op_dim])
 end
 
 function backward(backend::Backend, state::MultinomialLogisticLossLayerState, inputs::Vector{Blob}, diffs::Vector{Blob})
 end
-

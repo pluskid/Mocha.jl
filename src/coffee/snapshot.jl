@@ -2,7 +2,7 @@ using HDF5, JLD
 
 export Snapshot
 
-type Snapshot <: Coffee
+struct Snapshot <: Coffee
   dir :: AbstractString
 end
 
@@ -17,7 +17,7 @@ end
 
 const SOLVER_STATE_KEY = "solver_state"
 
-function enjoy{T<:InternalSolverState}(lounge::CoffeeLounge, coffee::Snapshot, net::Net, state::SolverState{T})
+function enjoy(lounge::CoffeeLounge, coffee::Snapshot, net::Net, state::SolverState{T}) where {T<:InternalSolverState}
   fn = @sprintf("snapshot-%06d.jld", state.iter)
   m_info("Saving snapshot to $fn...")
   path = joinpath(coffee.dir, fn)

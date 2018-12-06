@@ -11,7 +11,7 @@
   can_do_bp => true,
 )
 
-type SoftmaxLayerState <: LayerState
+struct SoftmaxLayerState <: LayerState
   layer      :: SoftmaxLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}
@@ -55,7 +55,7 @@ function forward(backend::CPUBackend, state::SoftmaxLayerState, inputs::Vector{B
 
     for i = 0:dim_pre-1
       for j = 0:dim_post-1
-        idx = Int[i + dim_pre*(k + dim_prob*j) for k=0:dim_prob-1] + 1
+        idx = Int[i + dim_pre*(k + dim_prob*j) for k=0:dim_prob-1] .+ 1
 
         maxval = -Inf
         for k in idx
@@ -86,7 +86,7 @@ function backward(backend::CPUBackend, state::SoftmaxLayerState, inputs::Vector{
       dim_pre, dim_prob, dim_post = split_dims(output, state.dims[ii])
       for i = 0:dim_pre-1
         for j = 0:dim_post-1
-          idx = Int[i + dim_pre*(k + dim_prob*j) for k=0:dim_prob-1] + 1
+          idx = Int[i + dim_pre*(k + dim_prob*j) for k=0:dim_prob-1] .+ 1
           dot_prod = 0.0
           for k in idx
             @inbounds dot_prod += top_diff[k] * output[k]

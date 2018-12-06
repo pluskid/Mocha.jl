@@ -10,7 +10,7 @@ function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, 
   println("    > Setup (pool along dimension $op_dim for $tensor_dim-D tensors)")
 
   layer = ChannelPoolingLayer(kernel=kernel, stride=stride, pad=pad, pooling=pooling,
-      tops=Array{Symbol}(n_input), bottoms=Array{Symbol}(n_input), channel_dim=op_dim)
+      tops=Array{Symbol}(undef,n_input), bottoms=Array{Symbol}(undef,n_input), channel_dim=op_dim)
 
   input = [rand(T, dim...) for dim in dims]
   inputs = Blob[make_blob(backend, x) for x in input]
@@ -21,7 +21,7 @@ function test_channel_pooling_layer(backend::Backend, pooling::PoolingFunction, 
   println("    > Forward")
   forward(backend, state, inputs)
 
-  payloads = Array{Any}(n_input)
+  payloads = Array{Any}(undef,n_input)
   for i = 1:n_input
     expected_output, payloads[i] = channel_pooling_forward(state, i, input[i], op_dim)
     got_output = to_array(state.blobs[i])
@@ -67,11 +67,11 @@ function channel_pooling_forward(state, i, input::Array, op_dim)
 
       region = canonical_input[:,cstart:cend,n]
       if isa(state.layer.pooling, Pooling.Max)
-        maxval, maxidx = findmax(region, 2)
+        maxval, maxidx = findmax(region, dims=2)
         canonical_output[:,pc,n] = maxval
-        canonical_mask[:,pc,n] = maxidx
+        canonical_mask[:,pc,n] = [idx_obj[2] for idx_obj in maxidx]
       elseif isa(state.layer.pooling, Pooling.Mean)
-        canonical_output[:,pc,n] = sum(region, 2) / state.layer.kernel
+        canonical_output[:,pc,n] = sum(region, dims=2) ./ state.layer.kernel
       else
         error("Unknown pooling $(state.layer.pooling)")
       end
@@ -105,10 +105,11 @@ function channel_pooling_backward(state, i, input::Array, diff::Array, payload::
       if isa(state.layer.pooling, Pooling.Max)
         region = view(canonical_gradient,1:dim_pre,cstart:cend,n)
         maxidx = canonical_mask[:,pc,n]
-        region[vec(maxidx)] += vec(canonical_diff[:,pc,n])
+        maxidx = [CartesianIndex(i0, maxidx[i0]) for i0=1:length(maxidx)]
+        region[maxidx] += canonical_diff[:,pc,n]
       elseif isa(state.layer.pooling, Pooling.Mean)
         for c = cstart:cend
-          canonical_gradient[:,c,n] += canonical_diff[:,pc,n] / state.layer.kernel
+          canonical_gradient[:,c,n] += canonical_diff[:,pc,n] ./ state.layer.kernel
         end
       else
         error("Unknown pooling $(state.layer.pooling)")
@@ -129,8 +130,8 @@ function test_channel_pooling_layer(backend::Backend, n_input, T, eps)
 end
 
 function test_channel_pooling_layer(backend::Backend)
-  test_channel_pooling_layer(backend, 1, Float32, 1e-4)
   test_channel_pooling_layer(backend, 3, Float64, 1e-8)
+  test_channel_pooling_layer(backend, 1, Float32, 1e-3)
 end
 
 if test_cpu

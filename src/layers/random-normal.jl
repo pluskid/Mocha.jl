@@ -11,13 +11,13 @@
   is_source => true
 )
 
-type RandomNormalLayerState <: LayerState
+mutable struct RandomNormalLayerState <: LayerState
     layer :: RandomNormalLayer
     blobs :: Vector{Blob}
     etc        :: Vector{Any}
 
     RandomNormalLayerState(backend::Backend, layer::RandomNormalLayer) = begin
-      blobs = Array{Blob}(length(layer.tops))
+      blobs = Array{Blob}(undef,length(layer.tops))
       for i = 1:length(blobs)
         dims = tuple(layer.output_dims..., layer.batch_sizes[i])
         blobs[i] = make_blob(backend, layer.eltype, dims...)

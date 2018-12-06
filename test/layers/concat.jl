@@ -16,13 +16,13 @@ function test_concat_layer(backend::Backend, dim, T, eps)
   input_blobs = Blob[make_blob(backend, x) for x in inputs]
   grad_blobs = Blob[make_blob(backend, x) for x in inputs]
 
-  layer = ConcatLayer(dim=dim, bottoms=Array{Symbol}(n_input), tops=[:concat])
+  layer = ConcatLayer(dim=dim, bottoms=Array{Symbol}(undef,n_input), tops=[:concat])
   state = setup(backend, layer, input_blobs, grad_blobs)
 
   println("    > Forward")
   forward(backend, state, input_blobs)
 
-  expected_output = cat(dim, inputs...)
+  expected_output = cat(inputs..., dims=dim)
   got_output = to_array(state.blobs[1])
   @test all(abs.(expected_output-got_output) .< eps)
 
@@ -33,7 +33,7 @@ function test_concat_layer(backend::Backend, dim, T, eps)
   for i = 1:n_input
     copy!(inputs[i], grad_blobs[i])
   end
-  got_grad_all = cat(dim, inputs...)
+  got_grad_all = cat(inputs..., dims=dim)
   @test all(abs.(top_diff - got_grad_all) .< eps)
 end
 

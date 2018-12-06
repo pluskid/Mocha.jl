@@ -8,7 +8,7 @@ export reset_outputs
   is_sink => true
 )
 
-type MemoryOutputLayerState <: LayerState
+struct MemoryOutputLayerState <: LayerState
   layer   :: MemoryOutputLayer
   outputs :: Vector{Vector{Array}}
 end
@@ -20,7 +20,7 @@ function reset_outputs(state::MemoryOutputLayerState)
 end
 
 function setup(backend::Backend, layer::MemoryOutputLayer, inputs::Vector{Blob}, diffs::Vector{Blob})
-  outputs = Array{Vector{Array}}(length(inputs))
+  outputs = Array{Vector{Array}}(undef,length(inputs))
   for i = 1:length(inputs)
     outputs[i] = Array[]
   end

@@ -12,7 +12,7 @@ function max_pooling_forward(input::Array{Float32}, output::Array{Float32}, mask
   width, height, channels, num = size(input)
   pooled_width = size(output, 1)
   pooled_height = size(output, 2)
-  ccall(MAX_POOL_FWD_FLOAT, Void,
+  ccall(MAX_POOL_FWD_FLOAT, Nothing,
       (Ptr{Float32}, Ptr{Float32}, Ptr{Csize_t},
       Cint, Cint, Cint, Cint,
       Cint, Cint,
@@ -27,7 +27,7 @@ function max_pooling_forward(input::Array{Float64}, output::Array{Float64}, mask
   width, height, channels, num = size(input)
   pooled_width = size(output, 1)
   pooled_height = size(output, 2)
-  ccall(MAX_POOL_FWD_DOUBLE, Void,
+  ccall(MAX_POOL_FWD_DOUBLE, Nothing,
       (Ptr{Float64}, Ptr{Float64}, Ptr{Csize_t},
       Cint, Cint, Cint, Cint,
       Cint, Cint,
@@ -43,7 +43,7 @@ function max_pooling_backward(input::Array{Float32}, output::Array{Float32}, mas
   width, height, channels, num = size(input)
   pooled_width = size(output, 1)
   pooled_height = size(output, 2)
-  ccall(MAX_POOL_BWD_FLOAT, Void,
+  ccall(MAX_POOL_BWD_FLOAT, Nothing,
       (Ptr{Float32}, Ptr{Float32}, Ptr{Csize_t},
       Cint, Cint, Cint, Cint,
       Cint, Cint,
@@ -58,7 +58,7 @@ function max_pooling_backward(input::Array{Float64}, output::Array{Float64}, mas
   width, height, channels, num = size(input)
   pooled_width = size(output, 1)
   pooled_height = size(output, 2)
-  ccall(MAX_POOL_BWD_DOUBLE, Void,
+  ccall(MAX_POOL_BWD_DOUBLE, Nothing,
       (Ptr{Float64}, Ptr{Float64}, Ptr{Csize_t},
       Cint, Cint, Cint, Cint,
       Cint, Cint,
@@ -75,7 +75,7 @@ function mean_pooling_forward(input::Array{Float32}, output::Array{Float32}, lay
   pooled_width = size(output, 1)
   pooled_height = size(output, 2)
 
-  ccall(MEAN_POOL_FWD_FLOAT, Void,
+  ccall(MEAN_POOL_FWD_FLOAT, Nothing,
       (Ptr{Float32}, Ptr{Float32},
       Cint, Cint, Cint, Cint,
       Cint, Cint,
@@ -91,7 +91,7 @@ function mean_pooling_forward(input::Array{Float64}, output::Array{Float64}, lay
   pooled_width = size(output, 1)
   pooled_height = size(output, 2)
 
-  ccall(MEAN_POOL_FWD_DOUBLE, Void,
+  ccall(MEAN_POOL_FWD_DOUBLE, Nothing,
       (Ptr{Float64}, Ptr{Float64},
       Cint, Cint, Cint, Cint,
       Cint, Cint,
@@ -108,7 +108,7 @@ function mean_pooling_backward(input::Array{Float32}, output::Array{Float32}, la
   pooled_width = size(output, 1)
   pooled_height = size(output, 2)
 
-  ccall(MEAN_POOL_BWD_FLOAT, Void,
+  ccall(MEAN_POOL_BWD_FLOAT, Nothing,
       (Ptr{Float32}, Ptr{Float32},
       Cint, Cint, Cint, Cint,
       Cint, Cint,
@@ -124,7 +124,7 @@ function mean_pooling_backward(input::Array{Float64}, output::Array{Float64}, la
   pooled_width = size(output, 1)
   pooled_height = size(output, 2)
 
-  ccall(MEAN_POOL_BWD_DOUBLE, Void,
+  ccall(MEAN_POOL_BWD_DOUBLE, Nothing,
       (Ptr{Float64}, Ptr{Float64},
       Cint, Cint, Cint, Cint,
       Cint, Cint,

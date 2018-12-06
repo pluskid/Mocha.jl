@@ -4,7 +4,7 @@ using Colors # requires Package Colors.jl
 using Mocha
 using Compat
 
-type ImageClassifier
+struct ImageClassifier
   net           :: Net
   channel_order :: NTuple{3,Int} # The channel order of the trained net, (1,2,3) means RGB
   sp_order      :: NTuple{2,Int} # The spatial order (1,2) means width-height (row major)
@@ -41,7 +41,7 @@ function ImageClassifier(net::Net, softmax_blob_name::Symbol;
   end
 
   pred_blob = net.output_blobs[softmax_blob_name]
-  pred = Array{data_type}(size(pred_blob))
+  pred = Array{data_type}(undef,size(pred_blob))
 
   return ImageClassifier(net, channel_order, sp_order, grayscale, classes,
       data_layer, pred_blob, pred, data_type, batch_size, image_wh)
@@ -112,7 +112,7 @@ function preprocess{T<:AbstractArray}(classifier::ImageClassifier, images::Vecto
     if classifier.grayscale
       data2 = convert(Array{classifier.data_type}, data)
     else
-      data2 = Array{classifier.data_type}(tuple(classifier.image_wh..., 3))
+      data2 = Array{classifier.data_type}(undef,tuple(classifier.image_wh..., 3))
       for i = 1:3
         data2[:,:,i] = convert(Array{classifier.data_type},
             data[:,:,classifier.channel_order[i]])

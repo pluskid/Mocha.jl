@@ -1,7 +1,7 @@
 ################################################################################
 # Pooling in image dimension (width and height)
 ################################################################################
-function max_pooling_forward{T}(input::Array{T}, output::Array{T}, mask::Array{Csize_t}, layer)
+function max_pooling_forward(input::Array{T}, output::Array{T}, mask::Array{Csize_t}, layer) where {T}
   width, height, channels, num = size(input)
   pooled_width = size(output, 1)
   pooled_height = size(output, 2)
@@ -38,7 +38,7 @@ function max_pooling_forward{T}(input::Array{T}, output::Array{T}, mask::Array{C
   end
 end
 
-function mean_pooling_forward{T}(input::Array{T}, output::Array{T}, layer)
+function mean_pooling_forward(input::Array{T}, output::Array{T}, layer) where {T}
   width, height, channels, num = size(input)
   pooled_width = size(output, 1)
   pooled_height = size(output, 2)
@@ -68,7 +68,7 @@ function mean_pooling_forward{T}(input::Array{T}, output::Array{T}, layer)
   end
 end
 
-function max_pooling_backward{T}(input::Array{T}, output::Array{T}, mask::Array{Csize_t}, layer)
+function max_pooling_backward(input::Array{T}, output::Array{T}, mask::Array{Csize_t}, layer) where {T}
   width, height, channels, num = size(input)
   pooled_width = size(output, 1)
   pooled_height = size(output, 2)
@@ -88,7 +88,7 @@ function max_pooling_backward{T}(input::Array{T}, output::Array{T}, mask::Array{
   end
 end
 
-function mean_pooling_backward{T}(input::Array{T}, output::Array{T}, layer)
+function mean_pooling_backward(input::Array{T}, output::Array{T}, layer) where {T}
   width, height, channels, num = size(input)
   pooled_width = size(output, 1)
   pooled_height = size(output, 2)
@@ -117,4 +117,3 @@ function mean_pooling_backward{T}(input::Array{T}, output::Array{T}, layer)
     end
   end
 end
-

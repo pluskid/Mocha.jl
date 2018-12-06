@@ -9,7 +9,7 @@
   can_do_bp => true, # back-propagate via upper layers
 )
 
-type ReshapeLayerState <: LayerState
+struct ReshapeLayerState <: LayerState
   layer      :: ReshapeLayer
   blobs      :: Vector{Blob}
   blobs_diff :: Vector{Blob}

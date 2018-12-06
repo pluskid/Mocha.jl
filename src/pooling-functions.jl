@@ -3,9 +3,9 @@ export PoolingFunction, Pooling
 @compat abstract type StdPoolingFunction <: PoolingFunction end # built-in poolings
 
 module Pooling
-using ..Mocha.StdPoolingFunction
+using ..Mocha: StdPoolingFunction
 
-type Max <: StdPoolingFunction end
-type Mean <: StdPoolingFunction end
+struct Max <: StdPoolingFunction end
+struct Mean <: StdPoolingFunction end
 
 end # module Pooling

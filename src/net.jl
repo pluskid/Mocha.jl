@@ -3,7 +3,7 @@ export init, destroy, forward, forward_epoch, backward, forward_backward, get_ep
 export get_layer, get_layer_state, freeze!, unfreeze!, freeze_all!, unfreeze_all!
 export dump_statistics, reset_statistics
 
-type Net{T <: Backend}
+struct Net{T <: Backend}
   name           :: AbstractString
   backend        :: T
 
@@ -197,12 +197,12 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
   m_info("Constructing net $name on $backend...")
   m_info("Topological sorting $(length(layers)) layers...")
   layers = topological_sort(layers)
-  data_layers = find(l -> is_source(l), layers)
+  data_layers = findall(l -> is_source(l), layers)
 
   n = length(layers)
-  states = Array{LayerState}(n)
-  blobs_forward = Array{Vector{Blob}}(n)
-  blobs_backward = Array{Vector{Blob}}(n)
+  states = Array{LayerState}(undef,n)
+  blobs_forward = Array{Vector{Blob}}(undef,n)
+  blobs_backward = Array{Vector{Blob}}(undef,n)
 
   output_blobs = Dict{Symbol,Blob}()
   diff_blobs = Dict{Symbol,Blob}()
@@ -211,7 +211,7 @@ Net(name::AbstractString, backend::Backend, layers :: Vector{Layer}) = begin
   for i = 1:n
     layer = layers[i]
     # record if layers has any dependency
-    if :bottoms ∈ fieldnames(layer)
+    if :bottoms ∈ fieldnames(typeof(layer))
       blob_fwd = Blob[output_blobs[x] for x in layer.bottoms]
       blob_bwd = Blob[diff_blobs[x] for x in layer.bottoms]
     else
@@ -296,7 +296,7 @@ function topological_sort(layers :: Vector{Layer})
   index = Int[]
   while length(index) < n
     # find layers that has no dependency
-    idx = find(sum(graph,2) .== 0)
+    idx = findall(reshape(sum(graph, dims=2), :) .== 0)
     if length(idx) == 0
       throw(TopologyError("Can't finish topological sort, cycle in layer dependency?"))
     end
@@ -307,8 +307,8 @@ function topological_sort(layers :: Vector{Layer})
     idx = [idx_inplace; idx_normal]
 
     push!(index, idx...)
-    graph[idx,:] = 2 # make sure we don't select those again
-    graph[:,idx] = 0 # layers that depend on those could be selected
+    graph[idx, :] .= 2 # make sure we don't select those again
+    graph[:, idx] .= 0 # layers that depend on those could be selected
   end
 
   return layers[index]
